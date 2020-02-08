@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Data File Tool Box is a set of routines useful to work with eclipse style 
-data files and property.
+Data File Tool Box is a set of routines useful to work with eclipse style
+data files and properties.
 
 Created on Tue Jul  9 21:23:27 2019
 @author: martin
@@ -21,7 +21,7 @@ from datafiletoolbox.propertyManipulation import *
 from datafiletoolbox.simObject import *
 
 
-__version__ = '0.1'
+__version__ = '0.2'
 __author__ = 'Martin Araya'
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')

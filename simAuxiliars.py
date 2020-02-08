@@ -8,7 +8,7 @@ Created on Sat Jul 27 14:49:56 2019
 
 def monthStr2Int(month) :
     """
-    receives a month as string in english and 
+    receives a month as string in english and
     return the corresponding integer for that month.
     """
     str2int = {
@@ -27,7 +27,7 @@ def monthStr2Int(month) :
             'DEC' : 12 ,
             }
     month = month.strip().upper()
-    
+
     try :
         return str2int[month[0:3]]
     except :
@@ -38,7 +38,7 @@ def simDate(DateArgument) :
     """
     simDate convert a date string in eclipse format to a datetime.date object.
     """
-    
+
     if type(DateArgument) == str :
         DateArgument = DateArgument.split()
         print(DateArgument)

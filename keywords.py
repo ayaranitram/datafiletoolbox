@@ -4,6 +4,8 @@
 Created on Thu Aug  1 19:54:53 2019
 
 @author: martin
+
+dictionaries of keywords with special treatments.
 """
 
 ZeroArgumentsKeywords = (
@@ -23,7 +25,7 @@ ZeroArgumentsKeywords = (
 #        'SWFN','SGFN','SOF2','SOF3','SWOF','SGOF','PVTO','PVTG','PVDO','PVDG',
 #        'GRUPTREE','GCONINJE','GINJGAS','GRUPINJE','GCONPROD','GCONINJE',
 #        'WELSPECS','COMPDAT','COMPDATMD','WPIMULT','WCONHIST','WRFTPLT','WINJGAS',
-#        'WCONINJH','WCONPROD','WCONINJE' 
+#        'WCONINJH','WCONPROD','WCONINJE'
 #        )
 TableFormatKeywords = ( 'SWFN','SGFN','SOF2','SOF3','SWOF','SGOF',
                        'PVTO','PVTG','PVDO','PVDG',
@@ -32,7 +34,7 @@ TableFormatKeywords = ( 'SWFN','SGFN','SOF2','SOF3','SWOF','SGOF',
 MultiLineKeywords = ( 'DATES','EQUALS','MULTIPLY','ADD','OPERATE','OPERATER',
         'GRUPTREE','GCONINJE','GINJGAS','GRUPINJE','GCONPROD','GCONINJE',
         'WELSPECS','COMPDAT','COMPDATMD','WPIMULT','WCONHIST','WRFTPLT','WINJGAS',
-        'WCONINJH','WCONPROD','WCONINJE' 
+        'WCONINJH','WCONPROD','WCONINJE'
         )
 
 SpecialKeywords = ('TITLE','DIMENS','START','EQLDIMS','TABDIMS','WELLDIMS')
