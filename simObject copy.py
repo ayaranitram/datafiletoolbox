@@ -91,7 +91,7 @@ class Simulation(object) :
     
     def __getitem__(self, item) :
         if type(item) == int :
-            if item > Simulation.Count[self.ID] :
+#            if item > Simulation.Count[self.ID] :
                 return None
         elif type(item) == str :
             try : 
@@ -127,6 +127,7 @@ class Simulation(object) :
     def content(self) :
         contentDict = {}
         for i in range( 1 , len( Simulation.Objects[self.ID]) ) :
+            #contentDict[i] = ( Simulation.Objects[self.ID][0][0][i] , Simulation.Objects[self.ID][0][1][i] )
             contentDict[i] = ( type(Simulation.Objects[self.ID][i]) , Simulation.Objects[self.ID][i].get_name() )
         return contentDict
      
@@ -182,34 +183,25 @@ class Model(Simulation) :
     
     ZeroArgumentsKeywords = (
         'RUNSPEC','GRID','EDIT','PROPS','REGIONS','SOLUTION','SUMMARY','SCHEDULE',
-        'ECHO','NOECHO','ENDBOX','NONNC','MONITOR','NOSIM',
-        'FREEZEPC',
-        'FIELD','METRIC','CART',
-        'OIL','WATER','GAS','DISGAS','VAPOIL','BRINE','API',
+        'ECHO','NOECHO','ENDBOX','NONNC','MONITOR','NOSIM'
+        'FIELD','METRIC',
+        'OIL','WATER','GAS','DISGAS','VAPOIL','BRINE',
         'FMTOUT','FMTIN','UNIFOUT','UNIFIN','MULTOUT','MULTIN',
         'IMPLICIT','AIM','IMPES','AITS','BPARA',
-        'AQUCON','AQUCT','AQUANCON','AQUCHWAT','AQUFETP','AQUFLUX',
-        'RUNCTRL','DTLOGIC','SMARTMB',
-        'SKIP','SKIP100','SKIP300','SKIPTNAV','SKIPTAB','SKIPREST',
-        'END','ENDACTIO','ENDSKIP',
-        
+        'END',
         'ALL','MSUMLINS','MSUMNEWT','SEPARATE','NEWTON','TCPU','ELAPSED','MAXDPR',
         'FOPR','FOPT','FGPR','FGPT','FWPR','FWPT',
         )
     
-    TableFormatKeywords = ( 'DATES','EQUALS','EQUALREG','MULTIPLY','MULTIREG',
-            'ADD','ADDREG','ADDZCORN','COPY''COPYBOX','COPYREG','OPERATE','OPERATER','MULTFLT','FAULTS',
+    TableFormatKeywords = ( 'DATES','EQUALS','MULTIPLY','ADD','OPERATE','OPERATER',
+            'SWFN','SGFN','SOF2','SOF3','SWOF','SGOF','PVTO','PVTG','PVDO','PVDG',
             'GRUPTREE','GCONINJE','GINJGAS','GRUPINJE','GCONPROD','GCONINJE',
-            'WELSPECS','COMPDAT','COMPDATMD','WPIMULT','WCONHIST','WRFTPLT',
-            'WINJGAS','WRFT','WPIMULT','WPI',
-            'WCONINJH','WCONPROD','WCONINJE','WELTARG','ACTIONX',
+            'WELSPECS','COMPDAT','COMPDATMD','WPIMULT','WCONHIST','WRFTPLT','WINJGAS',
+            'WCONINJH','WCONPROD','WCONINJE',
+            'PSPLITX','PSPLITY',
             )
     
-    UndefinedNumberOfTables = ( 'PSPLITX' , 'PSPLITY' )
-    
-    TableInTableKeywords = ( 'PVTO','PVTG', )
-    
-    SpecialKeywords = ('TITLE','DIMENS','START','EQLDIMS','TABDIMS','WELLDIMS','GPTDIMS','GRID','INCLUDE') #'SUMMARY','SCHEDULE','INCLUDE',)
+    SpecialKeywords = ('TITLE','DIMENS','START','EQLDIMS','TABDIMS','WELLDIMS','GPTDIMS','INCLUDE',) #'SUMMARY','SCHEDULE')
     
     NoSlashKeywords = ('TITLE')
     
@@ -252,7 +244,7 @@ class Model(Simulation) :
         self.welldims = None
         self.tabdims = None
         self.gptdims = None
-        self.DimensionedTableKeywords = { 'TUNING' : 3 ,}
+        self.DimensionedTableKeywords = { 'JFUNCR' : 1 }
         
     def set_parentID(self, parentID):
         self.parentID = parentID
@@ -346,8 +338,6 @@ class Model(Simulation) :
             Simulation.Objects[self.SimObjectID[0]][0][1][self.SimObjectID[1]] = self.name
     
     def set_dimens(self,dims) :
-        if '/' in dims :
-            dims = dims[ : dims.index('/') ]
         if type(dims) == str :
             dims = dims.split()
         temporal = []
@@ -366,41 +356,9 @@ class Model(Simulation) :
             return ''
         else :
             return self.dims
-    
-    def get_dimX(self) :
-        if self.dims == None :
-            return ''
-        else :
-            return self.dims[0]
-    
-    def get_dimY(self) :
-        if self.dims == None :
-            return ''
-        else :
-            return self.dims[1]
-        
-    def get_dimZ(self) :
-        if self.dims == None :
-            return ''
-        else :
-            return self.dims[2]
 
     def set_eqldims(self,eqldims) :
-        if '/' in eqldims :
-            eqldims = eqldims[ : eqldims.index('/') ]
-        if eqldims.strip() == '' :
-            eqldims = ' 5* '
         self.eqldims = expandKeyword(eqldims).split()
-        if len(self.eqldims) < 5 :
-            self.eqldims = expandKeyword(' '.join(self.eqldims) + ( str( 5 - len(self.eqldims) ) + '*' ) ).split()
-        if self.eqldims[0] == '1*' :
-            self.eqldims[0] = 1
-        if self.eqldims[3] == '1*' :
-            self.eqldims[3] = 1
-        self.DimensionedTableKeywords['EQUIL'] = int(self.eqldims[0])
-        self.DimensionedTableKeywords['TPVD'] = int(self.eqldims[3])
-        self.DimensionedTableKeywords['TEMPVD'] = int(self.eqldims[0])
-
         
     def get_eqldims(self) :
         if self.eqldims == None :
@@ -408,32 +366,7 @@ class Model(Simulation) :
         else :
             return self.eqldims
     
-    def set_gptdims(self,gptdims) :
-        if '/' in gptdims :
-            gptdims = gptdims[ : gptdims.index('/') ]
-        if gptdims.strip() == '' :
-            gptdims = ' 3* '
-        self.gptdims = expandKeyword(gptdims).split()
-        if len(self.gptdims) < 3 :
-            self.gptdims = expandKeyword(' '.join(self.gptdims) + ( str( 3 - len(self.gptdims) ) + '*' ) ).split()
-        if self.gptdims[0] == '1*' :
-            self.gptdims[0] = 1
-        if self.gptdims[2] == '1*' :
-            self.gptdims[2] = 1
-        self.DimensionedTableKeywords['GPTABLE'] = int(self.gptdims[0])
-        self.DimensionedTableKeywords['GPTABLEN'] = int(self.gptdims[0])
-        self.DimensionedTableKeywords['GPTABLE3'] = int(self.gptdims[0])
-        self.DimensionedTableKeywords['RECOVERY'] = int(self.gptdims[2])
-    
-    def get_gptdims(self) :
-        if self.gptdims == None :
-            return ''
-        else :
-            return self.gptdims
-    
     def set_welldims(self,welldims):
-        if '/' in welldims :
-            welldims = welldims[ : welldims.index('/') ]
         self.welldims = expandKeyword(welldims).split()
     
     def get_welldims(self):
@@ -443,103 +376,73 @@ class Model(Simulation) :
             return self.welldims
     
     def set_tabdims(self,tabdims) :
-        if '/' in tabdims :
-            tabdims = tabdims[ : tabdims.index('/') ]
-        if tabdims.strip() == '' :
-            tabdims = ' 24* '
         self.tabdims = expandKeyword(tabdims).split()
         if len(self.tabdims) < 25 :
             self.tabdims = expandKeyword(' '.join(self.tabdims) + ( str( 25 - len(self.tabdims) ) + '*' ) ).split()
-        if self.tabdims[0] == '1*' :
-            self.tabdims[0] = 1
         if self.tabdims[1] == '1*' :
             self.tabdims[1] = 1
         if self.tabdims[2] == '1*' :
-            self.tabdims[2] = 50
-        if self.tabdims[3] == '1*' :
-            self.tabdims[3] = 50
-        if self.tabdims[4] == '1*' :
-            self.tabdims[4] = 1
+            self.tabdims[2] = 1
         if self.tabdims[5] == '1*' :
-            self.tabdims[5] = 20
-        if self.tabdims[6] == '1*' :
-            self.tabdims[6] = 20
-        if self.tabdims[7] == '1*' :
-            self.tabdims[7] = 1
-        if self.tabdims[8] == '1*' :
-            self.tabdims[8] = 1
+            self.tabdims[5] = 1
         if self.tabdims[9] == '1*' :
-            self.tabdims[9] = self.tabdims[8]
+            self.tabdims[9] = 1
         if self.tabdims[10] == '1*' :
-            self.tabdims[10] = 10
+            self.tabdims[10] = self.tabdims[9]
         if self.tabdims[11] == '1*' :
-            self.tabdims[11] = 1
+            self.tabdims[11] = 10
         if self.tabdims[12] == '1*' :
-            self.tabdims[12] = self.tabdims[1]
+            self.tabdims[12] = 1
         if self.tabdims[13] == '1*' :
-            self.tabdims[13] = 0
+            self.tabdims[13] = 1
         if self.tabdims[14] == '1*' :
             self.tabdims[14] = 0
         if self.tabdims[15] == '1*' :
-            self.tabdims[15] = self.tabdims[1]
+            self.tabdims[15] = 0
         if self.tabdims[16] == '1*' :
-            self.tabdims[16] = 10
+            self.tabdims[16] = self.tabdims[2]
         if self.tabdims[17] == '1*' :
             self.tabdims[17] = 10
         if self.tabdims[18] == '1*' :
             self.tabdims[18] = 10
-        if self.tabdims[20] == '1*' :
-            self.tabdims[20] = 5
+        if self.tabdims[19] == '1*' :
+            self.tabdims[19] = 10
         if self.tabdims[21] == '1*' :
             self.tabdims[21] = 5
         if self.tabdims[22] == '1*' :
             self.tabdims[22] = 5
         if self.tabdims[23] == '1*' :
-            self.tabdims[23] = 0
-        self.DimensionedTableKeywords['JFUNCR'] = int(self.tabdims[0])
-        self.DimensionedTableKeywords['SGFN'] = int(self.tabdims[0])
-        self.DimensionedTableKeywords['SWFN'] = int(self.tabdims[0])
-        self.DimensionedTableKeywords['SOF2'] = int(self.tabdims[0])
-        self.DimensionedTableKeywords['SOF3'] = int(self.tabdims[0])
-        self.DimensionedTableKeywords['SWOF'] = int(self.tabdims[0])
-        self.DimensionedTableKeywords['SGOF'] = int(self.tabdims[0])
-        self.DimensionedTableKeywords['SGWFN'] = int(self.tabdims[0])
-        self.DimensionedTableKeywords['SOR'] = int(self.tabdims[0])
-        self.DimensionedTableKeywords['PVTG'] = int(self.tabdims[1])
-        self.DimensionedTableKeywords['PVDG'] = int(self.tabdims[1])
-        self.DimensionedTableKeywords['PVTO'] = int(self.tabdims[1])
-        self.DimensionedTableKeywords['PVDO'] = int(self.tabdims[1])
-        self.DimensionedTableKeywords['EOS'] = int(self.tabdims[8])
-        self.DimensionedTableKeywords['BIC'] = int(self.tabdims[8])
-        self.DimensionedTableKeywords['OMEGAA'] = int(self.tabdims[8])
-        self.DimensionedTableKeywords['OMEGAB'] = int(self.tabdims[8])
-        self.DimensionedTableKeywords['TCRIT'] = int(self.tabdims[8])
-        self.DimensionedTableKeywords['PCRIT'] = int(self.tabdims[8])
-        self.DimensionedTableKeywords['VCRIT'] = int(self.tabdims[8])
-        self.DimensionedTableKeywords['ZCRIT'] = int(self.tabdims[8])
-        self.DimensionedTableKeywords['MW'] = int(self.tabdims[8])
-        self.DimensionedTableKeywords['ACF'] = int(self.tabdims[8])
-        self.DimensionedTableKeywords['SSHIFT'] = int(self.tabdims[8])
-        self.DimensionedTableKeywords['RTEMP'] = int(self.tabdims[8])
-        self.DimensionedTableKeywords['EOSS'] = int(self.tabdims[9])
-        self.DimensionedTableKeywords['ROCK'] = int(self.tabdims[12])
-        self.DimensionedTableKeywords['ALPHA'] = int(self.tabdims[15])
-        self.DimensionedTableKeywords['ALPHAD'] = int(self.tabdims[15])
-        self.DimensionedTableKeywords['ALPHAI'] = int(self.tabdims[15])
-#        'JFUNCR' : 1 ,'EQUIL' : 1,'RSVD','PBVD','EOS','EOSS',
-#                           'SWFN','SGFN','SOF2','SOF3','SWOF','SGOF','PVDO','PVDG',
+            self.tabdims[23] = 5
+        if self.tabdims[24] == '1*' :
+            self.tabdims[24] = 0
+        self.DimensionedTableKeywords['JFUNCR'] = self.tabdims[1]
+        self.DimensionedTableKeywords['SGFN'] = self.tabdims[1]
+        self.DimensionedTableKeywords['SWFN'] = self.tabdims[1]
+        self.DimensionedTableKeywords['SOF2'] = self.tabdims[1]
+        self.DimensionedTableKeywords['SOF3'] = self.tabdims[1]
+        self.DimensionedTableKeywords['SWOF'] = self.tabdims[1]
+        self.DimensionedTableKeywords['SGOF'] = self.tabdims[1]
+        self.DimensionedTableKeywords['SGWFN'] = self.tabdims[1]
+        self.DimensionedTableKeywords['PVTG'] = self.tabdims[2]
+        self.DimensionedTableKeywords['PVDG'] = self.tabdims[2]
+        self.DimensionedTableKeywords['PVTO'] = self.tabdims[2]
+        self.DimensionedTableKeywords['PVDO'] = self.tabdims[2]
         
+    
     def get_tabdims(self) :
         if self.tabdims == None :
             return ''
         else :
             return self.tabdims
-
-    def set_grid(self,dummy=None) :
-        if self.tabdims == None :
-            self.set_tabdims(' 24* /') 
-        if self.eqldims == None :
-            self.set_eqldims(' 5* /') 
+    
+    def set_gptdims(self,gptdims) :
+        self.gptdims = expandKeyword(gptdims).split()
+    
+    def get_gptdims(self) :
+        if self.gptdims == None :
+            return ''
+        else :
+            return self.gptdims
     
     def set_start(self , start) :
         self.start = start
@@ -560,20 +463,14 @@ class Model(Simulation) :
             return self.path
         
     def set_include(self,IncludeFile) :
-        IncludeFile = IncludeFile.replace("\\","/").strip().strip("'")
-        if IncludeFile[-1] == '/' :
-            IncludeFile = IncludeFile[:-1]
-        if "'" in IncludeFile :
-            IncludeFile = IncludeFile.strip().strip("'")
+        print('INCLUDE:\n'+self.path+'\n'+IncludeFile)
         IncludePath = extension(self.path)[2].strip("'")
         IncludeFile = IncludeFile.strip().strip("'")
-#        if self.path[-1] == '/' :
-#            IncludePath = self.path[:-1]
-#        print('\n' + IncludePath + '\n' + IncludeFile )
+        if self.path[-1] == '/' :
+            IncludePath = self.path[:-1]
         if IncludeFile[0] == '/' :
             IncludeFile = IncludeFile[1:]
-        IncludePath = IncludePath + IncludeFile
-#        IncludePath = IncludePath + '/' + IncludeFile
+        IncludePath = IncludePath + '/' + IncludeFile
         self.ReadData(IncludePath)
     
     def set_summary(self) :
@@ -590,14 +487,7 @@ class Model(Simulation) :
         Model.Count[self.ID] += 1
         Model.Objects[self.ID][Model.Count[self.ID]] = Keyword(name , arguments , KeywordIndex = Model.Count[self.ID] , speak = self.speak )
         Model.Objects[self.ID][Model.Count[self.ID]].set_parentID(self.ID)
-        #self.checkSpecials(name)
-        self.checkSpecials( Model.Count[self.ID] )
-        
-    def set_keywordComments(self, keywordComments , KeywordIndex = None ) :
-        if KeywordIndex == None :
-            KeywordIndex = Model.Count[self.ID]
-        Model.Objects[self.ID][KeywordIndex].set_comments(keywordComments)
-        
+        self.checkSpecials(name)
         
         
     def set_KeywordArgument(self , arguments) :
@@ -605,10 +495,9 @@ class Model(Simulation) :
     
     
     def checkSpecials( self , keyword_index ) :
-#        print('keyword index ' + str(keyword_index))
         if type(keyword_index) == str :
             try : 
-                keyword_index = len(Model.List[self.ID]) - Model.List[self.ID][::-1].index(keyword_index) -1
+                keyword_index = Model.List[self.ID].index(keyword_index)
             except :
                 verbose( self.speak , self.msg0 , keyword_index + ' not in keyword list')
         if type(keyword_index) == int and keyword_index <= Model.Count[self.ID] :
@@ -642,87 +531,6 @@ class Model(Simulation) :
                 row = [ compdatDate.strip() ] + expandKeyword(line).split()
                 compdatTable.append(row)
         return pd.DataFrame(compdatTable)
-    
-    def PRODUCTIONandINJECTIONtable(self):
-        ProdInjTable = []
-        wconhistDict = self.extract('WCONHIST',CaseSensitive=False)
-        wconinjhDict = self.extract('WCONINJH',CaseSensitive=False)
-        wconprodDict = self.extract('WCONPROD',CaseSensitive=False)
-        wconinjeDict = self.extract('WCONINJE',CaseSensitive=False)
-        datesDict = self.extract('DATES',CaseSensitive=False)
-        wconhistArray = np.array(list(wconhistDict.keys()))
-        wconinjhArray = np.array(list(wconinjhDict.keys()))
-        wconprodArray = np.array(list(wconprodDict.keys()))
-        wconinjeArray = np.array(list(wconinjeDict.keys()))
-        datesArray = np.array(list(datesDict.keys()))
-        datesMin = min(datesArray)
-        
-        for each in wconhistArray :
-            if each < datesMin :
-                wconhistDate = self.start
-            else :
-                wconhistDate = datesDict[datesArray[ datesArray < each ][-1]][2][-1]
-            for line in wconhistDict[each][2] :
-                if wconhistDate == None :
-                    if self.start == None :
-                        wconhistDate = '01-JAN-1900'
-                        print('01-JAN-1900' , line)
-                    else :
-                        print(wconhistDate , line)
-                        wconhistDate = self.start
-                row = [ wconhistDate.strip() ] + ['WCONHIST'] + expandKeyword(line).split()
-                ProdInjTable.append(row)
-        
-    
-        for each in wconinjhArray :
-            if each < datesMin :
-                wconinjhDate = self.start
-            else :
-                wconinjhDate = datesDict[datesArray[ datesArray < each ][-1]][2][-1]
-            for line in wconinjhDict[each][2] :
-                if wconinjhDate == None :
-                    if self.start == None :
-                        wconinjhDate = '01-JAN-1900'
-                        print('01-JAN-1900' , line)
-                    else :
-                        print(wconinjhDate , line)
-                        wconinjhDate = self.start
-                row = [ wconinjhDate.strip() ] + ['WCONINJH'] + expandKeyword(line).split()
-                ProdInjTable.append(row)
-        
-        for each in wconprodDict :
-            if each < datesMin :
-                wconprodDate = self.start
-            else :
-                wconprodDate = datesDict[datesArray[ datesArray < each ][-1]][2][-1]
-            for line in wconprodDict[each][2] :
-                if wconprodDate == None :
-                    if self.start == None :
-                        wconprodDate = '01-JAN-1900'
-                        print('01-JAN-1900' , line)
-                    else :
-                        print(wconprodDate , line)
-                        wconprodDate = self.start
-                row = [ wconprodDate.strip() ] + ['WCONPROD'] + expandKeyword(line).split()
-                ProdInjTable.append(row)
-                
-        for each in wconinjeDict :
-            if each < datesMin :
-                wconinjeDate = self.start
-            else :
-                wconinjeDate = datesDict[datesArray[ datesArray < each ][-1]][2][-1]
-            for line in wconinjeDict[each][2] :
-                if wconinjeDate == None :
-                    if self.start == None :
-                        wconinjeDate = '01-JAN-1900'
-                        print('01-JAN-1900' , line)
-                    else :
-                        print(wconinjeDate , line)
-                        wconinjeDate = self.start
-                row = [ wconinjeDate.strip() ] + ['WCONINJE'] + expandKeyword(line).split()
-                ProdInjTable.append(row)
-                
-        return pd.DataFrame(ProdInjTable)
 
     
     def ReadData( self, filename , speak = None ):
@@ -731,17 +539,6 @@ class Model(Simulation) :
         from a given path/filename and return an 'model' object containing all the 
         the keywords and values extracted from the data file.
         """
-        
-        def appendArgument(previous='',new='') :
-            if '/' in new :
-                # keywords that can have / as part of the argument
-                if keywordName == 'INCLUDE' :
-                    return previous + new[ : len(new) - new[::-1].index('/')+1].strip('\n') + '\n'
-                # regular keywords
-                else :
-                    return previous + new[:new.index('/')+1].strip('\n') + '\n'
-            else :
-                return previous + new.strip('\n') + '\n'
         
         if speak == None :
             self.speak = self.get_speak()
@@ -761,183 +558,128 @@ class Model(Simulation) :
         keywordFlag = False
         SMRYflag = False
         slashCounter = 0
-        keywordComments = ''
         
-
+        
         for line in entirefile :
-
-            # empty line
-            if len(line.strip()) == 0 :
-                verbose( speak , self.msg1 , '<  reading empty line') 
-            
-            # comment line
-            elif len(line.strip()) >=2 and line.strip()[:2] == '--' :
-                verbose( speak , self.msg1 , '<  reading comment line\n' + str(line)) 
-                keywordComments = keywordComments + line
-
-            # line containing data
-            elif len(line.strip()) >=1 :
+            if len(line.strip()) > 0 and line.strip()[:2] != '--' :
                 values = line.split()
-                # ignore comments after keywords or arguments
-                if '--' in line :
-                    keywordComments = keywordComments + line
-                    line = line[:line.index('--')]
-                    values = line.split()
-                
-                # exception for SUMMARY section, read the entire section as argument of SUMMARY keyword
-                if values[0].upper() == 'SUMMARY' or SMRYflag == True :
-                    # in case entered here because of SUMMARY keyword
-                    if SMRYflag == False :
-                        keywordName = str(values[0])
-                        verbose( speak , self.msg2 , '   _______________\n>>  found keyword ' + keywordName)
-                        SMRYflag = True 
-                        keywordValues = ''
-                    
-                    # finished SUMMARY section
-                    elif values[0].upper() == 'SCHEDULE' :
-                        
-                        # saving SUMMARY keyword and its arguments and comments
-                        self.set_newKeyword( keywordName ,  keywordValues )
-                        self.set_keywordComments( keywordComments )
-                        keywordComments = ''
-                        
-                        # saving the new keyword SCHEDULE
-                        keywordName = str(values[0])
-                        verbose( speak , self.msg2 , '   _______________\n>>  found keyword ' + keywordName)
-                        if '--' in line :
-                            keywordComments = keywordComments + line
-                        self.set_newKeyword( keywordName )
-                        self.set_keywordComments( keywordComments )
-                        keywordComments = ''
-                        keywordFlag = False
-                        keywordName = ''
-                        SMRYflag = False
-                    
-                    # reading arguments of SUMMARY section
+                if len(line.strip()) >= 2 and len(values) >= 1 and len(values[0].strip()[:2]) >= 2 and values[0][:2] == '--' :
+                    verbose( speak , self.msg1 , '<  reading comment line\n' + str(line))  
+                elif values[0].upper() == 'SUMMARY' :
+                    # skip summary lines
+                    SMRYflag = True 
+                    keywordName = 'SUMMARY'
+                    keywordValues = ''
+                elif SMRYflag == True :
+                    if values[0].upper() == 'SCHEDULE' :
+                        # no more skipping
+                        SMRYflag = False 
+#                        self.set_newKeyword( keywordName ,  keywordValues )
+                        self.set_newKeyword( values[0] ,  '' )
                     else :
-                        keywordValues = appendArgument( keywordValues ,  line )
-                        
+                        keywordValues = keywordValues + line
                 
-                # keyword found
-                elif keywordFlag == False :
+                elif keywordFlag == True and keywordName.upper() == 'INCLUDE' :
+                    verbose( speak , self.msg1 , '<< reading argument of INCLUDE keyword')
+                    includePath = line
+                    if "'" in line :
+                        includePath = includePath[ includePath.index("'") + 1 : ]
+                        includePath = includePath[ : includePath.index("'") ]
+                    else :
+                        includePath = includePath[ : len(includePath) - includePath[::-1].index('/') - 1 ].strip()
+                    keywordFlag = False
+                    self.set_newKeyword( keywordName ,  includePath )
+                elif len(line) >= 1 and len(values) >= 1 and values[0][0] == '/' :
+                    if keywordName in Model.TableFormatKeywords :
+                        if slashCounter == 1 :
+                            verbose( speak , self.msg1 , '<< reading second slash, end of keyword ' + keywordName)
+                            keywordFlag = False
+                            if keywordValues.strip()[-1] == '/' :    
+                                keywordValues = keywordValues.rstrip()[:-1]
+                            self.set_newKeyword( keywordName ,  keywordValues.split('/') )
+                        else :
+                            slashCounter = 1 
+                            verbose( speak , self.msg1 , '<< reading slash, end of row argument ' + keywordName)
+                            keywordValues = keywordValues + ' /'
+                    else :
+                        verbose( speak , self.msg1 , '<< reading slash, end of keyword ' + keywordName)
+                        keywordFlag = False
+                        self.set_newKeyword( keywordName ,  keywordValues )
+                    
+                elif keywordFlag == True :
+                    if counter1 < 4 or counter2 == 10000 :
+                        verbose( speak , self.msg1 , '>> keyword ' + keywordName + ' line :' + str(counter1) )
+                        if counter2 == 10000 :
+                            lapseStart = datetime.datetime.now()  
+                            counter2 = 0
+                    counter1 = counter1 + 1
+                    counter2 = counter2 + 1
+                    if '--' in line :
+                        line = line[:line.index('--')]
+                        values = line.split()
+                    if '/' in line :
+                        if keywordName in Model.TableFormatKeywords :
+                            if slashCounter < 2 :
+                                #keywordFlag = True
+                                slashCounter = slashCounter + 1
+                                verbose( speak , self.msg1 , '<< reading slash, end of row argument ' + keywordName)
+                                keywordValues = keywordValues + ' ' + line[:line.index('/')+1]
+                                if ('/') in line[line.index('/')+1:] and line[line.index('/')+1:].lstrip().index('/') == 0 :
+                                    keywordFlag = False
+                                    verbose( speak , self.msg1 , '<< reading second slash, end of keyword ' + keywordName)
+                                    if keywordValues.strip()[-1] == '/' :    
+                                        keywordValues = keywordValues.rstrip()[:-1]
+                                    self.set_newKeyword( keywordName ,  keywordValues.split('/') )
+                            elif line.strip().index('/') > 0 :
+                                slashCounter = 0
+                                verbose( speak , self.msg1 , '<< reading slash, end of row argument ' + keywordName)
+                                keywordValues = keywordValues + ' ' + line[:line.index('/')+1]
+                                if ('/') in line[line.index('/')+1:] and line[line.index('/')+1:].lstrip().index('/') == 0 :
+                                    keywordFlag = False
+                                    verbose( speak , self.msg1 , '<< reading second slash, end of keyword ' + keywordName)
+                                    if keywordValues.strip()[-1] == '/' :    
+                                        keywordValues = keywordValues.rstrip()[:-1]
+                                    self.set_newKeyword( keywordName ,  keywordValues.split('/') )
+
+                            else :
+                                keywordFlag = False
+                                verbose( speak , self.msg1 , '<< reading second slash, end of keyword ' + keywordName)
+                                if keywordValues.strip()[-1] == '/' :    
+                                    keywordValues = keywordValues.rstrip()[:-1]
+                                self.set_newKeyword( keywordName ,  keywordValues.split('/') )
+
+                        elif line.strip().index('/') == 0 :
+                            keywordFlag = False
+                            self.set_newKeyword( keywordName ,  keywordValues )
+                        else :
+                            keywordValues = keywordValues + ' ' + line[:line.index('/')]
+                            keywordFlag = False
+                            self.set_newKeyword( keywordName ,  keywordValues )
+
+                    else :
+                        slashCounter = 0
+                        keywordValues = keywordValues + ' ' + line
+                    if keywordName in Model.NoSlashKeywords :
+                        keywordFlag = False
+                        self.set_newKeyword( keywordName ,  keywordValues )
+                elif len(line) >= 1 and len(values) >= 1 :
                     keywordFlag = True
                     slashCounter = 0
                     keywordName = str(values[0])
                     keywordValues = ''
+                    counter1 = 0
+                    counter2 = 0
+                    lapseStart = datetime.datetime.now()  
                     verbose( speak , self.msg2 , '   _______________\n>>  found keyword ' + keywordName)
 
-                    # save keywords that doesn't require arguments 
                     if keywordName in Model.ZeroArgumentsKeywords :
-                        self.set_newKeyword( keywordName )
-                        self.set_keywordComments( keywordComments )
                         keywordFlag = False
-                        keywordComments = ''
-                        keywordName = ''
+                        self.set_newKeyword( keywordName )
+                else : 
+                    #empty line
+                    pass
 
-                    # set number of tables for dimensioned keywords
-                    if keywordName in self.DimensionedTableKeywords :
-                        numberOfKeywordTables = self.DimensionedTableKeywords[keywordName.upper()] 
-                    else :
-                        numberOfKeywordTables = 1
-                
-                # reading keyword arguments
-                else : # elif keywordFlag == True :
-                    
-                    # interpreting slash in line
-                    if '/' in line :
-                        
-                        # check for comments after slash
-                        if len( line[ line.index('/')+1 : ].strip() ) > 0 :
-                            keywordComments = keywordComments + line
-                        
-                        # keywords that must have only one argument line
-                        if keywordName not in Model.TableFormatKeywords and keywordName not in self.DimensionedTableKeywords :
-                            # save the arguments in case / is not the first character
-                            if line.strip().index('/') > 0 :
-                                keywordValues = appendArgument( keywordValues ,  line )
-                            self.set_newKeyword( keywordName ,  keywordValues )
-                            self.set_keywordComments( keywordComments )
-                            keywordFlag = False
-                            keywordComments = ''
-                            keywordName = ''
-                        
-                        # keywords with undefined number of tables, closed by two consecutive slashes
-                        elif keywordName in Model.UndefinedNumberOfTables :
-                            
-                            # found closing slash
-                            if line.strip().index('/') == 0 :
-                                
-                                # first slash found, it is closing a table
-                                if slashCounter == 0 :
-                                    slashCounter = 1
-                                
-                                # only if the preceding line had a slash this one will be the second slash, then closing the keyword
-                                else : #if slashCounter == 1 :
-                                    verbose( speak , self.msg1 , '<< reading final slash, end of keyword ' + keywordName)
-                                    self.set_newKeyword( keywordName ,  keywordValues )
-                                    self.set_keywordComments( keywordComments )
-                                    keywordFlag = False
-                                    keywordComments = ''
-                                    keywordName = ''
-                                    slashCounter = 0
-                            
-                            # slash is not the first character in the line, it means the end of a table (not the end of the keyword)
-                            else :
-                                slashCounter = 1
-                        
-                        # keywords that could have more than one argument line
-                        elif keywordName in Model.TableFormatKeywords :
-                        
-                            # found closing slash
-                            if line.strip().index('/') == 0 :   
-                                verbose( speak , self.msg1 , '<< reading final slash, end of keyword ' + keywordName)
-                                self.set_newKeyword( keywordName ,  keywordValues )
-                                self.set_keywordComments( keywordComments )
-                                keywordFlag = False
-                                keywordComments = ''
-                                keywordName = ''
-                            
-                            # reading table row
-                            else : # if line.strip().index('/') > 0 :
-                                keywordValues = appendArgument( keywordValues ,  line )
-                    
-                        # keywords that must have a specific number of argument lines
-                        elif keywordName in self.DimensionedTableKeywords :
-                            keywordValues = appendArgument( keywordValues ,  line )
-                            
-                            # in case of TableInTable the closing slash is first character in the line
-                            if keywordName in Model.TableInTableKeywords :
-                                if line.strip().index('/') == 0 :
-                                    slashCounter = slashCounter + 1
-                                
-                            # slash always closes a table
-                            else : # if keywordName not in Model.TableInTableKeywords :
-                                slashCounter = slashCounter + 1
 
-                            # slash closing keyword or table
-                            if slashCounter == numberOfKeywordTables :
-                                keywordValues = appendArgument( keywordValues ,  line )
-                                self.set_newKeyword( keywordName ,  keywordValues )
-                                self.set_keywordComments( keywordComments )
-                                keywordFlag = False
-                                keywordComments = ''
-                                keywordName = ''
-                            
-                    # only data line:
-                    else : # if '/' not in line :
-#                        slashCounter = 0
-                        keywordValues = appendArgument( keywordValues ,  line )
-                        
-                        # in case the keyword does not require slash to close it
-                        if keywordName in Model.NoSlashKeywords :
-                            self.set_newKeyword( keywordName ,  keywordValues )
-                            self.set_keywordComments( keywordComments )
-                            keywordComments = ''
-                            keywordFlag = False
-                        
-                        # keywords with undefined number of tables, closed by two consecutive slashes
-                        elif keywordName in Model.UndefinedNumberOfTables :
-                            slashCounter = 0
         
 
 
@@ -948,7 +690,7 @@ class Keyword(Model) :
     """
     keyID = 0
     
-    def __init__(self , name , arguments = None , KeywordIndex = None , speak = None , comments = None) :
+    def __init__(self , name , arguments = None , KeywordIndex = None , speak = None ) :
         if speak == None :
             self.speak = self.get_speak()
         else :
@@ -969,10 +711,6 @@ class Keyword(Model) :
         self.msg1 = Simulation.msg1
         self.msg2 = Simulation.msg2
         self.msg3 = Simulation.msg3
-        if comments == None:
-            self.comment = ''
-        else :
-            self.comment = str(comments)
 
     def __str__(self) :
         line = 'this is keyword ' + str(self.name)
@@ -991,14 +729,6 @@ class Keyword(Model) :
         #    self.args = ' '.join(arguments)
         #else :
         #    verbose( self.speak , self.msg3 , '  ERROR: argument is not list or string')
-        
-    def set_comments(self, comments='') :
-        if comments == None:
-            self.comment = ''
-        elif comments == '' :
-            pass
-        else :
-            self.comment = str(comments)
     
     def append(self , arguments ) :
         if type(self.args) == str :
@@ -1054,12 +784,6 @@ class Keyword(Model) :
 
     def get_args(self) :
         return self.args
-    
-    def get_comments(self) :
-        return self.comment
-    
-    def get_comm(self) :
-        return self.comment
     
     def arg2prop(self) :
         self.gridprop = GridProperty(self.get_args() , self.speak , self.ID)
@@ -1197,7 +921,7 @@ class GridProperty(Keyword) :
                     verbose( self.speak , self.msg3 , 'dimensions must be an integer or an tuple of integers' )
                     return False
         
-        if self.dims != None and type(self.prop) == np.ndarray :
+        if self.dims != None and type(self.prop) == numpy.ndarray :
             prod = 1
             for each in self.dims :
                 prod = prod * each

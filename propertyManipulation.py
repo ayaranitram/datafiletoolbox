@@ -20,6 +20,8 @@ def expandKeyword( keywordValues , speak=0 , expandDefaults=True) :
         1 = print every message
         2 = print final statement only
     """
+    if keywordValues == None :
+        return ''
 
     if type(keywordValues) == list :
         outformat = 'list'
@@ -52,6 +54,8 @@ def expandKeyword( keywordValues , speak=0 , expandDefaults=True) :
         temp = ' '
         rept = inputValues[star+1:starEnd]
         inte = inputValues[starIni:star]
+        if len(inte) == 0 :
+            inte = '1'
         if len(rept) > 0 :
             inte = int(inte)
             for i in range(inte) :
