@@ -25,7 +25,7 @@ class Simulation(object) :
     Objects = {}
     Count = {}
 
-    msg0 = -1
+    msg0 = 0
     msg1 = -1
     msg2 = -1
     msg3 = -1
@@ -132,6 +132,13 @@ class Simulation(object) :
         for i in range( 1 , len( Simulation.Objects[self.ID]) ) :
             contentDict[i] = ( type(Simulation.Objects[self.ID][i]) , Simulation.Objects[self.ID][i].get_name() )
         return contentDict
+    
+    def keys(self) :
+        contentDict = []
+        for i in range( 1 , len( Simulation.Objects[self.ID]) ) :
+            contentDict.append( Simulation.Objects[self.ID][i].get_name() )
+        return contentDict
+        
 
     def set_name( self, name ) :
         self.name = name
@@ -195,13 +202,16 @@ class Model(Simulation) :
         'RUNCTRL','DTLOGIC','SMARTMB',
         'SKIP','SKIP100','SKIP300','SKIPTNAV','SKIPTAB','SKIPREST',
         'END','ENDACTIO','ENDSKIP',
+        'FILLEPS',
 
         'ALL','MSUMLINS','MSUMNEWT','SEPARATE','NEWTON','TCPU','ELAPSED','MAXDPR',
         'FOPR','FOPT','FGPR','FGPT','FWPR','FWPT',
         )
 
     TableFormatKeywords = ( 'DATES','EQUALS','EQUALREG','MULTIPLY','MULTIREG',
-            'ADD','ADDREG','ADDZCORN','COPY''COPYBOX','COPYREG','OPERATE','OPERATER','MULTFLT','FAULTS',
+            'ADD','ADDREG','ADDZCORN','COPY''COPYBOX','COPYREG','OPERATE','OPERATER',
+            'THPRESFT','MULTFLT','FAULTS',
+            'TRACER',
             'GRUPTREE','GCONINJE','GINJGAS','GRUPINJE','GCONPROD','GCONINJE',
             'WELSPECS','COMPDAT','COMPDATMD','WPIMULT','WCONHIST','WRFTPLT',
             'WINJGAS','WRFT','WPIMULT','WPI',
@@ -210,7 +220,7 @@ class Model(Simulation) :
 
     UndefinedNumberOfTables = ( 'PSPLITX' , 'PSPLITY' )
 
-    TableInTableKeywords = ( 'PVTO','PVTG', )
+    TableInTableKeywords = ( 'PVTO','PVTG' )
 
     SpecialKeywords = ('TITLE','DIMENS','START','EQLDIMS','TABDIMS','WELLDIMS','GPTDIMS','GRID','INCLUDE') #'SUMMARY','SCHEDULE','INCLUDE',)
 
@@ -296,10 +306,11 @@ class Model(Simulation) :
             if item > Model.Count[self.ID] :
                 return None
         elif type(item) == str :
-            try :
-                item = Model.Objects[self.ID][0][1].index(item)
-            except :
-                return None
+            cont = self.content()
+            for each in cont :
+                if cont[each][1] == item :
+                    return Model.Objects[self.ID][each]
+            return None
         return Model.Objects[self.ID][item]
 
     def content(self) :
@@ -307,6 +318,13 @@ class Model(Simulation) :
         for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
             #contentDict[i] = ( Simulation.Objects[self.ID][0][0][i] , Simulation.Objects[self.ID][0][1][i] )
             contentDict[i] = ( type(Model.Objects[self.ID][i]) , Model.Objects[self.ID][i].get_name() )
+        return contentDict
+    
+    def keys(self) :
+        contentDict = []
+        for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
+            #contentDict[i] = ( Simulation.Objects[self.ID][0][0][i] , Simulation.Objects[self.ID][0][1][i] )
+            contentDict.append( Model.Objects[self.ID][i].get_name() )
         return contentDict
 
     def extract(self , NameCriteria = None , CaseSensitive = False ) :
@@ -395,13 +413,14 @@ class Model(Simulation) :
             eqldims = ' 5* '
         self.eqldims = expandKeyword(eqldims).split()
         if len(self.eqldims) < 5 :
-            self.eqldims = expandKeyword(' '.join(self.eqldims) + ( str( 5 - len(self.eqldims) ) + '*' ) ).split()
+            self.eqldims = self.eqldims + ['1*']*(5-len(self.eqldims))
         if self.eqldims[0] == '1*' :
             self.eqldims[0] = 1
         if self.eqldims[3] == '1*' :
             self.eqldims[3] = 1
         self.DimensionedTableKeywords['EQUIL'] = int(self.eqldims[0])
-        self.DimensionedTableKeywords['TPVD'] = int(self.eqldims[3])
+        self.DimensionedTableKeywords['SALTVD'] = int(self.eqldims[0])
+        self.DimensionedTableKeywords['TVDP'] = int(self.eqldims[3])
         self.DimensionedTableKeywords['TEMPVD'] = int(self.eqldims[0])
 
 
@@ -418,7 +437,7 @@ class Model(Simulation) :
             gptdims = ' 3* '
         self.gptdims = expandKeyword(gptdims).split()
         if len(self.gptdims) < 3 :
-            self.gptdims = expandKeyword(' '.join(self.gptdims) + ( str( 3 - len(self.gptdims) ) + '*' ) ).split()
+            self.gptdims = self.gptdims + ['1*']*(3-len(self.gptdims))
         if self.gptdims[0] == '1*' :
             self.gptdims[0] = 1
         if self.gptdims[2] == '1*' :
@@ -452,7 +471,7 @@ class Model(Simulation) :
             tabdims = ' 24* '
         self.tabdims = expandKeyword(tabdims).split()
         if len(self.tabdims) < 25 :
-            self.tabdims = expandKeyword(' '.join(self.tabdims) + ( str( 25 - len(self.tabdims) ) + '*' ) ).split()
+            self.tabdims = self.tabdims + ['1*']*(25-len(self.tabdims))
         if self.tabdims[0] == '1*' :
             self.tabdims[0] = 1
         if self.tabdims[1] == '1*' :
@@ -512,6 +531,9 @@ class Model(Simulation) :
         self.DimensionedTableKeywords['PVDG'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVTO'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVDO'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['PVTW'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['PVTWSALT'] = int(self.tabdims[1])*2
+        self.DimensionedTableKeywords['PVZG'] = int(self.tabdims[1])*2
         self.DimensionedTableKeywords['EOS'] = int(self.tabdims[8])
         self.DimensionedTableKeywords['BIC'] = int(self.tabdims[8])
         self.DimensionedTableKeywords['OMEGAA'] = int(self.tabdims[8])
@@ -563,6 +585,7 @@ class Model(Simulation) :
             return self.path
 
     def set_include(self,IncludeFile) :
+        print('  reading include file\n' + str(IncludeFile) )
         IncludeFile = IncludeFile.replace("\\","/").strip().strip("'")
         if IncludeFile[-1] == '/' :
             IncludeFile = IncludeFile[:-1]
@@ -613,7 +636,7 @@ class Model(Simulation) :
             try :
                 keyword_index = len(Model.List[self.ID]) - Model.List[self.ID][::-1].index(keyword_index) -1
             except :
-                verbose( self.speak , self.msg0 , keyword_index + ' not in keyword list')
+                verbose( self.speak , self.msg2 , keyword_index + ' not in keyword list')
         if type(keyword_index) == int and keyword_index <= Model.Count[self.ID] :
             if Model.Objects[self.ID][keyword_index].get_name() in Model.SpecialKeywords :
                 verbose( self.speak , self.msg1 , 'special keyword identified')
@@ -771,11 +794,11 @@ class Model(Simulation) :
 
             # empty line
             if len(line.strip()) == 0 :
-                verbose( speak , self.msg1 , '<  reading empty line')
+                verbose( speak , self.msg0 , '<  reading empty line')
 
             # comment line
             elif len(line.strip()) >=2 and line.strip()[:2] == '--' :
-                verbose( speak , self.msg1 , '<  reading comment line\n' + str(line))
+                verbose( speak , self.msg0 , '<  reading comment line\n' + str(line))
                 keywordComments = keywordComments + line
 
             # line containing data
@@ -828,6 +851,11 @@ class Model(Simulation) :
                     keywordName = str(values[0])
                     keywordValues = ''
                     verbose( speak , self.msg2 , '   _______________\n>>  found keyword ' + keywordName)
+                    
+                    # check for keywords that cosists of a base name plus extra characters
+                    if keywordName[:4] == 'TVDP' : # tracer keywords
+                        self.DimensionedTableKeywords[keywordName.upper()] = self.DimensionedTableKeywords['TVDP']
+                        
 
                     # save keywords that doesn't require arguments
                     if keywordName in Model.ZeroArgumentsKeywords :
@@ -967,7 +995,8 @@ class Keyword(Model) :
             #self.checkSpecials(self.name)
         else :
             self.args = None
-        self.gridprop = None
+        self.prop = None
+        self.propObject = None
         self.msg0 = Simulation.msg0
         self.msg1 = Simulation.msg1
         self.msg2 = Simulation.msg2
@@ -1012,7 +1041,7 @@ class Keyword(Model) :
                 self.args.append(arguments)
             else :
                 self.args.append(arguments)
-                verbose( self.speak , self.msg1 , '  WARNING: argument is not list or string')
+                verbose( self.speak , self.msg2 , '  WARNING: argument is not list or string')
         elif type(self.args) == list :
             if type(arguments) == str :
                 self.args.append(arguments.split())
@@ -1020,7 +1049,7 @@ class Keyword(Model) :
                 self.args.append(arguments)
             else :
                 self.args.append(arguments)
-                verbose( self.speak , self.msg1 , '  WARNING: argument is not list or string')
+                verbose( self.speak , self.msg2 , '  WARNING: argument is not list or string')
         elif type(self.args) == tuple :
             self.args = [self.args]
             if type(arguments) == str :
@@ -1029,7 +1058,7 @@ class Keyword(Model) :
                 self.args.append(arguments)
             else :
                 self.args.append(arguments)
-                verbose( self.speak , self.msg1 , '  WARNING: argument is not list or string')
+                verbose( self.speak , self.msg2 , '  WARNING: argument is not list or string')
 
     def annex(self , arguments) :
         if type(arguments) == str :
@@ -1057,6 +1086,12 @@ class Keyword(Model) :
 
     def get_args(self) :
         return self.args
+    
+    def get_prop(self) :
+        if self.prop is None :
+            if self.args is not None :
+                self.arg2prop()
+        return self.prop
 
     def get_comments(self) :
         return self.comment
@@ -1065,32 +1100,41 @@ class Keyword(Model) :
         return self.comment
 
     def arg2prop(self) :
-        self.gridprop = GridProperty(self.get_args() , self.speak , self.ID)
+        self.propObject = GridProperty(self , self.speak , self.ID)
+        self.prop = self.propObject.prop
 
 
 
 
 class GridProperty(Keyword) :
-    def __init__( self , keywordArgument , speak = 0 , parentID = None ) :
+    def __init__( self , keyword , speak = 0 , parentID = None ) :
         self.speak = speak
         self.prop = None
         self.expanded = False
         self.shaped = False
         self.type = False
         self.dims = None
+        self.name = keyword.get_name()
 
         self.msg0 = Simulation.msg0
         self.msg1 = Simulation.msg1
         self.msg2 = Simulation.msg2
         self.msg3 = Simulation.msg3
 
+        
         # expand keyword to be converted to array
+        keywordArgument = keyword.get_args()
+        if '/' in keywordArgument :
+            keywordArgument = keywordArgument[ : keywordArgument.index('/') ]
+        keywordArgument = keywordArgument.replace("\n"," ")
         keywordArgument = expandKeyword(keywordArgument)
         self.expanded = True
 
         # convert to list
         if type(keywordArgument) == tuple :
             keywordArgument = list(keywordArgument)
+        elif type(keywordArgument) == str :
+            keywordArgument = keywordArgument.split()
 
         # with the list content identify the type of the values ( int or float )
         if type(keywordArgument) == list :
@@ -1174,6 +1218,18 @@ class GridProperty(Keyword) :
 
         # set shape according to dimension
         self.reshape()
+    
+    def get_prop(self) :
+        return self.prop
+    
+    def __str__(self) :
+        line = 'this is keyword propery' + str(self.name)
+        if self.prop is not None :
+            if len(self.prop) < 80 :
+                line = line + '\n ' + str(self.prop) 
+            else :
+                line = line + '\n ' + str(self.prop[:7]) + '\n...\n  ' + str(self.args[7:])  
+        return line
 
     def reshape(self , dimensions = None , speak = None) :
         """
