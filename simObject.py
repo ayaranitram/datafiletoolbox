@@ -42,11 +42,12 @@ class Simulation(object) :
             self.name = str(self.ID)
         else :
             self.name = name
+        self.Objects = {}
+        
         Simulation.Index[self.ID] = self.name
         # .SimObjects is a dictionary that collects all the subclasses this Collection has
         Simulation.Objects[self.ID] = {}
-        Simulation.Count[self.ID] = 0
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]] = [['ObjectType'],['ObjectName']]
+        self.Count = -1
 
         self.msg0 = Simulation.msg0
         self.msg1 = Simulation.msg1
@@ -81,32 +82,30 @@ class Simulation(object) :
                     line = line + " with name '" + str(self.content()[each][1]) + "'"
         return line
 
-    def __call__(self,SimObject):
-        if type(SimObject) == int :
-            if SimObject > Simulation.Count[self.ID] :
-                return None
-        elif type(SimObject) == str :
-            try :
-                SimObject = Simulation.Objects[self.ID][0][1].index(SimObject)
-            except :
-                return None
-        return Simulation.Objects[self.ID][SimObject]
-
-    def __getitem__(self, item) :
+    def __call__(self,item):
         if type(item) == int :
-            if item > Simulation.Count[self.ID] :
+            if item <= self.Count :
+                return self.Objects[item]
+            else :
                 return None
         elif type(item) == str :
-            try :
-                item = Simulation.Objects[self.ID][0][1].index(item)
-            except :
-                return None
-        return Simulation.Objects[self.ID][item]
+            for each in self.Objects :
+                if item == self.Objects[each].name :
+                    return self.Objects[each]
+            return None
+        else :
+            for each in self.Objects :
+                if item == self.Objects[each] :
+                    return self.Objects[each]
+            return None
+
+    def __getitem__(self, item) :
+        return self.__call__(item)
 
     def __next__(self) :
-        if self.ite < Simulation.Count[self.ID] :
+        if self.ite < self.Count :
             self.ite += 1
-            return Simulation.Objects[self.ID][self.ite - 1]
+            return self.Objects[self.ite - 1]
         else :
             self.ite = 1
             raise StopIteration
@@ -115,7 +114,7 @@ class Simulation(object) :
         return self
 
     def __len__(self) :
-        return Simulation.Count[self.ID]
+        return self.Count
 
     def get_ID(self) :
         return self.ID
@@ -129,49 +128,52 @@ class Simulation(object) :
 
     def content(self) :
         contentDict = {}
-        for i in range( 1 , len( Simulation.Objects[self.ID]) ) :
-            contentDict[i] = ( type(Simulation.Objects[self.ID][i]) , Simulation.Objects[self.ID][i].get_name() )
+        for each in self.Objects :
+            contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].get_name() )
         return contentDict
     
     def keys(self) :
-        contentDict = []
-        for i in range( 1 , len( Simulation.Objects[self.ID]) ) :
-            contentDict.append( Simulation.Objects[self.ID][i].get_name() )
-        return contentDict
+        contentKeys = []
+        for each in self.Objects :
+            contentKeys.append( self.Objects[each].get_name() )
+        return tuple(contentKeys)
         
-
-    def set_name( self, name ) :
-        self.name = name
-        Simulation.Index[self.ID] = self.name
+    def set_name( self , name ) :
+        try :
+            self.name = str(name)
+        except :
+            pass
+        # Simulation.Index[self.ID] = self.name
 
     def get_name( self ) :
         return str(self.name)
 
     def add_Model(self,name=None):
-        Simulation.Count[self.ID] += 1
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]] = Model( speak = self.speak )
+        self.Count += 1
+        self.Objects[self.Count] = Model( speak = self.speak )
         if name != None :
-            Simulation.Objects[self.ID][Simulation.Count[self.ID]].set_name(name)
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]].set_SimObjectID(self.ID,Simulation.Count[self.ID])
-        Simulation.Objects[self.ID][0][0].append('Model')
-        Simulation.Objects[self.ID][0][1].append(name)
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]].set_parentID(self.ID)
-        return Simulation.Count[self.ID]
+            self.Objects[self.Count].set_name(name)
+        self.Objects[self.Count].set_SimObjectID(self.ID,self.Count)
+        # Simulation.Objects[self.ID][0][0].append('Model')
+        # Simulation.Objects[self.ID][0][1].append(name)
+        self.Objects[self.Count].set_parent(self)
+        return self.Count
 
     def LoadModelFromData(self , filename , name = None , speak = None) :
         if speak == None :
             speak = self.speak
-        Simulation.Count[self.ID] += 1
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]] = Model( speak = self.speak )
-        Simulation.Objects[self.ID][0][0].append('Model')
+        self.Count += 1
+        self.Objects[self.Count] = Model( speak = self.speak )
+        # Simulation.Objects[self.ID][0][0].append('Model')
         if name != None :
-            Simulation.Objects[self.ID][Simulation.Count[self.ID]].set_name(name)
-            Simulation.Objects[self.ID][0][1].append(name)
+            self.Objects[self.Count].set_name(name)
+            # Simulation.Objects[self.ID][0][1].append(name)
         else :
-            Simulation.Objects[self.ID][Simulation.Count[self.ID]].set_name(extension(filename)[0])
-            Simulation.Objects[self.ID][0][1].append(extension(filename)[0])
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]].set_SimObjectID(self.ID,Simulation.Count[self.ID])
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]].ReadData(filename , speak)
+            self.Objects[self.Count].set_name(extension(filename)[0])
+            # Simulation.Objects[self.ID][0][1].append(extension(filename)[0])
+        self.Objects[self.Count].set_SimObjectID(self.ID,self.Count)
+        self.Objects[self.Count].set_parent(self)
+        self.Objects[self.Count].ReadData(filename , speak)
 
 
 
@@ -226,36 +228,39 @@ class Model(Simulation) :
 
     NoSlashKeywords = ('TITLE')
 
-    def __init__( self , DataFilePath = '' , speak = None ) :
+    def __init__( self , DataFilePath = '' , speak = None , parent = None ) :
         if speak == None :
             self.speak = self.get_speak()
         else :
             self.speak = speak
         self.SimObjectID = None
-        Model.ID += 1
-        self.ID = Model.ID
-        Model.Objects[self.ID] = {}
-        Model.Count[self.ID] = 0
-        Model.List[self.ID] = ['Keywords:']
+        if parent is not None :
+            self.ID = parent.ModelID
+            parent.childID += 1
+        else :
+            self.ID = None
+        self.parent = parent
+        self.Objects = {}
+        self.Count = 0
+        self.List = []
         #self.KeyworsList = []
         self.title = ''
-        if DataFilePath == '' :
+        if DataFilePath.strip() == '' :
             self.path = ''
-        else :
-            self.path = DataFilePath.strip()
-        if self.path == '' :
             self.name = ''
         else :
+            self.path = DataFilePath.strip()
             self.name = extension(self.path)[0]
         self.closing = '/'
-        self.start = None
+        
+        
         #self.SimObjects[self.objectID] = ['Model' , self.title , self.path ]
         self.msg0 = Simulation.msg0
         self.msg1 = Simulation.msg1
         self.msg2 = Simulation.msg2
         self.msg3 = Simulation.msg3
         # the ID of the object that create this one
-        self.parentID = None
+        self.parent = None
         # model dimensions
         self.dims = None
         #self.dimX = None
@@ -267,11 +272,13 @@ class Model(Simulation) :
         self.gptdims = None
         self.DimensionedTableKeywords = { 'TUNING' : 3 ,}
 
-    def set_parentID(self, parentID):
-        self.parentID = parentID
+    def set_parent(self, parent):
+        self.parent = parent
+        if self.ID is None :
+            self.ID = parent.Count
 
-    def get_parentID(self):
-        return self.parentID
+    def get_parent(self):
+        return self.parent
 
     def __str__(self) :
         line = 'Model Object' + str(self.ID)
@@ -287,65 +294,84 @@ class Model(Simulation) :
             line = line + '\n  start date: ' + str(self.start)
         return line
 
-    def __len__(self) :
-        return Model.Count[self.ID]
+    # def __len__(self) :
+    #     # >>> like parent function <<<
+    #     return Model.Count[self.ID]
 
-    def __call__(self,ModObject):
-        if type(ModObject) == int :
-            if ModObject > Model.Count[self.ID] :
-                return None
-        elif type(ModObject) == str :
-            try :
-                ModObject = Model.Objects[self.ID][0][1].index(ModObject)
-            except :
-                return None
-        return Model.Objects[self.ID][ModObject]
-
-    def __getitem__(self, item) :
-        if type(item) == int :
-            if item > Model.Count[self.ID] :
-                return None
-        elif type(item) == str :
-            cont = self.content()
-            for each in cont :
-                if cont[each][1] == item :
-                    return Model.Objects[self.ID][each]
-            return None
-        return Model.Objects[self.ID][item]
-
-    def content(self) :
-        contentDict = {}
-        for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
-            #contentDict[i] = ( Simulation.Objects[self.ID][0][0][i] , Simulation.Objects[self.ID][0][1][i] )
-            contentDict[i] = ( type(Model.Objects[self.ID][i]) , Model.Objects[self.ID][i].get_name() )
-        return contentDict
+    # def __call__(self,ModObject):
+    #     # >>> like parent function <<<
+    #     if type(ModObject) == int :
+    #         if ModObject <= Model.Count[self.ID] :
+    #             return None
+    #     elif type(ModObject) == str :
+    #         try :
+    #             ModObject = Model.Objects[self.ID][0][1].index(ModObject)
+    #         except :
+    #             return None
+    #     return Model.Objects[self.ID][ModObject]
     
-    def keys(self) :
-        contentDict = []
-        for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
-            #contentDict[i] = ( Simulation.Objects[self.ID][0][0][i] , Simulation.Objects[self.ID][0][1][i] )
-            contentDict.append( Model.Objects[self.ID][i].get_name() )
-        return contentDict
+    # def __getitem__(self, item) :
+    #     # >>> like parent function <<<
+    #     if type(item) == int :
+    #         if item > Model.Count[self.ID] :
+    #             return None
+    #     elif type(item) == str :
+    #         cont = self.content()
+    #         for each in cont :
+    #             if cont[each][1] == item :
+    #                 return Model.Objects[self.ID][each]
+    #         return None
+    #     return Model.Objects[self.ID][item]
+
+    # def content(self) :
+    #     # >>> like parent function <<<
+    #     contentDict = {}
+    #     for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
+    #         #contentDict[i] = ( Simulation.Objects[self.ID][0][0][i] , Simulation.Objects[self.ID][0][1][i] )
+    #         contentDict[i] = ( type(Model.Objects[self.ID][i]) , Model.Objects[self.ID][i].get_name() )
+    #     return contentDict
+    
+    # def keys(self) :
+    #     # >>> like parent function <<<
+    #     contentDict = []
+    #     for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
+    #         #contentDict[i] = ( Simulation.Objects[self.ID][0][0][i] , Simulation.Objects[self.ID][0][1][i] )
+    #         contentDict.append( Model.Objects[self.ID][i].get_name() )
+    #     return contentDict
+
+    # def set_name(self,name) :
+    #     # >>> like parent function <<<
+    #     self.name = str(name)
+    #     if self.SimObjectID != None :
+    #         Simulation.Objects[self.SimObjectID[0]][0][1][self.SimObjectID[1]] = self.name
 
     def extract(self , NameCriteria = None , CaseSensitive = False ) :
         contentDict = {}
         if NameCriteria == None :
-            for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
-                contentDict[i] = ( type(Model.Objects[self.ID][i]) , Model.Objects[self.ID][i].get_name() , Model.Objects[self.ID][i].get_args() )
+            for each in self.Objects[self.ID] :
+                contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
         else :
             if type(NameCriteria) == str :
                 if CaseSensitive == False :
                     NameCriteria = NameCriteria.upper()
-                for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
-                    if Model.Objects[self.ID][i].get_name() == NameCriteria :
-                        contentDict[i] = ( type(Model.Objects[self.ID][i]) , Model.Objects[self.ID][i].get_name() , Model.Objects[self.ID][i].get_args() )
+                    for each in self.Objects :
+                        if self.Objects[each].name.upper() == NameCriteria :
+                            contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
+                else :
+                    for each in self.Objects :
+                        if self.Objects[each].name == NameCriteria :
+                            contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
             elif type(NameCriteria) == tuple or type(NameCriteria) == list :
                 if CaseSensitive == False :
                     for k in range(len(NameCriteria)) :
                         NameCriteria[k] = NameCriteria[k].upper()
-                for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
-                    if Model.Objects[self.ID][i].get_name() in NameCriteria :
-                        contentDict[i] = ( type(Model.Objects[self.ID][i]) , Model.Objects[self.ID][i].get_name() , Model.Objects[self.ID][i].get_args() )
+                    for each in self.Objects[self.ID] :
+                        if self.Objects[each].name.upper() in NameCriteria :
+                            contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
+                else :
+                    for each in self.Objects[self.ID] :
+                        if self.Objects[each].name in NameCriteria :
+                            contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
         return contentDict
 
     def set_SimObjectID(self,intSimulationID,intModelID):
@@ -360,11 +386,6 @@ class Model(Simulation) :
         self.title = title
         if self.name == '' :
             self.name = self.title
-
-    def set_name(self,name) :
-        self.name = str(name)
-        if self.SimObjectID != None :
-            Simulation.Objects[self.SimObjectID[0]][0][1][self.SimObjectID[1]] = self.name
 
     def set_dimens(self,dims) :
         if '/' in dims :
@@ -384,25 +405,25 @@ class Model(Simulation) :
 
     def get_dimens(self) :
         if self.dims == None :
-            return ''
+            return None
         else :
             return self.dims
 
     def get_dimX(self) :
         if self.dims == None :
-            return ''
+            return None
         else :
             return self.dims[0]
 
     def get_dimY(self) :
         if self.dims == None :
-            return ''
+            return None
         else :
             return self.dims[1]
 
     def get_dimZ(self) :
         if self.dims == None :
-            return ''
+            return None
         else :
             return self.dims[2]
 
@@ -612,37 +633,35 @@ class Model(Simulation) :
 
     def set_newKeyword(self , name , arguments = None) :
         #self.KeyworsList.append(name)
-        Model.List[self.ID].append(name)
-        Model.Count[self.ID] += 1
-        Model.Objects[self.ID][Model.Count[self.ID]] = Keyword(name , arguments , KeywordIndex = Model.Count[self.ID] , speak = self.speak )
-        Model.Objects[self.ID][Model.Count[self.ID]].set_parentID(self.ID)
+        self.List.append(name)
+        self.Count += 1
+        self.Objects[self.Count] = Keyword(name , arguments , KeywordIndex = self.Count , speak = self.speak )
+        self.Objects[self.Count].set_parent(self)
         #self.checkSpecials(name)
-        self.checkSpecials( Model.Count[self.ID] )
+        self.checkSpecials( self.Count )
 
     def set_keywordComments(self, keywordComments , KeywordIndex = None ) :
         if KeywordIndex == None :
-            KeywordIndex = Model.Count[self.ID]
-        Model.Objects[self.ID][KeywordIndex].set_comments(keywordComments)
-
-
+            KeywordIndex = self.Count
+        self.Objects[KeywordIndex].set_comments(keywordComments)
 
     def set_KeywordArgument(self , arguments) :
-        Model.Objects[self.ID][Model.Count[self.ID]].append(arguments)
-
+        self.Objects[self.Count].append(arguments)
 
     def checkSpecials( self , keyword_index ) :
 #        print('keyword index ' + str(keyword_index))
         if type(keyword_index) == str :
             try :
-                keyword_index = len(Model.List[self.ID]) - Model.List[self.ID][::-1].index(keyword_index) -1
+                keyword_index = len(self.List) - self.List[::-1].index(keyword_index) -1
             except :
                 verbose( self.speak , self.msg2 , keyword_index + ' not in keyword list')
-        if type(keyword_index) == int and keyword_index <= Model.Count[self.ID] :
-            if Model.Objects[self.ID][keyword_index].get_name() in Model.SpecialKeywords :
+        if type(keyword_index) == int and keyword_index <= self.Count :
+            if self.Objects[keyword_index].get_name() in Model.SpecialKeywords :
                 verbose( self.speak , self.msg1 , 'special keyword identified')
-                if Model.Objects[self.ID][keyword_index] != None :
-                    Model.Objects[self.ID][keyword_index].expand()
-                exec('self.set_' + str(Model.Objects[self.ID][keyword_index].get_name().lower()) + '("' + Model.Objects[self.ID][keyword_index].get_args() + '")' )
+                if self.Objects[keyword_index] != None :
+                    self.Objects[keyword_index].expand()
+                exec('self.set_' + str(self.Objects[keyword_index].get_name().lower()) + '("' + self.Objects[keyword_index].get_args() + '")' )
+                
 
 
     def COMPDATtable(self):
@@ -716,7 +735,7 @@ class Model(Simulation) :
                 row = [ wconinjhDate.strip() ] + ['WCONINJH'] + expandKeyword(line).split()
                 ProdInjTable.append(row)
 
-        for each in wconprodDict :
+        for each in wconprodArray :
             if each < datesMin :
                 wconprodDate = self.start
             else :
@@ -732,7 +751,7 @@ class Model(Simulation) :
                 row = [ wconprodDate.strip() ] + ['WCONPROD'] + expandKeyword(line).split()
                 ProdInjTable.append(row)
 
-        for each in wconinjeDict :
+        for each in wconinjeArray :
             if each < datesMin :
                 wconinjeDate = self.start
             else :
@@ -977,16 +996,19 @@ class Keyword(Model) :
     """
     object to contain every keyword
     """
-    keyID = 0
 
-    def __init__(self , name , arguments = None , KeywordIndex = None , speak = None , comments = None) :
+    def __init__( self , name , arguments = None , KeywordIndex = None , speak = None , comments = None , parent = None ) :
         if speak == None :
             self.speak = self.get_speak()
         else :
             self.speak = speak
-        Keyword.keyID += 1
-        self.ID = Keyword.keyID
+        # Keyword.keyID += 1
+        if parent is not None :
+            self.ID = parent.Count
+        else :
+            self.ID = None
         self.name = name
+        self.parent = parent
         self.expanded = False
         #self.KeyworsList.append(name)
         self.indexInModel = KeywordIndex
@@ -1005,6 +1027,9 @@ class Keyword(Model) :
             self.comment = ''
         else :
             self.comment = str(comments)
+
+    def get_dimens(self) :
+        return self.parent.get_dimens()
 
     def __str__(self) :
         line = 'this is keyword ' + str(self.name)
@@ -1097,23 +1122,23 @@ class Keyword(Model) :
         return self.comment
 
     def get_comm(self) :
-        return self.comment
+        return self.comments()
 
     def arg2prop(self) :
-        self.propObject = GridProperty(self , self.speak , self.ID)
+        self.propObject = GridProperty( self , self.speak )
         self.prop = self.propObject.prop
 
 
 
 
 class GridProperty(Keyword) :
-    def __init__( self , keyword , speak = 0 , parentID = None ) :
+    def __init__( self , keyword , speak = 0 ) :
         self.speak = speak
         self.prop = None
         self.expanded = False
         self.shaped = False
         self.type = False
-        self.dims = None
+        self.parent = keyword
         self.name = keyword.get_name()
 
         self.msg0 = Simulation.msg0
@@ -1239,7 +1264,7 @@ class GridProperty(Keyword) :
         """
         # if dimensions are known give the appropiate shape to the array
         if dimensions == None :
-            self.dims = self.get_dimens()
+            dimensions = self.parent.get_dimens()
 
         elif type(dimensions) == str :
             dimensions = dimensions.split()
@@ -1256,12 +1281,12 @@ class GridProperty(Keyword) :
                     verbose( self.speak , self.msg3 , 'dimensions must be an integer or an tuple of integers' )
                     return False
 
-        if self.dims != None and type(self.prop) == np.ndarray :
+        if dimensions != None and type(self.prop) == np.ndarray :
             prod = 1
-            for each in self.dims :
+            for each in self.get_dimens() :
                 prod = prod * each
             if prod == len(self.prop) :
-                self.prop = self.prop.reshape(self.dims)
+                self.prop = self.prop.reshape(self.get_dimens())
                 self.shaped = True
                 return True
             else :
