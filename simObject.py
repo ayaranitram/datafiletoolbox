@@ -227,6 +227,8 @@ class Model(Simulation) :
     SpecialKeywords = ('TITLE','DIMENS','START','EQLDIMS','TABDIMS','WELLDIMS','GPTDIMS','GRID','INCLUDE') #'SUMMARY','SCHEDULE','INCLUDE',)
 
     NoSlashKeywords = ('TITLE')
+    
+    KnownTables = {'SWFN' : ['Sw','Krw','Kro']}
 
     def __init__( self , DataFilePath = '' , speak = None , parent = None ) :
         if speak == None :
@@ -271,6 +273,9 @@ class Model(Simulation) :
         self.tabdims = None
         self.gptdims = None
         self.DimensionedTableKeywords = { 'TUNING' : 3 ,}
+
+    def get_closing(self) :
+        return self.closing
 
     def set_parent(self, parent):
         self.parent = parent
@@ -388,8 +393,8 @@ class Model(Simulation) :
             self.name = self.title
 
     def set_dimens(self,dims) :
-        if '/' in dims :
-            dims = dims[ : dims.index('/') ]
+        if self.get_closing() in dims :
+            dims = dims[ : dims.index(self.get_closing()) ]
         if type(dims) == str :
             dims = dims.split()
         temporal = []
@@ -428,8 +433,8 @@ class Model(Simulation) :
             return self.dims[2]
 
     def set_eqldims(self,eqldims) :
-        if '/' in eqldims :
-            eqldims = eqldims[ : eqldims.index('/') ]
+        if self.get_closing() in eqldims :
+            eqldims = eqldims[ : eqldims.index(self.get_closing()) ]
         if eqldims.strip() == '' :
             eqldims = ' 5* '
         self.eqldims = expandKeyword(eqldims).split()
@@ -452,8 +457,8 @@ class Model(Simulation) :
             return self.eqldims
 
     def set_gptdims(self,gptdims) :
-        if '/' in gptdims :
-            gptdims = gptdims[ : gptdims.index('/') ]
+        if self.get_closing() in gptdims :
+            gptdims = gptdims[ : gptdims.index(self.get_closing()) ]
         if gptdims.strip() == '' :
             gptdims = ' 3* '
         self.gptdims = expandKeyword(gptdims).split()
@@ -475,8 +480,8 @@ class Model(Simulation) :
             return self.gptdims
 
     def set_welldims(self,welldims):
-        if '/' in welldims :
-            welldims = welldims[ : welldims.index('/') ]
+        if self.get_closing() in welldims :
+            welldims = welldims[ : welldims.index(self.get_closing()) ]
         self.welldims = expandKeyword(welldims).split()
 
     def get_welldims(self):
@@ -486,8 +491,8 @@ class Model(Simulation) :
             return self.welldims
 
     def set_tabdims(self,tabdims) :
-        if '/' in tabdims :
-            tabdims = tabdims[ : tabdims.index('/') ]
+        if self.get_closing() in tabdims :
+            tabdims = tabdims[ : tabdims.index(self.get_closing()) ]
         if tabdims.strip() == '' :
             tabdims = ' 24* '
         self.tabdims = expandKeyword(tabdims).split()
@@ -608,28 +613,26 @@ class Model(Simulation) :
     def set_include(self,IncludeFile) :
         print('  reading include file\n' + str(IncludeFile) )
         IncludeFile = IncludeFile.replace("\\","/").strip().strip("'")
-        if IncludeFile[-1] == '/' :
+        if IncludeFile[-1] == self.get_closing() :
             IncludeFile = IncludeFile[:-1]
         if "'" in IncludeFile :
             IncludeFile = IncludeFile.strip().strip("'")
         IncludePath = extension(self.path)[2].strip("'")
         IncludeFile = IncludeFile.strip().strip("'")
-#        if self.path[-1] == '/' :
+#        if self.path[-1] == self.get_closing() :
 #            IncludePath = self.path[:-1]
 #        print('\n' + IncludePath + '\n' + IncludeFile )
-        if IncludeFile[0] == '/' :
+        if IncludeFile[0] == self.get_closing() :
             IncludeFile = IncludeFile[1:]
         IncludePath = IncludePath + IncludeFile
-#        IncludePath = IncludePath + '/' + IncludeFile
+#        IncludePath = IncludePath + self.get_closing() + IncludeFile
         self.ReadData(IncludePath)
 
     def set_summary(self) :
         self.SUMMARY = True
-#        self.closing = 'SCHEDULE'
 
     def set_schedule(self) :
         self.SUMMARY = False
-#        self.closing = '/'
 
     def set_newKeyword(self , name , arguments = None) :
         #self.KeyworsList.append(name)
@@ -778,13 +781,13 @@ class Model(Simulation) :
         """
 
         def appendArgument(previous='',new='') :
-            if '/' in new :
+            if self.get_closing() in new :
                 # keywords that can have / as part of the argument
                 if keywordName == 'INCLUDE' :
-                    return previous + new[ : len(new) - new[::-1].index('/')+1].strip('\n') + '\n'
+                    return previous + new[ : len(new) - new[::-1].index(self.get_closing())+1].strip('\n') + '\n'
                 # regular keywords
                 else :
-                    return previous + new[:new.index('/')+1].strip('\n') + '\n'
+                    return previous + new[:new.index(self.get_closing())+1].strip('\n') + '\n'
             else :
                 return previous + new.strip('\n') + '\n'
 
@@ -894,16 +897,16 @@ class Model(Simulation) :
                 else : # elif keywordFlag == True :
 
                     # interpreting slash in line
-                    if '/' in line :
+                    if self.get_closing() in line :
 
                         # check for comments after slash
-                        if len( line[ line.index('/')+1 : ].strip() ) > 0 :
+                        if len( line[ line.index(self.get_closing())+1 : ].strip() ) > 0 :
                             keywordComments = keywordComments + line
 
                         # keywords that must have only one argument line
                         if keywordName not in Model.TableFormatKeywords and keywordName not in self.DimensionedTableKeywords :
                             # save the arguments in case / is not the first character
-                            if line.strip().index('/') > 0 :
+                            if line.strip().index(self.get_closing()) > 0 :
                                 keywordValues = appendArgument( keywordValues ,  line )
                             self.set_newKeyword( keywordName ,  keywordValues )
                             self.set_keywordComments( keywordComments )
@@ -915,7 +918,7 @@ class Model(Simulation) :
                         elif keywordName in Model.UndefinedNumberOfTables :
 
                             # found closing slash
-                            if line.strip().index('/') == 0 :
+                            if line.strip().index(self.get_closing()) == 0 :
 
                                 # first slash found, it is closing a table
                                 if slashCounter == 0 :
@@ -939,7 +942,7 @@ class Model(Simulation) :
                         elif keywordName in Model.TableFormatKeywords :
 
                             # found closing slash
-                            if line.strip().index('/') == 0 :
+                            if line.strip().index(self.get_closing()) == 0 :
                                 verbose( speak , self.msg1 , '<< reading final slash, end of keyword ' + keywordName)
                                 self.set_newKeyword( keywordName ,  keywordValues )
                                 self.set_keywordComments( keywordComments )
@@ -948,7 +951,7 @@ class Model(Simulation) :
                                 keywordName = ''
 
                             # reading table row
-                            else : # if line.strip().index('/') > 0 :
+                            else : # if line.strip().index(self.get_closing()) > 0 :
                                 keywordValues = appendArgument( keywordValues ,  line )
 
                         # keywords that must have a specific number of argument lines
@@ -957,7 +960,7 @@ class Model(Simulation) :
 
                             # in case of TableInTable the closing slash is first character in the line
                             if keywordName in Model.TableInTableKeywords :
-                                if line.strip().index('/') == 0 :
+                                if line.strip().index(self.get_closing()) == 0 :
                                     slashCounter = slashCounter + 1
 
                             # slash always closes a table
@@ -966,7 +969,7 @@ class Model(Simulation) :
 
                             # slash closing keyword or table
                             if slashCounter == numberOfKeywordTables :
-                                keywordValues = appendArgument( keywordValues ,  line )
+                                # keywordValues = appendArgument( keywordValues ,  line )
                                 self.set_newKeyword( keywordName ,  keywordValues )
                                 self.set_keywordComments( keywordComments )
                                 keywordFlag = False
@@ -974,7 +977,7 @@ class Model(Simulation) :
                                 keywordName = ''
 
                     # only data line:
-                    else : # if '/' not in line :
+                    else : # if self.get_closing() not in line :
 #                        slashCounter = 0
                         keywordValues = appendArgument( keywordValues ,  line )
 
@@ -1019,6 +1022,8 @@ class Keyword(Model) :
             self.args = None
         self.prop = None
         self.propObject = None
+        self.table = None
+        self.tableObject = None
         self.msg0 = Simulation.msg0
         self.msg1 = Simulation.msg1
         self.msg2 = Simulation.msg2
@@ -1030,6 +1035,9 @@ class Keyword(Model) :
 
     def get_dimens(self) :
         return self.parent.get_dimens()
+    
+    def get_closing(self) :
+        return self.parent.get_closing()
 
     def __str__(self) :
         line = 'this is keyword ' + str(self.name)
@@ -1118,6 +1126,12 @@ class Keyword(Model) :
                 self.arg2prop()
         return self.prop
 
+    def get_table(self) :
+        if self.table is None :
+            if self.args is not None :
+                self.arg2table()
+        return self.table
+
     def get_comments(self) :
         return self.comment
 
@@ -1128,11 +1142,117 @@ class Keyword(Model) :
         self.propObject = GridProperty( self , self.speak )
         self.prop = self.propObject.prop
 
+    def arg2table(self) :
+        self.tableObject = KeywordTable( self , self.speak )
+        self.table = self.tableObject.table
+
+    # check type of values in argument
+    def inferType(self,keywordArgument) :
+        if type(keywordArgument) == str :
+            dtypeInferred = 'int'
+            for i in range(len(keywordArgument)) :
+                try :
+                    temp = int(keywordArgument[i])
+                except :
+                    dtypeInferred = 'float'
+                    try :
+                        temp = float(keywordArgument[i])
+                    except :
+                        dtypeInferred = 'str'
+        elif type(keywordArgument) == list or type(keywordArgument) == tuple :
+            dtypeInferred = 'int'
+            for each in keywordArgument :
+                if type(each) == str :
+                    try :
+                        temp = int(each)
+                    except :
+                        dtypeInferred = 'float'
+                        try :
+                            temp = float(each)
+                        except :
+                            dtypeInferred = 'str'
+                elif type(each) == float :
+                    if int(each) != each :
+                        dtypeInferred = 'float'
+                else :
+                    dtypeInferred = 'str'
+        else :
+            dtypeInferred = None
+                
+        return dtypeInferred
+
+
+
+class KeywordTable(Keyword) :
+    def __init__( self , keyword , speak = 0 , force=False ) :
+        self.speak = speak
+        self.table = None
+        self.count = 1 # keyword.DimensionedTableKeywords[keyword.get_name()]
+        self.columns = 0
+        self.parent = keyword
+        self.name = self.parent.get_name()
+
+        self.msg0 = Simulation.msg0
+        self.msg1 = Simulation.msg1
+        self.msg2 = Simulation.msg2
+        self.msg3 = Simulation.msg3
+    
+        self.arg2table()    
+    
+    def arg2table(self) :
+        keywordArgument = self.parent.get_args().split('\n')
+
+        tableEnd = False
+        tableDict = {}
+        for line in keywordArgument :
+            row = expandKeyword(line)
+            if self.get_closing() in row :
+                tableEnd = True
+                row = row[ : row.index(self.get_closing()) ]
+            row = row.split()
+            
+            if len(row) > 0 :
+                # initialize dictionary
+                if self.columns == 0 :
+                    self.columns = len(row)
+                    for c in range( self.columns + 1 ) :
+                        tableDict[c] = []
+                    
+                # process every row
+                row = [self.count] + row
+                for c in range( self.columns + 1 ) :
+                    tableDict[c].append( row[c] )
+                # check if is last row of table 
+                if tableEnd :
+                    self.count += 1
+                    tableEnd = False
+        
+        for col in tableDict :
+            dtypeInferred = self.inferType( tableDict[col] )
+            for i in range(len(tableDict[col])) :
+                if dtypeInferred == 'int' :
+                    
+                    tableDict[col][i] = int(tableDict[col][i])
+                elif dtypeInferred == 'float' :
+                    tableDict[col][i] = float(tableDict[col][i])
+        
+        if self.name in Model.KnownTables :
+            ColNames = ['Table'] + Model.KnownTables[self.name]
+        else :
+            ColNames = ['Table']
+            for c in range( self.columns ) :
+                ColNames.append('Col_' + str(c+1))
+            
+        self.table = pd.DataFrame(data=tableDict)
+        self.table.rename(columns=dict(zip(self.table.columns,ColNames)),inplace=True)
+        self.table.set_index('Table',inplace=True)
+
+
 
 
 
 class GridProperty(Keyword) :
-    def __init__( self , keyword , speak = 0 ) :
+    def __init__( self , keyword , speak = 0 , force=False ) :
         self.speak = speak
         self.prop = None
         self.expanded = False
@@ -1145,12 +1265,14 @@ class GridProperty(Keyword) :
         self.msg1 = Simulation.msg1
         self.msg2 = Simulation.msg2
         self.msg3 = Simulation.msg3
-
         
+        self.arg2prop()
+
+    def arg2prop(self) :
         # expand keyword to be converted to array
-        keywordArgument = keyword.get_args()
-        if '/' in keywordArgument :
-            keywordArgument = keywordArgument[ : keywordArgument.index('/') ]
+        keywordArgument = self.parent.get_args()
+        if self.get_closing() in keywordArgument :
+            keywordArgument = keywordArgument[ : keywordArgument.index(self.get_closing()) ]
         keywordArgument = keywordArgument.replace("\n"," ")
         keywordArgument = expandKeyword(keywordArgument)
         self.expanded = True
@@ -1163,83 +1285,16 @@ class GridProperty(Keyword) :
 
         # with the list content identify the type of the values ( int or float )
         if type(keywordArgument) == list :
-            countInt = []
-            countFloat = []
-            countStr = []
-            countOther = []
-            typeStr = None
-
-            for i in range(len(keywordArgument)) :
-                if type(keywordArgument[i]) == int :
-                    countInt.append(i)
-                elif type(keywordArgument[i]) == float :
-                    countFloat.append(i)
-                elif type(keywordArgument[i]) == str :
-                    countStr.append(i)
-                    if '.' in keywordArgument[i] :
-                        typeStr = float
-                    elif ',' in keywordArgument[i] :
-                        typeStr = float
-                    else :
-                        if typeStr == None :
-                            typeStr = int
-                else :
-                    countOther.append(i)
-
-            if len(countOther) > 0 :
-                verbose( self.speak , self.msg3 , 'input type not identified: ' + str(keywordArgument[countOther[0]]) + ' type: ' + str(type(keywordArgument[countOther[0]])) + '.')
-            if len(countFloat) > 0 :
-                self.type = float
-            if len(countInt) > 0 :
-                if len(countFloat) > 0 :
-                    verbose( self.speak , self.msg2 , 'integers found mixed with floats in keyword arguments')
-                    for each in countInt :
-                        keywordArgument[each] = float(keywordArgument[each])
-                else :
-                    self.type = int
-            if len(countStr) > 0 :
-                if self.type == float :
-                    for each in countStr :
-                        try :
-                            keywordArgument[each] = float(keywordArgument[each])
-                        except :
-                            verbose( self.speak , self.msg3 , 'input type not identified: ' + str(keywordArgument[each]) + ' type: ' + str(type(keywordArgument[each])) + '.')
-                elif self.type == int :
-                    for each in countStr :
-                        try :
-                            keywordArgument[each] = int(keywordArgument[each])
-                        except :
-                            verbose( self.speak , self.msg3 , 'input type not identified: ' + str(keywordArgument[each]) + ' type: ' + str(type(keywordArgument[each])) + '.')
-
-        # in case string is received, identify the type of the values and then convert to list
-        elif type(keywordArgument) == str :
-            if '.' in ' '.join(keywordArgument) :
-                self.type = float
-            elif ',' in ' '.join(keywordArgument) :
-                self.type = float
-            else :
-                self.type = int
-
-            keywordArgument = keywordArgument.split()
-            if self.type == float :
-                for each in range(len(keywordArgument)) :
-                    try :
-                        keywordArgument[each] = float(keywordArgument[each])
-                    except :
-                        verbose( self.speak , self.msg3 , 'input type not identified: ' + str(keywordArgument[each]) + ' type: ' + str(type(keywordArgument[each])) + '.')
-            elif self.type == int :
-                for each in range(len(keywordArgument)) :
-                    try :
-                        keywordArgument[each] = int(keywordArgument[each])
-                    except :
-                        verbose( self.speak , self.msg3 , 'input type not identified: ' + str(keywordArgument[each]) + ' type: ' + str(type(keywordArgument[each])) + '.')
-
-        else :
-            # might be a numpy array or something else
-            pass
+            dtypeInferred = self.inferType(keywordArgument)
+                        
+        else : # might be a numpy array or something else
+            try :
+                dtypeInferred = keywordArgument.dtype
+            except :
+                dtypeInferred = None
 
         # create numpy array
-        self.prop = np.array( keywordArgument )
+        self.prop = np.array( keywordArgument , dtype=dtypeInferred  )
 
         # set shape according to dimension
         self.reshape()
