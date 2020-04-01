@@ -44,9 +44,9 @@ class Simulation(object) :
             self.name = name
         self.Objects = {}
         
-        Simulation.Index[self.ID] = self.name
+        # Simulation.Index[self.ID] = self.name
         # .SimObjects is a dictionary that collects all the subclasses this Collection has
-        Simulation.Objects[self.ID] = {}
+        # Simulation.Objects[self.ID] = {}
         self.Count = -1
 
         self.msg0 = Simulation.msg0
@@ -228,7 +228,14 @@ class Model(Simulation) :
 
     NoSlashKeywords = ('TITLE')
     
-    KnownTables = {'SWFN' : ['Sw','Krw','Kro']}
+    KnownTables = {'SWFN' : ['Sw','Krw','Pcwo'],
+                   'SOF2' : ['So','Krow'],
+                   'SOF3' : ['So','Krow','Krog'],
+                   'SGFN' : ['Sg','Krg','Pcog'],
+                   'PVDO' : ['Press','Bo','Uo'],
+                   'PVDG' : ['Press','Bg','Ug'],
+                   'PVZG' : ['Press','Z','Visc'],
+                   }
 
     def __init__( self , DataFilePath = '' , speak = None , parent = None ) :
         if speak == None :
@@ -353,8 +360,14 @@ class Model(Simulation) :
     def extract(self , NameCriteria = None , CaseSensitive = False ) :
         contentDict = {}
         if NameCriteria == None :
-            for each in self.Objects[self.ID] :
+            for each in self.Objects :
                 contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
+                # if self.Objects[each].get_prop() is not None :
+                #     contentDict[each] = ( self.Objects[each].get_name() , self.Objects[each].get_prop() )
+                # elif self.Objects[each].get_table() is not None :
+                #     contentDict[each] = ( self.Objects[each].get_name() , self.Objects[each].get_table() )
+                # else :
+                #     contentDict[each] = ( self.Objects[each].get_name() , self.Objects[each].get_args() )
         else :
             if type(NameCriteria) == str :
                 if CaseSensitive == False :
@@ -370,11 +383,11 @@ class Model(Simulation) :
                 if CaseSensitive == False :
                     for k in range(len(NameCriteria)) :
                         NameCriteria[k] = NameCriteria[k].upper()
-                    for each in self.Objects[self.ID] :
+                    for each in self.Objects :
                         if self.Objects[each].name.upper() in NameCriteria :
                             contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
                 else :
-                    for each in self.Objects[self.ID] :
+                    for each in self.Objects :
                         if self.Objects[each].name in NameCriteria :
                             contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
         return contentDict
@@ -1110,8 +1123,8 @@ class Keyword(Model) :
 
     def set_name(self , name) :
         self.name = str(name)
-        if self.indexInModel != None :
-            Model.List[self.ID][self.indexInModel] = self.name
+        # if self.indexInModel != None :
+        #     Model.List[self.ID][self.indexInModel] = self.name
             #self.KeyworsList[self.indexInModel] = self.name
 
     def get_name(self) :
