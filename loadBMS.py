@@ -12,7 +12,8 @@ import datafiletoolbox as dftb
 # from datafiletoolbox import expandKeyword
 BMS = dftb.simObject.Simulation()
 # BMS_HM = BMS.LoadModelFromData('C:/Users/mcaraya/OneDrive - Cepsa/git/sampleData/bms/HM_AZ45_E_1/HM_AZ45_E_1.DATA')
-BMS.LoadModelFromData('D:/git/sampleData/bms/HM_AZ45_E_1/HM_AZ45_E_1.DATA')
+# BMS.LoadModelFromData('D:/git/sampleData/bms/HM_AZ45_E_1/HM_AZ45_E_1.DATA')
+BMS.LoadModelFromData('C:/Users/mcaraya/OneDrive - Cepsa/git/sampleData/bms/HM_AZ45_E_1/HM_AZ45_E_1.DATA')
 SATNUM = BMS[BMS.keys()[0]]['SATNUM'].get_prop()
 PORO = BMS[BMS.keys()[0]]['PORO'].get_prop()
 PERMX = BMS[BMS.keys()[0]]['PERMX'].get_prop()

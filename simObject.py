@@ -194,10 +194,11 @@ class Model(Simulation) :
 
     ZeroArgumentsKeywords = (
         'RUNSPEC','GRID','EDIT','PROPS','REGIONS','SOLUTION','SUMMARY','SCHEDULE',
-        'ECHO','NOECHO','ENDBOX','NONNC','MONITOR','NOSIM',
+        'INIT',
+        'ECHO','NOECHO','ENDBOX','NONNC','MONITOR','NOSIM','RPTRUNSP',
         'FREEZEPC',
         'FIELD','METRIC','CART',
-        'OIL','WATER','GAS','DISGAS','VAPOIL','BRINE','API',
+        'OIL','WATER','GAS','DISGAS','VAPOIL','BRINE','API','STONE2','PRCORR',
         'FMTOUT','FMTIN','UNIFOUT','UNIFIN','MULTOUT','MULTIN',
         'IMPLICIT','AIM','IMPES','AITS','BPARA',
         'AQUCON','AQUCT','AQUANCON','AQUCHWAT','AQUFETP','AQUFLUX',
@@ -207,24 +208,27 @@ class Model(Simulation) :
         'FILLEPS',
 
         'ALL','MSUMLINS','MSUMNEWT','SEPARATE','NEWTON','TCPU','ELAPSED','MAXDPR',
-        'FOPR','FOPT','FGPR','FGPT','FWPR','FWPT',
+        'FOPR','FOPT','FGPR','FGPT','FWPR','FWPT','RSM',
         )
 
     TableFormatKeywords = ( 'DATES','EQUALS','EQUALREG','MULTIPLY','MULTIREG',
-            'ADD','ADDREG','ADDZCORN','COPY''COPYBOX','COPYREG','OPERATE','OPERATER',
+            'ADD','ADDREG','ADDZCORN','COPY','COPYBOX','COPYREG','OPERATE','OPERATER',
             'THPRESFT','MULTFLT','FAULTS',
             'TRACER',
+            'FIELDSEP','FIPSEP',
             'GRUPTREE','GCONINJE','GINJGAS','GRUPINJE','GCONPROD','GCONINJE',
             'WELSPECS','COMPDAT','COMPDATMD','WPIMULT','WCONHIST','WRFTPLT',
             'WINJGAS','WRFT','WPIMULT','WPI',
             'WCONINJH','WCONPROD','WCONINJE','WELTARG','ACTIONX',
+            'UDQ',
             )
 
     UndefinedNumberOfTables = ( 'PSPLITX' , 'PSPLITY' )
 
     TableInTableKeywords = ( 'PVTO','PVTG' )
 
-    SpecialKeywords = ('TITLE','DIMENS','START','EQLDIMS','TABDIMS','WELLDIMS','GPTDIMS','GRID','INCLUDE') #'SUMMARY','SCHEDULE','INCLUDE',)
+    SpecialKeywords = ('TITLE','DIMENS','START','EQLDIMS','TABDIMS','WELLDIMS','GPTDIMS','ROCKCOMP',
+                       'INCLUDE',) #'SUMMARY','SCHEDULE','INCLUDE',)
 
     NoSlashKeywords = ('TITLE')
     
@@ -250,7 +254,7 @@ class Model(Simulation) :
             self.ID = None
         self.parent = parent
         self.Objects = {}
-        self.Count = 0
+        self.Count = -1
         self.List = []
         #self.KeyworsList = []
         self.title = ''
@@ -279,7 +283,17 @@ class Model(Simulation) :
         self.welldims = None
         self.tabdims = None
         self.gptdims = None
-        self.DimensionedTableKeywords = { 'TUNING' : 3 ,}
+        self.rockcomp = None
+        self.DimensionedTableKeywords = {'TUNING' : 3 ,
+                                         # 'CNAMES' : 1 ,
+                                         # 'SCALECRS' : 1 ,
+                                         # 'DNGL' : 1 , 
+                                         # 'RPTRST' : 1 ,
+                                         # 'RPTSCHED' : 1 ,
+                                         # 'RPTSMRY' : 1 ,
+                                         # 'RPTSOL' : 1 ,
+                                         # 'RSCONST' : 1 ,
+                                         }
 
     def get_closing(self) :
         return self.closing
@@ -459,8 +473,14 @@ class Model(Simulation) :
             self.eqldims[3] = 1
         self.DimensionedTableKeywords['EQUIL'] = int(self.eqldims[0])
         self.DimensionedTableKeywords['SALTVD'] = int(self.eqldims[0])
-        self.DimensionedTableKeywords['TVDP'] = int(self.eqldims[3])
         self.DimensionedTableKeywords['TEMPVD'] = int(self.eqldims[0])
+        self.DimensionedTableKeywords['ZMFVD'] = int(self.eqldims[0])
+        self.DimensionedTableKeywords['RSVD'] = int(self.eqldims[0])
+        self.DimensionedTableKeywords['RVVD'] = int(self.eqldims[0])
+        self.DimensionedTableKeywords['PDVD'] = int(self.eqldims[0])
+        self.DimensionedTableKeywords['PBVD'] = int(self.eqldims[0])
+        self.DimensionedTableKeywords['TVDP'] = int(self.eqldims[3])
+        
 
 
     def get_eqldims(self) :
@@ -496,6 +516,27 @@ class Model(Simulation) :
         if self.get_closing() in welldims :
             welldims = welldims[ : welldims.index(self.get_closing()) ]
         self.welldims = expandKeyword(welldims).split()
+
+    def set_rockcomp(self,rockcomp):
+        if self.get_closing() in rockcomp :
+            rockcomp = rockcomp[ : rockcomp.index(self.get_closing()) ]
+        self.rockcomp = expandKeyword(rockcomp).split()
+        if len(self.rockcomp) < 5 :
+            self.rockcomp = self.rockcomp + ['1*']*(5-len(self.rockcomp))
+        if self.rockcomp[0] == '1*' :
+            self.rockcomp[0] = 'REVERS'
+        if self.rockcomp[1] == '1*' :
+            self.rockcomp[1] = 1
+        if self.rockcomp[2] == '1*' :
+            self.rockcomp[2] = 'NO'
+        if self.rockcomp[3] == '1*' :
+            self.rockcomp[3] = '1*'
+        if self.rockcomp[4] == '1*' :
+            self.rockcomp[4] = 0
+        self.DimensionedTableKeywords['ROCKPAMA'] = int(self.rockcomp[1])
+        self.DimensionedTableKeywords['ROCKPMAT'] = int(self.rockcomp[1])
+        self.DimensionedTableKeywords['ROCKTAB'] = int(self.rockcomp[1])
+        self.DimensionedTableKeywords['ROCKTABH'] = int(self.rockcomp[1])
 
     def get_welldims(self):
         if self.welldims == None :
@@ -569,11 +610,22 @@ class Model(Simulation) :
         self.DimensionedTableKeywords['PVTG'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVDG'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVTO'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['PVCO'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['PVCDO'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVDO'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVTW'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['PVDS'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['ROCK'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['RSCONSTT'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['RVCONSTT'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['BDENSITY'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['DENSITY'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['GRAVITY'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVTWSALT'] = int(self.tabdims[1])*2
         self.DimensionedTableKeywords['PVZG'] = int(self.tabdims[1])*2
         self.DimensionedTableKeywords['EOS'] = int(self.tabdims[8])
+        self.DimensionedTableKeywords['LBCCOEFR'] = int(self.tabdims[8])
+        self.DimensionedTableKeywords['PARACHOR'] = int(self.tabdims[8])
         self.DimensionedTableKeywords['BIC'] = int(self.tabdims[8])
         self.DimensionedTableKeywords['OMEGAA'] = int(self.tabdims[8])
         self.DimensionedTableKeywords['OMEGAB'] = int(self.tabdims[8])

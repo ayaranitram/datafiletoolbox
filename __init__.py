@@ -21,7 +21,7 @@ from datafiletoolbox.propertyManipulation import *
 from datafiletoolbox.simObject import *
 
 
-__version__ = '0.21'
+__version__ = '0.215'
 __author__ = 'Martin Araya'
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')
