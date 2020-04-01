@@ -810,7 +810,14 @@ class Model(Simulation) :
             self.speak = speak
 
         #keywords = {}
-        file = open(filename,'r')
+        try :
+            file = open(filename,'r')
+        except :
+            try :
+                file = open(filename.replace(' /','/'),'r')
+            except :
+                file = open(filename,'r')
+                
         entirefile = file.readlines()
         file.close()
 
