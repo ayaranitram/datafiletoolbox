@@ -481,7 +481,22 @@ class Model(Simulation) :
         self.DimensionedTableKeywords['PBVD'] = int(self.eqldims[0])
         self.DimensionedTableKeywords['TVDP'] = int(self.eqldims[3])
         
-
+    def create_CellIndex(self) :
+        
+        K_values = []
+        for k in range( 1 , self.get_dimZ()+1 ) :
+            K_values += [ k ] * self.get_dimX() * self.get_dimY()
+            
+        J_values = []
+        for j in range( 1 , self.get_dimY()+1 ) :
+            J_values += [ j ] * self.get_dimX()
+        J_values = J_values * self.get_dimZ()
+                    
+        I_values = list( range(1,self.get_dimX()+1) ) * self.get_dimY() * self.get_dimZ()
+                     
+        self.set_newKeyword('K_INDEX',K_values)
+        self.set_newKeyword('J_INDEX',J_values)
+        self.set_newKeyword('I_INDEX',I_values)
 
     def get_eqldims(self) :
         if self.eqldims == None :
@@ -1345,7 +1360,8 @@ class GridProperty(Keyword) :
         keywordArgument = self.parent.get_args()
         if self.get_closing() in keywordArgument :
             keywordArgument = keywordArgument[ : keywordArgument.index(self.get_closing()) ]
-        keywordArgument = keywordArgument.replace("\n"," ")
+        if type(keywordArgument) == str :
+            keywordArgument = keywordArgument.replace("\n"," ")
         keywordArgument = expandKeyword(keywordArgument)
         self.expanded = True
 
