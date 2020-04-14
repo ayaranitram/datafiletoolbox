@@ -193,52 +193,113 @@ class Model(Simulation) :
     List = {}
 
     ZeroArgumentsKeywords = (
-        'RUNSPEC','GRID','EDIT','PROPS','REGIONS','SOLUTION','SUMMARY','SCHEDULE',
-        'INIT',
-        'ECHO','NOECHO','ENDBOX','NONNC','MONITOR','NOSIM','RPTRUNSP',
-        'FREEZEPC',
-        'FIELD','METRIC','CART',
-        'OIL','WATER','GAS','DISGAS','VAPOIL','BRINE','API','STONE2','PRCORR',
-        'FMTOUT','FMTIN','UNIFOUT','UNIFIN','MULTOUT','MULTIN',
-        'IMPLICIT','AIM','IMPES','AITS','BPARA',
-        'AQUCON','AQUCT','AQUANCON','AQUCHWAT','AQUFETP','AQUFLUX',
-        'RUNCTRL','DTLOGIC','SMARTMB',
-        'SKIP','SKIP100','SKIP300','SKIPTNAV','SKIPTAB','SKIPREST',
-        'END','ENDACTIO','ENDSKIP',
-        'FILLEPS',
-
-        'ALL','MSUMLINS','MSUMNEWT','SEPARATE','NEWTON','TCPU','ELAPSED','MAXDPR',
-        'FOPR','FOPT','FGPR','FGPT','FWPR','FWPT','RSM',
+        'AIM','AITS','ALKALINE','API',
+        'BIGMODEL','BLACKOIL','BPARA','BRINE',
+        'CART','COAL','COMPOFF',
+        'DATE','DEADOIL','DIFFDP','DIFFUSE','DISGAS','DSPDEINT','DUALPERM','DPGRID',
+        'DUALPORO','DUMPFLUX','DTLOGIC',
+        'ECHO','ECLMC','EDIT','END','ENDACTIO','ENDBOX','ENDDYN','ENDFIN','ENDSKIP',
+        'EPSCHECK','EXCEL',                 
+        'FASTTRAC','FIELD','FILLEPS','FIPOWG','FMTHMD','FMTIN','FMTOUT','FMTSAVE',
+        'FOAM','FREEZEPC','FULLIMP','FWELLS',
+        'GAS','GASBEGIN','GASEND','GASWAT','GETGLOB','GIMODEL','GRAVDR','GRAVDRB','GRID',            
+        'HALFTRAN','HWELLS','HYMOBGDR','HYST','HYSTCHCK','HYSTJ',
+        'IMPES','IMPLICIT','IMPSAT','INIT','INSPEC','ISGAS',
+        'KVALUES',
+        'LAB','LGRCOPY','LIVEOIL','LOWSALT','LTRACE',
+        'MEMSAVE','METRIC','MIXWPERM','MONITOR','MULTIN','MULTOUT','MULTOUTS',
+        'NARROW','NEWTON','NINEPOIN','NINEXZ','NINEYZ','NOCASC','NODPCDT',
+        'NODPCO','NODPPM','NOECHO','NOFREEZE','NOGGF','NOHYKR','NOHYPC','NOHYST',
+        'NOINSPEC','NOLTRACE','NOMIX','NOMONITO','NONNC','NORSSPEC','NOSIM','NOWARNEP',
+        'OFM','OIL',
+        'PINCHOUT','POLYMER','PRCORR','PROPS',
+        'RADIAL','REGIONS','RKTRMDIR','RPTISOL','RTPONLY','RTPONLYO','RPTRUNSP',
+        'RSM','RSSPEC','RUNCTRL','RUNSPEC','RUNSUM',
+        'SAVE','SAVEEND','SCHEDULE','SEPARATE','SIMULATE','SKIP','SKIP100','SKIP300',
+        'SKIPTNAV','SKIPREST','SKIPTAB','SOLID','SOLUTION','SOLVENT','SMARTMB','STONE',
+        'STONE1','STONE2','SUMMARY','SURFACT','SURFACTW',
+        'TEMP','TEMPTVD','THANALV','THERMAL','TRACTVD','TRNHD',
+        'UNCODHMD','UNIFIN','UNIFOUT','UNIFOUTS','UNIFSAVE',
+        'VAPOIL','VISAGE','VISCD',
+        'WARN','WATER','WAVAILIM','WDRILRES',
         )
 
-    TableFormatKeywords = ( 'DATES','EQUALS','EQUALREG','MULTIPLY','MULTIREG',
-            'ADD','ADDREG','ADDZCORN','COPY','COPYBOX','COPYREG','OPERATE','OPERATER',
-            'THPRESFT','MULTFLT','FAULTS',
-            'TRACER',
-            'FIELDSEP','FIPSEP',
-            'GRUPTREE','GCONINJE','GINJGAS','GRUPINJE','GCONPROD','GCONINJE',
-            'WELSPECS','COMPDAT','COMPDATMD','WPIMULT','WCONHIST','WRFTPLT',
-            'WINJGAS','WRFT','WPIMULT','WPI',
-            'WCONINJH','WCONPROD','WCONINJE','WELTARG','ACTIONX',
-            'UDQ',
+    TableFormatKeywords = ( 
+        'ACTIONX','ADD','ADDREG','ADDZCORN','AMALGAM','AQANTRC','AQUCON','AQUCT',
+        'AQUALIST','AQUANCON','AQUANCONL','AQUCHGAS','AQUCHWAT','AQUFETP','AQUFLUX',
+        'AQUNUM','AQSTREAM','AQSTREAW','AUTOCOAR',
+        'BRANPROP',
+        'CECON','CECONT','COARSEN','COMPAGH','COMPAGHL','COMPDAT','COMPDATL','COMPDATMD',
+        'COMPFLSH','COMPIMB','COMPINJK','COMPKRI','COMPLMPL','COMPLUMP','COMPMBIL',
+        'COMPMOBI','COMPORD','COMPRIV','COMPRP','COMPRPL','COMPVE','COMPVEL','COPY',
+        'COPYBOX','COPYREG','COMPSEGL','COMPSEGS','CPIFACT','CPIFACTL','CSKIN',
+        'DATES','DATUMRX','DYNAMICR',
+        'EDITNNC','EDITNNCR','EPSDBGS','EQLDKVCR','EQUALS','EQUALREG',
+        'FAULTS','FIELDSEP','FIPSEP',
+        'GADVANCE','GASFCOMP','GCALECON','GCONCAL','GCONENG','GCONINJE','GCONPRI',
+        'GCONPROD','GCONSALE','GCONSUMP','GCUTBACK','GCUTBACKT','GDCQ','GDCQECON',
+        'GDRILPOT','GECON','GECONT','GEFAC','GINJGAS','GLIFTLIM','GLIFTOPT','GNETDP',
+        'GNETINJE','GNETPUMP','GPMAINT','GPMAINT3','GQUALITY','GRDREACH','GRUPFUEL',
+        'GRUPGR','GRUPINJE','GRUPMAST','GRUPNET','GRUPPROD','GRUPRIG','GRUPSALE',
+        'GRUPSLAV','GRUPTARG','GRUPTREE','GSATCOMP','GSATINGE','GSATPROD','GSEPCOND',
+        'GSEPREPT','GSWINGF','GTADD','GTMULT','GWRTWCV',
+        'HEATER','HEATERL','HMAQUFET','HMFAULTS','HMMLAQUN','HMMLCTAQ','HMMLFTAQ',
+        'HMMLTWCN','HMMMREGT','HMMROCK','HMMULRGT','HMMULRGT','HMMULTFT','HMMULTX',
+        'HMMULTY','HMMULTZ','HMMLTXY','HMMULTPV','HMMLTPX','HMMLTPY','HMMLTPZ','HMMLTPXY',
+        'HMMULTR','HMMULTTH','HMMULTZ','HMMULTPV','HMWELCON',
+        'IHOST',
+        'KVAN','KVCR','KVCRWAT',
+        'LGRFREE','LGRLOCK','LICENSES','LUMPING',
+        'MULTFLT','MULTIREG','MULTREGD','MULTREGH','MULTREGP','MULTREGT','MULTIPLY',
+        'NCONSUMP','NEFAC','NETCOMPA','NGASREM','NODEPROP','NWATREM',
+        'OILVISC','OPERATE','OPERATER',
+        'PATHS','PRORDER',
+        'REACHES','RIVERSYS','RIVRPROP','RIVSALT','RIVTRACE','ROCKCON','ROCKCONL',
+        'ROCKPROP','RPTHMG','RPTHMW',
+        'SCDETAB','SCONINJE','SCONPROD','SEPCOND','SEPVALS','SLAVES','STEST',
+        'THPRESFT','THPRES','TRACER',
+        'UDQ',
+        'WADVANCE','WALKALIN','WALQCALC','WAPI','WBHGLR','WBOREVOL','WCALVAL','WCONHIST',
+        'WCONINJE','WCONINJH','WCONINJP','WCONPROD','WCUTBACK','WCUTBACT','WCYCLE',
+        'WDFAC','WDFACCOR','WDRILPRI','WDRILTIM','WECON','WECONCMF','WECONINJ','WECONT',
+        'WEFAC','WELCNTL','WELSPECS','WELDRAW','WELLCOMP','WELLGR','WELLINJE','WELLKBHP',
+        'WELLOPEN','WELLPROD','WELLSHUT','WELLSPEC','WELLSTRE','WELLSTRW','WELLWAG',
+        'WELLMOVEL','WELMOVEL','WELOPEN','WELOPENL','WELPI','WELPRI','WELSEGS','WELSPECL',
+        'WELSPECS','WELTARG','WFOAM','WFRICTN','WFRICTNL','WINJGAS','WGASPROD','WGORPEN',
+        'WGRUPCON','WHEDREFD','WHTEMP','WINJGAS','WINJMIX','WINJMULT','WINJOIL','WINJORD',
+        'WINJTEMP','WINJW','WLIFT','WLIFTOPT','WLIST','WLISTARG','WLISTDYN','WLISTNAM',
+        'WNETCTRL','WNETDP','WORKTHP','WPAVEDEP','WPI','WPICOND','WPIMULT','WPIMULTL',
+        'WPLUG','WPOLYMER','WPOLYRED','WREGROUP','WRFT','WRFTPLT','WSALT','WSCCLEAN',
+        'WSCCLENL','WSCTAB','WSEGAICD','WSEGEXSS','WSEGFLIM','WSEGFMOD','WSEGHEAT',
+        'WSEGINIT','WSEGLABY','WSEGLINK','WSEGMULT','WSEGPROP','WSEGPULL','WSEGSEP',
+        'WSEGSICD','WSEGTABL','WSEGVALV','WSEGWELL','WSEPCOND','WSOLVENT','WSURFACT',
+        'WTADD','WTEMP','WTEMPQ','WTEST','WTHPMAX','WTMULT','WTRACER','WVFPDP','WVFPEXP',
+        'WWPAVE',
             )
 
     UndefinedNumberOfTables = ( 'PSPLITX' , 'PSPLITY' )
 
     TableInTableKeywords = ( 'PVTO','PVTG' )
 
-    SpecialKeywords = ('TITLE','DIMENS','START','EQLDIMS','TABDIMS','WELLDIMS','GPTDIMS','ROCKCOMP',
+    SpecialKeywords = ('TITLE','DIMENS','START','PATHS',
+                       'EQLDIMS','TABDIMS','WELLDIMS','GPTDIMS',
+                       'ROCKCOMP','MISCIBLE',
                        'INCLUDE',) #'SUMMARY','SCHEDULE','INCLUDE',)
 
     NoSlashKeywords = ('TITLE')
     
-    KnownTables = {'SWFN' : ['Sw','Krw','Pcwo'],
+    KnownTables = {'SGFN' : ['Sg','Krg','Pcog'],
                    'SOF2' : ['So','Krow'],
                    'SOF3' : ['So','Krow','Krog'],
-                   'SGFN' : ['Sg','Krg','Pcog'],
-                   'PVDO' : ['Press','Bo','Uo'],
+                   'SSFN' : ['PhaseFraction','KrgMultiplier','KrSolventMultiplier'],
+                   'SWFN' : ['Sw','Krw','Pcwo'],
+                   'PMISC' : ['OilPhasePressure','Miscibility'],
                    'PVDG' : ['Press','Bg','Ug'],
+                   'PVDO' : ['Press','Bo','Uo'],
                    'PVZG' : ['Press','Z','Visc'],
+                   
+                   
+                   #'STOW' : [['ReferencePressure'],['Pressure','SurfaceTension']],
                    }
 
     def __init__( self , DataFilePath = '' , speak = None , parent = None ) :
@@ -284,6 +345,7 @@ class Model(Simulation) :
         self.tabdims = None
         self.gptdims = None
         self.rockcomp = None
+        self.miscible = None
         self.DimensionedTableKeywords = {'TUNING' : 3 ,
                                          # 'CNAMES' : 1 ,
                                          # 'SCALECRS' : 1 ,
@@ -459,6 +521,23 @@ class Model(Simulation) :
         else :
             return self.dims[2]
 
+    def create_CellIndex(self) :
+        
+        K_values = []
+        for k in range( 1 , self.get_dimZ()+1 ) :
+            K_values += [ k ] * self.get_dimX() * self.get_dimY()
+            
+        J_values = []
+        for j in range( 1 , self.get_dimY()+1 ) :
+            J_values += [ j ] * self.get_dimX()
+        J_values = J_values * self.get_dimZ()
+                    
+        I_values = list( range(1,self.get_dimX()+1) ) * self.get_dimY() * self.get_dimZ()
+                     
+        self.set_newKeyword('K_INDEX',K_values)
+        self.set_newKeyword('J_INDEX',J_values)
+        self.set_newKeyword('I_INDEX',I_values)
+
     def set_eqldims(self,eqldims) :
         if self.get_closing() in eqldims :
             eqldims = eqldims[ : eqldims.index(self.get_closing()) ]
@@ -481,23 +560,6 @@ class Model(Simulation) :
         self.DimensionedTableKeywords['PBVD'] = int(self.eqldims[0])
         self.DimensionedTableKeywords['TVDP'] = int(self.eqldims[3])
         
-    def create_CellIndex(self) :
-        
-        K_values = []
-        for k in range( 1 , self.get_dimZ()+1 ) :
-            K_values += [ k ] * self.get_dimX() * self.get_dimY()
-            
-        J_values = []
-        for j in range( 1 , self.get_dimY()+1 ) :
-            J_values += [ j ] * self.get_dimX()
-        J_values = J_values * self.get_dimZ()
-                    
-        I_values = list( range(1,self.get_dimX()+1) ) * self.get_dimY() * self.get_dimZ()
-                     
-        self.set_newKeyword('K_INDEX',K_values)
-        self.set_newKeyword('J_INDEX',J_values)
-        self.set_newKeyword('I_INDEX',I_values)
-
     def get_eqldims(self) :
         if self.eqldims == None :
             return ''
@@ -558,7 +620,28 @@ class Model(Simulation) :
             return ''
         else :
             return self.welldims
+    
+    def set_miscible(self,miscible) :
+        if self.get_closing() in miscible :
+            miscible = miscible[ : miscible.index(self.get_closing()) ]
+        if miscible.strip() == '' :
+            miscible = ' 3* '
+        self.miscible = expandKeyword(miscible).split()
+        if len(self.miscible) < 4 :
+            self.miscible = self.miscible + ['1*']*(4-len(self.miscible))
+        if self.miscible[0] == '1*' :
+            self.miscible[0] = 1
+        self.DimensionedTableKeywords['SGCWMIS'] = int(self.miscible[0])
+        self.DimensionedTableKeywords['SORWMIS'] = int(self.miscible[0])
+        self.DimensionedTableKeywords['TLMIXPAR'] = int(self.miscible[0])
+        self.DimensionedTableKeywords['PMISC'] = int(self.miscible[0])
 
+    def get_miscible(self):
+        if self.miscible == None :
+            return ''
+        else :
+            return self.miscible
+        
     def set_tabdims(self,tabdims) :
         if self.get_closing() in tabdims :
             tabdims = tabdims[ : tabdims.index(self.get_closing()) ]
@@ -616,12 +699,15 @@ class Model(Simulation) :
         self.DimensionedTableKeywords['JFUNCR'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SGFN'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SWFN'] = int(self.tabdims[0])
+        self.DimensionedTableKeywords['MSFN'] = int(self.tabdims[0])
+        self.DimensionedTableKeywords['SSFN'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SOF2'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SOF3'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SWOF'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SGOF'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SGWFN'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SOR'] = int(self.tabdims[0])
+        self.DimensionedTableKeywords['STOW'] = int(self.tabdims[0])*2
         self.DimensionedTableKeywords['PVTG'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVDG'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVTO'] = int(self.tabdims[1])
