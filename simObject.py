@@ -347,14 +347,6 @@ class Model(Simulation) :
         self.rockcomp = None
         self.miscible = None
         self.DimensionedTableKeywords = {'TUNING' : 3 ,
-                                         # 'CNAMES' : 1 ,
-                                         # 'SCALECRS' : 1 ,
-                                         # 'DNGL' : 1 , 
-                                         # 'RPTRST' : 1 ,
-                                         # 'RPTSCHED' : 1 ,
-                                         # 'RPTSMRY' : 1 ,
-                                         # 'RPTSOL' : 1 ,
-                                         # 'RSCONST' : 1 ,
                                          }
 
     def get_closing(self) :
