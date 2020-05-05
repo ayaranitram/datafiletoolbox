@@ -19,6 +19,7 @@ verbose()
 
 from datafiletoolbox.propertyManipulation import *
 from datafiletoolbox.simObject import *
+from datafiletoolbox.stringformat import *
 
 
 __version__ = '0.215'

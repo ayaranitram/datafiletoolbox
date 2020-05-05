@@ -6,8 +6,9 @@ Created on Wed Sep 18 12:33:46 2019
 
 routine intended to manipulate and transform date strings.
 """
+import numpy as np
 
-def date(date , formatIN='', formatOUT = ''):
+def date(date , formatIN='', formatOUT=''):
     """
     stringformat.date receives a string containing a date or a list of strings
     containing dates and changes the date format to the format especified by
@@ -54,6 +55,10 @@ def date(date , formatIN='', formatOUT = ''):
                           12 : 'DEC'  }
 
     # define if input is a list/tuple of dates or a single date
+    # if type(date) == np.str_ or type(date) == np.ndarray or type(date) == np.datetime64 :
+    #     sample = date[0]
+    #     output = np
+    #     date = date.tolist()
     if type(date) == list or type(date) == tuple:
         sample = date[0].strip()
         for i in range(len(date)) :
@@ -225,7 +230,7 @@ def date(date , formatIN='', formatOUT = ''):
     for i in range(3) :
         numberformat[orderOUT[i]] = orderOUT[i+4]
     for i in range(len(dateOUT[0])) :
-        print(numberformat)
+        #print(numberformat)
         if numberformat[0] == 0 or numberformat[0] == None:
             dateStr = ''
         elif type(dateOUT[0][i]) == int and numberformat[0] == 2 and dateOUT[0][i] < 10 :
