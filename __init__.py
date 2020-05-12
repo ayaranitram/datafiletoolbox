@@ -22,7 +22,7 @@ from datafiletoolbox.simObject import *
 from datafiletoolbox.stringformat import *
 
 
-__version__ = '0.215'
+__version__ = '0.20.05.12' # cambio de versionado, la última fue 0.215
 __author__ = 'Martin Araya'
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')

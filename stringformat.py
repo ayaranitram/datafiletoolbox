@@ -8,7 +8,7 @@ routine intended to manipulate and transform date strings.
 """
 import numpy as np
 
-def date(date , formatIN='', formatOUT=''):
+def date(date , formatIN='' , formatOUT='' , speak=True ):
     """
     stringformat.date receives a string containing a date or a list of strings
     containing dates and changes the date format to the format especified by
@@ -26,6 +26,7 @@ def date(date , formatIN='', formatOUT=''):
 
     stringformat.date('31/DEC/1984' , formatIN='DD/MMM/YYYY' , formatOUT='MM-DD-YYYY')
 
+    speak parameter set to True will print a message showing the input and output formats.
     """
 
     MonthString2Number = {'JAN' :  1 ,
@@ -55,16 +56,35 @@ def date(date , formatIN='', formatOUT=''):
                           12 : 'DEC'  }
 
     # define if input is a list/tuple of dates or a single date
-    # if type(date) == np.str_ or type(date) == np.ndarray or type(date) == np.datetime64 :
-    #     sample = date[0]
-    #     output = np
-    #     date = date.tolist()
-    if type(date) == list or type(date) == tuple:
-        sample = date[0].strip()
-        for i in range(len(date)) :
-            date[i] = date[i].strip()
+
+    if type(date) is list or type(date) is tuple:
         output = list
-    else :
+        if type(date[0]) is str :
+            for i in range(len(date)) :
+                date[i] = date[i].strip()
+            sample = date[0].strip()
+        elif type(date[0]) is np.datetime64 :
+            date = np.array(date)
+        elif type(date[0]) is np.str_ :
+            date = list( map( str , date ) )
+            sample = date[0].strip()
+            
+    if type(date) is np.ndarray :
+        output = list
+        if str(date.dtype) == 'datetime64[ms]' :
+            npDateOnly = lambda x : x.split('T')[0]
+            date = list(np.datetime_as_string(date))
+            date = list(map( npDateOnly , date ))
+            formatIN = 'YYYY-MM-DD'
+            sample = date[0]
+
+    if type(date) is np.datetime64 :
+        formatIN = 'YYYY-MM-DD'
+        date = [ np.datetime_as_string(date).split('T')[0] ]
+        sample = date[0]
+        output = str
+
+    if type(date) is str :
         sample = date.strip()
         date = [ date ]
         output = str
@@ -72,9 +92,9 @@ def date(date , formatIN='', formatOUT=''):
     # look for the separator, empty string if not found
     separator = ''
     for sep in ['/', '-' , ' ' , '\t', '_', ':', ';', '#', "'"] :
-            if sep in sample :
-                separator = sep
-                break
+        if sep in sample :
+            separator = sep
+            break
 
     # separate the 1st, 2nd and 3rd components of the DATEs in three lists
     datelist = separator.join(date).split(separator)
@@ -145,7 +165,8 @@ def date(date , formatIN='', formatOUT=''):
                 elif orderIN[i] == 2 :
                     formatIN.append('Y'*orderIN[6])
             formatIN = orderIN[3].join(formatIN)
-            print('the input format is: ' + formatIN)
+            if speak :
+                print('the input format is: ' + formatIN)
         else :
             raise Exception('unable to idenfy date format, please provide with keyword formatIN')
 
@@ -178,7 +199,8 @@ def date(date , formatIN='', formatOUT=''):
     if formatOUT == '' :
         formatOUT = 'DD-MMM-YYYY'
         orderOUT = [0,1,2,'-',2,3,4]
-        print('default output format is: DD-MMM-YYYY')
+        if speak :
+            print('default output format is: DD-MMM-YYYY')
 
     # read format from formatOUT
     else :
