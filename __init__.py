@@ -13,16 +13,21 @@ import datetime
 import numpy
 import pandas
 
-from common.inout import extension
-from common.inout import verbose
-verbose()
+from datafiletoolbox.common.inout import extension
+from datafiletoolbox.common.inout import verbose
+from datafiletoolbox.common.stringformat import date
+from datafiletoolbox.common.loader import loadSimulationResults
+from datafiletoolbox.common.functions import mainKey
+from datafiletoolbox.common.functions import is_SimulationResult
 
 from datafiletoolbox.propertyManipulation import *
 from datafiletoolbox.simObject import *
-from datafiletoolbox.stringformat import *
 
+from datafiletoolbox.SimPlot import Plot
 
-__version__ = '0.20.05.12' # cambio de versionado, la última fue 0.215
+from bases.units import convertUnit
+
+__version__ = '0.20.05.13' 
 __author__ = 'Martin Araya'
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')
