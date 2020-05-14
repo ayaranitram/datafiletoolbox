@@ -16,7 +16,7 @@ from matplotlib.colors import is_color_like
 
 
 from datafiletoolbox.common.functions import is_SimulationResult
-from datafiletoolbox import verbose
+from datafiletoolbox.common.inout import verbose
 from datafiletoolbox.common.functions import mainKey
 from bases.units import convertUnit
 

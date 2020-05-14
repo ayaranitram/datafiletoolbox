@@ -13,17 +13,17 @@ import datetime
 import numpy
 import pandas
 
-from datafiletoolbox.common.inout import extension
-from datafiletoolbox.common.inout import verbose
-from datafiletoolbox.common.stringformat import date
-from datafiletoolbox.common.loader import loadSimulationResults
-from datafiletoolbox.common.functions import mainKey
-from datafiletoolbox.common.functions import is_SimulationResult
+from .common.inout import extension
+from .common.inout import verbose
+from .common.stringformat import date
+from .common.loader import loadSimulationResults
+from .common.functions import mainKey
+from .common.functions import is_SimulationResult
 
-from datafiletoolbox.propertyManipulation import *
-from datafiletoolbox.simObject import *
-
-from datafiletoolbox.SimPlot import Plot
+from .SimInput.propertyManipulation import *
+from .SimInput.simObject import *
+from .SimPlot.SmartPlot import Plot
+from .SimulationResults import *
 
 from bases.units import convertUnit
 
