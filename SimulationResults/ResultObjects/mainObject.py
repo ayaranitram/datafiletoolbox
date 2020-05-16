@@ -5,20 +5,20 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.20.05.13'
+__version__ = '0.0.20-05-16'
 
 import datafiletoolbox.dictionaries.dictionaries as dictionaries
 from datafiletoolbox.Classes.Errors import OverwrittingError
-from datafiletoolbox.common.inout import verbose 
+from datafiletoolbox.common.stringformat import date as strDate
+from datafiletoolbox.common.functions import is_SimulationResult
 from datafiletoolbox.common.inout import extension
-from datafiletoolbox.common import is_SimulationResult
-from datafiletoolbox import date as strDate
+from datafiletoolbox.common.inout import verbose 
 from datafiletoolbox.SimPlot.SmartPlot import Plot
 
-from datafiletoolbox.SimulationResults.ResultObjects.vipObject import VIP
-from datafiletoolbox.SimulationResults.ResultObjects.eclObject import ECL
-# from .vipObject import VIP
-# from .eclObject import ECL
+# from datafiletoolbox.SimulationResults.ResultObjects.vipObject import VIP
+# from datafiletoolbox.SimulationResults.ResultObjects.eclObject import ECL
+from .vipObject import VIP
+from .eclObject import ECL
 
 from bases.units import unit
 from bases.units import convertUnit

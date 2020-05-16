@@ -6,6 +6,9 @@ Created on Wed Sep 18 12:33:46 2019
 
 routine intended to manipulate and transform date strings.
 """
+
+__version__ = '0.0.20-05-16'
+
 import numpy as np
 
 def date(date , formatIN='' , formatOUT='' , speak=True ):

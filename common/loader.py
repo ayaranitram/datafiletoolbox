@@ -5,8 +5,10 @@ Created on Wed May 13 00:45:52 2020
 @author: MCARAYA
 """
 
-from datafiletoolbox import extension
-from datafiletoolbox.SimulationResults import *
+__version__ = '0.0.20-05-16'
+
+from datafiletoolbox.common.inout import extension
+from datafiletoolbox.SimulationResults.ResultsObjects import *
 
 def loadSimulationResults(FullPath=None,Simulator=None) :
     """
@@ -19,11 +21,11 @@ def loadSimulationResults(FullPath=None,Simulator=None) :
         print( 'Please provide the path to the simulation results as string.')
         return None
     if Simulator is None :
-        if extension(FullPath)[1].upper() in ['.SMSPEC','.UNSMRY','.DATA'] :
+        if extension(FullPath)[0].upper() in ['.SMSPEC','.UNSMRY','.DATA'] :
             Simulator = 'ECLIPSE'
-        elif extension(FullPath)[1].upper() in ['.DAT','.SSS'] :
+        elif extension(FullPath)[0].upper() in ['.DAT','.SSS'] :
             Simulator = 'VIP'
-        elif extension(FullPath)[1].upper() in ['.FSC','.SS_FIELD','.SS_WELLS','.SS_REGIONS','.SS_NETWORK'] :
+        elif extension(FullPath)[0].upper() in ['.FSC','.SS_FIELD','.SS_WELLS','.SS_REGIONS','.SS_NETWORK'] :
             Simulator = 'NEXUS'
     elif type(Simulator) is str and len(Simulator.strip()) > 0 :
         Simulator = Simulator.strip().upper()

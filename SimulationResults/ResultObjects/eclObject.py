@@ -5,9 +5,12 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-from datafiletoolbox.SimulationResults.ResultObjects.mainObject import SimResult
-from datafiletoolbox.common import verbose 
-from datafiletoolbox.common import extension
+__version__ = '0.0.20-05-16'
+
+# from datafiletoolbox.SimulationResults.ResultObjects.mainObject import SimResult
+from .mainObject import SimResult
+from datafiletoolbox.common.inout import extension
+from datafiletoolbox.common.inout import verbose 
 
 import ecl
 

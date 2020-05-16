@@ -5,6 +5,8 @@ Created on Wed May 29 16:22:25 2019
 @author: MCARAYA
 """
 
+__version__ = '0.0.20-05-16'
+
 def verbose(userLevel=0 , programLevel=0 , StringToPrint='') :
     """
     According to the user desired level of verbosity ( userLevel ) and the 
@@ -26,7 +28,10 @@ def verbose(userLevel=0 , programLevel=0 , StringToPrint='') :
     # debugging only:
     #print('+++ userLevel: ' + str(userLevel) + '\n+++ programLevel: ' + str(programLevel))
     
-    StringToPrint = str(StringToPrint)
+    if type(StringToPrint) is list or type(StringToPrint) is tuple :
+        StringToPrint = ' '.join(StringToPrint)
+    else :
+        StringToPrint = str(StringToPrint)
     
     if userLevel == None :
         userLevel = 0
@@ -46,7 +51,7 @@ def verbose(userLevel=0 , programLevel=0 , StringToPrint='') :
 
 
 
-def extension(filepath , NullValue='' , backSlashToSlash=True):
+def extension(filepath , NullValue='' , backSlashToSlash=True , backCompatibility=False):
     """
     receives a string indicating a FileName.Extension or 
     Path/FileName.Extension and return a tupple containing 
@@ -77,7 +82,10 @@ def extension(filepath , NullValue='' , backSlashToSlash=True):
         filename = filepath[lpath:]
         extension = ''
     
-    return ( filename , extension , path , path+filename+extension )
+    if backCompatibility :
+        return ( filename , extension , path , path+filename+extension )
+    else :
+        return ( extension , filename , path , path+filename+extension )
 
 
 

@@ -5,6 +5,8 @@ Created on Sun Jan 19 16:03:33 2020
 @author: MCARAYA
 """
 
+__version__ = '0.0.20-05-16'
+
 unitsFIELD = {'OIP' : 'MMstb' ,
               'WIP' : 'MMstb' ,
               'GIP' : 'Tscf' ,

@@ -5,12 +5,14 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-#from .mainObject import SimResult
-from datafiletoolbox.SimulationResults.ResultObjects.mainObject import SimResult
-from datafiletoolbox.common import verbose 
-from datafiletoolbox.common import extension
-from datafiletoolbox.common import mainKey
-from datafiletoolbox import date as strDate
+__version__ = '0.0.20-05-16'
+
+from .mainObject import SimResult
+# from datafiletoolbox.SimulationResults.ResultObjects.mainObject import SimResult
+from datafiletoolbox.common.inout import extension
+from datafiletoolbox.common.inout import verbose 
+from datafiletoolbox.common.functions import mainKey
+from datafiletoolbox.common.stringformat import date as strDate
 
 from datetime import timedelta
 import pandas as pd

@@ -5,13 +5,19 @@ Created on Wed May 13 00:46:05 2020
 @author: MCARAYA
 """
 
+__version__ = '0.0.20-05-16'
+
 def is_SimulationResult(obj) :
     """
-    Returns True if the object is a SimulationResults object.
+    returns True if the object is a SimulationResults object.
     """
     return 'SimulationResults.' in str(type(obj)) 
 
+
 def mainKey(Key) :
+    """
+    returns the main part (before the name if the item) of the keyword, MAIN:ITEM
+    """
     if type(Key) is str:
         if len(Key.strip()) > 0 :
             return Key.strip().split(':')[0]
@@ -22,6 +28,7 @@ def mainKey(Key) :
         for K in Key :
             results.append( mainKey(K) )
         return list(set(results))
+
 
 def alternate(start=True):
     """

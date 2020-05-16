@@ -5,7 +5,9 @@ Created on Wed May 13 15:00:45 2020
 @author: MCARAYA
 """
 
-from datafiletoolbox import verbose
+__version__ = '0.0.20-05-16'
+
+from datafiletoolbox.common.inout import verbose
 import numpy as np
 import pandas as pd
 
