@@ -13,15 +13,21 @@ import datetime
 import numpy
 import pandas
 
-from common.inout import extension
-from common.inout import verbose
-verbose()
+from .common.inout import extension
+from .common.inout import verbose
+from .common.stringformat import date
+from .common.loader import loadSimulationResults
+from .common.functions import mainKey
+from .common.functions import is_SimulationResult
 
-from datafiletoolbox.propertyManipulation import *
-from datafiletoolbox.simObject import *
+from .SimInput.propertyManipulation import *
+from .SimInput.simObject import *
+from .SimPlot.SmartPlot import Plot
+from .SimulationResults import *
 
+from bases.units import convertUnit
 
-__version__ = '0.2'
+__version__ = '0.20.05.13' 
 __author__ = 'Martin Araya'
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')

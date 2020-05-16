@@ -35,7 +35,10 @@ def expandKeyword( keywordValues , speak=0 , expandDefaults=True) :
             inputValues = ' ' + ' '.join(list(map(str,keywordValues))) + ' '
     elif type(keywordValues) == str :
         outformat = 'str'
+        
         inputValues = ' ' + keywordValues + ' '
+        inputValues = inputValues.replace('\n',' ')
+        inputValues = inputValues.replace('/',' /')
     else :
         verbose(speak,-1,'ERROR: keyword values to be expanded should be provided as LIST or STRING')
         raise Exception('keyword values to be expanded should be provided as LIST or STRING')

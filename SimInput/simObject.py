@@ -42,11 +42,12 @@ class Simulation(object) :
             self.name = str(self.ID)
         else :
             self.name = name
-        Simulation.Index[self.ID] = self.name
+        self.Objects = {}
+        
+        # Simulation.Index[self.ID] = self.name
         # .SimObjects is a dictionary that collects all the subclasses this Collection has
-        Simulation.Objects[self.ID] = {}
-        Simulation.Count[self.ID] = 0
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]] = [['ObjectType'],['ObjectName']]
+        # Simulation.Objects[self.ID] = {}
+        self.Count = -1
 
         self.msg0 = Simulation.msg0
         self.msg1 = Simulation.msg1
@@ -81,32 +82,30 @@ class Simulation(object) :
                     line = line + " with name '" + str(self.content()[each][1]) + "'"
         return line
 
-    def __call__(self,SimObject):
-        if type(SimObject) == int :
-            if SimObject > Simulation.Count[self.ID] :
-                return None
-        elif type(SimObject) == str :
-            try :
-                SimObject = Simulation.Objects[self.ID][0][1].index(SimObject)
-            except :
-                return None
-        return Simulation.Objects[self.ID][SimObject]
-
-    def __getitem__(self, item) :
+    def __call__(self,item):
         if type(item) == int :
-            if item > Simulation.Count[self.ID] :
+            if item <= self.Count :
+                return self.Objects[item]
+            else :
                 return None
         elif type(item) == str :
-            try :
-                item = Simulation.Objects[self.ID][0][1].index(item)
-            except :
-                return None
-        return Simulation.Objects[self.ID][item]
+            for each in self.Objects :
+                if item == self.Objects[each].name :
+                    return self.Objects[each]
+            return None
+        else :
+            for each in self.Objects :
+                if item == self.Objects[each] :
+                    return self.Objects[each]
+            return None
+
+    def __getitem__(self, item) :
+        return self.__call__(item)
 
     def __next__(self) :
-        if self.ite < Simulation.Count[self.ID] :
+        if self.ite < self.Count :
             self.ite += 1
-            return Simulation.Objects[self.ID][self.ite - 1]
+            return self.Objects[self.ite - 1]
         else :
             self.ite = 1
             raise StopIteration
@@ -115,7 +114,7 @@ class Simulation(object) :
         return self
 
     def __len__(self) :
-        return Simulation.Count[self.ID]
+        return self.Count
 
     def get_ID(self) :
         return self.ID
@@ -129,49 +128,52 @@ class Simulation(object) :
 
     def content(self) :
         contentDict = {}
-        for i in range( 1 , len( Simulation.Objects[self.ID]) ) :
-            contentDict[i] = ( type(Simulation.Objects[self.ID][i]) , Simulation.Objects[self.ID][i].get_name() )
+        for each in self.Objects :
+            contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].get_name() )
         return contentDict
     
     def keys(self) :
-        contentDict = []
-        for i in range( 1 , len( Simulation.Objects[self.ID]) ) :
-            contentDict.append( Simulation.Objects[self.ID][i].get_name() )
-        return contentDict
+        contentKeys = []
+        for each in self.Objects :
+            contentKeys.append( self.Objects[each].get_name() )
+        return tuple(contentKeys)
         
-
-    def set_name( self, name ) :
-        self.name = name
-        Simulation.Index[self.ID] = self.name
+    def set_name( self , name ) :
+        try :
+            self.name = str(name)
+        except :
+            pass
+        # Simulation.Index[self.ID] = self.name
 
     def get_name( self ) :
         return str(self.name)
 
     def add_Model(self,name=None):
-        Simulation.Count[self.ID] += 1
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]] = Model( speak = self.speak )
+        self.Count += 1
+        self.Objects[self.Count] = Model( speak = self.speak )
         if name != None :
-            Simulation.Objects[self.ID][Simulation.Count[self.ID]].set_name(name)
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]].set_SimObjectID(self.ID,Simulation.Count[self.ID])
-        Simulation.Objects[self.ID][0][0].append('Model')
-        Simulation.Objects[self.ID][0][1].append(name)
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]].set_parentID(self.ID)
-        return Simulation.Count[self.ID]
+            self.Objects[self.Count].set_name(name)
+        self.Objects[self.Count].set_SimObjectID(self.ID,self.Count)
+        # Simulation.Objects[self.ID][0][0].append('Model')
+        # Simulation.Objects[self.ID][0][1].append(name)
+        self.Objects[self.Count].set_parent(self)
+        return self.Count
 
     def LoadModelFromData(self , filename , name = None , speak = None) :
         if speak == None :
             speak = self.speak
-        Simulation.Count[self.ID] += 1
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]] = Model( speak = self.speak )
-        Simulation.Objects[self.ID][0][0].append('Model')
+        self.Count += 1
+        self.Objects[self.Count] = Model( speak = self.speak )
+        # Simulation.Objects[self.ID][0][0].append('Model')
         if name != None :
-            Simulation.Objects[self.ID][Simulation.Count[self.ID]].set_name(name)
-            Simulation.Objects[self.ID][0][1].append(name)
+            self.Objects[self.Count].set_name(name)
+            # Simulation.Objects[self.ID][0][1].append(name)
         else :
-            Simulation.Objects[self.ID][Simulation.Count[self.ID]].set_name(extension(filename)[0])
-            Simulation.Objects[self.ID][0][1].append(extension(filename)[0])
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]].set_SimObjectID(self.ID,Simulation.Count[self.ID])
-        Simulation.Objects[self.ID][Simulation.Count[self.ID]].ReadData(filename , speak)
+            self.Objects[self.Count].set_name(extension(filename)[0])
+            # Simulation.Objects[self.ID][0][1].append(extension(filename)[0])
+        self.Objects[self.Count].set_SimObjectID(self.ID,self.Count)
+        self.Objects[self.Count].set_parent(self)
+        self.Objects[self.Count].ReadData(filename , speak)
 
 
 
@@ -191,71 +193,148 @@ class Model(Simulation) :
     List = {}
 
     ZeroArgumentsKeywords = (
-        'RUNSPEC','GRID','EDIT','PROPS','REGIONS','SOLUTION','SUMMARY','SCHEDULE',
-        'ECHO','NOECHO','ENDBOX','NONNC','MONITOR','NOSIM',
-        'FREEZEPC',
-        'FIELD','METRIC','CART',
-        'OIL','WATER','GAS','DISGAS','VAPOIL','BRINE','API',
-        'FMTOUT','FMTIN','UNIFOUT','UNIFIN','MULTOUT','MULTIN',
-        'IMPLICIT','AIM','IMPES','AITS','BPARA',
-        'AQUCON','AQUCT','AQUANCON','AQUCHWAT','AQUFETP','AQUFLUX',
-        'RUNCTRL','DTLOGIC','SMARTMB',
-        'SKIP','SKIP100','SKIP300','SKIPTNAV','SKIPTAB','SKIPREST',
-        'END','ENDACTIO','ENDSKIP',
-        'FILLEPS',
-
-        'ALL','MSUMLINS','MSUMNEWT','SEPARATE','NEWTON','TCPU','ELAPSED','MAXDPR',
-        'FOPR','FOPT','FGPR','FGPT','FWPR','FWPT',
+        'AIM','AITS','ALKALINE','API',
+        'BIGMODEL','BLACKOIL','BPARA','BRINE',
+        'CART','COAL','COMPOFF',
+        'DATE','DEADOIL','DIFFDP','DIFFUSE','DISGAS','DSPDEINT','DUALPERM','DPGRID',
+        'DUALPORO','DUMPFLUX','DTLOGIC',
+        'ECHO','ECLMC','EDIT','END','ENDACTIO','ENDBOX','ENDDYN','ENDFIN','ENDSKIP',
+        'EPSCHECK','EXCEL',                 
+        'FASTTRAC','FIELD','FILLEPS','FIPOWG','FMTHMD','FMTIN','FMTOUT','FMTSAVE',
+        'FOAM','FREEZEPC','FULLIMP','FWELLS',
+        'GAS','GASBEGIN','GASEND','GASWAT','GETGLOB','GIMODEL','GRAVDR','GRAVDRB','GRID',            
+        'HALFTRAN','HWELLS','HYMOBGDR','HYST','HYSTCHCK','HYSTJ',
+        'IMPES','IMPLICIT','IMPSAT','INIT','INSPEC','ISGAS',
+        'KVALUES',
+        'LAB','LGRCOPY','LIVEOIL','LOWSALT','LTRACE',
+        'MEMSAVE','METRIC','MIXWPERM','MONITOR','MULTIN','MULTOUT','MULTOUTS',
+        'NARROW','NEWTON','NINEPOIN','NINEXZ','NINEYZ','NOCASC','NODPCDT',
+        'NODPCO','NODPPM','NOECHO','NOFREEZE','NOGGF','NOHYKR','NOHYPC','NOHYST',
+        'NOINSPEC','NOLTRACE','NOMIX','NOMONITO','NONNC','NORSSPEC','NOSIM','NOWARNEP',
+        'OFM','OIL',
+        'PINCHOUT','POLYMER','PRCORR','PROPS',
+        'RADIAL','REGIONS','RKTRMDIR','RPTISOL','RTPONLY','RTPONLYO','RPTRUNSP',
+        'RSM','RSSPEC','RUNCTRL','RUNSPEC','RUNSUM',
+        'SAVE','SAVEEND','SCHEDULE','SEPARATE','SIMULATE','SKIP','SKIP100','SKIP300',
+        'SKIPTNAV','SKIPREST','SKIPTAB','SOLID','SOLUTION','SOLVENT','SMARTMB','STONE',
+        'STONE1','STONE2','SUMMARY','SURFACT','SURFACTW',
+        'TEMP','TEMPTVD','THANALV','THERMAL','TRACTVD','TRNHD',
+        'UNCODHMD','UNIFIN','UNIFOUT','UNIFOUTS','UNIFSAVE',
+        'VAPOIL','VISAGE','VISCD',
+        'WARN','WATER','WAVAILIM','WDRILRES',
         )
 
-    TableFormatKeywords = ( 'DATES','EQUALS','EQUALREG','MULTIPLY','MULTIREG',
-            'ADD','ADDREG','ADDZCORN','COPY''COPYBOX','COPYREG','OPERATE','OPERATER',
-            'THPRESFT','MULTFLT','FAULTS',
-            'TRACER',
-            'GRUPTREE','GCONINJE','GINJGAS','GRUPINJE','GCONPROD','GCONINJE',
-            'WELSPECS','COMPDAT','COMPDATMD','WPIMULT','WCONHIST','WRFTPLT',
-            'WINJGAS','WRFT','WPIMULT','WPI',
-            'WCONINJH','WCONPROD','WCONINJE','WELTARG','ACTIONX',
+    TableFormatKeywords = ( 
+        'ACTIONX','ADD','ADDREG','ADDZCORN','AMALGAM','AQANTRC','AQUCON','AQUCT',
+        'AQUALIST','AQUANCON','AQUANCONL','AQUCHGAS','AQUCHWAT','AQUFETP','AQUFLUX',
+        'AQUNUM','AQSTREAM','AQSTREAW','AUTOCOAR',
+        'BRANPROP',
+        'CECON','CECONT','COARSEN','COMPAGH','COMPAGHL','COMPDAT','COMPDATL','COMPDATMD',
+        'COMPFLSH','COMPIMB','COMPINJK','COMPKRI','COMPLMPL','COMPLUMP','COMPMBIL',
+        'COMPMOBI','COMPORD','COMPRIV','COMPRP','COMPRPL','COMPVE','COMPVEL','COPY',
+        'COPYBOX','COPYREG','COMPSEGL','COMPSEGS','CPIFACT','CPIFACTL','CSKIN',
+        'DATES','DATUMRX','DYNAMICR',
+        'EDITNNC','EDITNNCR','EPSDBGS','EQLDKVCR','EQUALS','EQUALREG',
+        'FAULTS','FIELDSEP','FIPSEP',
+        'GADVANCE','GASFCOMP','GCALECON','GCONCAL','GCONENG','GCONINJE','GCONPRI',
+        'GCONPROD','GCONSALE','GCONSUMP','GCUTBACK','GCUTBACKT','GDCQ','GDCQECON',
+        'GDRILPOT','GECON','GECONT','GEFAC','GINJGAS','GLIFTLIM','GLIFTOPT','GNETDP',
+        'GNETINJE','GNETPUMP','GPMAINT','GPMAINT3','GQUALITY','GRDREACH','GRUPFUEL',
+        'GRUPGR','GRUPINJE','GRUPMAST','GRUPNET','GRUPPROD','GRUPRIG','GRUPSALE',
+        'GRUPSLAV','GRUPTARG','GRUPTREE','GSATCOMP','GSATINGE','GSATPROD','GSEPCOND',
+        'GSEPREPT','GSWINGF','GTADD','GTMULT','GWRTWCV',
+        'HEATER','HEATERL','HMAQUFET','HMFAULTS','HMMLAQUN','HMMLCTAQ','HMMLFTAQ',
+        'HMMLTWCN','HMMMREGT','HMMROCK','HMMULRGT','HMMULRGT','HMMULTFT','HMMULTX',
+        'HMMULTY','HMMULTZ','HMMLTXY','HMMULTPV','HMMLTPX','HMMLTPY','HMMLTPZ','HMMLTPXY',
+        'HMMULTR','HMMULTTH','HMMULTZ','HMMULTPV','HMWELCON',
+        'IHOST',
+        'KVAN','KVCR','KVCRWAT',
+        'LGRFREE','LGRLOCK','LICENSES','LUMPING',
+        'MULTFLT','MULTIREG','MULTREGD','MULTREGH','MULTREGP','MULTREGT','MULTIPLY',
+        'NCONSUMP','NEFAC','NETCOMPA','NGASREM','NODEPROP','NWATREM',
+        'OILVISC','OPERATE','OPERATER',
+        'PATHS','PRORDER',
+        'REACHES','RIVERSYS','RIVRPROP','RIVSALT','RIVTRACE','ROCKCON','ROCKCONL',
+        'ROCKPROP','RPTHMG','RPTHMW',
+        'SCDETAB','SCONINJE','SCONPROD','SEPCOND','SEPVALS','SLAVES','STEST',
+        'THPRESFT','THPRES','TRACER',
+        'UDQ',
+        'WADVANCE','WALKALIN','WALQCALC','WAPI','WBHGLR','WBOREVOL','WCALVAL','WCONHIST',
+        'WCONINJE','WCONINJH','WCONINJP','WCONPROD','WCUTBACK','WCUTBACT','WCYCLE',
+        'WDFAC','WDFACCOR','WDRILPRI','WDRILTIM','WECON','WECONCMF','WECONINJ','WECONT',
+        'WEFAC','WELCNTL','WELSPECS','WELDRAW','WELLCOMP','WELLGR','WELLINJE','WELLKBHP',
+        'WELLOPEN','WELLPROD','WELLSHUT','WELLSPEC','WELLSTRE','WELLSTRW','WELLWAG',
+        'WELLMOVEL','WELMOVEL','WELOPEN','WELOPENL','WELPI','WELPRI','WELSEGS','WELSPECL',
+        'WELSPECS','WELTARG','WFOAM','WFRICTN','WFRICTNL','WINJGAS','WGASPROD','WGORPEN',
+        'WGRUPCON','WHEDREFD','WHTEMP','WINJGAS','WINJMIX','WINJMULT','WINJOIL','WINJORD',
+        'WINJTEMP','WINJW','WLIFT','WLIFTOPT','WLIST','WLISTARG','WLISTDYN','WLISTNAM',
+        'WNETCTRL','WNETDP','WORKTHP','WPAVEDEP','WPI','WPICOND','WPIMULT','WPIMULTL',
+        'WPLUG','WPOLYMER','WPOLYRED','WREGROUP','WRFT','WRFTPLT','WSALT','WSCCLEAN',
+        'WSCCLENL','WSCTAB','WSEGAICD','WSEGEXSS','WSEGFLIM','WSEGFMOD','WSEGHEAT',
+        'WSEGINIT','WSEGLABY','WSEGLINK','WSEGMULT','WSEGPROP','WSEGPULL','WSEGSEP',
+        'WSEGSICD','WSEGTABL','WSEGVALV','WSEGWELL','WSEPCOND','WSOLVENT','WSURFACT',
+        'WTADD','WTEMP','WTEMPQ','WTEST','WTHPMAX','WTMULT','WTRACER','WVFPDP','WVFPEXP',
+        'WWPAVE',
             )
 
     UndefinedNumberOfTables = ( 'PSPLITX' , 'PSPLITY' )
 
     TableInTableKeywords = ( 'PVTO','PVTG' )
 
-    SpecialKeywords = ('TITLE','DIMENS','START','EQLDIMS','TABDIMS','WELLDIMS','GPTDIMS','GRID','INCLUDE') #'SUMMARY','SCHEDULE','INCLUDE',)
+    SpecialKeywords = ('TITLE','DIMENS','START','PATHS',
+                       'EQLDIMS','TABDIMS','WELLDIMS','GPTDIMS',
+                       'ROCKCOMP','MISCIBLE',
+                       'INCLUDE',) #'SUMMARY','SCHEDULE','INCLUDE',)
 
     NoSlashKeywords = ('TITLE')
+    
+    KnownTables = {'SGFN' : ['Sg','Krg','Pcog'],
+                   'SOF2' : ['So','Krow'],
+                   'SOF3' : ['So','Krow','Krog'],
+                   'SSFN' : ['PhaseFraction','KrgMultiplier','KrSolventMultiplier'],
+                   'SWFN' : ['Sw','Krw','Pcwo'],
+                   'PMISC' : ['OilPhasePressure','Miscibility'],
+                   'PVDG' : ['Press','Bg','Ug'],
+                   'PVDO' : ['Press','Bo','Uo'],
+                   'PVZG' : ['Press','Z','Visc'],
+                   
+                   
+                   #'STOW' : [['ReferencePressure'],['Pressure','SurfaceTension']],
+                   }
 
-    def __init__( self , DataFilePath = '' , speak = None ) :
+    def __init__( self , DataFilePath = '' , speak = None , parent = None ) :
         if speak == None :
             self.speak = self.get_speak()
         else :
             self.speak = speak
         self.SimObjectID = None
-        Model.ID += 1
-        self.ID = Model.ID
-        Model.Objects[self.ID] = {}
-        Model.Count[self.ID] = 0
-        Model.List[self.ID] = ['Keywords:']
+        if parent is not None :
+            self.ID = parent.ModelID
+            parent.childID += 1
+        else :
+            self.ID = None
+        self.parent = parent
+        self.Objects = {}
+        self.Count = -1
+        self.List = []
         #self.KeyworsList = []
         self.title = ''
-        if DataFilePath == '' :
+        if DataFilePath.strip() == '' :
             self.path = ''
-        else :
-            self.path = DataFilePath.strip()
-        if self.path == '' :
             self.name = ''
         else :
+            self.path = DataFilePath.strip()
             self.name = extension(self.path)[0]
         self.closing = '/'
-        self.start = None
+        
+        
         #self.SimObjects[self.objectID] = ['Model' , self.title , self.path ]
         self.msg0 = Simulation.msg0
         self.msg1 = Simulation.msg1
         self.msg2 = Simulation.msg2
         self.msg3 = Simulation.msg3
         # the ID of the object that create this one
-        self.parentID = None
+        self.parent = None
         # model dimensions
         self.dims = None
         #self.dimX = None
@@ -265,13 +344,21 @@ class Model(Simulation) :
         self.welldims = None
         self.tabdims = None
         self.gptdims = None
-        self.DimensionedTableKeywords = { 'TUNING' : 3 ,}
+        self.rockcomp = None
+        self.miscible = None
+        self.DimensionedTableKeywords = {'TUNING' : 3 ,
+                                         }
 
-    def set_parentID(self, parentID):
-        self.parentID = parentID
+    def get_closing(self) :
+        return self.closing
 
-    def get_parentID(self):
-        return self.parentID
+    def set_parent(self, parent):
+        self.parent = parent
+        if self.ID is None :
+            self.ID = parent.Count
+
+    def get_parent(self):
+        return self.parent
 
     def __str__(self) :
         line = 'Model Object' + str(self.ID)
@@ -287,65 +374,90 @@ class Model(Simulation) :
             line = line + '\n  start date: ' + str(self.start)
         return line
 
-    def __len__(self) :
-        return Model.Count[self.ID]
+    # def __len__(self) :
+    #     # >>> like parent function <<<
+    #     return Model.Count[self.ID]
 
-    def __call__(self,ModObject):
-        if type(ModObject) == int :
-            if ModObject > Model.Count[self.ID] :
-                return None
-        elif type(ModObject) == str :
-            try :
-                ModObject = Model.Objects[self.ID][0][1].index(ModObject)
-            except :
-                return None
-        return Model.Objects[self.ID][ModObject]
-
-    def __getitem__(self, item) :
-        if type(item) == int :
-            if item > Model.Count[self.ID] :
-                return None
-        elif type(item) == str :
-            cont = self.content()
-            for each in cont :
-                if cont[each][1] == item :
-                    return Model.Objects[self.ID][each]
-            return None
-        return Model.Objects[self.ID][item]
-
-    def content(self) :
-        contentDict = {}
-        for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
-            #contentDict[i] = ( Simulation.Objects[self.ID][0][0][i] , Simulation.Objects[self.ID][0][1][i] )
-            contentDict[i] = ( type(Model.Objects[self.ID][i]) , Model.Objects[self.ID][i].get_name() )
-        return contentDict
+    # def __call__(self,ModObject):
+    #     # >>> like parent function <<<
+    #     if type(ModObject) == int :
+    #         if ModObject <= Model.Count[self.ID] :
+    #             return None
+    #     elif type(ModObject) == str :
+    #         try :
+    #             ModObject = Model.Objects[self.ID][0][1].index(ModObject)
+    #         except :
+    #             return None
+    #     return Model.Objects[self.ID][ModObject]
     
-    def keys(self) :
-        contentDict = []
-        for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
-            #contentDict[i] = ( Simulation.Objects[self.ID][0][0][i] , Simulation.Objects[self.ID][0][1][i] )
-            contentDict.append( Model.Objects[self.ID][i].get_name() )
-        return contentDict
+    # def __getitem__(self, item) :
+    #     # >>> like parent function <<<
+    #     if type(item) == int :
+    #         if item > Model.Count[self.ID] :
+    #             return None
+    #     elif type(item) == str :
+    #         cont = self.content()
+    #         for each in cont :
+    #             if cont[each][1] == item :
+    #                 return Model.Objects[self.ID][each]
+    #         return None
+    #     return Model.Objects[self.ID][item]
+
+    # def content(self) :
+    #     # >>> like parent function <<<
+    #     contentDict = {}
+    #     for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
+    #         #contentDict[i] = ( Simulation.Objects[self.ID][0][0][i] , Simulation.Objects[self.ID][0][1][i] )
+    #         contentDict[i] = ( type(Model.Objects[self.ID][i]) , Model.Objects[self.ID][i].get_name() )
+    #     return contentDict
+    
+    # def keys(self) :
+    #     # >>> like parent function <<<
+    #     contentDict = []
+    #     for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
+    #         #contentDict[i] = ( Simulation.Objects[self.ID][0][0][i] , Simulation.Objects[self.ID][0][1][i] )
+    #         contentDict.append( Model.Objects[self.ID][i].get_name() )
+    #     return contentDict
+
+    # def set_name(self,name) :
+    #     # >>> like parent function <<<
+    #     self.name = str(name)
+    #     if self.SimObjectID != None :
+    #         Simulation.Objects[self.SimObjectID[0]][0][1][self.SimObjectID[1]] = self.name
 
     def extract(self , NameCriteria = None , CaseSensitive = False ) :
         contentDict = {}
         if NameCriteria == None :
-            for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
-                contentDict[i] = ( type(Model.Objects[self.ID][i]) , Model.Objects[self.ID][i].get_name() , Model.Objects[self.ID][i].get_args() )
+            for each in self.Objects :
+                contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
+                # if self.Objects[each].get_prop() is not None :
+                #     contentDict[each] = ( self.Objects[each].get_name() , self.Objects[each].get_prop() )
+                # elif self.Objects[each].get_table() is not None :
+                #     contentDict[each] = ( self.Objects[each].get_name() , self.Objects[each].get_table() )
+                # else :
+                #     contentDict[each] = ( self.Objects[each].get_name() , self.Objects[each].get_args() )
         else :
             if type(NameCriteria) == str :
                 if CaseSensitive == False :
                     NameCriteria = NameCriteria.upper()
-                for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
-                    if Model.Objects[self.ID][i].get_name() == NameCriteria :
-                        contentDict[i] = ( type(Model.Objects[self.ID][i]) , Model.Objects[self.ID][i].get_name() , Model.Objects[self.ID][i].get_args() )
+                    for each in self.Objects :
+                        if self.Objects[each].name.upper() == NameCriteria :
+                            contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
+                else :
+                    for each in self.Objects :
+                        if self.Objects[each].name == NameCriteria :
+                            contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
             elif type(NameCriteria) == tuple or type(NameCriteria) == list :
                 if CaseSensitive == False :
                     for k in range(len(NameCriteria)) :
                         NameCriteria[k] = NameCriteria[k].upper()
-                for i in range( 1 , len( Model.Objects[self.ID]) +1 ) :
-                    if Model.Objects[self.ID][i].get_name() in NameCriteria :
-                        contentDict[i] = ( type(Model.Objects[self.ID][i]) , Model.Objects[self.ID][i].get_name() , Model.Objects[self.ID][i].get_args() )
+                    for each in self.Objects :
+                        if self.Objects[each].name.upper() in NameCriteria :
+                            contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
+                else :
+                    for each in self.Objects :
+                        if self.Objects[each].name in NameCriteria :
+                            contentDict[each] = ( type(self.Objects[each]) , self.Objects[each].name , self.Objects[each].get_args() )
         return contentDict
 
     def set_SimObjectID(self,intSimulationID,intModelID):
@@ -361,14 +473,9 @@ class Model(Simulation) :
         if self.name == '' :
             self.name = self.title
 
-    def set_name(self,name) :
-        self.name = str(name)
-        if self.SimObjectID != None :
-            Simulation.Objects[self.SimObjectID[0]][0][1][self.SimObjectID[1]] = self.name
-
     def set_dimens(self,dims) :
-        if '/' in dims :
-            dims = dims[ : dims.index('/') ]
+        if self.get_closing() in dims :
+            dims = dims[ : dims.index(self.get_closing()) ]
         if type(dims) == str :
             dims = dims.split()
         temporal = []
@@ -384,31 +491,48 @@ class Model(Simulation) :
 
     def get_dimens(self) :
         if self.dims == None :
-            return ''
+            return None
         else :
             return self.dims
 
     def get_dimX(self) :
         if self.dims == None :
-            return ''
+            return None
         else :
             return self.dims[0]
 
     def get_dimY(self) :
         if self.dims == None :
-            return ''
+            return None
         else :
             return self.dims[1]
 
     def get_dimZ(self) :
         if self.dims == None :
-            return ''
+            return None
         else :
             return self.dims[2]
 
+    def create_CellIndex(self) :
+        
+        K_values = []
+        for k in range( 1 , self.get_dimZ()+1 ) :
+            K_values += [ k ] * self.get_dimX() * self.get_dimY()
+            
+        J_values = []
+        for j in range( 1 , self.get_dimY()+1 ) :
+            J_values += [ j ] * self.get_dimX()
+        J_values = J_values * self.get_dimZ()
+                    
+        I_values = list( range(1,self.get_dimX()+1) ) * self.get_dimY() * self.get_dimZ()
+                     
+        self.set_newKeyword('K_INDEX',K_values)
+        self.set_newKeyword('J_INDEX',J_values)
+        self.set_newKeyword('I_INDEX',I_values)
+
     def set_eqldims(self,eqldims) :
-        if '/' in eqldims :
-            eqldims = eqldims[ : eqldims.index('/') ]
+        if self.get_closing() in eqldims :
+            eqldims = eqldims[ : eqldims.index(self.get_closing()) ]
         if eqldims.strip() == '' :
             eqldims = ' 5* '
         self.eqldims = expandKeyword(eqldims).split()
@@ -420,10 +544,14 @@ class Model(Simulation) :
             self.eqldims[3] = 1
         self.DimensionedTableKeywords['EQUIL'] = int(self.eqldims[0])
         self.DimensionedTableKeywords['SALTVD'] = int(self.eqldims[0])
-        self.DimensionedTableKeywords['TVDP'] = int(self.eqldims[3])
         self.DimensionedTableKeywords['TEMPVD'] = int(self.eqldims[0])
-
-
+        self.DimensionedTableKeywords['ZMFVD'] = int(self.eqldims[0])
+        self.DimensionedTableKeywords['RSVD'] = int(self.eqldims[0])
+        self.DimensionedTableKeywords['RVVD'] = int(self.eqldims[0])
+        self.DimensionedTableKeywords['PDVD'] = int(self.eqldims[0])
+        self.DimensionedTableKeywords['PBVD'] = int(self.eqldims[0])
+        self.DimensionedTableKeywords['TVDP'] = int(self.eqldims[3])
+        
     def get_eqldims(self) :
         if self.eqldims == None :
             return ''
@@ -431,8 +559,8 @@ class Model(Simulation) :
             return self.eqldims
 
     def set_gptdims(self,gptdims) :
-        if '/' in gptdims :
-            gptdims = gptdims[ : gptdims.index('/') ]
+        if self.get_closing() in gptdims :
+            gptdims = gptdims[ : gptdims.index(self.get_closing()) ]
         if gptdims.strip() == '' :
             gptdims = ' 3* '
         self.gptdims = expandKeyword(gptdims).split()
@@ -454,19 +582,61 @@ class Model(Simulation) :
             return self.gptdims
 
     def set_welldims(self,welldims):
-        if '/' in welldims :
-            welldims = welldims[ : welldims.index('/') ]
+        if self.get_closing() in welldims :
+            welldims = welldims[ : welldims.index(self.get_closing()) ]
         self.welldims = expandKeyword(welldims).split()
+
+    def set_rockcomp(self,rockcomp):
+        if self.get_closing() in rockcomp :
+            rockcomp = rockcomp[ : rockcomp.index(self.get_closing()) ]
+        self.rockcomp = expandKeyword(rockcomp).split()
+        if len(self.rockcomp) < 5 :
+            self.rockcomp = self.rockcomp + ['1*']*(5-len(self.rockcomp))
+        if self.rockcomp[0] == '1*' :
+            self.rockcomp[0] = 'REVERS'
+        if self.rockcomp[1] == '1*' :
+            self.rockcomp[1] = 1
+        if self.rockcomp[2] == '1*' :
+            self.rockcomp[2] = 'NO'
+        if self.rockcomp[3] == '1*' :
+            self.rockcomp[3] = '1*'
+        if self.rockcomp[4] == '1*' :
+            self.rockcomp[4] = 0
+        self.DimensionedTableKeywords['ROCKPAMA'] = int(self.rockcomp[1])
+        self.DimensionedTableKeywords['ROCKPMAT'] = int(self.rockcomp[1])
+        self.DimensionedTableKeywords['ROCKTAB'] = int(self.rockcomp[1])
+        self.DimensionedTableKeywords['ROCKTABH'] = int(self.rockcomp[1])
 
     def get_welldims(self):
         if self.welldims == None :
             return ''
         else :
             return self.welldims
+    
+    def set_miscible(self,miscible) :
+        if self.get_closing() in miscible :
+            miscible = miscible[ : miscible.index(self.get_closing()) ]
+        if miscible.strip() == '' :
+            miscible = ' 3* '
+        self.miscible = expandKeyword(miscible).split()
+        if len(self.miscible) < 4 :
+            self.miscible = self.miscible + ['1*']*(4-len(self.miscible))
+        if self.miscible[0] == '1*' :
+            self.miscible[0] = 1
+        self.DimensionedTableKeywords['SGCWMIS'] = int(self.miscible[0])
+        self.DimensionedTableKeywords['SORWMIS'] = int(self.miscible[0])
+        self.DimensionedTableKeywords['TLMIXPAR'] = int(self.miscible[0])
+        self.DimensionedTableKeywords['PMISC'] = int(self.miscible[0])
 
+    def get_miscible(self):
+        if self.miscible == None :
+            return ''
+        else :
+            return self.miscible
+        
     def set_tabdims(self,tabdims) :
-        if '/' in tabdims :
-            tabdims = tabdims[ : tabdims.index('/') ]
+        if self.get_closing() in tabdims :
+            tabdims = tabdims[ : tabdims.index(self.get_closing()) ]
         if tabdims.strip() == '' :
             tabdims = ' 24* '
         self.tabdims = expandKeyword(tabdims).split()
@@ -521,20 +691,34 @@ class Model(Simulation) :
         self.DimensionedTableKeywords['JFUNCR'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SGFN'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SWFN'] = int(self.tabdims[0])
+        self.DimensionedTableKeywords['MSFN'] = int(self.tabdims[0])
+        self.DimensionedTableKeywords['SSFN'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SOF2'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SOF3'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SWOF'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SGOF'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SGWFN'] = int(self.tabdims[0])
         self.DimensionedTableKeywords['SOR'] = int(self.tabdims[0])
+        self.DimensionedTableKeywords['STOW'] = int(self.tabdims[0])*2
         self.DimensionedTableKeywords['PVTG'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVDG'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVTO'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['PVCO'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['PVCDO'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVDO'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVTW'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['PVDS'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['ROCK'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['RSCONSTT'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['RVCONSTT'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['BDENSITY'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['DENSITY'] = int(self.tabdims[1])
+        self.DimensionedTableKeywords['GRAVITY'] = int(self.tabdims[1])
         self.DimensionedTableKeywords['PVTWSALT'] = int(self.tabdims[1])*2
         self.DimensionedTableKeywords['PVZG'] = int(self.tabdims[1])*2
         self.DimensionedTableKeywords['EOS'] = int(self.tabdims[8])
+        self.DimensionedTableKeywords['LBCCOEFR'] = int(self.tabdims[8])
+        self.DimensionedTableKeywords['PARACHOR'] = int(self.tabdims[8])
         self.DimensionedTableKeywords['BIC'] = int(self.tabdims[8])
         self.DimensionedTableKeywords['OMEGAA'] = int(self.tabdims[8])
         self.DimensionedTableKeywords['OMEGAB'] = int(self.tabdims[8])
@@ -587,62 +771,58 @@ class Model(Simulation) :
     def set_include(self,IncludeFile) :
         print('  reading include file\n' + str(IncludeFile) )
         IncludeFile = IncludeFile.replace("\\","/").strip().strip("'")
-        if IncludeFile[-1] == '/' :
+        if IncludeFile[-1] == self.get_closing() :
             IncludeFile = IncludeFile[:-1]
         if "'" in IncludeFile :
             IncludeFile = IncludeFile.strip().strip("'")
         IncludePath = extension(self.path)[2].strip("'")
         IncludeFile = IncludeFile.strip().strip("'")
-#        if self.path[-1] == '/' :
+#        if self.path[-1] == self.get_closing() :
 #            IncludePath = self.path[:-1]
 #        print('\n' + IncludePath + '\n' + IncludeFile )
-        if IncludeFile[0] == '/' :
+        if IncludeFile[0] == self.get_closing() :
             IncludeFile = IncludeFile[1:]
         IncludePath = IncludePath + IncludeFile
-#        IncludePath = IncludePath + '/' + IncludeFile
+#        IncludePath = IncludePath + self.get_closing() + IncludeFile
         self.ReadData(IncludePath)
 
     def set_summary(self) :
         self.SUMMARY = True
-#        self.closing = 'SCHEDULE'
 
     def set_schedule(self) :
         self.SUMMARY = False
-#        self.closing = '/'
 
     def set_newKeyword(self , name , arguments = None) :
         #self.KeyworsList.append(name)
-        Model.List[self.ID].append(name)
-        Model.Count[self.ID] += 1
-        Model.Objects[self.ID][Model.Count[self.ID]] = Keyword(name , arguments , KeywordIndex = Model.Count[self.ID] , speak = self.speak )
-        Model.Objects[self.ID][Model.Count[self.ID]].set_parentID(self.ID)
+        self.List.append(name)
+        self.Count += 1
+        self.Objects[self.Count] = Keyword(name , arguments , KeywordIndex = self.Count , speak = self.speak )
+        self.Objects[self.Count].set_parent(self)
         #self.checkSpecials(name)
-        self.checkSpecials( Model.Count[self.ID] )
+        self.checkSpecials( self.Count )
 
     def set_keywordComments(self, keywordComments , KeywordIndex = None ) :
         if KeywordIndex == None :
-            KeywordIndex = Model.Count[self.ID]
-        Model.Objects[self.ID][KeywordIndex].set_comments(keywordComments)
-
-
+            KeywordIndex = self.Count
+        self.Objects[KeywordIndex].set_comments(keywordComments)
 
     def set_KeywordArgument(self , arguments) :
-        Model.Objects[self.ID][Model.Count[self.ID]].append(arguments)
-
+        self.Objects[self.Count].append(arguments)
 
     def checkSpecials( self , keyword_index ) :
 #        print('keyword index ' + str(keyword_index))
         if type(keyword_index) == str :
             try :
-                keyword_index = len(Model.List[self.ID]) - Model.List[self.ID][::-1].index(keyword_index) -1
+                keyword_index = len(self.List) - self.List[::-1].index(keyword_index) -1
             except :
                 verbose( self.speak , self.msg2 , keyword_index + ' not in keyword list')
-        if type(keyword_index) == int and keyword_index <= Model.Count[self.ID] :
-            if Model.Objects[self.ID][keyword_index].get_name() in Model.SpecialKeywords :
+        if type(keyword_index) == int and keyword_index <= self.Count :
+            if self.Objects[keyword_index].get_name() in Model.SpecialKeywords :
                 verbose( self.speak , self.msg1 , 'special keyword identified')
-                if Model.Objects[self.ID][keyword_index] != None :
-                    Model.Objects[self.ID][keyword_index].expand()
-                exec('self.set_' + str(Model.Objects[self.ID][keyword_index].get_name().lower()) + '("' + Model.Objects[self.ID][keyword_index].get_args() + '")' )
+                if self.Objects[keyword_index] != None :
+                    self.Objects[keyword_index].expand()
+                exec('self.set_' + str(self.Objects[keyword_index].get_name().lower()) + '("' + self.Objects[keyword_index].get_args() + '")' )
+                
 
 
     def COMPDATtable(self):
@@ -716,7 +896,7 @@ class Model(Simulation) :
                 row = [ wconinjhDate.strip() ] + ['WCONINJH'] + expandKeyword(line).split()
                 ProdInjTable.append(row)
 
-        for each in wconprodDict :
+        for each in wconprodArray :
             if each < datesMin :
                 wconprodDate = self.start
             else :
@@ -732,7 +912,7 @@ class Model(Simulation) :
                 row = [ wconprodDate.strip() ] + ['WCONPROD'] + expandKeyword(line).split()
                 ProdInjTable.append(row)
 
-        for each in wconinjeDict :
+        for each in wconinjeArray :
             if each < datesMin :
                 wconinjeDate = self.start
             else :
@@ -759,13 +939,13 @@ class Model(Simulation) :
         """
 
         def appendArgument(previous='',new='') :
-            if '/' in new :
+            if self.get_closing() in new :
                 # keywords that can have / as part of the argument
                 if keywordName == 'INCLUDE' :
-                    return previous + new[ : len(new) - new[::-1].index('/')+1].strip('\n') + '\n'
+                    return previous + new[ : len(new) - new[::-1].index(self.get_closing())+1].strip('\n') + '\n'
                 # regular keywords
                 else :
-                    return previous + new[:new.index('/')+1].strip('\n') + '\n'
+                    return previous + new[:new.index(self.get_closing())+1].strip('\n') + '\n'
             else :
                 return previous + new.strip('\n') + '\n'
 
@@ -775,7 +955,14 @@ class Model(Simulation) :
             self.speak = speak
 
         #keywords = {}
-        file = open(filename,'r')
+        try :
+            file = open(filename,'r')
+        except :
+            try :
+                file = open(filename.replace(' /','/'),'r')
+            except :
+                file = open(filename,'r')
+                
         entirefile = file.readlines()
         file.close()
 
@@ -875,16 +1062,16 @@ class Model(Simulation) :
                 else : # elif keywordFlag == True :
 
                     # interpreting slash in line
-                    if '/' in line :
+                    if self.get_closing() in line :
 
                         # check for comments after slash
-                        if len( line[ line.index('/')+1 : ].strip() ) > 0 :
+                        if len( line[ line.index(self.get_closing())+1 : ].strip() ) > 0 :
                             keywordComments = keywordComments + line
 
                         # keywords that must have only one argument line
                         if keywordName not in Model.TableFormatKeywords and keywordName not in self.DimensionedTableKeywords :
                             # save the arguments in case / is not the first character
-                            if line.strip().index('/') > 0 :
+                            if line.strip().index(self.get_closing()) > 0 :
                                 keywordValues = appendArgument( keywordValues ,  line )
                             self.set_newKeyword( keywordName ,  keywordValues )
                             self.set_keywordComments( keywordComments )
@@ -896,7 +1083,7 @@ class Model(Simulation) :
                         elif keywordName in Model.UndefinedNumberOfTables :
 
                             # found closing slash
-                            if line.strip().index('/') == 0 :
+                            if line.strip().index(self.get_closing()) == 0 :
 
                                 # first slash found, it is closing a table
                                 if slashCounter == 0 :
@@ -920,7 +1107,7 @@ class Model(Simulation) :
                         elif keywordName in Model.TableFormatKeywords :
 
                             # found closing slash
-                            if line.strip().index('/') == 0 :
+                            if line.strip().index(self.get_closing()) == 0 :
                                 verbose( speak , self.msg1 , '<< reading final slash, end of keyword ' + keywordName)
                                 self.set_newKeyword( keywordName ,  keywordValues )
                                 self.set_keywordComments( keywordComments )
@@ -929,7 +1116,7 @@ class Model(Simulation) :
                                 keywordName = ''
 
                             # reading table row
-                            else : # if line.strip().index('/') > 0 :
+                            else : # if line.strip().index(self.get_closing()) > 0 :
                                 keywordValues = appendArgument( keywordValues ,  line )
 
                         # keywords that must have a specific number of argument lines
@@ -938,7 +1125,7 @@ class Model(Simulation) :
 
                             # in case of TableInTable the closing slash is first character in the line
                             if keywordName in Model.TableInTableKeywords :
-                                if line.strip().index('/') == 0 :
+                                if line.strip().index(self.get_closing()) == 0 :
                                     slashCounter = slashCounter + 1
 
                             # slash always closes a table
@@ -947,7 +1134,7 @@ class Model(Simulation) :
 
                             # slash closing keyword or table
                             if slashCounter == numberOfKeywordTables :
-                                keywordValues = appendArgument( keywordValues ,  line )
+                                # keywordValues = appendArgument( keywordValues ,  line )
                                 self.set_newKeyword( keywordName ,  keywordValues )
                                 self.set_keywordComments( keywordComments )
                                 keywordFlag = False
@@ -955,7 +1142,7 @@ class Model(Simulation) :
                                 keywordName = ''
 
                     # only data line:
-                    else : # if '/' not in line :
+                    else : # if self.get_closing() not in line :
 #                        slashCounter = 0
                         keywordValues = appendArgument( keywordValues ,  line )
 
@@ -977,16 +1164,19 @@ class Keyword(Model) :
     """
     object to contain every keyword
     """
-    keyID = 0
 
-    def __init__(self , name , arguments = None , KeywordIndex = None , speak = None , comments = None) :
+    def __init__( self , name , arguments = None , KeywordIndex = None , speak = None , comments = None , parent = None ) :
         if speak == None :
             self.speak = self.get_speak()
         else :
             self.speak = speak
-        Keyword.keyID += 1
-        self.ID = Keyword.keyID
+        # Keyword.keyID += 1
+        if parent is not None :
+            self.ID = parent.Count
+        else :
+            self.ID = None
         self.name = name
+        self.parent = parent
         self.expanded = False
         #self.KeyworsList.append(name)
         self.indexInModel = KeywordIndex
@@ -997,6 +1187,8 @@ class Keyword(Model) :
             self.args = None
         self.prop = None
         self.propObject = None
+        self.table = None
+        self.tableObject = None
         self.msg0 = Simulation.msg0
         self.msg1 = Simulation.msg1
         self.msg2 = Simulation.msg2
@@ -1005,6 +1197,12 @@ class Keyword(Model) :
             self.comment = ''
         else :
             self.comment = str(comments)
+
+    def get_dimens(self) :
+        return self.parent.get_dimens()
+    
+    def get_closing(self) :
+        return self.parent.get_closing()
 
     def __str__(self) :
         line = 'this is keyword ' + str(self.name)
@@ -1077,8 +1275,8 @@ class Keyword(Model) :
 
     def set_name(self , name) :
         self.name = str(name)
-        if self.indexInModel != None :
-            Model.List[self.ID][self.indexInModel] = self.name
+        # if self.indexInModel != None :
+        #     Model.List[self.ID][self.indexInModel] = self.name
             #self.KeyworsList[self.indexInModel] = self.name
 
     def get_name(self) :
@@ -1093,40 +1291,155 @@ class Keyword(Model) :
                 self.arg2prop()
         return self.prop
 
+    def get_table(self) :
+        if self.table is None :
+            if self.args is not None :
+                self.arg2table()
+        return self.table
+
     def get_comments(self) :
         return self.comment
 
     def get_comm(self) :
-        return self.comment
+        return self.comments()
 
     def arg2prop(self) :
-        self.propObject = GridProperty(self , self.speak , self.ID)
+        self.propObject = GridProperty( self , self.speak )
         self.prop = self.propObject.prop
+
+    def arg2table(self) :
+        self.tableObject = KeywordTable( self , self.speak )
+        self.table = self.tableObject.table
+
+    # check type of values in argument
+    def inferType(self,keywordArgument) :
+        if type(keywordArgument) == str :
+            dtypeInferred = 'int'
+            for i in range(len(keywordArgument)) :
+                try :
+                    temp = int(keywordArgument[i])
+                except :
+                    dtypeInferred = 'float'
+                    try :
+                        temp = float(keywordArgument[i])
+                    except :
+                        dtypeInferred = 'str'
+        elif type(keywordArgument) == list or type(keywordArgument) == tuple :
+            dtypeInferred = 'int'
+            for each in keywordArgument :
+                if type(each) == str :
+                    try :
+                        temp = int(each)
+                    except :
+                        dtypeInferred = 'float'
+                        try :
+                            temp = float(each)
+                        except :
+                            dtypeInferred = 'str'
+                elif type(each) == float :
+                    if int(each) != each :
+                        dtypeInferred = 'float'
+                else :
+                    dtypeInferred = 'str'
+        else :
+            dtypeInferred = None
+                
+        return dtypeInferred
+
+
+
+class KeywordTable(Keyword) :
+    def __init__( self , keyword , speak = 0 , force=False ) :
+        self.speak = speak
+        self.table = None
+        self.count = 1 # keyword.DimensionedTableKeywords[keyword.get_name()]
+        self.columns = 0
+        self.parent = keyword
+        self.name = self.parent.get_name()
+
+        self.msg0 = Simulation.msg0
+        self.msg1 = Simulation.msg1
+        self.msg2 = Simulation.msg2
+        self.msg3 = Simulation.msg3
+    
+        self.arg2table()    
+    
+    def arg2table(self) :
+        keywordArgument = self.parent.get_args().split('\n')
+
+        tableEnd = False
+        tableDict = {}
+        for line in keywordArgument :
+            row = expandKeyword(line)
+            if self.get_closing() in row :
+                tableEnd = True
+                row = row[ : row.index(self.get_closing()) ]
+            row = row.split()
+            
+            if len(row) > 0 :
+                # initialize dictionary
+                if self.columns == 0 :
+                    self.columns = len(row)
+                    for c in range( self.columns + 1 ) :
+                        tableDict[c] = []
+                    
+                # process every row
+                row = [self.count] + row
+                for c in range( self.columns + 1 ) :
+                    tableDict[c].append( row[c] )
+                # check if is last row of table 
+                if tableEnd :
+                    self.count += 1
+                    tableEnd = False
+        
+        for col in tableDict :
+            dtypeInferred = self.inferType( tableDict[col] )
+            for i in range(len(tableDict[col])) :
+                if dtypeInferred == 'int' :
+                    
+                    tableDict[col][i] = int(tableDict[col][i])
+                elif dtypeInferred == 'float' :
+                    tableDict[col][i] = float(tableDict[col][i])
+        
+        if self.name in Model.KnownTables :
+            ColNames = ['Table'] + Model.KnownTables[self.name]
+        else :
+            ColNames = ['Table']
+            for c in range( self.columns ) :
+                ColNames.append('Col_' + str(c+1))
+            
+        self.table = pd.DataFrame(data=tableDict)
+        self.table.rename(columns=dict(zip(self.table.columns,ColNames)),inplace=True)
+        self.table.set_index('Table',inplace=True)
+
 
 
 
 
 class GridProperty(Keyword) :
-    def __init__( self , keyword , speak = 0 , parentID = None ) :
+    def __init__( self , keyword , speak = 0 , force=False ) :
         self.speak = speak
         self.prop = None
         self.expanded = False
         self.shaped = False
         self.type = False
-        self.dims = None
+        self.parent = keyword
         self.name = keyword.get_name()
 
         self.msg0 = Simulation.msg0
         self.msg1 = Simulation.msg1
         self.msg2 = Simulation.msg2
         self.msg3 = Simulation.msg3
-
         
+        self.arg2prop()
+
+    def arg2prop(self) :
         # expand keyword to be converted to array
-        keywordArgument = keyword.get_args()
-        if '/' in keywordArgument :
-            keywordArgument = keywordArgument[ : keywordArgument.index('/') ]
-        keywordArgument = keywordArgument.replace("\n"," ")
+        keywordArgument = self.parent.get_args()
+        if self.get_closing() in keywordArgument :
+            keywordArgument = keywordArgument[ : keywordArgument.index(self.get_closing()) ]
+        if type(keywordArgument) == str :
+            keywordArgument = keywordArgument.replace("\n"," ")
         keywordArgument = expandKeyword(keywordArgument)
         self.expanded = True
 
@@ -1138,83 +1451,16 @@ class GridProperty(Keyword) :
 
         # with the list content identify the type of the values ( int or float )
         if type(keywordArgument) == list :
-            countInt = []
-            countFloat = []
-            countStr = []
-            countOther = []
-            typeStr = None
-
-            for i in range(len(keywordArgument)) :
-                if type(keywordArgument[i]) == int :
-                    countInt.append(i)
-                elif type(keywordArgument[i]) == float :
-                    countFloat.append(i)
-                elif type(keywordArgument[i]) == str :
-                    countStr.append(i)
-                    if '.' in keywordArgument[i] :
-                        typeStr = float
-                    elif ',' in keywordArgument[i] :
-                        typeStr = float
-                    else :
-                        if typeStr == None :
-                            typeStr = int
-                else :
-                    countOther.append(i)
-
-            if len(countOther) > 0 :
-                verbose( self.speak , self.msg3 , 'input type not identified: ' + str(keywordArgument[countOther[0]]) + ' type: ' + str(type(keywordArgument[countOther[0]])) + '.')
-            if len(countFloat) > 0 :
-                self.type = float
-            if len(countInt) > 0 :
-                if len(countFloat) > 0 :
-                    verbose( self.speak , self.msg2 , 'integers found mixed with floats in keyword arguments')
-                    for each in countInt :
-                        keywordArgument[each] = float(keywordArgument[each])
-                else :
-                    self.type = int
-            if len(countStr) > 0 :
-                if self.type == float :
-                    for each in countStr :
-                        try :
-                            keywordArgument[each] = float(keywordArgument[each])
-                        except :
-                            verbose( self.speak , self.msg3 , 'input type not identified: ' + str(keywordArgument[each]) + ' type: ' + str(type(keywordArgument[each])) + '.')
-                elif self.type == int :
-                    for each in countStr :
-                        try :
-                            keywordArgument[each] = int(keywordArgument[each])
-                        except :
-                            verbose( self.speak , self.msg3 , 'input type not identified: ' + str(keywordArgument[each]) + ' type: ' + str(type(keywordArgument[each])) + '.')
-
-        # in case string is received, identify the type of the values and then convert to list
-        elif type(keywordArgument) == str :
-            if '.' in ' '.join(keywordArgument) :
-                self.type = float
-            elif ',' in ' '.join(keywordArgument) :
-                self.type = float
-            else :
-                self.type = int
-
-            keywordArgument = keywordArgument.split()
-            if self.type == float :
-                for each in range(len(keywordArgument)) :
-                    try :
-                        keywordArgument[each] = float(keywordArgument[each])
-                    except :
-                        verbose( self.speak , self.msg3 , 'input type not identified: ' + str(keywordArgument[each]) + ' type: ' + str(type(keywordArgument[each])) + '.')
-            elif self.type == int :
-                for each in range(len(keywordArgument)) :
-                    try :
-                        keywordArgument[each] = int(keywordArgument[each])
-                    except :
-                        verbose( self.speak , self.msg3 , 'input type not identified: ' + str(keywordArgument[each]) + ' type: ' + str(type(keywordArgument[each])) + '.')
-
-        else :
-            # might be a numpy array or something else
-            pass
+            dtypeInferred = self.inferType(keywordArgument)
+                        
+        else : # might be a numpy array or something else
+            try :
+                dtypeInferred = keywordArgument.dtype
+            except :
+                dtypeInferred = None
 
         # create numpy array
-        self.prop = np.array( keywordArgument )
+        self.prop = np.array( keywordArgument , dtype=dtypeInferred  )
 
         # set shape according to dimension
         self.reshape()
@@ -1239,7 +1485,7 @@ class GridProperty(Keyword) :
         """
         # if dimensions are known give the appropiate shape to the array
         if dimensions == None :
-            self.dims = self.get_dimens()
+            dimensions = self.parent.get_dimens()
 
         elif type(dimensions) == str :
             dimensions = dimensions.split()
@@ -1256,12 +1502,12 @@ class GridProperty(Keyword) :
                     verbose( self.speak , self.msg3 , 'dimensions must be an integer or an tuple of integers' )
                     return False
 
-        if self.dims != None and type(self.prop) == np.ndarray :
+        if dimensions != None and type(self.prop) == np.ndarray :
             prod = 1
-            for each in self.dims :
+            for each in self.get_dimens() :
                 prod = prod * each
             if prod == len(self.prop) :
-                self.prop = self.prop.reshape(self.dims)
+                self.prop = self.prop.reshape(self.get_dimens())
                 self.shaped = True
                 return True
             else :
