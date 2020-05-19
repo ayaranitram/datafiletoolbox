@@ -13,16 +13,24 @@ Created on Tue Jul  9 21:23:27 2019
 # import numpy
 # import pandas
 
-# from .common.inout import extension
-# from .common.inout import verbose
-# from .common.stringformat import date
-from .common.loader import loadSimulationResults
+# from datafiletoolbox.common.inout import extension
+# from datafiletoolbox.common.inout import verbose
+# from datafiletoolbox.common.stringformat import date
+# from datafiletoolbox.common.loader import loadSimulationResults
+# from datafiletoolbox.SimPlot.SmartPlot import Plot
+
+# from datafiletoolbox.SimulationResults.oneObject import *
+
+# from datafiletoolbox.SimulationResults.mainObject import SimResult
+# from datafiletoolbox.SimulationResults.vipObject import VIP
+# from datafiletoolbox.SimulationResults.eclObject import ECL
+
 # from .common.functions import mainKey
 # from .common.functions import is_SimulationResult
 
 # from .SimInput.propertyManipulation import *
 # from .SimInput.simObject import *
-from .SimPlot.SmartPlot import Plot
+
 # from .SimulationResults import *
 
 # from bases.units import convertUnit
