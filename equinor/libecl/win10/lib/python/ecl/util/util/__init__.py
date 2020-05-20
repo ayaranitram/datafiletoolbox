@@ -39,14 +39,14 @@ The modules included in the util package are:
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
-import ecl
+from datafiletoolbox.equinor.libecl.win10.lib.python import ecl # import ecl
 from cwrap import Prototype
 
 
 
 from .version import Version, EclVersion
 
-from ecl.util.enums import RngAlgTypeEnum, RngInitModeEnum
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.enums import RngAlgTypeEnum, RngInitModeEnum # from ecl.util.enums import RngAlgTypeEnum, RngInitModeEnum
 
 from .ctime import CTime
 

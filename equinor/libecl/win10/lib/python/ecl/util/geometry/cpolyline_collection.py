@@ -19,8 +19,8 @@ Create a polygon
 import ctypes
 
 from cwrap import BaseCClass
-from ecl import EclPrototype
-from ecl.util.geometry import CPolyline
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype # from ecl import EclPrototype
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.geometry import CPolyline # from ecl.util.geometry import CPolyline
 
 
 class CPolylineCollection(BaseCClass):

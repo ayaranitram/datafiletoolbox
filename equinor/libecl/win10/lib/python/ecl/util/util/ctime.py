@@ -20,7 +20,7 @@ import datetime
 import time
 
 from cwrap import BaseCValue
-from ecl import EclPrototype
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype # from ecl import EclPrototype
 
 
 class CTime(BaseCValue):

@@ -14,8 +14,8 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from ecl import EclPrototype
-from ecl.util.util import VectorTemplate
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype # from ecl import EclPrototype
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.util import VectorTemplate # from ecl.util.util import VectorTemplate
 
 
 class DoubleVector(VectorTemplate):

@@ -35,14 +35,14 @@ import re
 # argument. In the python code this order has been reversed.
 from cwrap import BaseCClass, CFILE
 
-from ecl.util.util import monkey_the_camel
-from ecl.util.util import StringList, CTime, DoubleVector, TimeVector, IntVector
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.util import monkey_the_camel # from ecl.util.util import monkey_the_camel
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.util import StringList, CTime, DoubleVector, TimeVector, IntVector # from ecl.util.util import StringList, CTime, DoubleVector, TimeVector, IntVector
 
-from ecl.summary import EclSumTStep
-from ecl.summary import EclSumVarType
-from ecl.summary.ecl_sum_vector import EclSumVector
-from ecl.summary.ecl_smspec_node import EclSMSPECNode
-from ecl import EclPrototype, EclUnitTypeEnum
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary import EclSumTStep # from ecl.summary import EclSumTStep
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary import EclSumVarType # from ecl.summary import EclSumVarType
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary.ecl_sum_vector import EclSumVector # from ecl.summary.ecl_sum_vector import EclSumVector
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary.ecl_smspec_node import EclSMSPECNode # from ecl.summary.ecl_smspec_node import EclSMSPECNode
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype, EclUnitTypeEnum # from ecl import EclPrototype, EclUnitTypeEnum
 #, EclSumKeyWordVector
 
 
@@ -1544,7 +1544,7 @@ are advised to fetch vector as a numpy vector and then scale that yourself:
         return new_case
 
 
-import ecl.summary.ecl_sum_keyword_vector
+import datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary.ecl_sum_keyword_vector # import ecl.summary.ecl_sum_keyword_vector
 EclSum._dump_csv_line = EclPrototype("void ecl_sum_fwrite_interp_csv_line(ecl_sum, time_t, ecl_sum_vector, FILE)", bind=False)
 EclSum._get_interp_vector = EclPrototype("void ecl_sum_get_interp_vector(ecl_sum, time_t, ecl_sum_vector, double_vector)", bind=False)
 EclSum._init_pandas_frame = EclPrototype("void ecl_sum_init_double_frame(ecl_sum, ecl_sum_vector, double*)", bind=False)

@@ -16,8 +16,8 @@
 import os.path
 
 from cwrap import BaseCClass
-from ecl import EclPrototype
-from ecl.util.enums import RngInitModeEnum, RngAlgTypeEnum
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype # from ecl import EclPrototype
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.enums import RngInitModeEnum, RngAlgTypeEnum # from ecl.util.enums import RngInitModeEnum, RngAlgTypeEnum
 
 
 class RandomNumberGenerator(BaseCClass):

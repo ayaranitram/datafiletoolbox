@@ -21,8 +21,8 @@
 """
 
 
-import ecl.util.util
-import ecl.util.geometry
+import datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.util # import ecl.util.util
+import datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.geometry # import ecl.util.geometry
 
 from .ecl_sum_var_type import EclSumVarType
 from .ecl_sum_tstep import EclSumTStep

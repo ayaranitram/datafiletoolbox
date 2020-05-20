@@ -14,8 +14,8 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 from cwrap import BaseCClass
-from ecl.util.util import IntVector
-from ecl import EclPrototype
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.util import IntVector # from ecl.util.util import IntVector
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype # from ecl import EclPrototype
 from .cpolyline import CPolyline
 from ctypes import c_double
 

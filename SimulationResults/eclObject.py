@@ -19,8 +19,8 @@ os.environ['PYTHONPATH'] = eclPath + ';' + os.environ['PYTHONPATH']
 eclPath = eclPath + ';' + extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib'
 eclPath = eclPath + ';' + extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
 os.environ['PATH'] = eclPath + ';' + os.environ['PATH']
-import ecl
-import ecl.summary
+from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import summary
            
 class ECL(SimResult):
     """

@@ -1,4 +1,4 @@
-from ecl import EclPrototype
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype # from ecl import EclPrototype
 import os
 
 def installAbortSignals():

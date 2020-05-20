@@ -18,8 +18,8 @@ import re
 import datetime
 import numbers
 
-from ecl.util.util import monkey_the_camel
-from ecl.summary import EclSum
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.util import monkey_the_camel # from ecl.util.util import monkey_the_camel
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary import EclSum # from ecl.summary import EclSum
 
 
 class NPVParseKey(object):

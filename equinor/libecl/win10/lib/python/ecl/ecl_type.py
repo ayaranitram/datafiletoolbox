@@ -16,7 +16,7 @@
 from __future__ import absolute_import
 
 from cwrap import BaseCClass, BaseCEnum
-from ecl import EclPrototype
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype # from ecl import EclPrototype
 
 class EclTypeEnum(BaseCEnum):
     TYPE_NAME="ecl_type_enum"

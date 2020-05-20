@@ -14,8 +14,8 @@
 #  See the GNU General Public License at <http://www.gnu.org/licenses/gpl.html>
 #  for more details.
 
-from ecl.util.util import monkey_the_camel
-from ecl.summary import EclSum
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.util import monkey_the_camel # from ecl.util.util import monkey_the_camel
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary import EclSum # from ecl.summary import EclSum
 
 class EclCase(object):
 

@@ -16,7 +16,7 @@
 
 from __future__ import print_function
 import warnings
-from ecl.summary.ecl_sum_node import EclSumNode
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary.ecl_sum_node import EclSumNode # from ecl.summary.ecl_sum_node import EclSumNode
 
 
 class EclSumVector(object):

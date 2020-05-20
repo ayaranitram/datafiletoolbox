@@ -17,7 +17,7 @@
 Simple package for working with 2D geometry.
 
 """
-import ecl
+import datafiletoolbox.equinor.libecl.win10.lib.python.ecl # import ecl
 from cwrap import Prototype
 
 from .geo_pointset import GeoPointset

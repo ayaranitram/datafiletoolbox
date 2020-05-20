@@ -16,8 +16,8 @@
 import datetime
 import re
 
-from ecl import EclPrototype
-from ecl.util.util import VectorTemplate, CTime
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype # from ecl import EclPrototype
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.util import VectorTemplate, CTime # from ecl.util.util import VectorTemplate, CTime
 
 
 class TimeVector(VectorTemplate):

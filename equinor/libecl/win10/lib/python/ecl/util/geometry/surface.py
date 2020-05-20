@@ -22,8 +22,8 @@ import os.path
 import ctypes
 
 from cwrap import BaseCClass
-from ecl import EclPrototype
-from ecl.util.geometry import GeoPointset
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype # from ecl import EclPrototype
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.geometry import GeoPointset # from ecl.util.geometry import GeoPointset
 
 
 class Surface(BaseCClass):

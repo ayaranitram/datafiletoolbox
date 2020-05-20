@@ -15,8 +15,8 @@
 #  for more details.
 
 from cwrap import BaseCClass
-from ecl.util.util import monkey_the_camel
-from ecl import EclPrototype
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.util import monkey_the_camel # from ecl.util.util import monkey_the_camel
+from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype # from ecl import EclPrototype
 
 
 class EclSMSPECNode(BaseCClass):
