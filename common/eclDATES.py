@@ -6,6 +6,7 @@ Created on Sat Jul 27 14:49:56 2019
 @author: martin
 """
 
+from math import floor
 def monthStr2Int(month) :
     """
     receives a month as string in english and
@@ -26,14 +27,28 @@ def monthStr2Int(month) :
             'NOV' : 11 ,
             'DEC' : 12 ,
             }
-    month = month.strip().upper()
-
+    int2str = dict(list(zip(list(str2int.values()),list(str2int.keys()))))
+    if type(month) is float :
+        month = floor(month)
+    if type(month) is int :
+        if month >= 1 and month <= 12 :
+            return int2str[ month ]
+        elif month > 12 :
+            if month%12 == 0 :
+                return int2str[ 12 ]
+            else :
+                return int2str[ month%12 ]
+        elif month < 0 :
+            return int2str[ month%12 +1 ]
+        else :
+            print( " month should be integer or string." )
+    
     try :
-        return str2int[month[0:3]]
+        return str2int[ month.strip().upper()[0:3] ]
     except :
-        print( 'Incorrect month string :' + str(month) )
+        print( " not recognized month string: '" + str(month) + "'" )
 
-
+from datetime import date
 def simDate(DateArgument) :
     """
     simDate convert a date string in eclipse format to a datetime.date object.

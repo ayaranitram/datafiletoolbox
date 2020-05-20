@@ -33,6 +33,37 @@ import json
 import os
 
 
+# verbose(1,1,'\n  initializing most commong units conversions...')
+verbose(0,0,convertibleUnits('SM3','MMstb',False))
+verbose(0,0,convertibleUnits('SM3','Bscf',False))
+verbose(0,0,convertibleUnits('SM3','Tscf',False))
+verbose(0,0,convertibleUnits('STM3','MMstb',False))
+verbose(0,0,convertibleUnits('KSTM3','MMstb',False))
+verbose(0,0,convertibleUnits('KSM3','Bscf',False))
+verbose(0,0,convertibleUnits('MSM3','Tscf',False))
+verbose(0,0,convertibleUnits('SM3/DAY','Mstb/day',False))
+verbose(0,0,convertibleUnits('SM3/DAY','stb/day',False))
+verbose(0,0,convertibleUnits('SM3/DAY','MMscf/day',False))
+verbose(0,0,convertibleUnits('SM3/DAY','Mscf/day',False))
+verbose(0,0,convertibleUnits('STM3/DAY','Mstb/day',False))
+verbose(0,0,convertibleUnits('STM3/DAY','stb/day',False))
+verbose(0,0,convertibleUnits('KSM3/DAY','MMscf/day',False))
+verbose(0,0,convertibleUnits('KSM3/DAY','Mscf/day',False))
+verbose(0,0,convertibleUnits('STM3/DAY','SM3/DAY',False))
+verbose(0,0,convertibleUnits('KSTM3/DAY','SM3/DAY',False))
+verbose(0,0,convertibleUnits('KSM3/DAY','SM3/DAY',False))
+verbose(0,0,convertibleUnits('STM3','SM3',False))
+verbose(0,0,convertibleUnits('KSTM3','SM3',False))
+verbose(0,0,convertibleUnits('KSM3','SM3',False))
+verbose(0,0,convertibleUnits('MSM3','SM3',False))
+verbose(0,0,convertibleUnits('KPA','BARSA',False))
+verbose(0,0,convertibleUnits('BARSA','psia',False))
+verbose(0,0,convertibleUnits('KPA','psia',False))
+verbose(0,0,convertibleUnits('DATE','DATES',False))
+verbose(0,0,convertibleUnits('DAY','DAYS',False))
+timeout = 0.1
+
+
 class SimResult(object):
     """       ___________________________________
     <<< HELP of Simulation Result Objects >>>
