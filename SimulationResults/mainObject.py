@@ -943,6 +943,7 @@ class SimResult(object):
         if len(IndexList) == len(PlotKeys) :
             # check consistency:
             OKflag = True
+            ReviewFlag = False
             for i in range(len(IndexList)) :
                 if ':' in IndexList[i] and ':' in PlotKeys[i]:
                     if IndexList[i].split(':')[1] == PlotKeys[i].split(':')[1] :
@@ -950,6 +951,7 @@ class SimResult(object):
                     else :
                         verbose( self.speak , 3 ," the pair '" + PlotKeys[i] + "' vs '" + IndexList[i] + "' might not be correct." )
                         OKflag = False
+                        ReviewFlag = True
             
             if not OKflag and len(Keys) == len(Index) : # migt be a sorting issue
                 for i in range(len(Keys)) :
@@ -966,12 +968,12 @@ class SimResult(object):
                             else :
                                 verbose( self.speak , 3 ," the pair '" + PlotKeys[i] + "' vs '" + IndexList[i] + "' might not be correct." )
                                 OKflag = False
-        
-            if OKflag :
-                verbose( self.speak , 3, ' the pairs consistency WAS corrected with sorting.')
-            else :
-                verbose( self.speak , 3, ' the pairs consistency was NOT corrected with sorting.')
-        
+            if ReviewFlag :
+                if OKflag :
+                    verbose( self.speak , 3, ' the pairs consistency WAS corrected with sorting.')
+                else :
+                    verbose( self.speak , 3, ' the pairs consistency was NOT corrected with sorting.')
+            
         if IndexList == [] :
             if len(Index) == 1 :
                 IndexList = Index[0]
