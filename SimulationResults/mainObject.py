@@ -13,7 +13,7 @@ from datafiletoolbox.common.stringformat import date as strDate
 from datafiletoolbox.common.functions import is_SimulationResult
 from datafiletoolbox.common.inout import extension
 from datafiletoolbox.common.inout import verbose 
-from datafiletoolbox.ResultsPlot.SmartPlot import Plot
+from datafiletoolbox.PlotResults.SmartPlot import Plot
 
 # from .vipObject import VIP
 # from .SimulationResults import ECL
