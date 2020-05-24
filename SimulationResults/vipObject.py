@@ -813,7 +813,7 @@ class VIP(SimResult):
 
         return self.wells
             
-    def get_Groups(self,pattern=None,reload=False) :
+    def extract_Groups(self,pattern=None,reload=False) :
         """
         Will return a list of all the group names in case.
 
@@ -886,7 +886,7 @@ class VIP(SimResult):
         else :
             raise TypeError('Key must be string')
     
-    def get_Keys(self,pattern=None,reload=False) :
+    def list_Keys(self,pattern=None,reload=False) :
         """
         Return a StringList of summary keys matching @pattern.
 

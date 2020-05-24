@@ -10,7 +10,7 @@ __version__ = '0.0.20-05-19'
 from datafiletoolbox.dictionaries import dictionaries
 from datafiletoolbox.Classes.Errors import OverwrittingError
 from datafiletoolbox.common.stringformat import date as strDate
-from datafiletoolbox.common.functions import is_SimulationResult
+from datafiletoolbox.common.functions import is_SimulationResult 
 from datafiletoolbox.common.inout import extension
 from datafiletoolbox.common.inout import verbose 
 from datafiletoolbox.PlotResults.SmartPlot import Plot
@@ -630,14 +630,30 @@ class SimResult(object):
         if type(item) is tuple :
             pass # what to do with the tupple?
         if type(item) is str :
-            return self.__call__([item])[item]
+            if self.is_Key(item) :
+                return self.__call__([item])[item]
+            else :
+                meti = self.__getitem__([item])
+                if meti is None :
+                    return None
+                elif len(meti.columns) == 1 :
+                    verbose( self.speak , 2 , " a single item match the pattern,\n return the series for the item '" + meti.columns[0] + "':")
+                    return meti[meti.columns[0]]
+                else :
+                    verbose( self.speak , 2 , " multiple items match the pattern,\n return a dataframe with all the matching items:")
+                    return meti
         if type(item) is list :
             cols = []
             for each in item :
+                each = each.strip(' :')
                 if self.is_Key(each) :
                     cols.append(each)
                 elif each in self.attributes :
                     cols += self.attributes[each]
+                elif ':' in each :
+                    attribute , pattern = each.split(':')
+                    cols += self.keyGen(attribute,pattern)
+
             return self.__call__(cols)
     
     def __len__(self) :
@@ -649,6 +665,34 @@ class SimResult(object):
     def __str__(self) :
         return self.name
     
+    def keyGen(self,keys=[],items=[]) :
+        """
+        returns the combination of every key in keys with all the items.
+        keys and items must be list of strings
+        """
+        if type(items) == str :
+            items = [items]
+        if type(keys) == str :
+            keys = [keys]
+        ListOfKeys = []
+        for k in keys :
+            k.strip(' :')
+            for i in items :
+                i = i.strip(' :')
+                if self.is_Key(k+':'+i) :
+                    ListOfKeys.append( k+':'+i )
+                elif k[0].upper() == 'W' :
+                    wells = self.get_Wells(i)
+                    if len(wells) > 0 :
+                        for w in wells :
+                            if self.is_Key(k+':'+w) :
+                                ListOfKeys.append( k+':'+w )
+                elif k[0].upper() == 'R' :
+                    pass
+                elif k[0].upper() == 'G' :
+                    pass
+        return ListOfKeys
+        
     @property
     def describe(self) :
         # # calling the describe method from pandas for the entire dataframe is very intensive (huge dataframe)
@@ -1327,16 +1371,24 @@ class SimResult(object):
         """
         Will return a list of all the region names in case.
 
-        If the pattern variable is different from None only wells
+        If the pattern variable is different from None only regions
         matching the pattern will be returned; the matching is based
-        on fnmatch(), i.e. shell style wildcards.
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
         """
+        if pattern is not None and type( pattern ) is not str :
+            raise TypeError('pattern argument must be a string.')    
+    
         if len(self.regions) == 0 or reload == True :
-            self.regions = tuple( self.extract_Regions(pattern) )
+            self.regions = tuple( self.extract_Regions() )
         if pattern is None :
             return self.regions
         else:
-            return self.extract_Regions(pattern)       
+            return tuple( fnmatch.filter( self.regions , pattern ) )# return self.extract_Regions(pattern)       
     
     def get_Wells(self,pattern=None,reload=False) :
         """       
@@ -1362,6 +1414,56 @@ class SimResult(object):
             return self.wells
         else:
             return tuple( fnmatch.filter( self.wells , pattern ) )
+    
+    def get_Groups(self,pattern=None,reload=False) :
+        """       
+        Will return a list of all the group names in case.
+
+        If the pattern variable is different from None only groups
+        matching the pattern will be returned; the matching is based
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
+            
+        """
+        if pattern is not None and type( pattern ) is not str :
+            raise TypeError('pattern argument must be a string.')
+        
+        if len(self.groups) == 0 or reload == True :
+            self.groups = self.extract_Groups() 
+
+        if pattern is None :
+            return self.groups
+        else:
+            return tuple( fnmatch.filter( self.groups , pattern ) )
+    
+    def get_Keys(self,pattern=None,reload=False) :
+        """       
+        Will return a list of all the key names in case.
+
+        If the pattern variable is different from None only keys
+        matching the pattern will be returned; the matching is based
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
+            
+        """
+        if pattern is not None and type( pattern ) is not str :
+            raise TypeError('pattern argument must be a string.')
+        
+        if len(self.keys) == 0 or reload == True :
+            self.keys = self.list_Keys() 
+
+        if pattern is None :
+            return self.keys
+        else:
+            return tuple( fnmatch.filter( self.keys , pattern ) )
 
     def get_Vectors(self,key=None,reload=False):
         return self.get_Vector(key,reload)

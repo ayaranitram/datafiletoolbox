@@ -28,7 +28,7 @@ def mainKey(Key) :
         for K in Key :
             results.append( mainKey(K) )
         return list(set(results))
-
+    
 
 def alternate(start=True):
     """

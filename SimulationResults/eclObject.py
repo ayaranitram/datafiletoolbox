@@ -98,7 +98,7 @@ class ECL(SimResult):
         self.wells = self.results.wells() 
         return self.wells
     
-    def get_Groups(self,pattern=None,reload=False) :
+    def extract_Groups(self,pattern=None,reload=False) :
         """
         calls group method from libecl:
         
@@ -109,13 +109,13 @@ class ECL(SimResult):
         on fnmatch(), i.e. shell style wildcards.
         """
         if len(self.groups) == 0 or reload == True :
-            self.groups = tuple( self.results.groups(pattern) )
+            self.groups = tuple( self.results.groups() )
         if pattern is None :
             return self.groups
         else:
             return tuple( self.results.groups(pattern) )
         
-    def get_Keys(self,pattern=None,reload=False) :
+    def list_Keys(self,pattern=None,reload=False) :
         """
         Return a StringList of summary keys matching @pattern.
 
