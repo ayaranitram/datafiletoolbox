@@ -109,7 +109,7 @@ VIP2ECLkey = { #'NAME OF COLUMN in VIP sss' : 'base ECL output keyword'
            'AVG PRES' : 'BP' ,
            'OIL-IN-PLACE' : 'OIP' ,
            'GAS-IN-PLACE' : 'GIP' ,
-           # 'HCPV PRES' : 'PRH' ,
+           'HCPV PRES' : 'PR' ,
            'HCPVD PRES' : 'PRH' ,
            'GAS POT PRD' : 'GPP' ,
            'OIL POT PRD' : 'OPP' ,

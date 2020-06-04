@@ -10,6 +10,7 @@ __version__ = '0.0.20-05-19'
 from datafiletoolbox.dictionaries import dictionaries
 from datafiletoolbox.Classes.Errors import OverwrittingError
 from datafiletoolbox.common.stringformat import date as strDate
+from datafiletoolbox.common.stringformat import isDate
 from datafiletoolbox.common.functions import is_SimulationResult 
 from datafiletoolbox.common.inout import extension
 from datafiletoolbox.common.inout import verbose 
@@ -1526,7 +1527,17 @@ class SimResult(object):
                 return True
             elif Key is None :
                 if self.filter['key'] is not None :
-                    Key = self.filter['key']
+                    if ( type(Min) is str and isDate(Min) ) or ( type(Max) is str and isDate(Max) ) :
+                        if type( self.get_Vector(self.filter['key'])[self.filter['key']][0] ) is np.datetime64 :
+                            Key = self.filter['key']
+                        else :
+                            Key = 'DATE'                    
+                    else :  
+                        Key = self.filter['key']
+                elif type(Min) is str and isDate(Min) :
+                    Key = 'DATE'
+                elif type(Max) is str and isDate(Max) :
+                    Key = 'DATE'
                 elif Condition is not None :
                     pass
                 else :
@@ -1544,7 +1555,7 @@ class SimResult(object):
             self.filter = {'key':None,'min':None,'max':None,'condition':None,'filter':None}
             if not Incremental :
                 FilterArray = np.array([True]*len(self.fieldtime[2]))
-            # self.filter = previous.copy()
+
                 
             if Min is not None :
                 if type(Min) is int or type(Min) is float :
@@ -1560,10 +1571,10 @@ class SimResult(object):
                     except :
                         verbose(self.speak , 3 , " if the 'Min' is string it must represent a date, better if is formatted like DD-MMM-YYYY")
                 if type(Min) is np.datetime64 :
-                    KeyArray = self.get_Vector('DATE')['DATE']
+                    KeyArray = self.get_Vector(Key)[Key]
                     FilterArray = FilterArray * ( KeyArray >= Min )
                     self.filter['min'] = Min
-                    self.filter['key'] = 'DATE'
+                    self.filter['key'] = Key
                     self.filter['filter'] = FilterArray
                     return True
                 else :
@@ -1581,15 +1592,14 @@ class SimResult(object):
                 elif type(Max) is str :
                     try :
                         Max = np.datetime64( pd.to_datetime( strDate( Max ) ) )
-                        print(type(Max))
                     except :
                         verbose(self.speak , 3 , " if the 'Min' is string it must represent a date, better if is formatted like DD-MMM-YYYY")
                         return False
                 if type(Max) is np.datetime64 :
-                    KeyArray = self.get_Vector('DATE')['DATE']
+                    KeyArray = self.get_Vector(Key)[Key]
                     FilterArray = FilterArray * ( KeyArray <= Max )
                     self.filter['max'] = Max
-                    self.filter['key'] = 'DATE'
+                    self.filter['key'] = Key
                     self.filter['filter'] = FilterArray
                     return True
                 else :

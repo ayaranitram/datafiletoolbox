@@ -11,6 +11,13 @@ __version__ = '0.0.20-05-16'
 
 import numpy as np
 
+def isDate(dateStr , formatIN='' , formatOUT='' , speak=False ):
+    try :
+        date(dateStr , formatIN=formatIN , formatOUT=formatOUT , speak=speak )
+        return True
+    except :
+        return False
+
 def date(date , formatIN='' , formatOUT='' , speak=True ):
     """
     stringformat.date receives a string containing a date or a list of strings
@@ -169,7 +176,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True ):
                     formatIN.append('Y'*orderIN[6])
             formatIN = orderIN[3].join(formatIN)
             if speak :
-                print('the input format is: ' + formatIN)
+                print(' the input format is: ' + formatIN)
         else :
             raise Exception('unable to idenfy date format, please provide with keyword formatIN')
 
@@ -202,8 +209,8 @@ def date(date , formatIN='' , formatOUT='' , speak=True ):
     if formatOUT == '' :
         formatOUT = 'DD-MMM-YYYY'
         orderOUT = [0,1,2,'-',2,3,4]
-        if speak :
-            print('default output format is: DD-MMM-YYYY')
+        if speak and formatIN != formatOUT :
+            print(' default output format is: DD-MMM-YYYY')
 
     # read format from formatOUT
     else :
