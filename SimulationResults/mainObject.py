@@ -1487,7 +1487,10 @@ class SimResult(object):
         else:
             return tuple( fnmatch.filter( self.keys , pattern ) )
     
-    def set_Filter(self,Key=None,Min=None,Max=None,Condition=None,Filter=None,IncrementalFilter=True) :
+    def get_Filter(self) :
+        return self.filter['filter']
+    
+    def set_Filter(self,Key=None,Condition=None,Min=None,Max=None,Filter=None,IncrementalFilter=True) :
         if IncrementalFilter :
             if self.filter['filter'] is None :
                 Incremental = False
