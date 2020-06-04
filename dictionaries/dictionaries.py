@@ -5,7 +5,7 @@ Created on Sun Jan 19 16:03:33 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-05-16'
+__version__ = '0.0.20-06-03'
 
 unitsFIELD = {'OIP' : 'MMstb' ,
               'WIP' : 'MMstb' ,
@@ -109,8 +109,8 @@ VIP2ECLkey = { #'NAME OF COLUMN in VIP sss' : 'base ECL output keyword'
            'AVG PRES' : 'BP' ,
            'OIL-IN-PLACE' : 'OIP' ,
            'GAS-IN-PLACE' : 'GIP' ,
+           # 'HCPV PRES' : 'PRH' ,
            'HCPVD PRES' : 'PRH' ,
-           'HCPV PRES' : 'PRH' ,
            'GAS POT PRD' : 'GPP' ,
            'OIL POT PRD' : 'OPP' ,
            'WTR POT PRD' : 'WPP' ,
