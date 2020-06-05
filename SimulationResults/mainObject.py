@@ -1247,7 +1247,13 @@ class SimResult(object):
                     
         self.set_FieldTime()
     
-    def remove_Restart(self,SimResultObject) :
+    def remove_Restart(self,SimResultObject='--ALL') :
+        if SimResultObject == '--ALL' :
+            if len(self.restarts) == 0 :
+                print(" nothing to remove, no restarts objects defined")
+            else :
+                self.restarts = []
+                print(" removed ALL the restart objects (" + len(self.restarts) + " objects removed" )
         if SimResultObject in self.restarts :
             print(" removed restart object '" + str(self.restarts.pop(SimResultObject)) + "'")
     
