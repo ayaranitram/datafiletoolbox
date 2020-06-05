@@ -787,7 +787,11 @@ class VIP(SimResult):
         
     
     def get_Dates(self) :
-        self.set_Vector( 'DATES' , np.array( pd.to_datetime( strDate( list( self.loadVector('DATE','FIELD',True) ) , speak=(self.speak==1)) ) , dtype='datetime64[s]') , self.get_Unit('DATE') , DataType='datetime64' , overwrite=True )
+        try :
+            DateVector = strDate( list( self.loadVector('DATE','FIELD',True) ) , speak=(self.speak==1))
+        except :
+            DateVector = strDate( list( self.loadVector('DATE','FIELD',True) ) , formatIN='DD-MM-YYYY' , speak=(self.speak==1))
+        self.set_Vector( 'DATES' , np.array( pd.to_datetime( DateVector ) , dtype='datetime64[s]') , self.get_Unit('DATE') , DataType='datetime64' , overwrite=True )
         #self.set_Vector( 'DATES' , np.array( pd.to_datetime( self.get_Vector('DATE')['DATE'] ) , dtype='datetime64[s]') , self.get_Unit('DATE') , DataType='datetime64' , overwrite=True )
         self.set_Vector( 'DATE' , self.get_Vector('DATES')['DATES'] , self.get_Unit('DATES') , overwrite=True )
         self.start = min( self.get_Vector('DATE')['DATE'] )
