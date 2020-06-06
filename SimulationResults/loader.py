@@ -12,7 +12,7 @@ from datafiletoolbox.common.inout import extension
 from datafiletoolbox.SimulationResults.vipObject import VIP
 from datafiletoolbox.SimulationResults.eclObject import ECL
 
-def loadSimulationResults(FullPath=None,Simulator=None) :
+def loadSimulationResults(FullPath=None,Simulator=None,Verbosity=2) :
     """
     Loads the results of reservoir simulation into and SimuResult object.
     This library can read:
@@ -34,9 +34,9 @@ def loadSimulationResults(FullPath=None,Simulator=None) :
 
     
     if Simulator in ['ECL','E100','E300','ECLIPSE','IX','INTERSECT','TNAV','TNAVIGATOR'] :
-        return ECL(FullPath,3)
+        return ECL(FullPath,Verbosity)
     if Simulator in ['VIP'] :
-        return VIP(FullPath,3)
+        return VIP(FullPath,Verbosity)
     if Simulator in ['NX','NEXUS']:
-        return VIP(FullPath,3)
+        return VIP(FullPath,Verbosity)
 
