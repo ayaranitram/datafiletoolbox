@@ -1498,6 +1498,20 @@ class SimResult(object):
         return self.filter['filter']
     
     def set_Filter(self,Key=None,Condition=None,Min=None,Max=None,Filter=None,IncrementalFilter=True) :
+        def MightBeDate(string) :
+            if isDate(string) :
+                return ''
+            else :
+                for DateType in [ ['DD','MM','YY'] , ['DD','MM','YYYY'] ] :
+                    for sep in ['/', '-' , ' ' , '\t', '_', ':', ';', '#', "'"] :
+                        formatStr = sep.join(DateType)
+                        if isDate(string,formatIN=formatStr) :
+                            return formatStr
+            DateFormat = ''
+            return False
+        
+        DateFormat = ''
+        
         if IncrementalFilter :
             if self.filter['filter'] is None :
                 Incremental = False
@@ -1533,16 +1547,17 @@ class SimResult(object):
                 return True
             elif Key is None :
                 if self.filter['key'] is not None :
-                    if ( type(Min) is str and isDate(Min) ) or ( type(Max) is str and isDate(Max) ) :
+                    if ( type(Min) is str and MightBeDate(Min) != False ) or ( type(Max) is str and MightBeDate(Max) != False ) :
                         if type( self.get_Vector(self.filter['key'])[self.filter['key']][0] ) is np.datetime64 :
                             Key = self.filter['key']
                         else :
-                            Key = 'DATE'                    
+                            Key = 'DATE'
+                            
                     else :  
                         Key = self.filter['key']
-                elif type(Min) is str and isDate(Min) :
+                elif type(Min) is str and MightBeDate(Min) != False :
                     Key = 'DATE'
-                elif type(Max) is str and isDate(Max) :
+                elif type(Max) is str and MightBeDate(Max) != False :
                     Key = 'DATE'
                 elif Condition is not None :
                     pass
@@ -1562,7 +1577,7 @@ class SimResult(object):
             if not Incremental :
                 FilterArray = np.array([True]*len(self.fieldtime[2]))
 
-                
+            Minflag = False
             if Min is not None :
                 if type(Min) is int or type(Min) is float :
                     KeyArray = self.get_Vector(Key)[Key]
@@ -1570,23 +1585,35 @@ class SimResult(object):
                     self.filter['min'] = Min
                     self.filter['key'] = Key
                     self.filter['filter'] = FilterArray
-                    return True
+                    if Max is None and Condition is None :
+                        return True
+                    else :
+                        Minflag = True
+                        return self.set_Filter(Key=Key,Condition=Condition,Max=Max,IncrementalFilter=True) 
                 elif type(Min) is str :
+                    DateFormat = str(MightBeDate(Min))
                     try :
-                        Min = np.datetime64( pd.to_datetime( strDate( Min ) ) )
+                        Min = np.datetime64( pd.to_datetime( strDate( Min , DateFormat , speak=(self.speak==1 or DateFormat=='') ) ) )
+                        if DateFormat != '' :
+                            verbose(self.speak , 2 , " the 'Min' date format is " + DateFormat)
                     except :
                         verbose(self.speak , 3 , " if the 'Min' is string it must represent a date, better if is formatted like DD-MMM-YYYY")
-                if type(Min) is np.datetime64 :
+                if Minflag is False and type(Min) is np.datetime64 :
                     KeyArray = self.get_Vector(Key)[Key]
                     FilterArray = FilterArray * ( KeyArray >= Min )
                     self.filter['min'] = Min
                     self.filter['key'] = Key
                     self.filter['filter'] = FilterArray
-                    return True
+                    if Max is None and Condition is None :
+                        return True
+                    else :
+                        return self.set_Filter(Key=Key,Condition=Condition,Max=Max,IncrementalFilter=True) 
+                    
                 else :
                     verbose(self.speak , 3 , " the 'Min' value for the filter must be integer or float")
                     return False
-                    
+            
+            Maxflag = False
             if Max is not None :
                 if type(Max) is int or type(Max) is float :
                     KeyArray = self.get_Vector(Key)[Key]
@@ -1594,20 +1621,30 @@ class SimResult(object):
                     self.filter['max'] = Max
                     self.filter['key'] = Key
                     self.filter['filter'] = FilterArray
-                    return True
+                    if Condition is None :
+                        return True
+                    else :
+                        Maxflag = True
+                        return self.set_Filter(Key=Key,Condition=Condition,IncrementalFilter=True) 
                 elif type(Max) is str :
+                    DateFormat = str(MightBeDate(Max))
                     try :
-                        Max = np.datetime64( pd.to_datetime( strDate( Max ) ) )
+                        Max = np.datetime64( pd.to_datetime( strDate( Max , DateFormat , speak=(self.speak==1 or DateFormat=='') ) ) )
+                        if DateFormat != '' :
+                            verbose(self.speak , 2 , " the 'Max' date format is " + DateFormat)
                     except :
-                        verbose(self.speak , 3 , " if the 'Min' is string it must represent a date, better if is formatted like DD-MMM-YYYY")
+                        verbose(self.speak , 3 , " if the 'Max' is string it must represent a date, better if is formatted like DD-MMM-YYYY")
                         return False
-                if type(Max) is np.datetime64 :
+                if Maxflag is False and type(Max) is np.datetime64 :
                     KeyArray = self.get_Vector(Key)[Key]
                     FilterArray = FilterArray * ( KeyArray <= Max )
                     self.filter['max'] = Max
                     self.filter['key'] = Key
                     self.filter['filter'] = FilterArray
-                    return True
+                    if Condition is None :
+                        return True
+                    else :
+                        return self.set_Filter(Key=Key,Condition=Condition,IncrementalFilter=True) 
                 else :
                     verbose(self.speak , 3 , " the 'Max' value for the filter must be integer or float")
                     return False

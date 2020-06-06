@@ -39,3 +39,6 @@ __version__ = '0.0.20-05-16'
 __author__ = 'Martin Araya'
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')
+
+from .common.stringformat import date
+from .common.inout import extension
