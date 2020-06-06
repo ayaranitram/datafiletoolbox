@@ -9,16 +9,19 @@ routine intended to manipulate and transform date strings.
 
 __version__ = '0.0.20-05-16'
 
+class UndefinedDateFormat(Exception) :
+    pass
+
 import numpy as np
 
-def isDate(dateStr , formatIN='' , formatOUT='' , speak=False ):
+def isDate(dateStr , formatIN='' , speak=False ):
     try :
-        date(dateStr , formatIN=formatIN , formatOUT=formatOUT , speak=speak )
+        date(dateStr , formatIN=formatIN , speak=speak )
         return True
     except :
         return False
 
-def date(date , formatIN='' , formatOUT='' , speak=True ):
+def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 ):
     """
     stringformat.date receives a string containing a date or a list of strings
     containing dates and changes the date format to the format especified by
@@ -135,9 +138,13 @@ def date(date , formatIN='' , formatOUT='' , speak=True ):
             if datestr[i] == True :
                 orderIN[1] = i
                 found = found + 'M'
-            elif datemax[i] != None and datemax[i] > 1000 :
+            elif datemax[i] != None and datemax[i] > 999 :
                 orderIN[2] = i
                 orderIN[6] = 4
+                found = found + 'Y'
+            elif datemax[i] != None and datemax[i] > 99 :
+                orderIN[2] = i
+                orderIN[6] = 3
                 found = found + 'Y'
             elif datemax[i] != None and datemax[i] > 31 :
                 orderIN[2] = i
@@ -178,7 +185,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True ):
             if speak :
                 print(' the input format is: ' + formatIN)
         else :
-            raise Exception('unable to idenfy date format, please provide with keyword formatIN')
+            raise UndefinedDateFormat('unable to idenfy date format, please provide with keyword formatIN')
 
     # read input format from formatIN
     else :
@@ -209,8 +216,8 @@ def date(date , formatIN='' , formatOUT='' , speak=True ):
     if formatOUT == '' :
         formatOUT = 'DD-MMM-YYYY'
         orderOUT = [0,1,2,'-',2,3,4]
-        if speak and formatIN != formatOUT :
-            print(' default output format is: DD-MMM-YYYY')
+        # if speak and formatIN != formatOUT :
+        #     print(' default output format is: DD-MMM-YYYY')
 
     # read format from formatOUT
     else :
@@ -256,7 +263,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True ):
         dateM = orderOUT[1]
         for i in range(len(dateOUT[dateM])) :
             dateOUT[dateM][i] = MonthString2Number[dateOUT[dateM][i]]
-
+        
     dateOUTformated = []
     numberformat = [None,None,None] # [year,day,month]
     for i in range(3) :
@@ -267,17 +274,67 @@ def date(date , formatIN='' , formatOUT='' , speak=True ):
             dateStr = ''
         elif type(dateOUT[0][i]) == int and numberformat[0] == 2 and dateOUT[0][i] < 10 :
             dateStr = '0' + str(dateOUT[0][i]) + orderOUT[3]
+        elif type(dateOUT[0][i]) == int and numberformat[0] == 3 and dateOUT[0][i] < 10 :
+            dateStr = '00' + str(dateOUT[0][i]) + orderOUT[3]
+        elif type(dateOUT[0][i]) == int and numberformat[0] == 3 and dateOUT[0][i] < 100 :    
+            dateStr = '0' + str(dateOUT[0][i]) + orderOUT[3]
+        elif type(dateOUT[0][i]) == int and numberformat[0] == 4 and dateOUT[0][i] < 10 :
+            if YYbaseIN == 0 :
+                dateStr = '000' + str(dateOUT[0][i]) + orderOUT[3]
+            else :
+                dateStr = str(dateOUT[0][i]+YYbaseIN) + orderOUT[3]
+        elif type(dateOUT[0][i]) == int and numberformat[0] == 4 and dateOUT[0][i] < 100 :
+            if YYbaseIN == 0 :
+                dateStr = '00' + str(dateOUT[0][i]) + orderOUT[3]
+            else :
+                dateStr = str(dateOUT[0][i]+YYbaseIN) + orderOUT[3]
+        elif type(dateOUT[0][i]) == int and numberformat[0] == 4 and dateOUT[0][i] < 1000 :
+            dateStr = '0' + str(dateOUT[0][i]) + orderOUT[3]
         else :
             dateStr = str(dateOUT[0][i]) + orderOUT[3]
+            
         if numberformat[1] == 0 or numberformat[1] == None :
             dateStr = dateStr + ''
         elif type(dateOUT[1][i]) == int and numberformat[1] == 2 and dateOUT[1][i] < 10 :
             dateStr = dateStr + '0' + str(dateOUT[1][i]) + orderOUT[3]
+        elif type(dateOUT[1][i]) == int and numberformat[1] == 3 and dateOUT[1][i] < 10 :
+            dateStr = dateStr + '00' + str(dateOUT[1][i]) + orderOUT[3]
+        elif type(dateOUT[1][i]) == int and numberformat[1] == 3 and dateOUT[1][i] < 100 :
+            dateStr = dateStr + '0' + str(dateOUT[1][i]) + orderOUT[3]    
+        elif type(dateOUT[1][i]) == int and numberformat[1] == 4 and dateOUT[1][i] < 10 :
+            if YYbaseIN == 0 :
+                dateStr = dateStr + '000' + str(dateOUT[1][i]) + orderOUT[3]
+            else :
+                dateStr = dateStr + str(dateOUT[1][i]+YYbaseIN) + orderOUT[3]
+        elif type(dateOUT[1][i]) == int and numberformat[1] == 4 and dateOUT[1][i] < 100 :
+            if YYbaseIN :
+                dateStr = dateStr + '00' + str(dateOUT[1][i]) + orderOUT[3]
+            else :
+                dateStr = dateStr + str(dateOUT[1][i]+YYbaseIN) + orderOUT[3]
+        elif type(dateOUT[1][i]) == int and numberformat[1] == 4 and dateOUT[1][i] < 1000 :
+            dateStr = dateStr + '0' + str(dateOUT[1][i]) + orderOUT[3]
         else :
             dateStr = dateStr + str(dateOUT[1][i]) + orderOUT[3]
+            
         if numberformat[2] == 0 or numberformat[2] == None:
             dateStr = dateStr + ''
         elif type(dateOUT[2][i]) == int and numberformat[2] == 2 and dateOUT[2][i] < 10 :
+            dateStr = dateStr + '0' + str(dateOUT[2][i])
+        elif type(dateOUT[2][i]) == int and numberformat[2] == 3 and dateOUT[2][i] < 10 :
+            dateStr = dateStr + '00' + str(dateOUT[2][i])
+        elif type(dateOUT[2][i]) == int and numberformat[2] == 3 and dateOUT[2][i] < 100 :
+            dateStr = dateStr + '0' + str(dateOUT[2][i])        
+        elif type(dateOUT[2][i]) == int and numberformat[2] == 4 and dateOUT[2][i] < 10 :
+            if YYbaseIN == 0 :
+                dateStr = dateStr + '000' + str(dateOUT[2][i])
+            else :
+                dateStr = dateStr + str(dateOUT[2][i]+YYbaseIN)
+        elif type(dateOUT[2][i]) == int and numberformat[2] == 4 and dateOUT[2][i] < 100 :
+            if YYbaseIN == 0 :
+                dateStr = dateStr + '00' + str(dateOUT[2][i])
+            else :
+                dateStr = dateStr + str(dateOUT[2][i]+YYbaseIN)
+        elif type(dateOUT[2][i]) == int and numberformat[2] == 4 and dateOUT[2][i] < 1000 :
             dateStr = dateStr + '0' + str(dateOUT[2][i])
         else :
             dateStr = dateStr + str(dateOUT[2][i])
