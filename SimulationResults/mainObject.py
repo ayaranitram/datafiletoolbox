@@ -5,12 +5,13 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-05-19'
+__version__ = '0.0.20-06-08'
 
 from datafiletoolbox.dictionaries import dictionaries
 from datafiletoolbox.Classes.Errors import OverwrittingError
 from datafiletoolbox.common.stringformat import date as strDate
-from datafiletoolbox.common.stringformat import isDate
+from datafiletoolbox.common.stringformat import isDate 
+from datafiletoolbox.common.stringformat import multisplit , isnumeric
 from datafiletoolbox.common.functions import is_SimulationResult 
 from datafiletoolbox.common.inout import extension
 from datafiletoolbox.common.inout import verbose 
@@ -593,7 +594,8 @@ class SimResult(object):
         self.path = None
         self.start = None
         self.end = None
-        self.filter = {'key':None,'min':None,'max':None,'condition':None,'filter':None}
+        self.filter = {'key':[None],'min':[None],'max':[None],'condition':[None],'filter':None,'reset':True,'incremental':[None],'operation':[None]}
+        self.filterUndo = None
         self.wells = tuple()
         self.groups = tuple()
         self.regions = tuple()
@@ -743,6 +745,8 @@ class SimResult(object):
     def set_Index(self,Key) :
         if self.is_Key(Key) :
             self.DTindex = Key
+    def get_index(self) :
+        return self.get_Index()
     def get_Index(self) :
         return self.DTindex
     
@@ -866,7 +870,7 @@ class SimResult(object):
         """
         return self.len_tSteps()
     
-    def plot(self,Keys=[],Index='TIME',otherSims=None,Wells=[],Groups=[],Regions=[],DoNotRepeatColors=None) :
+    def plot(self,Keys=[],Index=None,otherSims=None,Wells=[],Groups=[],Regions=[],DoNotRepeatColors=None) : # Index='TIME'
 
         if type(DoNotRepeatColors) is not bool :
             UserDRC = None
@@ -881,6 +885,8 @@ class SimResult(object):
             Groups = [Groups]
         if type(Regions) is str :
             Regions = [Regions]
+        if Index is None :
+            Index = self.get_Index()
         if type(Index) is list or type(Index) is tuple :
             if len(Index) > 0 :                
                 if type(Index[0]) is str :
@@ -1062,6 +1068,15 @@ class SimResult(object):
         if type(UserDRC) is bool :
             DoNotRepeatColors = UserDRC
 
+        # extract and discard the vectors before calling the Plot, to avoid latency issues
+        for sim in SimsToPlot :
+            prevSpeak , sim.speak = sim.speak , 0
+            for Y in PlotKeys :
+                trash = sim(Y)
+            for X in IndexList :
+                trash = sim(X)
+            sim.speak = prevSpeak
+            
         Plot( SimResultObjects=SimsToPlot , Y_Keys=PlotKeys ,  X_Key=IndexList , DoNotRepeatColors=DoNotRepeatColors ) #, X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] ,  graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={})
         return( PlotKeys , IndexList )
     
@@ -1237,6 +1252,8 @@ class SimResult(object):
         for i in range(len(self.restarts)) :
             if self.restarts[i].get_Vector('TIME')['TIME'][0] < selfTi :
                 sortedR += [self.restarts[i]]
+            else :
+                verbose( self.speak , 3 , " the simulation '" + str(self.restarts[i]) + "' was not added as restart because it doesn't contain data before this ( '" + str(self) +"' ) simulation." )
         self.restarts = sortedR
         
         # sort simulations by start time
@@ -1244,25 +1261,38 @@ class SimResult(object):
             for j in range(0,len(self.restarts)-i-1) :
                 if self.restarts[j].get_Vector('TIME')['TIME'][0] > self.restarts[j+1].get_Vector('TIME')['TIME'][0] :
                     self.restarts[j] , self.restarts[j+1] = self.restarts[j+1] , self.restarts[j]
-                    
+        
+        self.redo_Filter()        
         self.set_FieldTime()
+        self.print_Restart()
+        
+    def print_Restart(self) :
+        prevSpeak , self.speak = self.speak , -1
+        message = self.get_Restart()
+        self.speak = prevSpeak
     
     def remove_Restart(self,SimResultObject='--ALL') :
         if SimResultObject == '--ALL' :
             if len(self.restarts) == 0 :
                 print(" nothing to remove, no restarts objects defined")
             else :
+                print(" removed ALL the restart objects (" + str(len(self.restarts)) + " objects removed" )
                 self.restarts = []
-                print(" removed ALL the restart objects (" + len(self.restarts) + " objects removed" )
+                
         if SimResultObject in self.restarts :
             print(" removed restart object '" + str(self.restarts.pop(SimResultObject)) + "'")
     
+    def get_Restarts(self):
+        return self.get_Restart()
     def get_Restart(self):
-        if self.speak in ( -1, 1 ) and len( self.restarts ) > 0 :
-            string = "\n '" + self.get_Name() + "' restarts from " 
-            for r in range(0,len(self.restarts)) :
-                string = string + "\n   '" + self.restarts[::-1][r].get_Name() + "'"
-            print( string )
+        if self.speak in ( -1, 1 ) :
+            if len( self.restarts ) > 0 :
+                string = "\n '" + self.get_Name() + "' restarts from " 
+                for r in range(0,len(self.restarts)) :
+                    string = string + "\n   '" + self.restarts[::-1][r].get_Name() + "'"
+                print( string )
+            # else :
+            #     print(" restarts simulations are not defined.")
         return self.restarts
     
     def set_Color(self,MatplotlibColor=None,Key=None):
@@ -1497,7 +1527,55 @@ class SimResult(object):
     def get_Filter(self) :
         return self.filter['filter']
     
-    def set_Filter(self,Key=None,Condition=None,Min=None,Max=None,Filter=None,IncrementalFilter=True) :
+    def reset_Filter(self) :
+        if self.filter['reset'] :
+            self.filter = {'key':[None],'min':[None],'max':[None],'condition':[None],'filter':None,'reset':True,'incremental':[None],'operation':[None]}
+            verbose(self.speak , 2 , " << filter reset >>")
+            return True
+        else :
+            self.filter['reset'] = True
+            return False
+    
+    def undo_Filter(self) :
+        if self.filterUndo is None :
+            verbose(self.speak , -1 , " << not possible to revert last set_Filter operation or already reverted >>")
+            return False
+        else :
+            self.filter['filter'] = self.filterUndo
+            for each in ['key','min','max','condition'] :
+                self.filter[each] = self.filter[each][:-1]
+            verbose(self.speak , -1 , " << last set_Filter has been reverted,\n filter set to previous version >>")
+            self.filterUndo = None
+            return True
+    
+    def redo_Filter(self) :
+        redo = self.filter.copy()
+        self.reset_Filter()
+        for i in range(len(redo['key'])) :
+            if redo['key'][i] is None and redo['condition'][i] is None and redo['min'][i] is None and redo['max'][i] is None :
+                verbose( self.speak , 1 , " <redo_Filter> skipping empty filter...")
+            else :
+                Key = redo['key'][i]
+                Condition = redo['condition'][i]
+                Min = redo['min'][i]
+                Max = redo['max'][i]
+                Incremental = redo['incremental'][i]
+                Operation = redo['operation'][i]
+                filterStr = []
+                if Key is not None :
+                    filterStr += ["Key='"+str(Key)+"'"]                    
+                if Condition is not None :
+                    filterStr += ["Condition='"+str(Condition)+"'"]
+                if Min is not None :
+                    filterStr += ["Min='"+str(Min)+"'"]
+                if Max is not None :
+                    filterStr += ["Min='"+str(Max)+"'"]
+                filterStr = ', '.join(filterStr) + ", IncrementalFilter="+str(Incremental)+", FilterOperation='"+str(Operation)+"'"
+                verbose( self.speak , 2 , " <redo_Filter> applying filter: " + filterStr )
+                self.set_Filter( Key=Key , Condition=Condition , Min=Min , Max=Max , IncrementalFilter=Incremental , FilterOperation=Operation  )
+    
+    def set_Filter(self,Key=None,Condition=None,Min=None,Max=None,Filter=None,IncrementalFilter=True,FilterOperation=None) :
+        # support function to validate date string
         def MightBeDate(string) :
             if isDate(string) :
                 return ''
@@ -1507,90 +1585,240 @@ class SimResult(object):
                         formatStr = sep.join(DateType)
                         if isDate(string,formatIN=formatStr) :
                             return formatStr
-            DateFormat = ''
             return False
         
-        DateFormat = ''
+        # convert the string to numpy date
+        def toNumpyDate(DateString) :
+            DateFormat = str(MightBeDate(DateString))
+            try :
+                return np.datetime64( pd.to_datetime( strDate( DateString , DateFormat , speak=False ) ) )
+            except :
+                raise TypeError(" a string must represent a date, better if is formatted like DD-MMM-YYYY")
         
-        if IncrementalFilter :
-            if self.filter['filter'] is None :
-                Incremental = False
+        # check if aditional conditions waiting to be applied
+        def ContinueFiltering(Key,Condition,Min,Max,Filter,Operation) :
+            if Condition is None and Min is None and Max is None and Filter is None :
+                self.filter['reset'] = True
+                self.set_FieldTime()
+                return True
             else :
-                Incremental = IncrementalFilter
+                self.filter['reset'] = False
+                return self.set_Filter(Key=Key,Condition=Condition,Min=Min,Max=Max,Filter=Filter,IncrementalFilter=True,FilterOperation=Operation)
+        
+        # apply the Filter
+        def applyFilter( NewFilter , CurrentFilter=None ) :
+            if CurrentFilter is not None :
+                self.filter['filter'] = CurrentFilter
+                self.filterUndo = CurrentFilter.copy()
+            if Incremental :
+                if Operation == '*' :
+                    self.filter['filter'] = NewFilter * self.filter['filter']
+                else : 
+                    self.filter['filter'] = NewFilter + self.filter['filter']
+            else :
+                self.filter['filter'] = NewFilter
+            if True not in self.filter['filter'] :
+                verbose( self.speak , -1 , "\n***IMPORTANT*****IMPORTANT*****IMPORTANT*****IMPORTANT*****"+\
+                                           "\n The new filter will result in empty vectors." +\
+                                           "\n Nothing will be following plots, dataframes or vectors." +\
+                                           "\n To restore previous filter call the method .undo_Filter()\n")
+        
+        # apply a Condition 
+        def applyCondition( Left, Mid , Right ) :
+            if Right is None :
+                if Left in ['>=','<=','==','!=','>','<'] :
+                    if isnumeric(Mid) :
+                        applyCondition( Key , Left , Mid )
+                    elif self.isKey(Mid):
+                        applyCondition( Key , Left , Mid )
+                    else :
+                        raise TypeError(" the Condition is not correct: '" + Key+Left+Mid + "'")
+                if Mid in ['>=','<=','==','!=','>','<'] :
+                    if isnumeric(Left) :
+                        applyCondition( Left , Mid , Key )
+                    elif self.isKey(Left):
+                        applyCondition( Left , Mid , Key )
+                    else :
+                        raise TypeError(" the Condition is not correct: '" + Left+Mid+Key + "'")
+            else :
+                # check Left parameter
+                if self.is_Key(Left) :
+                    Left = self.get_Vector(Left)[Left]
+                elif isnumeric(Left) :
+                    Left = float(Left)
+                elif MightBeDate(Left) != False :
+                    Left = toNumpyDate(Left)
+                    if self.is_Key(Right) and type( self.get_Vector(Right)[Right][0] ) is not np.datetime64 :
+                        raise TypeError(" if condition compares to a date, the Key must be DATE or date kind ")
+                else :
+                    raise TypeError(" the condition should be composed by Keys, conditions, numbers or dates ")
+                # check Right parameter
+                if self.is_Key(Right) :
+                    Right = self.get_Vector(Right)[Right]
+                elif isnumeric(Right) :
+                    Right = float(Right)
+                elif MightBeDate(Right) != False :
+                    Right = toNumpyDate(Right)
+                    if type( Left[0] ) is not np.datetime64 :
+                        raise TypeError(" if condition compares to a date, the Key must be DATE or date kind ")
+                else :
+                    raise TypeError(" the condition should be composed by Keys, conditions, numbers or dates ")
+                # check Mid parameter
+                if Mid not in ['>=','<=','==','!=','>','<'] :
+                    raise TypeError(" the condition should be composed by Keys, conditions, numbers or dates ")
+                if Mid == '>=' :
+                    return Left >= Right
+                if Mid == '<=' :
+                    return Left <= Right
+                if Mid == '==' :
+                    return Left == Right
+                if Mid == '!=' :
+                    return Left != Right
+                if Mid == '>' :
+                    return Left > Right
+                if Mid == '<' :
+                    return Left < Right
                 
-        if Filter is not None :
+        
+        # start of main function, setting parameters
+        DateFormat = '' # set default date string format
+        
+        Incremental = bool(IncrementalFilter) # move parameter to internal variable
+        if IncrementalFilter and self.filter['filter'] is None :
+            Incremental = False # if IncrementalFilter is True but previous filter is None, there is nothing to "increment"
+        
+        
+        # verify Filter operation is AND or * or OR or +
+        if type(FilterOperation) is str and FilterOperation.lower() in ['+','or'] :
+            Operation = '+' # OR operation
+        else :
+            Operation = '*' # AND is the default operation
+            
+        # APPLY or calculate the Filter
+        if Filter is not None : # apply it if Filter parameter is provided
             if type(Filter) is list or type(Filter) is tuple :
-                Filter = np.array(Filter)
+                Filter = np.array(Filter) # convert to numpy array
             if type(Filter) is np.ndarray : 
-                if len(Filter) == len(self.fieldtime[2]) :
-                    if Filter.dtype == 'bool' :
-                        if Incremental :
-                            self.filter['filter'] = Filter * self.filter['filter']
-                        else :
-                            self.filter['filter'] = Filter
-                        return True
+                if len(Filter) == len(self.fieldtime[2]) : # check Filter has the proper lenght
+                    if Filter.dtype == 'bool' : # check it has the correct dtype
+                        applyFilter( Filter )
+                        self.filter['key'].append(None)
+                        self.filter['min'].append(None)
+                        self.filter['max'].append(None)
+                        self.filter['condition'].append(None)
+                        self.filter['incremental'].append(IncrementalFilter)
+                        self.filter['operation'].append(FilterOperation)
+                        return ContinueFiltering(Key=Key,Condition=Condition,Min=Min,Max=Max,Filter=None,Operation=Operation)
                     else :
                         try:
                             Filter = Filter.astype('bool')
+                            # corrected the filter, apply it
+                            return ContinueFiltering(Key=Key,Condition=Condition,Min=Min,Max=Max,Filter=None,Operation=Operation)
                         except:
                             verbose(self.speak , 3 , " the 'Filter' must be an array of dtype 'bool'")
                             return False
-                        return self.set_Filter(Filter=Filter,IncrementalFilter=IncrementalFilter)
-                else :
+
+                else : # filter is not correct
                     verbose(self.speak , 3 , " the 'Filter' must have the exact same lenght of the simulation vectors: " + str(len(self.fieldtime[2])) )
                     return False
                 
-        elif Filter is None :
+        # apply or CALCULATE the Filter     
+        else : # calculate the filter
             if Key is None and Condition is None and Min is None and Max is None :
-                self.filter = {'key':None,'min':None,'max':None,'condition':None,'filter':None}
-                verbose(self.speak , 3 , " << filter reset >>")
-                return True
-            elif Key is None :
-                if self.filter['key'] is not None :
+                # no arguments provided, means reset
+                return self.reset_Filter() 
+            
+            elif Key is None : # Key is not provided
+                # take previous Key  
+                if self.filter['key'][-1] is not None : 
                     if ( type(Min) is str and MightBeDate(Min) != False ) or ( type(Max) is str and MightBeDate(Max) != False ) :
-                        if type( self.get_Vector(self.filter['key'])[self.filter['key']][0] ) is np.datetime64 :
-                            Key = self.filter['key']
+                        if type( self.get_Vector(self.filter['key'][-1])[self.filter['key'][-1]][0] ) is np.datetime64 :
+                            Key = self.filter['key'][-1] # previous Key is DATE kind and Min or Max are dates
                         else :
-                            Key = 'DATE'
-                            
-                    else :  
-                        Key = self.filter['key']
-                elif type(Min) is str and MightBeDate(Min) != False :
+                            Key = 'DATE' # Min or Max are dates but previos Key is not DATE kind, set proper Key for this Min or Max
+                    else :  # take the previous Key
+                        Key = self.filter['key'][-1]
+                
+                # no previous Key
+                elif ( type(Min) is str and MightBeDate(Min) != False ) or ( type(Max) is str and MightBeDate(Max) != False ) :
+                    # Min or Max are DATE strings, set Key accordingly
                     Key = 'DATE'
-                elif type(Max) is str and MightBeDate(Max) != False :
-                    Key = 'DATE'
+                
+                # the Key might be inside the Condition
                 elif Condition is not None :
-                    pass
+                    pass # check later
+                
+                # if Key is a numpy.array or a list, it could be a filter
+                elif type(Key) is list or type(Key) is tuple or type(Filter) is np.ndarray :
+                    if len(Key) == len(self.fieldtime[2]) : # it looks like a Filter
+                        verbose( self.speak , 1 , ' a Filter was received')
+                        return ContinueFiltering(Key=None,Condition=Condition,Min=Min,Max=Max,Filter=Key,Operation=Operation)
+                
+                # missing Key
                 else :
                     verbose(self.speak , 2 , ' no Filter or Key received.')
                     return False
+            
+            # ckeck the received is valid:
             elif not self.is_Key(Key) :
-                if Condition is None :
-                    return self.set_Filter(Condition=Key)
+                # the Key is a not in the simulation, might be a Condition string
+                if Condition is None : # there is no Condition argument provided
+                    for cond in ['<','>','<=','>=','!=','==','=','<>','><'] : # check for conditional strings
+                        if cond in Key :
+                            verbose( self.speak , 1 , ' a Condition was received')
+                            return ContinueFiltering(Key=None,Condition=Key,Min=Min,Max=Max,Filter=Filter,Operation=Operation)
                 else :
                     raise KeyError(" the argument Key: '" + str(Key) + "' is not a key in this simulation")
 
-            if Incremental :
+            
+            # calculate the NewFilter
+            
+            if Incremental : # if Incremental is True, keep the current Filter for new calculations
                 FilterArray = self.filter['filter']
-            previous = self.filter.copy()
-            self.filter = {'key':None,'min':None,'max':None,'condition':None,'filter':None}
-            if not Incremental :
+            else : # if Incremental is False, create a new array
                 FilterArray = np.array([True]*len(self.fieldtime[2]))
-
-            Minflag = False
-            if Min is not None :
+            # temporarily deactivate current filter
+            self.filter['filter'] = None 
+            
+            
+            # previous = self.filter.copy()
+            # self.filter = {'key':None,'min':None,'max':None,'condition':None,'filter':None,'reset':True}
+            
+                
+            if Min is not None : # apply Min parameter
                 if type(Min) is int or type(Min) is float :
+                    # Min is a number
+                    
+                    # check consistency with Max parameter
+                    if Max is None :
+                        pass # is OK
+                    elif type(Max) is int or type(Max) is float :
+                        pass # OK
+                    else : # Max is not number
+                        verbose(self.speak , 3 , " the parameter 'Min' is a number: " + str(Min) + "\n then 'Max' must be also a number.")
+                        # raise TypeError(" if Min is a number, Max must be a number also.")
+                        return False
+                    
+                    # calculate and apply filter
                     KeyArray = self.get_Vector(Key)[Key]
-                    FilterArray = FilterArray * ( KeyArray >= Min )
-                    self.filter['min'] = Min
-                    self.filter['key'] = Key
-                    self.filter['filter'] = FilterArray
-                    if Max is None and Condition is None :
-                        return True
-                    else :
-                        Minflag = True
-                        return self.set_Filter(Key=Key,Condition=Condition,Max=Max,IncrementalFilter=True) 
-                elif type(Min) is str :
+                    applyFilter( KeyArray >= Min , FilterArray )
+                    self.filter['key'].append(Key)
+                    self.filter['min'].append(Min)
+                    self.filter['max'].append(None)
+                    self.filter['condition'].append(None)
+                    self.filter['incremental'].append(IncrementalFilter)
+                    self.filter['operation'].append(FilterOperation)
+                    
+                    if FilterOperation is None :
+                        if Condition is None :
+                            if ( type(Max) is int or type(Max) is float ) and Min > Max :
+                                return ContinueFiltering(Key=Key,Condition=Condition,Min=None,Max=Max,Filter=Filter,Operation='+')
+                        else :
+                            pass # to implement later
+                    return ContinueFiltering(Key=Key,Condition=Condition,Min=None,Max=Max,Filter=Filter,Operation=Operation)
+
+                if type(Min) is str :
+                    # Min a string, might be a date
                     DateFormat = str(MightBeDate(Min))
                     try :
                         Min = np.datetime64( pd.to_datetime( strDate( Min , DateFormat , speak=(self.speak==1 or DateFormat=='') ) ) )
@@ -1598,35 +1826,66 @@ class SimResult(object):
                             verbose(self.speak , 2 , " the 'Min' date format is " + DateFormat)
                     except :
                         verbose(self.speak , 3 , " if the 'Min' is string it must represent a date, better if is formatted like DD-MMM-YYYY")
-                if Minflag is False and type(Min) is np.datetime64 :
-                    KeyArray = self.get_Vector(Key)[Key]
-                    FilterArray = FilterArray * ( KeyArray >= Min )
-                    self.filter['min'] = Min
-                    self.filter['key'] = Key
-                    self.filter['filter'] = FilterArray
-                    if Max is None and Condition is None :
-                        return True
-                    else :
-                        return self.set_Filter(Key=Key,Condition=Condition,Max=Max,IncrementalFilter=True) 
+                        return False
                     
-                else :
-                    verbose(self.speak , 3 , " the 'Min' value for the filter must be integer or float")
+                if type(Min) is np.datetime64 :
+                    # Min is a date
+                    
+                    # check consistency with Max parameter
+                    if Max is None :
+                        pass # is OK
+                    elif type(Max) is str :
+                        DateFormat = str(MightBeDate(Max))
+                        try :
+                            Max = np.datetime64( pd.to_datetime( strDate( Max , DateFormat , speak=(self.speak==1 or DateFormat=='') ) ) )
+                        except :
+                            verbose(self.speak , 3 , " the parameter 'Min' is represents a date: " + strDate(Min,DateFormat,speak=False) + "\n then 'Max' should be a valid date.")
+                            # raise TypeError(" if Min is a date, Max must be a date also.")
+                            return False
+                    else : # Max is not None and is not a date string
+                        verbose(self.speak , 3 , " the parameter 'Min' is represents a date: " + strDate(Min,DateFormat,speak=False) + "\n then 'Max' must be also a date.")
+                        # raise TypeError(" if Min is a date, Max must be a date also.")
+                        return False
+                    
+                    # calculate and apply filter
+                    KeyArray = self.get_Vector(Key)[Key]
+                    applyFilter( KeyArray >= Min , FilterArray )
+                    self.filter['key'].append(Key)
+                    self.filter['min'].append(Min)
+                    self.filter['max'].append(None)
+                    self.filter['condition'].append(None)
+                    self.filter['incremental'].append(IncrementalFilter)
+                    self.filter['operation'].append(FilterOperation)
+                    
+                    if FilterOperation is None :
+                        if type(Max) is np.datetime64 and Min > Max :
+                            return ContinueFiltering(Key=Key,Condition=Condition,Min=None,Max=Max,Filter=Filter,Operation='+')
+                    return ContinueFiltering(Key=Key,Condition=Condition,Min=None,Max=Max,Filter=Filter,Operation=Operation)
+
+                    
+                else : # not proper type of Min
+                    verbose(self.speak , 3 , " the 'Min' value for the filter must be integer, float or date")
                     return False
             
-            Maxflag = False
-            if Max is not None :
+            if Max is not None : # apply Max parameter
                 if type(Max) is int or type(Max) is float :
+                    # Min is a number
+                    
+                    # calculate and apply filter
                     KeyArray = self.get_Vector(Key)[Key]
-                    FilterArray = FilterArray * ( KeyArray <= Max )
-                    self.filter['max'] = Max
-                    self.filter['key'] = Key
-                    self.filter['filter'] = FilterArray
-                    if Condition is None :
-                        return True
-                    else :
-                        Maxflag = True
-                        return self.set_Filter(Key=Key,Condition=Condition,IncrementalFilter=True) 
-                elif type(Max) is str :
+                    applyFilter( KeyArray <= Max , FilterArray )
+
+                    self.filter['key'].append(Key)
+                    self.filter['min'].append(None)
+                    self.filter['max'].append(Max)
+                    self.filter['condition'].append(None)
+                    self.filter['incremental'].append(IncrementalFilter)
+                    self.filter['operation'].append(FilterOperation)
+                    
+                    return ContinueFiltering(Key=Key,Condition=Condition,Min=Min,Max=None,Filter=Filter,Operation=Operation)
+                    
+                if type(Max) is str :
+                    # Max a string, might be a date
                     DateFormat = str(MightBeDate(Max))
                     try :
                         Max = np.datetime64( pd.to_datetime( strDate( Max , DateFormat , speak=(self.speak==1 or DateFormat=='') ) ) )
@@ -1635,291 +1894,123 @@ class SimResult(object):
                     except :
                         verbose(self.speak , 3 , " if the 'Max' is string it must represent a date, better if is formatted like DD-MMM-YYYY")
                         return False
-                if Maxflag is False and type(Max) is np.datetime64 :
+                    
+                if type(Max) is np.datetime64 :
+                    # Max is a date
+                    
+                    # calculate and apply filter
                     KeyArray = self.get_Vector(Key)[Key]
-                    FilterArray = FilterArray * ( KeyArray <= Max )
-                    self.filter['max'] = Max
-                    self.filter['key'] = Key
-                    self.filter['filter'] = FilterArray
-                    if Condition is None :
-                        return True
-                    else :
-                        return self.set_Filter(Key=Key,Condition=Condition,IncrementalFilter=True) 
-                else :
+                    applyFilter( KeyArray <= Max , FilterArray )
+                    self.filter['key'].append(Key)
+                    self.filter['min'].append(None)
+                    self.filter['max'].append(Max)
+                    self.filter['condition'].append(None)
+                    self.filter['incremental'].append(IncrementalFilter)
+                    self.filter['operation'].append(FilterOperation)
+                    
+                    return ContinueFiltering(Key=Key,Condition=Condition,Min=Min,Max=None,Filter=Filter,Operation=Operation)
+
+                else : # not proper type of Max
                     verbose(self.speak , 3 , " the 'Max' value for the filter must be integer or float")
                     return False
                     
-            if Condition is not None :
-                if type(Condition) is list or type(Condition) is tuple :
-                    applying = []
-                    if not IncrementalFilter :
-                        self.filter['filter'] = None
-                    for each in Condition:
-                        applying.append( self.set_Filter(Key=Key,Condition=each,IncrementalFilter=True) )
-                    applying = np.array(applying)
-                    return applying.all == True
-                elif type(Condition) is str :
-                    if '>=' in Condition :
-                        Left,Right = Condition.split('>=')
-                        Left = Left.strip()
-                        Right = Right.strip()
-                        if len(Left)>0 and len(Right)>0 :
-                            if self.is_Key(Left) and self.is_Key(Right) :
-                                FilterArray = FilterArray * ( self.get_Vector(Left)[Left] >= self.get_Vector(Right)[Right] )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = None
-                                return True
-                            elif self.is_Key(Left) :
-                                try :
-                                    Right = float(Right)
-                                except :
-                                    verbose( self.speak , 3 , " the 'Condition' must have\n   two Keys\n   or\n   one Key and one float or integer")
-                                    return False
-                                FilterArray = FilterArray * ( self.get_Vector(Left)[Left] >= Right )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = None
-                                return True
-                            elif self.is_Key(Right) :
-                                try :
-                                    Left = float(Left)
-                                except :
-                                    verbose( self.speak , 3 , " the 'Condition' must have\n   two Keys\n   or\n   one Key and one float or integer")
-                                    return False
-                                FilterArray = FilterArray * ( Left >= self.get_Vector(Right)[Right] )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = None
-                                return True
-                        elif len(Left)>0 :
-                            return self.set_Filter(Condition=Condition+Key)
-                        elif len(Right)>0 :
-                            return self.set_Filter(Condition=Key+Condition)
+            if Condition is not None : # apply Condition parameter
+                if type(Condition) is str :
+                    NewCondition = ''
+                    for cond in ['<>','><'] : # check common mistakes
+                        if cond in Condition :
+                            verbose( self.speak , -1 , " I've saved your life this time, but keep in mind that the inequality check in python is '!=' and not '" + cond + "'")
+                            NewCondition = Condition.replace(cond,'!=')
+                    for cond in ['=>','=<'] : # check common mistakes
+                        if cond in Condition :
+                            verbose( self.speak , -1 , " I've saved your life this time, but keep in mind that the '" + cond + "' is not the correct sintax in Python for '" + cond[::-1] + "'")
+                            NewCondition = Condition.replace(cond,cond[::-1])
+                    for c in range(1, len(Condition)-1) :
+                        if Condition[c] == '=' :
+                            if Condition[c+1] == '=' or Condition[c-1] == '=' :
+                                pass # means ==
+                            elif Condition[c-1] == '!' :
+                                pass # means !=
+                            elif Condition[c-1] == '>' :
+                                pass # means >=
+                            elif Condition[c-1] == '<' :
+                                pass # means <=
+                            else :
+                                verbose( self.speak , -1 , " I've saved your life this time, but keep in mind that the equality check in python is '==' and not '='")
+                                NewCondition = Condition[:c]+'='+Condition[c:]
+                    if NewCondition != '' :
+                        verbose( self.speak , 2 , "\n the received condition was: '" + Condition + "'" + \
+                                                  "\n the corrected condition in: '" + NewCondition + "'"  )
+                        Condition = NewCondition
+                    found=[]
+                    for cond in ['>=','<=','==','!='] :
+                        if cond in Condition :                               
+                            found.append(cond)
+                    for c in range(len(Condition)-1) :
+                        if Condition[c] in ['<','>'] :
+                            if Condition[c+1] != '=' :
+                                found.append(Condition[c])
+                    CondList=multisplit(Condition,found)
 
-                    if '<=' in Condition :
-                        Left,Right = Condition.split('<=')
-                        Left = Left.strip()
-                        Right = Right.strip()
-                        if len(Left)>0 and len(Right)>0 :
-                            if self.is_Key(Left) and self.is_Key(Right) :
-                                FilterArray = FilterArray * ( self.get_Vector(Left)[Left] <= self.get_Vector(Right)[Right] )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = None
-                                self.filter['min'] = None
-                                self.filter['max'] = None
-                                return True
-                            elif self.is_Key(Left) :
-                                try :
-                                    Right = float(Right)
-                                except :
-                                    verbose( self.speak , 3 , " the 'Condition' must have\n   two Keys\n   or\n   one Key and one float or integer")
-                                    return False
-                                FilterArray = FilterArray * ( self.get_Vector(Left)[Left] <= Right )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = Left
-                                self.filter['max'] = Right
-                                return True
-                            elif self.is_Key(Right) :
-                                try :
-                                    Left = float(Left)
-                                except :
-                                    verbose( self.speak , 3 , " the 'Condition' must have\n   two Keys\n   or\n   one Key and one float or integer")
-                                    return False
-                                FilterArray = FilterArray * ( Left <= self.get_Vector(Right)[Right] )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = Right
-                                self.filter['min'] = Left
-                                return True
-                        elif len(Left)>0 :
-                            return self.set_Filter(Condition=Condition+Key)
-                        elif len(Right)>0 :
-                            return self.set_Filter(Condition=Key+Condition)
-
-                    if '==' in Condition :
-                        Left,Right = Condition.split('==')
-                        Left = Left.strip()
-                        Right = Right.strip()
-                        if len(Left)>0 and len(Right)>0 :
-                            if self.is_Key(Left) and self.is_Key(Right) :
-                                FilterArray = FilterArray * ( self.get_Vector(Left)[Left] == self.get_Vector(Right)[Right] )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = None
-                                self.filter['min'] = None
-                                self.filter['max'] = None
-                                return True
-                            elif self.is_Key(Left) :
-                                try :
-                                    Right = float(Right)
-                                except :
-                                    verbose( self.speak , 3 , " the 'Condition' must have\n   two Keys\n   or\n   one Key and one float or integer")
-                                    return False
-                                FilterArray = FilterArray * ( self.get_Vector(Left)[Left] == Right )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = Left
-                                self.filter['min'] = Right
-                                self.filter['max'] = Right
-                                return True
-                            elif self.is_Key(Right) :
-                                try :
-                                    Left = float(Left)
-                                except :
-                                    verbose( self.speak , 3 , " the 'Condition' must have\n   two Keys\n   or\n   one Key and one float or integer")
-                                    return False
-                                FilterArray = FilterArray * ( Left == self.get_Vector(Right)[Right] )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = Right
-                                self.filter['min'] = Left
-                                self.filter['max'] = Left
-                                return True
-                        elif len(Left)>0 :
-                            return self.set_Filter(Condition=Condition+Key)
-                        elif len(Right)>0 :
-                            return self.set_Filter(Condition=Key+Condition)
+                    if len(CondList) < 2 :
+                        verbose( self.speak , 3 , " the Condition parameter is not correct: '" + Condition + "'")
+                        return False
+                    if len(CondList) == 2 :
+                        CondFilter = applyCondition( CondList[0] , CondList[1] , None )
+                        applyFilter( CondFilter , FilterArray )
+                        self.filter['key'].append(Key)
+                        self.filter['min'].append(None)
+                        self.filter['max'].append(None)
+                        self.filter['condition'].append(Condition)
+                        self.filter['incremental'].append(IncrementalFilter)
+                        self.filter['operation'].append(FilterOperation)
+                        self.filter['reset'] = True
+                        self.set_FieldTime()
+                        return True
+                    if len(CondList) == 3 :
+                        CondFilter = applyCondition( CondList[0] , CondList[1] , CondList[2] )
+                        applyFilter( CondFilter , FilterArray )
+                        self.filter['key'].append(Key)
+                        self.filter['min'].append(None)
+                        self.filter['max'].append(None)
+                        self.filter['condition'].append(Condition)
+                        self.filter['incremental'].append(IncrementalFilter)
+                        self.filter['operation'].append(FilterOperation)
+                        self.filter['reset'] = True
+                        self.set_FieldTime()
+                        return True
+                    if len(CondList) == 5 :
+                        if ( '<' in CondList[1] and '<' in CondList[3] ) and ( CondList[0] <= CondList[2] ):
+                            CondOperation = '*'
+                        elif ( '>' in CondList[1] and '>' in CondList[3] ) and ( CondList[0] >= CondList[2] ):
+                            CondOperation = '*'
+                        elif ( '<' in CondList[1] and '!=' in CondList[3] ) and ( CondList[0] <= CondList[2] ):
+                            CondOperation = '*'
+                        elif ( '!=' in CondList[1] and '>' in CondList[3] ) and ( CondList[0] >= CondList[2] ):
+                            CondOperation = '*'
+                        else :
+                            CondOperation = '+'
+                        CondFilter1 = applyCondition( CondList[0] , CondList[1] , CondList[2] ) 
+                        CondFilter2 = applyCondition( CondList[2] , CondList[3] , CondList[4] ) 
                         
-                    if '!=' in Condition :
-                        Left,Right = Condition.split('!=')
-                        Left = Left.strip()
-                        Right = Right.strip()
-                        if len(Left)>0 and len(Right)>0 :
-                            if self.is_Key(Left) and self.is_Key(Right) :
-                                FilterArray = FilterArray * ( self.get_Vector(Left)[Left] != self.get_Vector(Right)[Right] )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = None
-                                self.filter['min'] = None
-                                self.filter['max'] = None
-                                return True
-                            elif self.is_Key(Left) :
-                                try :
-                                    Right = float(Right)
-                                except :
-                                    verbose( self.speak , 3 , " the 'Condition' must have\n   two Keys\n   or\n   one Key and one float or integer")
-                                    return False
-                                FilterArray = FilterArray * ( self.get_Vector(Left)[Left] != Right )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = Left
-                                self.filter['min'] = None
-                                self.filter['max'] = None
-                                return True
-                            elif self.is_Key(Right) :
-                                try :
-                                    Left = float(Left)
-                                except :
-                                    verbose( self.speak , 3 , " the 'Condition' must have\n   two Keys\n   or\n   one Key and one float or integer")
-                                    return False
-                                FilterArray = FilterArray * ( Left != self.get_Vector(Right)[Right] )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = Right
-                                self.filter['min'] = None
-                                self.filter['max'] = None
-                                return True
-                        elif len(Left)>0 :
-                            return self.set_Filter(Condition=Condition+Key)
-                        elif len(Right)>0 :
-                            return self.set_Filter(Condition=Key+Condition)
-                        
-                    if '<>' in Condition :
-                        verbose( self.speak , -1 , " I've saved your life this time, but keep in mind that the inequality check in python is '!=' and not '<>'")
-                        Condition = Condition.replace('<>','!=')
-                        return self.set_Filter(Key=Key,Condition=Condition,IncrementalFilter=IncrementalFilter)
-                        
-                    if '>' in Condition :
-                        Left,Right = Condition.split('>')
-                        Left = Left.strip()
-                        Right = Right.strip()
-                        if len(Left)>0 and len(Right)>0 :
-                            if self.is_Key(Left) and self.is_Key(Right) :
-                                FilterArray = FilterArray * ( self.get_Vector(Left)[Left] > self.get_Vector(Right)[Right] )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = None
-                                self.filter['min'] = None
-                                self.filter['max'] = None
-                                return True
-                            elif self.is_Key(Left) :
-                                try :
-                                    Right = float(Right)
-                                except :
-                                    verbose( self.speak , 3 , " the 'Condition' must have\n   two Keys\n   or\n   one Key and one float or integer")
-                                    return False
-                                FilterArray = FilterArray * ( self.get_Vector(Left)[Left] > Right )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = Left
-                                self.filter['min'] = Right
-                                return True
-                            elif self.is_Key(Right) :
-                                try :
-                                    Left = float(Left)
-                                except :
-                                    verbose( self.speak , 3 , " the 'Condition' must have\n   two Keys\n   or\n   one Key and one float or integer")
-                                    return False
-                                FilterArray = FilterArray * ( Left > self.get_Vector(Right)[Right] )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = Right
-                                self.filter['max'] = Left
-                                return True
-                        elif len(Left)>0 :
-                            return self.set_Filter(Condition=Condition+Key)
-                        elif len(Right)>0 :
-                            return self.set_Filter(Condition=Key+Condition)
-                        
-                    if '<' in Condition :
-                        Left,Right = Condition.split('<')
-                        Left = Left.strip()
-                        Right = Right.strip()
-                        if len(Left)>0 and len(Right)>0 :
-                            if self.is_Key(Left) and self.is_Key(Right) :
-                                FilterArray = FilterArray * ( self.get_Vector(Left)[Left] < self.get_Vector(Right)[Right] )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = None
-                                self.filter['min'] = None
-                                self.filter['max'] = None
-                                return True
-                            elif self.is_Key(Left) :
-                                try :
-                                    Right = float(Right)
-                                except :
-                                    verbose( self.speak , 3 , " the 'Condition' must have\n   two Keys\n   or\n   one Key and one float or integer")
-                                    return False
-                                FilterArray = FilterArray * ( self.get_Vector(Left)[Left] < Right )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = Left
-                                self.filter['max'] = Right
-                                return True
-                            elif self.is_Key(Right) :
-                                try :
-                                    Left = float(Left)
-                                except :
-                                    verbose( self.speak , 3 , " the 'Condition' must have\n   two Keys\n   or\n   one Key and one float or integer")
-                                    return False
-                                FilterArray = FilterArray * ( Left < self.get_Vector(Right)[Right] )
-                                self.filter['filter'] = FilterArray
-                                self.filter['condition'] = Condition
-                                self.filter['key'] = Right
-                                self.filter['min'] = Left
-                                return True
-                        elif len(Left)>0 :
-                            return self.set_Filter(Condition=Condition+Key)
-                        elif len(Right)>0 :
-                            return self.set_Filter(Condition=Key+Condition)
-                        
-                    if '=' in Condition :
-                        verbose( self.speak , -1 , " I've saved your life this time, but keep in mind that the equality check in python is '==' and not '='")
-                        Condition = Condition.replace('=','==')
-                        return self.set_Filter(Key=Key,Condition=Condition,IncrementalFilter=IncrementalFilter)
+                        if type(CondFilter1) is np.ndarray and type(CondFilter2) is np.ndarray :
+                            if CondOperation == '+' :
+                                CondFilter = CondFilter1 + CondFilter2
+                            else :
+                                CondFilter = CondFilter1 * CondFilter2
+                            applyFilter( CondFilter , FilterArray )
+                            self.filter['key'].append(Key)
+                            self.filter['min'].append(None)
+                            self.filter['max'].append(None)
+                            self.filter['condition'].append(Condition)
+                            self.filter['incremental'].append(IncrementalFilter)
+                            self.filter['operation'].append(FilterOperation)
+                            self.filter['reset'] = True
+                            self.set_FieldTime()
+                            return True
+                        else :
+                            self.filter['reset'] = True
+                            return False
                     
     def get_Vectors(self,key=None,reload=False):
         return self.get_Vector(key,reload)
@@ -1933,6 +2024,7 @@ class SimResult(object):
         """
         if len( self.get_Restart() ) > 0 :
             return self.checkRestarts(key,reload)
+            # returnVectors = self.checkRestarts(key,reload)
         
         returnVectors = {}
         if self.results != None :
@@ -1946,8 +2038,8 @@ class SimResult(object):
         if self.filter['filter'] is None :
             return returnVectors
         else :
-            if self.filter['key'] is not None :
-                verbose( self.speak , 1 , " filter by key '" + self.filter['key'] + "'")          
+            if self.filter['key'][-1] is not None :
+                verbose( self.speak , 1 , " filter by key '" + self.filter['key'][-1] + "'")          
             for each in returnVectors :
                 returnVectors[each] = returnVectors[each][self.filter['filter']]
             return returnVectors
@@ -2004,7 +2096,15 @@ class SimResult(object):
                 returnVectors[K] = np.concatenate( [ returnVectors[K] , Rlist[-1].checkIfLoaded(K,False) ] )
                 verbose( self.speak , 1 , " reading key '" + str(K) + "' from restart " + str(len(Rlist)) + ": '" + str(Rlist[0]) + "'")
             
-        return returnVectors
+        # return returnVectors
+        if self.filter['filter'] is None :
+            return returnVectors
+        else :
+            if self.filter['key'][-1] is not None :
+                verbose( self.speak , 1 , " filter by key '" + self.filter['key'][-1] + "'")          
+            for each in returnVectors :
+                returnVectors[each] = returnVectors[each][self.filter['filter']]
+            return returnVectors
     
     def checkIfLoaded(self,key,reload) :
         """
@@ -2197,14 +2297,14 @@ class SimResult(object):
         
         if type(self.get_Vector('FOPR')['FOPR']) == np.ndarray and type(self.get_Vector('FWPR')['FWPR']) == np.ndarray :
             # calculated FLPR if not available:
-            if self.is_Key('FLPR') == False or len( self.get_Vector('FLPR')['FLPR'] ) < len( self.get_Vector('FWPR')['FWPR'] ) or type(self.get_Vector('FLPR')['FLPR']) != np.ndarray :
+            if self.is_Key('FLPR') is False or len( self.get_Vector('FLPR')['FLPR'] ) < len( self.get_Vector('FWPR')['FWPR'] ) or type(self.get_Vector('FLPR')['FLPR']) != np.ndarray :
                 try :
                     self.set_Vector( 'FLPR' , np.array( self.get_Vector('FOPR')['FOPR'],dtype='float' ) + convertUnit( np.array( self.get_Vector('FWPR')['FWPR'],dtype='float' ) , self.get_Unit('FWPR') , self.get_Unit('FOPR') , PrintConversionPath=(self.speak==1) ) , self.get_Unit('FOPR') , overwrite=True )
                 except :
                     verbose( self.speak , 2 , 'failed to create missing vector FLPR.')
             
             # calculated FWCT if not available:
-            if self.is_Key('FWCT') == False or len( self.get_Vector('FWCT')['FWCT'] ) < len( self.get_Vector('FWPR')['FWPR'] ) or type(self.get_Vector('FWCT')['FWCT']) != np.ndarray :
+            if self.is_Key('FWCT') is False or len( self.get_Vector('FWCT')['FWCT'] ) < len( self.get_Vector('FWPR')['FWPR'] ) or type(self.get_Vector('FWCT')['FWCT']) != np.ndarray :
                 try :
                     Vector = np.array( np.divide(  np.array(self.get_Vector('FWPR')['FWPR'],dtype='float') , convertUnit( np.array( self.get_Vector('FLPR')['FLPR'],dtype='float' ) , self.get_Unit('FLPR') , self.get_Unit('FWPR') , PrintConversionPath=(self.speak==1) ) ) ,dtype='float') 
                     Vector = np.nan_to_num( Vector, nan=0.0 , posinf=0.0 , neginf=0.0 )
@@ -2213,7 +2313,7 @@ class SimResult(object):
                     verbose( self.speak , 2 , 'failed to create missing vector FWCT.')
                     
             # calculated FWOR & FOWR if not available:
-            if self.is_Key('FWOR') == False or len( self.get_Vector('FWOR')['FWOR'] ) < len( self.get_Vector('FWPR')['FWPR'] ) or type(self.get_Vector('FWOR')['FWOR']) != np.ndarray :
+            if self.is_Key('FWOR') is False or len( self.get_Vector('FWOR')['FWOR'] ) < len( self.get_Vector('FWPR')['FWPR'] ) or type(self.get_Vector('FWOR')['FWOR']) != np.ndarray :
                 try :
                     Vector = np.array( np.divide( np.array( self.get_Vector('FWPR')['FWPR'] , dtype='float' ) , np.array( self.get_Vector('FOPR')['FOPR'] , dtype='float' ) ),dtype='float')
                     Vector = np.nan_to_num( Vector, nan=0.0 , posinf=0.0 , neginf=0.0 )
@@ -2230,7 +2330,7 @@ class SimResult(object):
                     
         # calculated FGOR if not available:
         if type(self.get_Vector('FOPR')['FOPR']) == np.ndarray and type(self.get_Vector('FGPR')['FGPR']) == np.ndarray :
-            if self.is_Key('FGOR') == False or len( self.get_Vector('FGOR')['FGOR'] ) < len( self.get_Vector('FOPR')['FOPR'] ) or type(self.get_Vector('FGOR')['FGOR']) != np.ndarray :
+            if self.is_Key('FGOR') is False or len( self.get_Vector('FGOR')['FGOR'] ) < len( self.get_Vector('FOPR')['FOPR'] ) or type(self.get_Vector('FGOR')['FGOR']) != np.ndarray :
                 try :
                     Vector = np.array( np.divide( np.array( self.get_Vector('FGPR')['FGPR'] , dtype='float' ) , np.array( self.get_Vector('FOPR')['FOPR'] , dtype='float' ) ) ,dtype='float')
                     Vector = np.nan_to_num( Vector, nan=0.0 , posinf=0.0 , neginf=0.0 )
@@ -2240,7 +2340,7 @@ class SimResult(object):
         
         # calculated FOGR if not available:
         if type(self.get_Vector('FOPR')['FOPR']) == np.ndarray and type(self.get_Vector('FGPR')['FGPR']) == np.ndarray :
-            if self.is_Key('FOGR') == False or len( self.get_Vector('FOGR')['FOGR'] ) < len( self.get_Vector('FOPR')['FOPR'] ) or type(self.get_Vector('FOGR')['FOGR']) != np.ndarray :
+            if self.is_Key('FOGR') is False or len( self.get_Vector('FOGR')['FOGR'] ) < len( self.get_Vector('FOPR')['FOPR'] ) or type(self.get_Vector('FOGR')['FOGR']) != np.ndarray :
                 try :
                     Vector = np.array( np.divide( np.array( self.get_Vector('FOPR')['FOPR'] , dtype='float' ) , np.array( self.get_Vector('FGPR')['FGPR'] , dtype='float' ) ) ,dtype='float')
                     Vector = np.nan_to_num( Vector, nan=0.0 , posinf=0.0 , neginf=0.0 )
@@ -2250,7 +2350,7 @@ class SimResult(object):
     
         if type(self.get_Vector('FOPT')['FOPT']) == np.ndarray and type(self.get_Vector('FWPT')['FWPT']) == np.ndarray :
             # calculated FLPR if not available:
-            if self.is_Key('FLPT') == False or len( self.get_Vector('FLPT')['FLPT'] ) < len( self.get_Vector('FWPT')['FWPT'] ) or type(self.get_Vector('FLPT')['FLPT']) != np.ndarray :
+            if self.is_Key('FLPT') is False or len( self.get_Vector('FLPT')['FLPT'] ) < len( self.get_Vector('FWPT')['FWPT'] ) or type(self.get_Vector('FLPT')['FLPT']) != np.ndarray :
                 try :
                     self.set_Vector( 'FLPT' , np.array( self.get_Vector('FOPT')['FOPT'],dtype='float' ) + convertUnit( np.array( self.get_Vector('FWPT')['FWPT'],dtype='float' ), self.get_Unit('FWPT') , self.get_Unit('FOPT') , PrintConversionPath=(self.speak==1)) , self.get_Unit('FOPT') , overwrite=True )
                 except :
@@ -2260,6 +2360,23 @@ class SimResult(object):
                         verbose( self.speak , 2 , 'vector FLPT integrated from FLPR.')
                     except :
                         verbose( self.speak , 2 , 'failed to create missing vector FLPT.')
+        
+        if type(self.get_Vector('TIME')['TIME']) == np.ndarray :
+            if self.is_Key('DATE') is False or len( self.get_Vector('DATE')['DATE'] ) < len( self.get_Vector('TIME')['TIME'] ) or type(self.get_Vector('DATE')['DATE']) != np.ndarray :
+                self.createDATES()
+            if self.is_Key('DATES') is False or len( self.get_Vector('DATES')['DATES'] ) < len( self.get_Vector('TIME')['TIME'] ) or type(self.get_Vector('DATES')['DATES']) != np.ndarray :
+                self.createDATES()
+        
+        if type(self.get_Vector('DATE')['DATE']) == np.ndarray :
+            for T in ['YEAR','MONTH','DAY'] :
+                if self.is_Key(T) is False or len( self.get_Vector(T)[T] ) < len( self.get_Vector('DATE')['DATE'] ) or type(self.get_Vector(T)[T]) != np.ndarray :
+                    if T == 'YEAR' :
+                        self.createYEAR()
+                    elif T == 'MONTH' :
+                        self.createMONTH()
+                    elif T == 'DAY' :
+                        self.createDAY()
+            
     
         np.seterr(divide=None, invalid=None)
     
@@ -2657,6 +2774,18 @@ class SimResult(object):
         self.set_Vector( 'DATES' , DATE , 'DATE' , overwrite=True )
         self.set_Vector( 'DATE' , DATE , 'DATE' , overwrite=True )
     
+    def createYEAR(self) :
+        Years = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).year)
+        self.set_Vector( 'YEAR' , Years , 'Year' , DataType='int' , overwrite=True) 
+    
+    def createMONTH(self) :
+        Months = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).month)
+        self.set_Vector( 'MONTH' , Months , 'Month' , DataType='int' , overwrite=True) 
+    
+    def createDAY(self) :
+        Days = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).day)
+        self.set_Vector( 'DAY' , Days , 'Day' , DataType='int' , overwrite=True) 
+
     def get_UnitsConverted(self,Key=None,OtherObject_or_NewUnits=None):
         """
         returns a vector converted from the unit system of this object 
