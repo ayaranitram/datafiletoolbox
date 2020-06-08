@@ -5,7 +5,7 @@ Created on Wed May 13 00:31:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.20.05.13' 
+__version__ = '0.0.20-06-08' 
 
 import time
 import random
@@ -260,6 +260,10 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
                 SeriesColors[c] = ('b')
             elif 'WI' in Y_Keys[c] :
                 SeriesColors[c] = ('c')
+            elif 'GOR' in Y_Keys[c] :
+                SeriesColors[c] = ('gold')
+            elif 'WC' in Y_Keys[c] :
+                SeriesColors[c] = ('steelblue')
             else :
                 SeriesColors[c] = ( random.random() , random.random() , random.random() )
             # time.sleep(timeout)
