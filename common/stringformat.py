@@ -7,12 +7,55 @@ Created on Wed Sep 18 12:33:46 2019
 routine intended to manipulate and transform date strings.
 """
 
-__version__ = '0.0.20-05-16'
+__version__ = '0.0.20-06-08'
 
 class UndefinedDateFormat(Exception) :
     pass
 
 import numpy as np
+
+def multisplit(string,sep=[]) :
+    """
+    receives a string and returns a list with string split by all the separators in sep.
+    """
+    assert type(string) is str
+    
+    # check sep is list
+    if type(sep) is str :
+        sep = [sep]
+    
+    # sort sep by lenght
+    s = len(sep)
+    for i in range(s-1) :
+        for j in range(s-i-1) :
+            if len(sep[j]) < len(sep[j+1]) :
+                sep[j] , sep[j+1] = sep[j+1] , sep[j]
+    
+    stringlist = []
+    i = 0
+    x = 0
+    t = len(string)
+    while i < t :
+        for se in sep :
+            s = len(se)
+            if (i+s <= t) :
+                if string[i:i+s] == se :
+                    stringlist += [ string[x:i] , string[i:i+s] ]
+                    x = i+s
+                    i += s
+                    break
+        i += 1
+    stringlist += [ string[x:] ]
+    return stringlist
+                
+
+def isnumeric(string) :
+    assert type(string) is str
+    try :
+        float(string)
+        return True
+    except :
+        return False
 
 def isDate(dateStr , formatIN='' , speak=False ):
     try :
