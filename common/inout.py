@@ -5,7 +5,7 @@ Created on Wed May 29 16:22:25 2019
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-05-16'
+__version__ = '0.9.20-06-12'
 
 def verbose(userLevel=0 , programLevel=0 , StringToPrint='') :
     """
