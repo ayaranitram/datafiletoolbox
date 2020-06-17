@@ -1270,6 +1270,14 @@ class SimResult(object):
         prevSpeak , self.speak = self.speak , -1
         message = self.get_Restart()
         self.speak = prevSpeak
+        
+    def clean_Restart(self) :
+        """
+        removes ALL the simulations from the restart list.
+        equivalent to :
+            .remove_Restart('--ALL')
+        """
+        self.remove_Restart(SimResultObject='--ALL')
     
     def remove_Restart(self,SimResultObject='--ALL') :
         if SimResultObject == '--ALL' :

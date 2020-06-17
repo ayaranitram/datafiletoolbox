@@ -5,7 +5,7 @@ Created on Wed May 29 16:22:25 2019
 @author: MCARAYA
 """
 
-__version__ = '0.9.20-06-12'
+__version__ = '1.0.20-06-17'
 
 def verbose(userLevel=0 , programLevel=0 , StringToPrint='') :
     """
@@ -55,9 +55,9 @@ def extension(filepath , NullValue='' , backSlashToSlash=True , backCompatibilit
     """
     receives a string indicating a FileName.Extension or 
     Path/FileName.Extension and return a tupple containing 
-    [0] the name of the FileName in the first position, 
-    [1] the .Extension in the second position and
-    [2] the \Path in the third position.
+    [0] the .Extension of the file in filepath,
+    [1] the name of the FileName without extension, 
+    [2] the Directory containing the file,
     [3] the fullpath
     
     in case an item is not present an empty string is returned by default.
