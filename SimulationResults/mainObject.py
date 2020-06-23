@@ -1253,7 +1253,7 @@ class SimResult(object):
             if self.restarts[i].get_Vector('TIME')['TIME'][0] < selfTi :
                 sortedR += [self.restarts[i]]
             else :
-                verbose( self.speak , 3 , " the simulation '" + str(self.restarts[i]) + "' was not added as restart because it doesn't contain data before this ( '" + str(self) +"' ) simulation." )
+                verbose( self.speak , 3 , " the simulation '" + str(self.restarts[i]) + "' was not added as restart because it doesn't contain data before this simulation ( '" + str(self) +"' ) simulation." )
         self.restarts = sortedR
         
         # sort simulations by start time
@@ -1261,7 +1261,7 @@ class SimResult(object):
             for j in range(0,len(self.restarts)-i-1) :
                 if self.restarts[j].get_Vector('TIME')['TIME'][0] > self.restarts[j+1].get_Vector('TIME')['TIME'][0] :
                     self.restarts[j] , self.restarts[j+1] = self.restarts[j+1] , self.restarts[j]
-        
+    
         self.redo_Filter()        
         self.set_FieldTime()
         self.print_Restart()
