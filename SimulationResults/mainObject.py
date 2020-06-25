@@ -611,6 +611,7 @@ class SimResult(object):
         self.colorGrouping = 6
         self.DTindex = 'TIME'
         self.restarts = []
+        self.restartFilters = {}
         self.vectorsRestart = {}
         self.pandasColumns = { 'HEADERS' : {} , 'COLUMNS' : {} , 'DATA' : {} }
         self.fieldtime = ( None , None , None ) 
@@ -1248,7 +1249,7 @@ class SimResult(object):
         
         sortedR = []
         selfTi = self.checkIfLoaded('TIME',False)[0]
-        # remove simulations that starts after the self
+        # remove simulations that starts after this one (self)
         for i in range(len(self.restarts)) :
             if self.restarts[i].get_Vector('TIME')['TIME'][0] < selfTi :
                 sortedR += [self.restarts[i]]
@@ -1261,30 +1262,62 @@ class SimResult(object):
             for j in range(0,len(self.restarts)-i-1) :
                 if self.restarts[j].get_Vector('TIME')['TIME'][0] > self.restarts[j+1].get_Vector('TIME')['TIME'][0] :
                     self.restarts[j] , self.restarts[j+1] = self.restarts[j+1] , self.restarts[j]
+        
+        # calculate restartFilters for each restart
+        for i in range(len(self.restarts)-1) :
+            thisFilter = self.restarts[i].get_RawVector('TIME')['TIME'] < self.restarts[i+1].get_RawVector('TIME')['TIME'][0]
+            self.restartFilters[ self.restarts[i] ] = thisFilter
+        # claculate restartFilters for the last restart
+        thisFilter = self.restarts[-1].get_RawVector('TIME')['TIME'] < self.get_RawVector('TIME')['TIME'][0]
+        self.restartFilters[ self.restarts[-1] ] = thisFilter
     
-        self.redo_Filter()        
+        # recreate filter for this simulation (self), now considering the restarts
+        self.redo_Filter()
+        # recalculate the total time for this simulation (self), now considering the restarts
         self.set_FieldTime()
+        # print the restarts
         self.print_Restart()
         
     def print_Restart(self) :
         prevSpeak , self.speak = self.speak , -1
         message = self.get_Restart()
         self.speak = prevSpeak
-        
-    def clean_Restart(self) :
+ 
+    def clean_Restarts(self) :
         """
+        ** alias for remove_Restart() ** 
         removes ALL the simulations from the restart list.
         equivalent to :
             .remove_Restart('--ALL')
         """
         self.remove_Restart(SimResultObject='--ALL')
-    
+    def clean_Restart(self) :
+        """
+        ** alias for remove_Restart() ** 
+        removes ALL the simulations from the restart list.
+        equivalent to :
+            .remove_Restart('--ALL')
+        """
+        self.remove_Restart(SimResultObject='--ALL')
+    def remove_Restart(SimResultObject='--ALL') :
+        """
+        ** alias for remove_Restart() ** 
+        removes ALL the simulations from the restart list.
+        equivalent to :
+            .remove_Restart('--ALL')
+        """
+        self.remove_Restart(self,SimResultObject='--ALL') 
     def remove_Restart(self,SimResultObject='--ALL') :
+        """
+        removes ALL the simulations from the restart list.
+        equivalent to :
+            .remove_Restart('--ALL')
+        """
         if SimResultObject == '--ALL' :
             if len(self.restarts) == 0 :
                 print(" nothing to remove, no restarts objects defined")
             else :
-                print(" removed ALL the restart objects (" + str(len(self.restarts)) + " objects removed" )
+                print(" removed ALL the restart objects (" + str(len(self.restarts)) + " objects removed)" )
                 self.restarts = []
                 
         if SimResultObject in self.restarts :
@@ -1296,12 +1329,36 @@ class SimResult(object):
         if self.speak in ( -1, 1 ) :
             if len( self.restarts ) > 0 :
                 string = "\n '" + self.get_Name() + "' restarts from " 
-                for r in range(0,len(self.restarts)) :
-                    string = string + "\n   '" + self.restarts[::-1][r].get_Name() + "'"
+                for r in range(len(self.restarts)-1,-1,-1) :
+                    string = string + "\n   →'" + self.restarts[r].get_Name() + "'"
+                    if len( self.restarts[r].restarts ) > 0 :
+                        string += self.restarts[r].print_RecursiveRestarts(1)
                 print( string )
             # else :
             #     print(" restarts simulations are not defined.")
         return self.restarts
+    
+    def get_RecursiveRestarts(self):
+        if len( self.restarts ) == 0 :
+            return self.restarts
+        else :
+            restarts = []
+            for R in self.restarts :
+                if len( R.restarts ) == 0 :
+                    restarts.append ( [ R ] )
+                else :
+                    restarts.append( [ R , R.get_RecursiveRestarts() ] )
+            return restarts
+    
+    def print_RecursiveRestarts(self,ite=0) :
+        if len( self.restarts ) == 0 :
+            return ''
+        else :
+            string = ''
+            for R in self.restarts[::-1] :
+                string = string + "\n" + "   "*ite + "   →'" + R.get_Name() + "'"
+                string += R.print_RecursiveRestarts(ite+1)
+            return string
     
     def set_Color(self,MatplotlibColor=None,Key=None):
         if MatplotlibColor is None :
@@ -1537,8 +1594,11 @@ class SimResult(object):
     
     def reset_Filter(self) :
         if self.filter['reset'] :
-            self.filter = {'key':[None],'min':[None],'max':[None],'condition':[None],'filter':None,'reset':True,'incremental':[None],'operation':[None]}
-            verbose(self.speak , 2 , " << filter reset >>")
+            if self.filter['key'] == [None] and self.filter['condition'] == [None ] and self.filter['min'] == [None] and self.filter['max'] == [None] :
+                pass
+            else :
+                self.filter = {'key':[None],'min':[None],'max':[None],'condition':[None],'filter':None,'reset':True,'incremental':[None],'operation':[None]}
+                verbose(self.speak , 2 , " << filter reset >>")
             return True
         else :
             self.filter['reset'] = True
@@ -2034,14 +2094,7 @@ class SimResult(object):
             return self.checkRestarts(key,reload)
             # returnVectors = self.checkRestarts(key,reload)
         
-        returnVectors = {}
-        if self.results != None :
-            if type(key) == str :
-                returnVectors[key] = self.checkIfLoaded(key,reload)
-            if type(key) == list or type(key) == tuple :
-                listOfKeys = list(set(key))
-                for each in listOfKeys :
-                    returnVectors[each] = self.checkIfLoaded(each,reload)
+        returnVectors = self.get_RawVector(key=key,reload=reload)
         
         if self.filter['filter'] is None :
             return returnVectors
@@ -2052,58 +2105,133 @@ class SimResult(object):
                 returnVectors[each] = returnVectors[each][self.filter['filter']]
             return returnVectors
     
+    # extract the raw vector, without apply filter
+    def get_RawVector(self,key=None,reload=False):
+        """
+        returns a dictionary with numpy vectors for the selected key(s) 
+        ignoring any applied filter
+        key may be:
+            a string with a single key or,
+            a list or tuple containing the keys names as strings.
+        """
+        returnVectors = {}
+        if self.results != None :
+            if type(key) == str :
+                returnVectors[key] = self.checkIfLoaded(key,reload)
+            if type(key) == list or type(key) == tuple :
+                listOfKeys = list(set(key))
+                for each in listOfKeys :
+                    returnVectors[each] = self.checkIfLoaded(each,reload)        
+        return returnVectors
+    
+    # return the raw vector, without apply filter
+    def get_RawVectorWithUnits(self,key=None,reload=False):
+        """
+        returns a dictionary with a tuple ( units , numpy vectors ) 
+        ignoring any applied filter, for the selected key(s)
+        key may be:
+            a string with a single key or,
+            a list or tuple containing the keys names as strings.
+        """
+        returnVectors = self.get_RawVector(key=key,reload=reload)
+        for key in returnVectors :
+            returnVectors[key] = ( self.get_Unit(key) , returnVectors[key] )
+        return returnVectors    
+    
+    # # support functions for get_Vector:
+    # def checkRestarts(self,key=None,reload=False) :
+    #     returnVectors = {}
+    #     Rlist = self.restarts + [ self ]
+    #     if type(key) == str :
+    #         key = [ key ]
+            
+    #     for K in key :
+    #         try :
+    #             Rlist[-1].checkIfLoaded(K,False)
+    #             Kexists = True
+    #         except :
+    #             Kexists = False
+
+    #         if Kexists :
+    #             ti = Rlist[0].checkIfLoaded('TIME',False)[0]
+    #             tf = Rlist[1].checkIfLoaded('TIME',False)[0]
+
+    #             try :
+    #                 RVector = Rlist[0].checkIfLoaded(K,False)
+    #             except :
+    #                 RVector = np.array( [0]*len(Rlist[0].checkIfLoaded('TIME',False)) , dtype=Rlist[-1].checkIfLoaded(K,False).dtype )
+
+    #             if RVector is None or len(RVector) == 0 :
+    #                 RVector = np.array( [0]*len(Rlist[0].checkIfLoaded('TIME',False)) , dtype=Rlist[-1].checkIfLoaded(K,False).dtype )
+
+    #             if tf in Rlist[0].checkIfLoaded('TIME',False) :
+    #                 returnVectors[K] = RVector[ ( Rlist[0].checkIfLoaded('TIME',False)>=ti ) & ( Rlist[0].checkIfLoaded('TIME',False)<tf ) ]
+    #             else :
+    #                 returnVectors[K] = RVector[ Rlist[0].checkIfLoaded('TIME',False) >= ti ]
+    #             verbose( self.speak , 1 , " reading key '" + str(K) + "' from restart " + "0" + ": '" + str(Rlist[0]) + "'")
+                
+    #             for R in range(1,len(Rlist)-1) :
+    #                 ti = Rlist[R].checkIfLoaded('TIME',False)[0]
+    #                 tf = Rlist[R+1].checkIfLoaded('TIME',False)[0]
+    #                 try :
+    #                     RVector = Rlist[R].checkIfLoaded(K,False)
+    #                 except :
+    #                     RVector = np.array( [0]*len(Rlist[R].checkIfLoaded('TIME',False)) , dtype=Rlist[-1].checkIfLoaded(K,False).dtype )
+
+    #                 if RVector is None or len(RVector) == 0 :
+    #                     RVector = np.array( [0]*len(Rlist[R].checkIfLoaded('TIME',False)) , dtype=Rlist[-1].checkIfLoaded(K,False).dtype )
+
+    #                 if tf in Rlist[R].checkIfLoaded('TIME',False) :
+    #                     returnVectors[K] = np.concatenate( [ returnVectors[K] , RVector[ ( Rlist[R].checkIfLoaded('TIME',False)>=ti ) & ( Rlist[R].checkIfLoaded('TIME',False)<tf ) ] ] )
+    #                 else :
+    #                     returnVectors[K] = np.concatenate( [ returnVectors[K] , RVector[ ( Rlist[R].checkIfLoaded('TIME',False)>=ti ) ] ] )
+    #                 verbose( self.speak , 1 , " reading key '" + str(K) + "' from restart " + str(R) + ": '" + str(Rlist[0]) + "'")
+                    
+    #             returnVectors[K] = np.concatenate( [ returnVectors[K] , Rlist[-1].checkIfLoaded(K,False) ] )
+    #             verbose( self.speak , 1 , " reading key '" + str(K) + "' from restart " + str(len(Rlist)) + ": '" + str(Rlist[0]) + "'")
+            
+    #     # return returnVectors
+    #     if self.filter['filter'] is None :
+    #         return returnVectors
+    #     else :
+    #         if self.filter['key'][-1] is not None :
+    #             verbose( self.speak , 1 , " filter by key '" + self.filter['key'][-1] + "'")          
+    #         for each in returnVectors :
+    #             returnVectors[each] = returnVectors[each][self.filter['filter']]
+    #         return returnVectors
+        
     # support functions for get_Vector:
     def checkRestarts(self,key=None,reload=False) :
         returnVectors = {}
-        Rlist = self.restarts + [ self ]
+        Rlist = self.restarts # + [ self ]
         if type(key) == str :
             key = [ key ]
             
         for K in key :
-            try :
-                Rlist[-1].checkIfLoaded(K,False)
-                Kexists = True
-            except :
-                Kexists = False
-
-            if Kexists :
-                ti = Rlist[0].checkIfLoaded('TIME',False)[0]
-                tf = Rlist[1].checkIfLoaded('TIME',False)[0]
-
+            VectorsList = []
+            verbose( self.speak , 1 , " preparing key '" + str(K) + "'")
+            for R in Rlist :
                 try :
-                    RVector = Rlist[0].checkIfLoaded(K,False)
+                    # try to extract the not-filtered vector from the simulation
+                    Vector = R.get_RawVector(K)[K]
+                    verbose( self.speak , 1 , "     reading from restart " + str(R) )
                 except :
-                    RVector = np.array( [0]*len(Rlist[0].checkIfLoaded('TIME',False)) , dtype=Rlist[-1].checkIfLoaded(K,False).dtype )
-
-                if RVector is None or len(RVector) == 0 :
-                    RVector = np.array( [0]*len(Rlist[0].checkIfLoaded('TIME',False)) , dtype=Rlist[-1].checkIfLoaded(K,False).dtype )
-
-                if tf in Rlist[0].checkIfLoaded('TIME',False) :
-                    returnVectors[K] = RVector[ ( Rlist[0].checkIfLoaded('TIME',False)>=ti ) & ( Rlist[0].checkIfLoaded('TIME',False)<tf ) ]
-                else :
-                    returnVectors[K] = RVector[ Rlist[0].checkIfLoaded('TIME',False) >= ti ]
-                verbose( self.speak , 1 , " reading key '" + str(K) + "' from restart " + "0" + ": '" + str(Rlist[0]) + "'")
+                    # if failed to extract, create a zeros vector of the 'TIME' size
+                    Vector = np.zeros( len(R.get_RawVector(K)[K]) )
+                    verbose( self.speak , 1 , "     filling with zeros for restart "+ str(R) )
                 
-                for R in range(1,len(Rlist)-1) :
-                    ti = Rlist[R].checkIfLoaded('TIME',False)[0]
-                    tf = Rlist[R+1].checkIfLoaded('TIME',False)[0]
-                    try :
-                        RVector = Rlist[R].checkIfLoaded(K,False)
-                    except :
-                        RVector = np.array( [0]*len(Rlist[R].checkIfLoaded('TIME',False)) , dtype=Rlist[-1].checkIfLoaded(K,False).dtype )
+                # apply filter
+                verbose( self.speak , 1 , "          applying filter")
+                Vector = Vector[ self.restartFilters[R] ]
+                
+                # concatenate vectors                
+                if K in returnVectors :
+                    verbose( self.speak , 1 , "          concatenating vectors")
+                    returnVectors[K] = np.concatenate( [ returnVectors[K] , Vector ] )
+                else :
+                    verbose( self.speak , 1 , "          creating vector")
+                    returnVectors[K] = Vector
 
-                    if RVector is None or len(RVector) == 0 :
-                        RVector = np.array( [0]*len(Rlist[R].checkIfLoaded('TIME',False)) , dtype=Rlist[-1].checkIfLoaded(K,False).dtype )
-
-                    if tf in Rlist[R].checkIfLoaded('TIME',False) :
-                        returnVectors[K] = np.concatenate( [ returnVectors[K] , RVector[ ( Rlist[R].checkIfLoaded('TIME',False)>=ti ) & ( Rlist[R].checkIfLoaded('TIME',False)<tf ) ] ] )
-                    else :
-                        returnVectors[K] = np.concatenate( [ returnVectors[K] , RVector[ ( Rlist[R].checkIfLoaded('TIME',False)>=ti ) ] ] )
-                    verbose( self.speak , 1 , " reading key '" + str(K) + "' from restart " + str(R) + ": '" + str(Rlist[0]) + "'")
-                    
-                returnVectors[K] = np.concatenate( [ returnVectors[K] , Rlist[-1].checkIfLoaded(K,False) ] )
-                verbose( self.speak , 1 , " reading key '" + str(K) + "' from restart " + str(len(Rlist)) + ": '" + str(Rlist[0]) + "'")
-            
         # return returnVectors
         if self.filter['filter'] is None :
             return returnVectors
