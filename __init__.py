@@ -35,7 +35,7 @@ Created on Tue Jul  9 21:23:27 2019
 
 # from bases.units import convertUnit
 
-__version__ = '0.0.20-05-16'
+__version__ = '0.1.20-06-25'
 __author__ = 'Martin Araya'
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')

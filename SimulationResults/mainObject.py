@@ -612,6 +612,8 @@ class SimResult(object):
         self.DTindex = 'TIME'
         self.restarts = []
         self.restartFilters = {}
+        self.continuations = []
+        self.continuationFilters = {}
         self.vectorsRestart = {}
         self.pandasColumns = { 'HEADERS' : {} , 'COLUMNS' : {} , 'DATA' : {} }
         self.fieldtime = ( None , None , None ) 
@@ -1254,7 +1256,7 @@ class SimResult(object):
             if self.restarts[i].get_Vector('TIME')['TIME'][0] < selfTi :
                 sortedR += [self.restarts[i]]
             else :
-                verbose( self.speak , 3 , " the simulation '" + str(self.restarts[i]) + "' was not added as restart because it doesn't contain data before this simulation ( '" + str(self) +"' ) simulation." )
+                verbose( self.speak , 3 , " the simulation '" + str(self.restarts[i]) + "' was not added as restart because it doesn't contain data before this simulation ( '" + str(self) +"' )." )
         self.restarts = sortedR
         
         # sort simulations by start time
@@ -1277,10 +1279,55 @@ class SimResult(object):
         self.set_FieldTime()
         # print the restarts
         self.print_Restart()
+    
+    def set_Continue(self,SimResultObject) :
+        self.set_Continuation(SimResultObject)
+    def set_Continuation(self,SimResultObject) :
+        if type( SimResultObject ) == list :
+            self.continuations = self.continuations + SimResultObject 
+        else :
+            self.continuations.append(SimResultObject)
+        self.continuations = list( set ( self.continuations ) )
+        
+        sortedC = []
+        selfTf = self.checkIfLoaded('TIME',False)[-1]
+        # remove simulations that starts after this one (self)
+        for i in range(len(self.continuations)) :
+            if self.continuations[i].get_Vector('TIME')['TIME'][-1] > selfTf :
+                sortedC += [self.continuations[i]]
+            else :
+                verbose( self.speak , 3 , " the simulation '" + str(self.continuations[i]) + "' was not added as continuation because it doesn't contain data after this simulation ( '" + str(self) +"' )." )
+        self.continuations = sortedC
+        
+        # sort simulations by start time
+        for i in range(len(self.continuations)) :
+            for j in range(0,len(self.continuations)-i-1) :
+                if self.continuations[j].get_Vector('TIME')['TIME'][-1] < self.continuations[j+1].get_Vector('TIME')['TIME'][-1] :
+                    self.continuations[j] , self.continuations[j+1] = self.continuations[j+1] , self.continuations[j]
+        
+        # calculate continuationFilters for each continuation
+        for i in range(1,len(self.continuations)) :
+            thisFilter = self.continuations[i].get_RawVector('TIME')['TIME'] > self.continuations[i-1].get_RawVector('TIME')['TIME'][-1]
+            self.continuationFilters[ self.continuations[i] ] = thisFilter
+        # claculate continuationFilters for the last continuation
+        thisFilter = self.continuations[0].get_RawVector('TIME')['TIME'] > self.get_RawVector('TIME')['TIME'][-1]
+        self.continuationFilters[ self.continuations[0] ] = thisFilter
+    
+        # recreate filter for this simulation (self), now considering the restarts
+        self.redo_Filter()
+        # recalculate the total time for this simulation (self), now considering the restarts
+        self.set_FieldTime()
+        # print the continuation
+        self.print_Restart()
         
     def print_Restart(self) :
         prevSpeak , self.speak = self.speak , -1
         message = self.get_Restart()
+        self.speak = prevSpeak
+    
+    def print_Continuation(self) :
+        prevSpeak , self.speak = self.speak , -1
+        message = self.get_Continuation()
         self.speak = prevSpeak
  
     def clean_Restarts(self) :
@@ -1299,7 +1346,7 @@ class SimResult(object):
             .remove_Restart('--ALL')
         """
         self.remove_Restart(SimResultObject='--ALL')
-    def remove_Restart(SimResultObject='--ALL') :
+    def remove_Restarts(self,SimResultObject='--ALL') :
         """
         ** alias for remove_Restart() ** 
         removes ALL the simulations from the restart list.
@@ -1323,6 +1370,46 @@ class SimResult(object):
         if SimResultObject in self.restarts :
             print(" removed restart object '" + str(self.restarts.pop(SimResultObject)) + "'")
     
+    def clean_Continuations(self) :
+        """
+        ** alias for remove_Restart() ** 
+        removes ALL the simulations from the restart list.
+        equivalent to :
+            .remove_Restart('--ALL')
+        """
+        self.remove_Continuation(SimResultObject='--ALL')
+    def clean_Continuation(self) :
+        """
+        ** alias for remove_Restart() ** 
+        removes ALL the simulations from the restart list.
+        equivalent to :
+            .remove_Restart('--ALL')
+        """
+        self.remove_Continuation(SimResultObject='--ALL')
+    def remove_Continuations(self,SimResultObject='--ALL') :
+        """
+        ** alias for remove_Restart() ** 
+        removes ALL the simulations from the restart list.
+        equivalent to :
+            .remove_Restart('--ALL')
+        """
+        self.remove_Continuation(self,SimResultObject='--ALL') 
+    def remove_Continuation(self,SimResultObject='--ALL') :
+        """
+        removes ALL the simulations from the continuation list.
+        equivalent to :
+            .remove_Continuation('--ALL')
+        """
+        if SimResultObject == '--ALL' :
+            if len(self.continuations) == 0 :
+                print(" nothing to remove, no continuation objects defined")
+            else :
+                print(" removed ALL the continuation objects (" + str(len(self.restarts)) + " objects removed)" )
+                self.restarts = []
+                
+        if SimResultObject in self.restarts :
+            print(" removed continuation object '" + str(self.restarts.pop(SimResultObject)) + "'")
+    
     def get_Restarts(self):
         return self.get_Restart()
     def get_Restart(self):
@@ -1330,13 +1417,24 @@ class SimResult(object):
             if len( self.restarts ) > 0 :
                 string = "\n '" + self.get_Name() + "' restarts from " 
                 for r in range(len(self.restarts)-1,-1,-1) :
-                    string = string + "\n   →'" + self.restarts[r].get_Name() + "'"
+                    string = string + "\n   ←'" + self.restarts[r].get_Name() + "'"
                     if len( self.restarts[r].restarts ) > 0 :
                         string += self.restarts[r].print_RecursiveRestarts(1)
                 print( string )
-            # else :
-            #     print(" restarts simulations are not defined.")
         return self.restarts
+    
+    def get_Continuations(self):
+        return self.get_Restart()
+    def get_Continuation(self):
+        if self.speak in ( -1, 1 ) :
+            if len( self.continuations ) > 0 :
+                string = "\n '" + self.get_Name() + "' continues to " 
+                for r in range(len(self.continuations)) :
+                    string = string + "\n   →'" + self.continuations[r].get_Name() + "'"
+                    if len( self.continuations[r].continuations ) > 0 :
+                        string += self.continuations[r].print_RecursiveContinuations(1)
+                print( string )
+        return self.continuations
     
     def get_RecursiveRestarts(self):
         if len( self.restarts ) == 0 :
@@ -1350,13 +1448,35 @@ class SimResult(object):
                     restarts.append( [ R , R.get_RecursiveRestarts() ] )
             return restarts
     
+    def get_RecursiveContinuations(self):
+        if len( self.continuations ) == 0 :
+            return self.continuations
+        else :
+            continuations = []
+            for C in self.continuations :
+                if len( C.continuations ) == 0 :
+                    continuations.append ( [ C ] )
+                else :
+                    continuations.append( [ C , C.get_RecursiveContinuations() ] )
+            return continuations
+    
+    def print_RecursiveContinuations(self,ite=0):
+        if len( self.continuations ) == 0 :
+            return ''
+        else :
+            string = ''
+            for C in self.continuations :
+                string = string + "\n" + "   "*ite + "   →'" + C.get_Name() + "'"
+                string += C.print_RecursiveContinuations(ite+1)
+            return string
+    
     def print_RecursiveRestarts(self,ite=0) :
         if len( self.restarts ) == 0 :
             return ''
         else :
             string = ''
             for R in self.restarts[::-1] :
-                string = string + "\n" + "   "*ite + "   →'" + R.get_Name() + "'"
+                string = string + "\n" + "   "*ite + "   ←'" + R.get_Name() + "'"
                 string += R.print_RecursiveRestarts(ite+1)
             return string
     
@@ -2090,11 +2210,8 @@ class SimResult(object):
             a string with a single key or,
             a list or tuple containing the keys names as strings.
         """
-        if len( self.get_Restart() ) > 0 :
-            return self.checkRestarts(key,reload)
-            # returnVectors = self.checkRestarts(key,reload)
-        
-        returnVectors = self.get_RawVector(key=key,reload=reload)
+
+        returnVectors = self.get_UnfilteredVector(key,reload)
         
         if self.filter['filter'] is None :
             return returnVectors
@@ -2105,11 +2222,25 @@ class SimResult(object):
                 returnVectors[each] = returnVectors[each][self.filter['filter']]
             return returnVectors
     
-    # extract the raw vector, without apply filter
+    def get_VectorWithUnits(self,key=None,reload=False):
+        """
+        returns a dictionary with a tuple ( units , numpy vectors ) 
+        key may be:
+            a string with a single key or,
+            a list or tuple containing the keys names as strings.
+        """
+        returnVectors = self.get_Vector(key=key,reload=reload)
+        for key in returnVectors :
+            returnVectors[key] = ( self.get_Unit(key) , returnVectors[key] )
+        return returnVectors  
+    
+    # extract the raw vector, without apply filter and without restarts or continues
     def get_RawVector(self,key=None,reload=False):
         """
-        returns a dictionary with numpy vectors for the selected key(s) 
-        ignoring any applied filter
+        returns a dictionary with numpy vectors for the selected key(s) ignoring:
+            any applied filter
+            any restarts
+            any continuations
         key may be:
             a string with a single key or,
             a list or tuple containing the keys names as strings.
@@ -2123,12 +2254,51 @@ class SimResult(object):
                 for each in listOfKeys :
                     returnVectors[each] = self.checkIfLoaded(each,reload)        
         return returnVectors
+
+    def get_UnfilteredVector(self,key=None,reload=False):
+        """
+        returns a dictionary with numpy vectors for the selected key(s) 
+        ignoring any applied filter
+        key may be:
+            a string with a single key or,
+            a list or tuple containing the keys names as strings.
+        """
+        # check restarts
+        restartDict = {}
+        if len( self.get_Restart() ) > 0 :
+            restartDict = self.checkRestarts(key,reload)
+        
+        # check continuations
+        continuationDict = {}
+        if len( self.get_Restart() ) > 0 :
+            continuationDict = self.checkContinuations(key,reload)
+            
+        # get vector for current simulation
+        returnVectors = self.get_RawVector(key=key,reload=reload)
+        
+        if restartDict != {} and continuationDict != {} :
+            # concatenate restarts + self + continuations
+            for each in returnVectors :
+                returnVectors[each] = np.concatenate( [ restartDict[each] , returnVectors[each] , continuationDict[each] ] )
+        elif restartDict != {} :
+            # concatenate restarts + self 
+            for each in returnVectors :
+                returnVectors[each] = np.concatenate( [ restartDict[each] , returnVectors[each] ] )
+        elif continuationDict != {} :
+            # concatenate self + continuations
+            for each in returnVectors :
+                returnVectors[each] = np.concatenate( [ returnVectors[each] , continuationDict[each] ] )
+                
+        return returnVectors
     
-    # return the raw vector, without apply filter
+    
     def get_RawVectorWithUnits(self,key=None,reload=False):
         """
         returns a dictionary with a tuple ( units , numpy vectors ) 
-        ignoring any applied filter, for the selected key(s)
+        ignoring:
+            any applied filter
+            any restarts
+            any continuations
         key may be:
             a string with a single key or,
             a list or tuple containing the keys names as strings.
@@ -2137,69 +2307,7 @@ class SimResult(object):
         for key in returnVectors :
             returnVectors[key] = ( self.get_Unit(key) , returnVectors[key] )
         return returnVectors    
-    
-    # # support functions for get_Vector:
-    # def checkRestarts(self,key=None,reload=False) :
-    #     returnVectors = {}
-    #     Rlist = self.restarts + [ self ]
-    #     if type(key) == str :
-    #         key = [ key ]
             
-    #     for K in key :
-    #         try :
-    #             Rlist[-1].checkIfLoaded(K,False)
-    #             Kexists = True
-    #         except :
-    #             Kexists = False
-
-    #         if Kexists :
-    #             ti = Rlist[0].checkIfLoaded('TIME',False)[0]
-    #             tf = Rlist[1].checkIfLoaded('TIME',False)[0]
-
-    #             try :
-    #                 RVector = Rlist[0].checkIfLoaded(K,False)
-    #             except :
-    #                 RVector = np.array( [0]*len(Rlist[0].checkIfLoaded('TIME',False)) , dtype=Rlist[-1].checkIfLoaded(K,False).dtype )
-
-    #             if RVector is None or len(RVector) == 0 :
-    #                 RVector = np.array( [0]*len(Rlist[0].checkIfLoaded('TIME',False)) , dtype=Rlist[-1].checkIfLoaded(K,False).dtype )
-
-    #             if tf in Rlist[0].checkIfLoaded('TIME',False) :
-    #                 returnVectors[K] = RVector[ ( Rlist[0].checkIfLoaded('TIME',False)>=ti ) & ( Rlist[0].checkIfLoaded('TIME',False)<tf ) ]
-    #             else :
-    #                 returnVectors[K] = RVector[ Rlist[0].checkIfLoaded('TIME',False) >= ti ]
-    #             verbose( self.speak , 1 , " reading key '" + str(K) + "' from restart " + "0" + ": '" + str(Rlist[0]) + "'")
-                
-    #             for R in range(1,len(Rlist)-1) :
-    #                 ti = Rlist[R].checkIfLoaded('TIME',False)[0]
-    #                 tf = Rlist[R+1].checkIfLoaded('TIME',False)[0]
-    #                 try :
-    #                     RVector = Rlist[R].checkIfLoaded(K,False)
-    #                 except :
-    #                     RVector = np.array( [0]*len(Rlist[R].checkIfLoaded('TIME',False)) , dtype=Rlist[-1].checkIfLoaded(K,False).dtype )
-
-    #                 if RVector is None or len(RVector) == 0 :
-    #                     RVector = np.array( [0]*len(Rlist[R].checkIfLoaded('TIME',False)) , dtype=Rlist[-1].checkIfLoaded(K,False).dtype )
-
-    #                 if tf in Rlist[R].checkIfLoaded('TIME',False) :
-    #                     returnVectors[K] = np.concatenate( [ returnVectors[K] , RVector[ ( Rlist[R].checkIfLoaded('TIME',False)>=ti ) & ( Rlist[R].checkIfLoaded('TIME',False)<tf ) ] ] )
-    #                 else :
-    #                     returnVectors[K] = np.concatenate( [ returnVectors[K] , RVector[ ( Rlist[R].checkIfLoaded('TIME',False)>=ti ) ] ] )
-    #                 verbose( self.speak , 1 , " reading key '" + str(K) + "' from restart " + str(R) + ": '" + str(Rlist[0]) + "'")
-                    
-    #             returnVectors[K] = np.concatenate( [ returnVectors[K] , Rlist[-1].checkIfLoaded(K,False) ] )
-    #             verbose( self.speak , 1 , " reading key '" + str(K) + "' from restart " + str(len(Rlist)) + ": '" + str(Rlist[0]) + "'")
-            
-    #     # return returnVectors
-    #     if self.filter['filter'] is None :
-    #         return returnVectors
-    #     else :
-    #         if self.filter['key'][-1] is not None :
-    #             verbose( self.speak , 1 , " filter by key '" + self.filter['key'][-1] + "'")          
-    #         for each in returnVectors :
-    #             returnVectors[each] = returnVectors[each][self.filter['filter']]
-    #         return returnVectors
-        
     # support functions for get_Vector:
     def checkRestarts(self,key=None,reload=False) :
         returnVectors = {}
@@ -2231,7 +2339,50 @@ class SimResult(object):
                 else :
                     verbose( self.speak , 1 , "          creating vector")
                     returnVectors[K] = Vector
-
+            # returnVectors[K] = np.concatenate( [ returnVectors[K] , self.checkIfLoaded( K , False ) ] )
+        
+        # return returnVectors
+        if self.filter['filter'] is None :
+            return returnVectors
+        else :
+            if self.filter['key'][-1] is not None :
+                verbose( self.speak , 1 , " filter by key '" + self.filter['key'][-1] + "'")          
+            for each in returnVectors :
+                returnVectors[each] = returnVectors[each][self.filter['filter']]
+            return returnVectors
+    
+    def checkContinuations(self,key=None,reload=False) :
+        returnVectors = {}
+        Clist = self.continuations # + [ self ]
+        if type(key) == str :
+            key = [ key ]
+            
+        for K in key :
+            VectorsList = []
+            verbose( self.speak , 1 , " preparing key '" + str(K) + "'")
+            for C in Clist :
+                try :
+                    # try to extract the not-filtered vector from the simulation
+                    Vector = C.get_RawVector(K)[K]
+                    verbose( self.speak , 1 , "     reading from restart " + str(C) )
+                except :
+                    # if failed to extract, create a zeros vector of the 'TIME' size
+                    Vector = np.zeros( len(C.get_RawVector(K)[K]) )
+                    verbose( self.speak , 1 , "     filling with zeros for restart "+ str(C) )
+                
+                # apply filter
+                verbose( self.speak , 1 , "          applying filter")
+                Vector = Vector[ self.continuationFilters[C] ]
+                
+                # concatenate vectors                
+                if K in returnVectors :
+                    verbose( self.speak , 1 , "          concatenating vectors")
+                    returnVectors[K] = np.concatenate( [ returnVectors[K] , Vector ] )
+                else :
+                    verbose( self.speak , 1 , "          creating vector")
+                    returnVectors[K] = Vector
+            # returnVectors[K] = np.concatenate( [ self.checkIfLoaded( K , False ) , returnVectors[K] ] )
+            
         # return returnVectors
         if self.filter['filter'] is None :
             return returnVectors
