@@ -2270,7 +2270,7 @@ class SimResult(object):
         
         # check continuations
         continuationDict = {}
-        if len( self.get_Restart() ) > 0 :
+        if len( self.get_Continuation() ) > 0 :
             continuationDict = self.checkContinuations(key,reload)
             
         # get vector for current simulation
@@ -2322,10 +2322,12 @@ class SimResult(object):
                 try :
                     # try to extract the not-filtered vector from the simulation
                     Vector = R.get_RawVector(K)[K]
+                    #Vector = R.get_UnfilteredVector(K)[K]
                     verbose( self.speak , 1 , "     reading from restart " + str(R) )
                 except :
                     # if failed to extract, create a zeros vector of the 'TIME' size
                     Vector = np.zeros( len(R.get_RawVector(K)[K]) )
+                    #Vector = np.zeros( len(R.get_UnfilteredVector(K)[K]) )
                     verbose( self.speak , 1 , "     filling with zeros for restart "+ str(R) )
                 
                 # apply filter
