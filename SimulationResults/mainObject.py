@@ -677,7 +677,12 @@ class SimResult(object):
         if type(Value) is np.ndarray :
             if len(Value) != len(self.fieldtime[2]) :
                 raise TypeError(" the 'Value' array must have the exact same lenght of the simulation vectors: " + str(len(self.fieldtime[2])) )
-            Units = Units.strip('( )')
+            if type(Units) is str :
+                Units = Units.strip('( )')
+            elif Units is None :
+                Units = str(None)
+            else :
+                Units = str(Units)
             if unit.isUnit(Units) :
                 pass
             else :
@@ -840,6 +845,34 @@ class SimResult(object):
 
     def get_Units(self,Key='--EveryType--') :
         return self.get_Unit(Key)
+
+    def set_Units(self,Key,Unit=None,overwrite=False) :
+        return self.set_Unit(Key)    
+    def set_Unit(self,Key,Unit=None,overwrite=False) :
+        if type(Key) is str :
+            Key = [Key]
+        if type(Unit) is str :
+            Unit = [Unit]
+
+        if Unit is None and type(Key) is dict :
+            keysDict = Key.copy()  
+        elif len(Key) != len(Unit) :
+            raise ValueError('the lists of Keys and Units must have the same lenght')
+        
+        keysDict = dict(zip(Key,Unit))
+        
+        for k , u in keysDict.items() :
+            if k in self.units :
+                if self.units[k] == 'None' or overwrite is True :
+                    self.units[k] = u
+                    keysDict[k] = True
+                else :
+                    verbose( self.speak , 2 , "the key '" +k+ "' has '" +u+ "' already defined as units, add parameter  overwrite=True  to change this key units." )
+                    keysDict[k] = False
+            else :
+                self.units[k] = u
+                keysDict[k] = True
+        return keysDict
 
     def len_Wells(self) :
         """
@@ -1250,10 +1283,10 @@ class SimResult(object):
         self.restarts = list( set ( self.restarts ) )
         
         sortedR = []
-        selfTi = self.checkIfLoaded('TIME',False)[0]
+        selfTi = self.get_RawVector('TIME')['TIME'][0]
         # remove simulations that starts after this one (self)
         for i in range(len(self.restarts)) :
-            if self.restarts[i].get_Vector('TIME')['TIME'][0] < selfTi :
+            if self.restarts[i].get_RawVector('TIME')['TIME'][0] < selfTi :
                 sortedR += [self.restarts[i]]
             else :
                 verbose( self.speak , 3 , " the simulation '" + str(self.restarts[i]) + "' was not added as restart because it doesn't contain data before this simulation ( '" + str(self) +"' )." )
@@ -1262,7 +1295,7 @@ class SimResult(object):
         # sort simulations by start time
         for i in range(len(self.restarts)) :
             for j in range(0,len(self.restarts)-i-1) :
-                if self.restarts[j].get_Vector('TIME')['TIME'][0] > self.restarts[j+1].get_Vector('TIME')['TIME'][0] :
+                if self.restarts[j].get_RawVector('TIME')['TIME'][0] > self.restarts[j+1].get_RawVector('TIME')['TIME'][0] :
                     self.restarts[j] , self.restarts[j+1] = self.restarts[j+1] , self.restarts[j]
         
         # calculate restartFilters for each restart
@@ -1290,10 +1323,10 @@ class SimResult(object):
         self.continuations = list( set ( self.continuations ) )
         
         sortedC = []
-        selfTf = self.checkIfLoaded('TIME',False)[-1]
-        # remove simulations that starts after this one (self)
+        selfTf = self.get_RawVector('TIME')['TIME'][-1]
+        # remove simulations that ends before this one (self)
         for i in range(len(self.continuations)) :
-            if self.continuations[i].get_Vector('TIME')['TIME'][-1] > selfTf :
+            if self.continuations[i].get_RawVector('TIME')['TIME'][-1] > selfTf :
                 sortedC += [self.continuations[i]]
             else :
                 verbose( self.speak , 3 , " the simulation '" + str(self.continuations[i]) + "' was not added as continuation because it doesn't contain data after this simulation ( '" + str(self) +"' )." )
@@ -1302,7 +1335,7 @@ class SimResult(object):
         # sort simulations by start time
         for i in range(len(self.continuations)) :
             for j in range(0,len(self.continuations)-i-1) :
-                if self.continuations[j].get_Vector('TIME')['TIME'][-1] < self.continuations[j+1].get_Vector('TIME')['TIME'][-1] :
+                if self.continuations[j].get_RawVector('TIME')['TIME'][-1] > self.continuations[j+1].get_RawVector('TIME')['TIME'][-1] :
                     self.continuations[j] , self.continuations[j+1] = self.continuations[j+1] , self.continuations[j]
         
         # calculate continuationFilters for each continuation
@@ -1318,7 +1351,7 @@ class SimResult(object):
         # recalculate the total time for this simulation (self), now considering the restarts
         self.set_FieldTime()
         # print the continuation
-        self.print_Restart()
+        self.print_Continuation()
         
     def print_Restart(self) :
         prevSpeak , self.speak = self.speak , -1
@@ -1417,9 +1450,11 @@ class SimResult(object):
             if len( self.restarts ) > 0 :
                 string = "\n '" + self.get_Name() + "' restarts from " 
                 for r in range(len(self.restarts)-1,-1,-1) :
-                    string = string + "\n   ←'" + self.restarts[r].get_Name() + "'"
+                    string = string + "\n   ◄'" + self.restarts[r].get_Name() + "'"
                     if len( self.restarts[r].restarts ) > 0 :
                         string += self.restarts[r].print_RecursiveRestarts(1)
+                    if len( self.restarts[r].continuations ) > 0 :
+                        string += self.restarts[r].print_RecursiveContinuations(1)
                 print( string )
         return self.restarts
     
@@ -1430,9 +1465,11 @@ class SimResult(object):
             if len( self.continuations ) > 0 :
                 string = "\n '" + self.get_Name() + "' continues to " 
                 for r in range(len(self.continuations)) :
-                    string = string + "\n   →'" + self.continuations[r].get_Name() + "'"
+                    string = string + "\n   ►'" + self.continuations[r].get_Name() + "'"
                     if len( self.continuations[r].continuations ) > 0 :
                         string += self.continuations[r].print_RecursiveContinuations(1)
+                    if len( self.continuations[r].restarts ) > 0 :
+                        string += self.continuations[r].print_RecursiveRestarts(1)
                 print( string )
         return self.continuations
     
@@ -1466,7 +1503,7 @@ class SimResult(object):
         else :
             string = ''
             for C in self.continuations :
-                string = string + "\n" + "   "*ite + "   →'" + C.get_Name() + "'"
+                string = string + "\n" + "   "*ite + "   "+u"\U0001F6C7"+"►'" + C.get_Name() + "'"
                 string += C.print_RecursiveContinuations(ite+1)
             return string
     
@@ -1476,7 +1513,7 @@ class SimResult(object):
         else :
             string = ''
             for R in self.restarts[::-1] :
-                string = string + "\n" + "   "*ite + "   ←'" + R.get_Name() + "'"
+                string = string + "\n" + "   "*ite + "   "+u"\U0001F6C7"+"◄'" + R.get_Name() + "'"
                 string += R.print_RecursiveRestarts(ite+1)
             return string
     
