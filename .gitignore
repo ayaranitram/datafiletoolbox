@@ -1,3 +1,4 @@
 ._*.py
 ._.gitignore
 __pycache__
+.DS_Store
