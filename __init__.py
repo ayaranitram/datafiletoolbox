@@ -38,7 +38,7 @@ Created on Tue Jul  9 21:23:27 2019
 __version__ = '0.1.21-08-04'
 __author__ = 'Martin Araya'
 
-msg = """modulos branch merged into master branch"""
+msg = """implementing libecl 2.9.0 from pypi, released on May 2020"""
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')
 print(msg)
