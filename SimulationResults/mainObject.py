@@ -2954,7 +2954,7 @@ class SimResult(object):
                 means WWCT:P1 = WOPR:P1 + WLPR:P2 
                 will add FOPR plus FWPR
         but:
-            'R' : ( 'A' , '-', 'B' , '*' , 'C' ) 
+            'R' : ( 'A' , '-', 'B' , '/' , 'C' ) 
                 means R = ( A - B ) / C
                 will add A plus B and the result will be divided by C
 
@@ -3000,7 +3000,7 @@ class SimResult(object):
                     # following the operations sequence
                     # extracting Next vector or float
                     if type( CalculationTuple[i] ) == str :
-                        Next = np.array( self.get_Vector(CalculationTuple)[CalculationTuple] , dtype='float' )
+                        Next = np.array( self.get_Vector(CalculationTuple[i])[CalculationTuple[i]] , dtype='float' )
                         Units.append( self.get_Unit( CalculationTuple[i] ) )
                         CalcUnit = self.get_Unit( CalculationTuple[i] )
                     else :
