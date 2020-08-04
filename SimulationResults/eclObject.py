@@ -14,14 +14,16 @@ from datafiletoolbox.common.inout import verbose
 import numpy as np
 import os
 
-eclPath = extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib/python' 
-os.environ['PYTHONPATH'] = eclPath + ';' + os.environ['PYTHONPATH']
-eclPath = eclPath + ';' + extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib'
-eclPath = eclPath + ';' + extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
-os.environ['PATH'] = eclPath + ';' + os.environ['PATH']
-from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
-from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import summary
-           
+#eclPath = extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib/python' 
+#os.environ['PYTHONPATH'] = eclPath + ';' + os.environ['PYTHONPATH']
+#eclPath = eclPath + ';' + extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib'
+#eclPath = eclPath + ';' + extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
+#os.environ['PATH'] = eclPath + ';' + os.environ['PATH']
+
+#from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
+import ecl
+#from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import summary
+       
 class ECL(SimResult):
     """
     object to contain eclipse format results read from SMSPEC using libecl from equinor 
