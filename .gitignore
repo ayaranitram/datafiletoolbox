@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 ._*.py
 ._.gitignore
 __pycache__
 .DS_Store
+=======
+._*.py
+._.gitignore
+__pycache__
+>>>>>>> modulos

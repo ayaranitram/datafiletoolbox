@@ -9,19 +9,36 @@ Created on Tue Jul  9 21:23:27 2019
 @author: martin
 """
 
-import datetime
-import numpy
-import pandas
+# import datetime
+# import numpy
+# import pandas
 
-from common.inout import extension
-from common.inout import verbose
-verbose()
+# from datafiletoolbox.common.inout import extension
+# from datafiletoolbox.common.inout import verbose
+# from datafiletoolbox.common.stringformat import date
+# from datafiletoolbox.common.loader import loadSimulationResults
+# from datafiletoolbox.SimPlot.SmartPlot import Plot
 
-from datafiletoolbox.propertyManipulation import *
-from datafiletoolbox.simObject import *
+# from datafiletoolbox.SimulationResults.oneObject import *
 
+# from datafiletoolbox.SimulationResults.mainObject import SimResult
+# from datafiletoolbox.SimulationResults.vipObject import VIP
+# from datafiletoolbox.SimulationResults.eclObject import ECL
 
-__version__ = '0.2'
+# from .common.functions import mainKey
+# from .common.functions import is_SimulationResult
+
+# from .SimInput.propertyManipulation import *
+# from .SimInput.simObject import *
+
+# from .SimulationResults import *
+
+# from bases.units import convertUnit
+
+__version__ = '0.1.20-06-25'
 __author__ = 'Martin Araya'
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')
+
+from .common.stringformat import date
+from .common.inout import extension
