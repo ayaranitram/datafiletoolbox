@@ -35,10 +35,13 @@ Created on Tue Jul  9 21:23:27 2019
 
 # from bases.units import convertUnit
 
-__version__ = '0.1.20-06-25'
+__version__ = '0.1.21-08-04'
 __author__ = 'Martin Araya'
 
+msg = """modulos branch merged into master branch"""
+
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')
+print(msg)
 
 from .common.stringformat import date
 from .common.inout import extension
