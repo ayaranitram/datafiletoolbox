@@ -16,7 +16,7 @@ def is_SimulationResult(obj) :
 
 def mainKey(Key) :
     """
-    returns the main part (before the name if the item) of the keyword, MAIN:ITEM
+    returns the main part (before the name of the item) in the keyword, MAIN:ITEM
     """
     if type(Key) is str:
         if len(Key.strip()) > 0 :
@@ -28,7 +28,6 @@ def mainKey(Key) :
         for K in Key :
             results.append( mainKey(K) )
         return list(set(results))
-    
 
 def alternate(start=True):
     """

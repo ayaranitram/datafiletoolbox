@@ -8,6 +8,7 @@ Created on Wed May 13 15:45:12 2020
 __version__ = '0.0.20-05-19'
 
 from datafiletoolbox.SimulationResults.mainObject import SimResult
+from datafiletoolbox.common.functions import mainKey
 from datafiletoolbox.common.inout import extension
 from datafiletoolbox.common.inout import verbose 
 
@@ -221,8 +222,8 @@ class ECL(SimResult):
             KeyDict = {}
             for each in self.keys :
                 if ':' in each :
-                    Key.append(self.mainKey(each))
-                    KeyDict[self.mainKey(each)] = each
+                    Key.append( mainKey(each) )
+                    KeyDict[ mainKey(each) ] = each
                 else :
                     Key.append(each)
             Key = list( set (Key) )

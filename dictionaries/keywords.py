@@ -5,82 +5,15 @@ Created on Sun Jan 19 16:03:33 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-06-03'
+__version__ = '0.0.20-08-06'
 
-unitsFIELD = {'OIP' : 'MMstb' ,
-              'WIP' : 'MMstb' ,
-              'GIP' : 'Tscf' ,
-              'OPR' : 'stb/day' ,
-              'WPR' : 'stb/day' ,
-              'GPR' : 'MMscf/day' ,
-              'OIR' : 'stb/day' ,
-              'WIR' : 'stb/day' ,
-              'GIR' : 'MMscf/day' ,
-              'BHP' : 'psia' ,
-              'BP' : 'psia' ,
-              'BP9' : 'psia' ,
-              'BP5' : 'psia' ,
-              'OPT' : 'MMstb' ,
-              'WPT' : 'MMstb' ,
-              'GPT' : 'Tscf' ,
-              'OIT' : 'MMstb' ,
-              'WIT' : 'MMstb' ,
-              'GIT' : 'Tscf' ,
-              'PR' : 'psia' ,
-              'PRH' : 'psia' ,
-              'PRP' : 'psia' ,
-    }
-unitsMETRIC = {'OIP' : 'Ksm3' ,
-              'WIP' : 'Ksm3' ,
-              'GIP' : 'Msm3' ,
-              'OPR' : 'sm3/day' ,
-              'WPR' : 'sm3/day' ,
-              'GPR' : 'Ksm3/day' ,
-              'OIR' : 'sm3/day' ,
-              'WIR' : 'sm3/day' ,
-              'GIR' : 'Ksm3/day' ,
-              'BHP' : 'bara' ,
-              'BP' : 'bara' ,
-              'BP9' : 'bara' ,
-              'BP5' : 'bara' ,
-              'OPT' : 'Ksm3' ,
-              'WPT' : 'Ksm3' ,
-              'GPT' : 'Msm3' ,
-              'OIT' : 'Ksm3' ,
-              'WIT' : 'Ksm3' ,
-              'GIT' : 'Msm3' ,    
-              'PR' : 'bara' ,
-              'PRH' : 'bara' ,
-              'PRP' : 'bara' ,
-    }
+# highly recommended to automatically create inverse dictionaries in the __init__ module of this folder
 
+UniversalKeys = ( 'DATE','DATES','TIME','DAY','DAYS','MONTH','MONTHS','YEAR','YEARS' )
 
-calculations = { 
-    # dictionary for the function "arithmeticVector" 
-    # the accepted operators are: '+' , '-' , '*' , '/' , '^'
-    # the operation must start with a number or variable, never with an operator
-    #
-    # the operations will be executed in the exact order they are described. i.e.:
-    # 'LPR' : ( 'OPR' , '+' , 'WPR' ) 
-    #    means LPR = OPR + WPR 
-    #    will add OPR plus WPR
-    # but:
-    # 'R' : ( 'A' , '-', 'B' , '*' , 'C' ) 
-    #   means R = ( A - B ) / C
-    #   will add A plus B and the result will be divided by C
-    # to represent R = A - B / C the correct sintax is:
-    # 'R' : ( -1 , '*' , 'B' , '/', 'C' , '+' , 'A'  ) 
-    #   that means R = -1 * B / C + A
-    
-    'LPR' : ( 'OPR' , '+', 'WPR' ) ,
-    'WCT' : ( 'WPR' , '/', 'LPR'  ) ,
-    'GOR' : ( 'GPR' , '/', 'OPR' ) ,
-    'OGR' : ( 'OPR' , '/', 'GPR' ) ,
-    'WOR' : ( 'WPR' , '/', 'OPR' ) ,
-    'OWR' : ( 'OPR' , '/', 'WPR' ) ,
-    'GLR' : ( 'GPR' , '/', 'LPR' ) ,
-    'LGR' : ( 'LPR' , '/', 'GPR' ) ,
-    }
+VIPTypesToExtractVectors = ( 'FIELD' , 'WELL' , 'AREA', 'REGION' )
+
+# KnownCSVsections = ( '[S3INFO]' , '[HEADERS]' , '[DATA]' ) # not used
 
 VIP2ECLkey = { #'NAME OF COLUMN in VIP sss' : 'base ECL output keyword' 
             'DATE' : 'DATE' ,
@@ -207,7 +140,6 @@ VIP2CSVkey = { #'NAME OF COLUMN in VIP sss' : 'base ECL output keyword'
            '# WINJ' : 'WINJ' ,
            '# GINJ' : 'GINJ' ,
            }
-
 
 CSV2ECLtype = {'CONNLIST' : 'C', 
                'CONN' : 'C',
@@ -462,3 +394,4 @@ CSV2ECLkey = { #'NAME OF VARIABLE in CSV' : 'base ECL output keyword'
         #  'TQM' : '' ,
         #  'P' : '' ,
         }
+

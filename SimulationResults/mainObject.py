@@ -7,12 +7,12 @@ Created on Wed May 13 15:14:35 2020
 
 __version__ = '0.0.20-06-08'
 
-from datafiletoolbox.dictionaries import dictionaries
+from datafiletoolbox import dictionaries
 from datafiletoolbox.Classes.Errors import OverwrittingError
 from datafiletoolbox.common.stringformat import date as strDate
 from datafiletoolbox.common.stringformat import isDate 
 from datafiletoolbox.common.stringformat import multisplit , isnumeric
-from datafiletoolbox.common.functions import is_SimulationResult 
+from datafiletoolbox.common.functions import is_SimulationResult , mainKey
 from datafiletoolbox.common.inout import extension
 from datafiletoolbox.common.inout import verbose 
 from datafiletoolbox.PlotResults.SmartPlot import Plot
@@ -221,327 +221,12 @@ class SimResult(object):
             
     """
     
-    UniversalKeys = ( 'DATE','DATES','TIME','DAY','DAYS','MONTH','MONTHS','YEAR','YEARS')
-    
-    VIP2ECLkey = dictionaries.VIP2ECLkey
-    ECL2VIPkey = {}
-    for each in VIP2ECLkey :
-        ECL2VIPkey[VIP2ECLkey[each]] = each
-
-    VIP2ECLtype = dictionaries.VIP2ECLtype
-    ECL2VIPtype = {}
-    for each in VIP2ECLtype :
-        ECL2VIPtype[VIP2ECLtype[each]] = each
+    ### define common dictionaries and constants
         
     VIPnotECL = []
     
-    VIPTypesToExtractVectors = ( 'FIELD' , 'WELL' , 'AREA', 'REGION' )
-    KnownCSVsections = ( '[S3INFO]' , '[HEADERS]' , '[DATA]' )
     CSV_Variable2Verbose = {}
     CSV_Verbose2Variable = {}
-    
-    CSV2ECLkey = dictionaries.CSV2ECLkey
-    ECL2CSVkey = {}
-    for each in CSV2ECLkey :
-        ECL2CSVkey[CSV2ECLkey[each]] = each
-    CSV2ECLtype = dictionaries.CSV2ECLtype
-    ECL2CSVtype = {}
-    for each in CSV2ECLtype :
-        ECL2CSVtype[CSV2ECLtype[each]] = each
-     
-    VIP2CSVkey = dictionaries.VIP2CSVkey
-    CSV2VIPkey = {}
-    for each in VIP2CSVkey :
-        CSV2VIPkey[VIP2CSVkey[each]] = each
-    
-    def testECLmolarKey(key) :
-        if '_' in key :
-            if ':' in key :
-                var = key.strip().split(':')[0].upper()
-                clss = var[0]
-                var = var[1:]
-                member = key.strip().split(':')[1].upper()
-            else :
-                member = ''
-                var = key.strip().upper()
-                clss = var[0]
-                var = var[1:]
-            if '_' in var :
-                comp = var[var.index('_'):]
-            else :
-                return False
-            try :
-                comp = int(comp)
-            except :
-                return False
-            if var[0] in ('X','Y','Z') :
-                xyz = var[0]
-            elif var[0] == 'C' :
-                xyz = ''
-                if var[var.index('_')-1] == 'R' :
-                    xyz = 'Q'
-                elif var[var.index('_')-1] == 'T' :
-                    xyz = 'C'
-                else:
-                    return False
-                if var[var.index('_')-2] in ( 'P','I' ) :
-                    pi = var[var.index('_')-2]
-                else :
-                    return False
-            else :
-                return False
-            if clss in SimResult.ECL2VIPtype :
-                clss = SimResult.ECL2VIPtype[clss]
-            else :
-                return False
-            VIPkey = xyz + str(comp) + pi
-            return ( VIPkey , clss , member )
-        else :
-            return False
-        
-    def testCSVmolarKey(variableORkey,CLASStype=None,MEMBER=None) :
-        variableORkey = variableORkey.strip().upper()
-        if ':' in variableORkey :
-            if MEMBER is None and len(variableORkey.split(':')[1]) > 0 :
-                MEMBER = variableORkey.split(':')[1]
-            variableORkey.split(':')[0]
-        if variableORkey[-1] in ( 'P','I' ) :
-            pi = variableORkey[-1]
-        else :
-            return False
-        if variableORkey[0] in ('X','Y','Z') :
-            xyz = variableORkey[0]
-            rt = 'MF'
-            pi = ''
-        elif variableORkey[0] == 'Q' :
-            rt = 'R'
-            xyz = 'CM'
-        elif variableORkey[0] == 'C' :
-            rt = 'T'
-            xyz = 'CM'
-        else :
-            return False
-        
-        comp = variableORkey[1:-1]
-        try :
-            comp = int(comp)
-        except :
-            return False
-               
-        if CLASStype != None and CLASStype in SimResult.CSV2ECLtype[CLASStype] :
-            keyType = SimResult.CSV2ECLtype[CLASStype] 
-        else :
-            return False
-        if MEMBER is None :
-            MEMBER = ''
-        if MEMBER != None and MEMBER != 'FIELD':
-            MEMBER = ':' + MEMBER.upper()
-        elif CLASStype != None and MEMBER == 'FIELD' :
-            keyType = 'F'
-        
-        ECLkey = keyType + xyz + rt + pi + '_' + str(comp)
-        return ECLkey
-        
-    def fromECLtoVIP(self,key) :
-        verbose( self.speak , 1 , 'translating ' + str(key) + ' from ECL to VIP style.')
-        test = SimResult.testECLmolarKey(key)
-        if type(test) == tuple :
-            return test[0] , test[1] , test[2]
-        
-        key = key.strip().upper()
-        if ':' in key :
-            keyName = key[key.index(':')+1:]
-            keyRoot = key[:key.index(':')]
-            keyType = 'W'
-            if keyRoot in SimResult.UniversalKeys :
-                keyType = 'W'
-            else :
-                keyType = keyRoot[0]
-                keyRoot = keyRoot[1:]
-            if keyRoot in ( 'BHP' , 'THP' ) :
-                keyType = 'W'
-            if keyType == 'F' :
-                keyName = 'ROOT'
-            if keyType != '' and keyType in SimResult.ECL2VIPtype :
-                keyType = SimResult.ECL2VIPtype[keyType]
-            if keyRoot in SimResult.ECL2VIPkey :
-                VIPkey = SimResult.ECL2VIPkey[keyRoot]
-            else :
-                VIPkey = keyRoot
-        else :
-            keyName = 'ROOT'
-            keyRoot = key
-            keyType = key[0]
-            if keyRoot in SimResult.UniversalKeys :
-                keyType = 'F'
-            else :
-                keyType = keyRoot[0]
-                keyRoot = keyRoot[1:]
-            if keyRoot in ( 'BHP' , 'THP' ) :
-                keyType = 'W'
-                keyName = ''
-            if keyType == 'F' :
-                keyName = 'ROOT'
-            if keyType != '' and keyType in SimResult.ECL2VIPtype :
-                keyType = SimResult.ECL2VIPtype[keyType]
-            if keyRoot in SimResult.ECL2VIPkey :
-                VIPkey = SimResult.ECL2VIPkey[keyRoot]
-            else :
-                VIPkey = keyRoot
-
-        verbose( self.speak , 1 ,'ECLIPSE key ' + key + ' interpreted as VIP key ' + VIPkey + ' for ' + str(keyType) + ' summary for the item ' + keyName )
-        return VIPkey , keyType , keyName
-
-    def mainKey(self,Key) :
-        if type(Key) is str:
-            if len(Key.strip()) > 0 :
-                return Key.strip().split(':')[0]
-            else :
-                return None
-        if type(Key) is list or type(Key) is tuple :
-            results = []
-            for K in Key :
-                results.append( self.mainKey(K) )
-            return list(set(results))
-    
-    def fromVIPtoECL(self,key,SSStype=None):
-        if SSStype != None :
-            S = ' of ' + str(SSStype)
-        else :
-            S = ''
-        verbose( self.speak , 1 , 'translating ' + str(key) + S + ' from VIP to ECL style.')
-        key = key.strip().upper()
-        if ':' in key :
-            keyName = key[key.index(':')+1:]
-            keyRoot = key[:key.index(':')]
-            keyType = 'W'
-            ConvertedRoot = keyRoot
-            if keyRoot in SimResult.VIP2ECLkey :
-                ConvertedRoot = SimResult.VIP2ECLkey[ keyRoot ]  
-            if keyRoot in ( 'BHP' , 'THP' , 'AVG PRES' ) :
-                keyType = 'W'
-            if keyName == 'ROOT' :
-                keyType = 'F'
-                keyName = ''
-            else :
-                keyName = ':' + keyName
-            if SSStype != None and SSStype in SimResult.VIP2ECLtype :
-                keyType = SimResult.VIP2ECLtype[SSStype]
-            if keyRoot in SimResult.UniversalKeys :
-                keyType = ''
-        else :
-            keyName = ''
-            keyRoot = key
-            keyType = 'F'
-            ConvertedRoot = keyRoot
-            if keyRoot in SimResult.VIP2ECLkey :
-                ConvertedRoot = SimResult.VIP2ECLkey[ keyRoot ] 
-            if key in ( 'BHP' , 'THP' , 'AVG PRES' ) :
-                keyType = 'W'
-            if key in SimResult.VIP2ECLkey :
-                keyRoot = SimResult.VIP2ECLkey[key]
-            if SSStype != None and SSStype in SimResult.VIP2ECLtype :
-                keyType = SimResult.VIP2ECLtype[SSStype]
-            if keyRoot in SimResult.UniversalKeys :
-                keyType = ''
-   
-        if keyRoot == '' :
-            verbose( self.speak , 1 ,'CSV variable ' + key + ' not converted to ECL key.' )
-            return None
-        ECLkey = keyType + ConvertedRoot + keyName
-        verbose( self.speak , 1 ,'VIP key ' + key + ' interpreted as ECL key ' + ECLkey )
-        return ECLkey
-    
-    def fromCSVtoECL(self,variableORkey,CLASStype=None,MEMBER=None):
-        test = SimResult.testCSVmolarKey(variableORkey,CLASStype,MEMBER)
-        if type(test) == str :
-            return test
-        
-        if CLASStype != None :
-            C = ' of class ' + str(CLASStype)
-        if MEMBER != None :
-            M = ' for ' + str(MEMBER)
-        verbose( self.speak , 1 , 'translating ' + str(variableORkey) + C + M + ' from CSV to ECL style.')
-        
-        keyType = None
-        if CLASStype != None :
-            if CLASStype in SimResult.CSV2ECLtype :
-                keyType = SimResult.CSV2ECLtype[CLASStype] 
-
-        if MEMBER != None and len(MEMBER.strip()) > 0 :
-            keyName = MEMBER.strip().upper()
-            if keyName in ( 'FIELD' , 'ROOT' ) :
-                keyName = ''
-            else :
-                keyName = ':' + keyName
-        else :
-            keyName = None
-            
-        key = self.mainKey(variableORkey).upper()
-        if key in SimResult.UniversalKeys :
-            keyType = ''
-        if key in SimResult.CSV2ECLkey :
-            keyRoot = SimResult.CSV2ECLkey[key]
-        else :
-            keyRoot = None 
-        
-        verbose( self.speak , 1 , str(keyType) + ' ' + str(keyRoot) + ' ' + str(keyName) )
-        if keyRoot != None and keyType != None and keyName != None :
-            return keyType + keyRoot + keyName
-
-    def fromECLtoCSV(self,key) :
-        verbose( self.speak , 1 , 'translating ' + str(key) + ' from ECL to CSV style.')
-        test = SimResult.testECLmolarKey(key)
-        if type(test) == tuple :
-            return test[0] , test[1] , test[2]
-        
-        key = key.strip().upper()
-        if ':' in key :
-            keyName = key[key.index(':')+1:]
-            keyRoot = key[:key.index(':')]
-            keyType = 'W'
-            if keyRoot in SimResult.UniversalKeys :
-                keyType = 'MISCELLANEOUS'
-                keyName = ''
-            else :
-                keyType = keyRoot[0]
-                keyRoot = keyRoot[1:]
-            if keyRoot in ( 'BHP' , 'THP' ) :
-                keyType = 'W'
-            if keyType == 'F' :
-                keyName = 'FIELD'
-            if keyType != '' and keyType in SimResult.ECL2CSVtype :
-                keyType = SimResult.ECL2CSVtype[keyType]
-            if keyRoot in SimResult.ECL2CSVkey :
-                CSVkey = SimResult.ECL2CSVkey[keyRoot]
-            else :
-                CSVkey = keyRoot
-        else :
-            keyName = 'FIELD'
-            keyRoot = key
-            keyType = key[0]
-            if keyRoot in SimResult.UniversalKeys :
-                keyType = 'MISCELLANEOUS'
-                keyName = ''
-            else :
-                keyType = keyRoot[0]
-                keyRoot = keyRoot[1:]
-            if keyRoot in ( 'BHP' , 'THP' ) :
-                keyType = 'W'
-                keyName = ''
-            if keyType == 'F' :
-                keyName = 'FIELD'
-            if keyType != '' and keyType in SimResult.ECL2CSVtype :
-                keyType = SimResult.ECL2CSVtype[keyType]
-            if keyRoot in SimResult.ECL2CSVkey :
-                CSVkey = SimResult.ECL2CSVkey[keyRoot]
-            else :
-                CSVkey = keyRoot
-
-        verbose( self.speak , 1 ,'ECLIPSE key ' + key + ' interpreted as CSV key ' + CSVkey + ' for ' + str(keyType) + ' summary for the item ' + keyName )
-        return CSVkey , keyType , keyName
-
-
     
     def writeCSVtoPandas(self,CSVFilePath):
         if self.path is None :
@@ -793,7 +478,7 @@ class SimResult(object):
                                 verbose(self.speak , 3 , "the units for the key '" + Key + "' can't be converted from '" + self.get_Unit(Key) + "' to '" + UnitSystem_or_CustomUnitsDictionary[Key] + "'." )
                             verbose(self.speak , 1 , "the key '" + Key + "' matches one attribute in this simulation:\n"+str(matchedKeys) )
                         else :
-                            mainKs = self.mainKey( matchedKeys )
+                            mainKs = mainKey( matchedKeys )
                             if len(mainKs) == 1 :
                                 if convertibleUnits( self.get_Unit(matchedKeys[0]) , UnitSystem_or_CustomUnitsDictionary[Key] ) :
                                     self.plotUnits[Key] = UnitSystem_or_CustomUnitsDictionary[Key]
@@ -1538,8 +1223,8 @@ class SimResult(object):
         elif self.is_Key(Key) :
             if Key in self.keyColors :
                 return self.keyColors[Key]
-            elif self.mainKey(Key) in self.keyColors :
-                return self.keyColors[self.mainKey(Key)]
+            elif mainKey(Key) in self.keyColors :
+                return self.keyColors[mainKey(Key)]
             else :
                 return None
         elif Key in self.attributes :
@@ -1609,7 +1294,7 @@ class SimResult(object):
             props = []
             for each in self.get_Keys() :
                 if ':' in each :
-                    attr = self.mainKey(each)
+                    attr = mainKey(each)
                     if attr in self.attributes :
                         if type(self.attributes[ attr ]) == list :
                             self.attributes[ attr ] = self.attributes[ attr ] + [ each ]
@@ -1631,7 +1316,7 @@ class SimResult(object):
             props = []
             for each in self.get_Keys(pattern,reload=False) :
                 if ':' in each :
-                    props.append( self.mainKey(each) )
+                    props.append( mainKey(each) )
                 else :
                     props.append( each.strip() )
             return tuple(set(props))
@@ -2520,7 +2205,7 @@ class SimResult(object):
             Units = Units.strip('( )')
             if unit.isUnit(Units) :
                 pass
-            elif Units == 'DEGREES' and 'API' in self.mainKey(Key).upper() :
+            elif Units == 'DEGREES' and 'API' in mainKey(Key).upper() :
                 Units = 'API'
                 verbose( self.speak , 2 , '\nIMPORTANT: the selected Units: ' + Units + ' were chaged to "API" for the vector with key name ' + Key + '.')
             elif ( ' / ' in Units and unit.isUnit(Units.replace(' / ','/')) ) or ( '/ ' in Units and unit.isUnit(Units.replace('/ ','/')) ) or ( ' /' in Units and unit.isUnit(Units.replace(' /','/')) ) :
