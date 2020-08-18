@@ -10,7 +10,13 @@ __version__ = '0.0.20-05-19'
 from datafiletoolbox.common.inout import extension
 #from datafiletoolbox.SimulationResults.mainObject import SimResult
 from datafiletoolbox.SimulationResults.vipObject import VIP
-from datafiletoolbox.SimulationResults.eclObject import ECL
+
+okECL = False
+try :
+    from datafiletoolbox.SimulationResults.eclObject import ECL
+    okECL = True
+except ImportError :
+    print ( 'failed import ECL, usually due to fail to import libecl')
 
 def loadSimulationResults(FullPath=None,Simulator=None,Verbosity=2) :
     """
@@ -34,7 +40,10 @@ def loadSimulationResults(FullPath=None,Simulator=None,Verbosity=2) :
 
     
     if Simulator in ['ECL','E100','E300','ECLIPSE','IX','INTERSECT','TNAV','TNAVIGATOR'] :
-        return ECL(FullPath,Verbosity)
+        if okECL is True :
+            return ECL(FullPath,Verbosity)
+        else :
+            print( 'ECL object not loaded')
     if Simulator in ['VIP'] :
         return VIP(FullPath,Verbosity)
     if Simulator in ['NX','NEXUS']:

@@ -12,7 +12,7 @@ from datafiletoolbox.Classes.Errors import OverwrittingError
 from datafiletoolbox.common.stringformat import date as strDate
 from datafiletoolbox.common.stringformat import isDate 
 from datafiletoolbox.common.stringformat import multisplit , isnumeric
-from datafiletoolbox.common.functions import is_SimulationResult , mainKey
+from datafiletoolbox.common.functions import is_SimulationResult , mainKey , wellFromAttribute
 from datafiletoolbox.common.inout import extension
 from datafiletoolbox.common.inout import verbose 
 from datafiletoolbox.PlotResults.SmartPlot import Plot
@@ -302,6 +302,8 @@ class SimResult(object):
         self.vectorsRestart = {}
         self.pandasColumns = { 'HEADERS' : {} , 'COLUMNS' : {} , 'DATA' : {} }
         self.fieldtime = ( None , None , None ) 
+        self.GORcriteria = ( 10 , 'Mscf/stb' )
+        self.wellsLists = {}
     
     def __call__(self,Key=None,Index=None) :
         if Index is None :
@@ -431,8 +433,144 @@ class SimResult(object):
         desc['wells'] = [ len(self.wells) , '' , '' ]
         desc['groups'] = [ len(self.groups) , '' , '' ]
         desc['regions'] = [ len(self.regions), '' , '' ]
+        
+        if self.is_Attribute('WOPR') is True or ( self.is_Attribute('WGPR') is True and ( self.is_Attribute('WOGR') is True or self.is_Attribute('WGOR') is True ) ) :
+            desc['oilProducers'] = [ len( self.get_OilProducers() ) , '' , '' ]
+        
+        if self.is_Attribute('WGPR') is True or ( self.is_Attribute('WOPR') is True and ( self.is_Attribute('WOGR') is True or self.is_Attribute('WGOR') is True ) ) :
+            desc['gasProducers'] = [ len( self.get_GasProducers() ) , '' , '' ]
+        
+        if self.is_Attribute('WWPR') is True or self.is_Attribute('WWCT') is True :
+            desc['waterProducers'] = [ len( self.get_WaterProducers() ) , '' , '' ] 
+
+        if self.is_Attribute('WOIR') :
+            desc['oilInjectors'] = [ len( self.get_OilInjectors() ) , '' , '' ]
+        
+        if self.is_Attribute('WGIR') :
+            desc['gasInjectors'] = [ len( self.get_GasInjectors() ) , '' , '' ]
+        
+        if self.is_Attribute('WWIR') :
+            desc['waterInjectors'] = [ len( self.get_WaterInjectors() ) , '' , '' ]
+        
         return pd.DataFrame( data=desc , index=Index)
     
+    def get_WaterInjectors( self , reload=False ) :
+        """
+        returns a list of the wells that inject water at any time in the simulation.
+        """
+        if 'WaterInjectors' not in self.wellsLists or reload is True :
+            if self.is_Attribute('WWIR') :
+                self.wellsLists['WaterInjectors'] = list( self[['WWIR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) 
+            else :
+                return []
+        return self.wellsLists['WaterInjectors']
+        
+    def get_GasInjectors( self , reload=False ) :
+        """
+        returns a list of the wells that inject gas at any time in the simulation.
+        """
+        if 'GasInjectors' not in self.wellsLists or reload is True :
+            if self.is_Attribute('WGIR') :
+                self.wellsLists['GasInjectors'] = list( self[['WGIR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) 
+            else :
+                return []
+        return self.wellsLists['GasInjectors']
+    
+    def get_OilInjectors( self , reload=False ) :
+        """
+        returns a list of the wells that inject oil at any time in the simulation.
+        """
+        if 'OilInjectors' not in self.wellsLists or reload is True :
+            if self.is_Attribute('WOIR') :
+                self.wellsLists['OilInjectors'] = list( self[['WOIR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) 
+            else :
+                return []
+        return self.wellsLists['OilInjectors']
+    
+    def get_WaterProducers( self , reload=False ) :
+        """
+        returns a list of the wells that produces more than 99.99% water at any time in the simulation.
+        """
+        if 'WaterProducers' not in self.wellsLists or reload is True :
+            if self.is_Attribute('WWPR') :
+                waterProducers = self[['WWPR']]
+                waterProducers = waterProducers.rename( columns=wellFromAttribute( waterProducers.columns ) )
+                
+                waterCheck = waterProducers.copy()
+                
+                if self.is_Attribute('WOPR') :
+                    oilProducers = self[['WOPR']]
+                    oilProducers = oilProducers.rename( columns=wellFromAttribute( oilProducers.columns ) )
+                    waterCheck = waterCheck + oilProducers
+                
+                if self.is_Attribute('WGPR') :
+                    gasProducers = self[['WGPR']]
+                    gasProducers = gasProducers.rename( columns=wellFromAttribute( gasProducers.columns ) )
+                    waterCheck = waterCheck + gasProducers
+                
+                waterCheck = waterProducers / waterCheck
+                
+                waterCheck.replace(0,np.nan).dropna(axis=1,how='all')
+                
+            self.wellsLists['WaterProducers'] = list( waterCheck[ waterCheck >= 0.9999 ].columns ) 
+        elif self.is_Attribute('WWCT') :
+            waterCheck = self[['WWPR']]
+            waterCheck = waterCheck.rename( columns=wellFromAttribute( waterCheck.columns ) )
+            self.wellsLists['WaterProducers'] = list( waterCheck[ waterCheck >= 0.9999 ].columns ) 
+        else :
+            return []
+        return self.wellsLists['WaterProducers']
+    
+    def get_OilProducers( self , reload=False ) :
+        """
+        returns a list of the wells considered oil producers at any time in the simulation.
+        the GOR criteria to define the oil and gas producers can be modified by the method .set_GORcriteria()
+        """
+        if 'OilProducers' not in self.wellsLists or reload is True :
+            if self.is_Attribute('WOPR') and self.is_Attribute('WGPR') :
+                GAS = self[['WGPR']]
+                OIL = self[['WOPR']]
+                GOR = ( GAS.rename( columns=wellFromAttribute( GAS.columns ) ) / OIL.rename( columns=wellFromAttribute( OIL.columns ) ) )
+                GOR = GOR.replace(0,np.nan).dropna(axis=1,how='all')
+                print('convert',self.GORcriteria[0],'from',self.GORcriteria[1],'to',self.get_Unit('WGPR')[0] + '/' + self.get_Unit('WOPR')[0] )
+                GORcriteria = convertUnit( self.GORcriteria[0] , self.GORcriteria[1] , self.get_Unit('WGPR')[0] + '/' + self.get_Unit('WOPR')[0] )
+                self.wellsLists['OilProducers'] = list( GOR[ GOR<=GORcriteria ].replace(0,np.nan).dropna(axis=1,how='all').columns )
+                self.wellsLists['GasProducers'] = list( GOR[ GOR>GORcriteria ].replace(0,np.nan).dropna(axis=1,how='all').columns )
+            
+            elif self.is_Attribute('WGOR') :
+                GOR = self[['WGOR']]
+                GOR = ( GOR.rename( columns=wellFromAttribute( GOR.columns ) ) ).replace(0,np.nan).dropna(axis=1,how='all')
+                GORcriteria = convertUnit( self.GORcriteria[0] , self.GORcriteria[1] , self.get_Unit('WGOR') )
+                self.wellsLists['OilProducers'] = list( GOR[ GOR<=self.GORcriteria ].replace(0,np.nan).dropna(axis=1,how='all').columns )
+                self.wellsLists['GasProducers'] = list( GOR[ GOR>self.GORcriteria ].replace(0,np.nan).dropna(axis=1,how='all').columns )
+            
+            elif self.is_Attribute('WOGR') :
+                GOR = 1 / self[['WGOR']]
+                GOR = ( GOR.rename( columns=wellFromAttribute( GOR.columns ) ) ).replace(0,np.nan).dropna(axis=1,how='all')
+                GORcriteria = convertUnit( self.GORcriteria[0] , self.GORcriteria[1] , self.get_Unit('WOGR').split('/')[1] +'/'+ self.get_Unit('WOGR').split('/')[0] )
+                self.wellsLists['OilProducers'] = list( GOR[ GOR<=self.GORcriteria ].replace(0,np.nan).dropna(axis=1,how='all').columns )
+                self.wellsLists['GasProducers'] = list( GOR[ GOR>self.GORcriteria ].replace(0,np.nan).dropna(axis=1,how='all').columns )
+           
+            elif self.is_Attribute('WOPR') :
+                self.wellsLists['OilProducers'] = wellFromAttribute( list( self[['WOPR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) )
+            
+            else :
+                return []
+        return self.wellsLists['OilProducers']
+    
+    def get_GasProducers( self , reload=False ) :
+        """
+        returns a list of the wells considered gas producers at any time in the simulation.
+        the GOR criteria to define the oil and gas producers can be modified by the method .set_GORcriteria()
+        """
+        if 'GasProducers' not in self.wellsLists or reload is True :
+            catch = self.get_OilProducers(reload=True)
+            if 'GasProducers' not in self.wellsLists and self.is_Attribute('WGPR') :
+                self.wellsLists['GasProducers'] = wellFromAttribute( list( self[['WGPR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) )
+            else :
+                return []
+        return self.wellsLists['GasProducers']
+                
     def set_index(self,Key) :
         self.set_Index(Key)
     def set_Index(self,Key) :
@@ -442,6 +580,36 @@ class SimResult(object):
         return self.get_Index()
     def get_Index(self) :
         return self.DTindex
+    
+    def set_GORcriteria( self, GOR=10.0 , Units=None ) :
+        """
+        change the GOR criteria to define a producer well as oil or gas producer.
+        By default, it is set to 10Mscf/stb.
+        
+        if changed, the lists oilProducers and gasProducers will be recalculated.
+
+        """
+        if Units is None :
+            if type(self.get_Unit('WGOR')) is str and len(self.get_Unit('WGOR'))>0 :
+                Units = self.get_Unit('WGOR')
+        elif type(self.get_Unit('WOPR')) is str and len(self.get_Unit('WOPR'))>0 and \
+            type(self.get_Unit('WGPR')) is str and len(self.get_Unit('WGPR'))>0:
+            Units = self.get_Unit('WGPR').split(':')[0] / self.get_Unit('WOPR').split(':')[0] 
+        else :
+            print( 'please provide Units for the GOR criteria')
+            return False
+        
+        if type(GOR) is float or type(GOR) is int :
+            self.GORcriteria = ( GOR , Units )
+            catch = self.get_OilProducers(reload=True)
+            return True
+        else :
+            print( 'GOR value should be integer or float')
+            return False
+    def get_GORcriteria( self ) :
+        return self.GORcriteria
+        
+        
     
     def set_plotUnits(self,UnitSystem_or_CustomUnitsDictionary='FIELD') :
         if type(UnitSystem_or_CustomUnitsDictionary) is str :
