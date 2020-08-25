@@ -32,6 +32,7 @@ class ECL(SimResult):
         self.kind = ECL
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             self.loadSummary(inputFile)
+        self.initialize()
 
     def loadSummary(self,SummaryFilePath):
         if type(SummaryFilePath) == str :

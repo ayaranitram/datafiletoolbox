@@ -305,6 +305,14 @@ class SimResult(object):
         self.GORcriteria = ( 10 , 'Mscf/stb' )
         self.WCcriteria = 1 
         self.wellsLists = {}
+        self.printMessages = 0
+    
+    def initialize(self) :
+        """
+        run intensive routines, to have the data loaded and ready
+        """
+        self.get_Producers()
+        self.get_Injectors()
     
     def __call__(self,Key=None,Index=None) :
         if Index is None :
@@ -387,6 +395,8 @@ class SimResult(object):
         return self.name
     
     def __repr__(self):
+        self.printMessages = 1
+        
         text = str(self.kind).split('.')[-1][:-2] + " simulation: '" + self.name + "'"
         if self.is_Key('DATE') :
             text = text + '\n from ' + str(self('DATE')[0]) + ' to ' + str(self('DATE')[-1])
@@ -395,20 +405,23 @@ class SimResult(object):
         if self.is_Key('FGIP') :
             text = text + '\n GIP @ first tstep: ' + str(self('FGIP')[0]) + ' ' + self.get_Units('FGIP')
             
-        text = text + '\n\n production wells:'
+        text = text + '\n\n production wells: ' + str( len( self.get_Producers() ) )
         if self.get_OilProducers() != [] :
-            text = text + '\n    oil: ' + str(len( self.get_OilProducers() ))
+            text = text + '\n    oil wells' + ' ( with GOR<' + str(self.get_GORcriteria()[0]) + str(self.get_GORcriteria()[1]) + ' ) : ' + str(len( self.get_OilProducers() )) 
         if self.get_GasProducers() != [] :
-            text = text + '\n    gas: ' + str(len( self.get_GasProducers() ))
+            text = text + '\n    gas wells' + ' ( with GOR>' + str(self.get_GORcriteria()[0]) + str(self.get_GORcriteria()[1]) + ' ) : ' + str(len( self.get_GasProducers() )) 
         if self.get_WaterProducers() != [] :
-            text = text + '\n  water: ' + str(len( self.get_WaterProducers() ))
-        text = text + '\n\n injection wells:'
+            text = text + '\n  water wells: ' + str(len( self.get_WaterProducers() ))
+            
+        text = text + '\n\n injection wells: ' + str( len( self.get_Injectors() ) )
         if self.get_OilInjectors() != [] :
-            text = text + '\n    oil: ' + str(len( self.get_OilInjectors() ))
+            text = text + '\n    oil wells: ' + str(len( self.get_OilInjectors() ))
         if self.get_GasInjectors() != [] :
-            text = text + '\n    gas: ' + str(len( self.get_GasInjectors() ))
+            text = text + '\n    gas wells: ' + str(len( self.get_GasInjectors() ))
         if self.get_WaterInjectors() != [] :
-            text = text + '\n  water: ' + str(len( self.get_WaterInjectors() ))
+            text = text + '\n  water wells: ' + str(len( self.get_WaterInjectors() ))
+        
+        self.printMessages = 0
         return text
     
     def keyGen(self,keys=[],items=[]) :
@@ -445,6 +458,10 @@ class SimResult(object):
         # describeKeys = list(set(self.keys))
         # describeKeys.sort()
         # return self[describeKeys].describe()
+        print()
+        print( self.__repr__() )
+        print()
+        
         if 'ECL' in str(self.kind) :
             kind = 'ECL'
         elif 'VIP' in str(self.kind) :
@@ -460,23 +477,23 @@ class SimResult(object):
         desc['groups'] = [ len(self.groups) , '' , '' ]
         desc['regions'] = [ len(self.regions), '' , '' ]
         
-        if self.is_Attribute('WOPR') is True or ( self.is_Attribute('WGPR') is True and ( self.is_Attribute('WOGR') is True or self.is_Attribute('WGOR') is True ) ) :
-            desc['oilProducers'] = [ len( self.get_OilProducers() ) , '' , '' ]
+        # if self.is_Attribute('WOPR') is True or ( self.is_Attribute('WGPR') is True and ( self.is_Attribute('WOGR') is True or self.is_Attribute('WGOR') is True ) ) :
+        #     desc['oilProducers'] = [ len( self.get_OilProducers() ) , '' , '' ]
         
-        if self.is_Attribute('WGPR') is True or ( self.is_Attribute('WOPR') is True and ( self.is_Attribute('WOGR') is True or self.is_Attribute('WGOR') is True ) ) :
-            desc['gasProducers'] = [ len( self.get_GasProducers() ) , '' , '' ]
+        # if self.is_Attribute('WGPR') is True or ( self.is_Attribute('WOPR') is True and ( self.is_Attribute('WOGR') is True or self.is_Attribute('WGOR') is True ) ) :
+        #     desc['gasProducers'] = [ len( self.get_GasProducers() ) , '' , '' ]
         
-        if self.is_Attribute('WWPR') is True or self.is_Attribute('WWCT') is True :
-            desc['waterProducers'] = [ len( self.get_WaterProducers() ) , '' , '' ] 
+        # if self.is_Attribute('WWPR') is True or self.is_Attribute('WWCT') is True :
+        #     desc['waterProducers'] = [ len( self.get_WaterProducers() ) , '' , '' ] 
 
-        if self.is_Attribute('WOIR') :
-            desc['oilInjectors'] = [ len( self.get_OilInjectors() ) , '' , '' ]
+        # if self.is_Attribute('WOIR') :
+        #     desc['oilInjectors'] = [ len( self.get_OilInjectors() ) , '' , '' ]
         
-        if self.is_Attribute('WGIR') :
-            desc['gasInjectors'] = [ len( self.get_GasInjectors() ) , '' , '' ]
+        # if self.is_Attribute('WGIR') :
+        #     desc['gasInjectors'] = [ len( self.get_GasInjectors() ) , '' , '' ]
         
-        if self.is_Attribute('WWIR') :
-            desc['waterInjectors'] = [ len( self.get_WaterInjectors() ) , '' , '' ]
+        # if self.is_Attribute('WWIR') :
+        #     desc['waterInjectors'] = [ len( self.get_WaterInjectors() ) , '' , '' ]
         
         return pd.DataFrame( data=desc , index=Index)
     
@@ -485,10 +502,11 @@ class SimResult(object):
         returns a list of the wells that inject water at any time in the simulation.
         """
         if 'WaterInjectors' not in self.wellsLists or reload is True :
+            verbose( self.printMessages , 1 , '# extrating data to count water injection wells' )
             if self.is_Attribute('WWIR') :
                 self.wellsLists['WaterInjectors'] = list( self[['WWIR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) 
             else :
-                return []
+                self.wellsLists['WaterInjectors'] = []
         return self.wellsLists['WaterInjectors']
         
     def get_GasInjectors( self , reload=False ) :
@@ -496,10 +514,11 @@ class SimResult(object):
         returns a list of the wells that inject gas at any time in the simulation.
         """
         if 'GasInjectors' not in self.wellsLists or reload is True :
+            verbose( self.printMessages , 1 , '# extrating data to count gas injection wells' )
             if self.is_Attribute('WGIR') :
                 self.wellsLists['GasInjectors'] = list( self[['WGIR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) 
             else :
-                return []
+                self.wellsLists['GasInjectors'] = []
         return self.wellsLists['GasInjectors']
     
     def get_OilInjectors( self , reload=False ) :
@@ -507,17 +526,24 @@ class SimResult(object):
         returns a list of the wells that inject oil at any time in the simulation.
         """
         if 'OilInjectors' not in self.wellsLists or reload is True :
+            verbose( self.printMessages , 1 , '# extrating data to count oil injection wells' )
             if self.is_Attribute('WOIR') :
                 self.wellsLists['OilInjectors'] = list( self[['WOIR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) 
             else :
-                return []
+                self.wellsLists['OilInjectors'] = []
         return self.wellsLists['OilInjectors']
+    
+    def get_Injectors( self , reload=False ) :
+        if 'Injectors' not in self.wellsLists or reload is True :
+            self.wellsLists['Injectors'] = list( set( self.get_WaterInjectors( reload ) + self.get_GasInjectors( reload ) + self.get_OilInjectors( reload ) ) )
+        return self.wellsLists['Injectors']
     
     def get_WaterProducers( self , reload=False ) :
         """
         returns a list of the wells that produces more than 99.99% water at any time in the simulation.
         """
         if 'WaterProducers' not in self.wellsLists or reload is True :
+            verbose( self.printMessages , 1 , '# extrating data to count water production wells' )
             if self.is_Attribute('WWPR') :
                 waterProducers = self[['WWPR']]
                 waterProducers = waterProducers.rename( columns=wellFromAttribute( waterProducers.columns ) )
@@ -545,7 +571,7 @@ class SimResult(object):
             self.wellsLists['WaterProducers'] = list( waterCheck.columns ) 
             
         else :
-            return []
+            self.wellsLists['WaterProducers'] = []
         
         return self.wellsLists['WaterProducers']
     
@@ -555,6 +581,7 @@ class SimResult(object):
         the GOR criteria to define the oil and gas producers can be modified by the method .set_GORcriteria()
         """
         if reload is True or 'OilProducers' not in self.wellsLists :
+            verbose( self.printMessages , 1 , '# extrating data to count oil production wells' )
             if self.is_Attribute('WOPR') and self.is_Attribute('WGPR') :
                 OIL = self[['WOPR']]
                 OIL.rename( columns=wellFromAttribute( OIL.columns ) , inplace=True ) 
@@ -571,9 +598,10 @@ class SimResult(object):
                 
                 # the loop is a trick to avoid memory issues when converting new 
                 i = 0
-                while not convertibleUnits( self.GORcriteria[1] , self.get_Unit('WGPR').split('/')[0] + '/' + self.get_Unit('WOPR').split('/')[0] ) and i < 10 :
+                test = False
+                while not test and i < 10 :
                     i += 1
-                    convertibleUnits( self.GORcriteria[1] , self.get_Unit('WGPR').split('/')[0] + '/' + self.get_Unit('WOPR').split('/')[0] )
+                    test = convertibleUnits( self.GORcriteria[1] , self.get_Unit('WGPR').split('/')[0] + '/' + self.get_Unit('WOPR').split('/')[0] )
                 GORcriteria = convertUnit( self.GORcriteria[0] , self.GORcriteria[1] , self.get_Unit('WGPR').split('/')[0] + '/' + self.get_Unit('WOPR').split('/')[0] , PrintConversionPath=False )
 
                 self.wellsLists['OilProducers'] = list( (GOR<=GORcriteria).replace(False,np.nan).dropna(axis=1,how='all').columns )
@@ -612,7 +640,7 @@ class SimResult(object):
                 self.wellsLists['OilProducers'] = wellFromAttribute( list( self[['WOPR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) )
             
             else :
-                return []
+                self.wellsLists['OilProducers'] = []
         return self.wellsLists['OilProducers']
     
     def get_GasProducers( self , reload=False ) :
@@ -621,14 +649,20 @@ class SimResult(object):
         the GOR criteria to define the oil and gas producers can be modified by the method .set_GORcriteria()
         """
         if reload is True or 'GasProducers' not in self.wellsLists :
+            verbose( self.printMessages , 1 , '# extrating data to count gas production wells' )
             catch = self.get_OilProducers(reload=True)
             if 'GasProducers' not in self.wellsLists and self.is_Attribute('WGPR') is True :
                 verbose( self.speak , 2 , 'neither GOR or OIL RATE available, every well with gas rate > 0 will be listeda as gas producer.' )
                 self.wellsLists['GasProducers'] = wellFromAttribute( list( self[['WGPR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) )
-            else :
-                return []
+            elif 'GasProducers' not in self.wellsLists :
+                self.wellsLists['GasProducers'] = []
         return self.wellsLists['GasProducers']
-                
+
+    def get_Producers( self , reload=False ) :
+        if 'Producers' not in self.wellsLists or reload is True :
+            self.wellsLists['Producers'] = list( set( self.get_WaterProducers( reload ) + self.get_GasProducers( reload ) + self.get_OilProducers( reload ) ) )
+        return self.wellsLists['Producers']
+        
     def set_index(self,Key) :
         self.set_Index(Key)
     def set_Index(self,Key) :
@@ -671,11 +705,11 @@ class SimResult(object):
         else :
             print( 'GOR value should be integer or float')
             return False
+        
     def get_GORcriteria( self ) :
         return self.GORcriteria
         
         
-    
     def set_plotUnits(self,UnitSystem_or_CustomUnitsDictionary='FIELD') :
         if type(UnitSystem_or_CustomUnitsDictionary) is str :
             if UnitSystem_or_CustomUnitsDictionary.upper() in ['F','FIELD'] :

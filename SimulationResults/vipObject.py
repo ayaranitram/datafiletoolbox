@@ -44,6 +44,7 @@ class VIP(SimResult):
         self.stripUnits()
         self.fill_FieldBasics()
         self.get_Attributes(reload=True)
+        self.initialize()
         
     def selectLoader(self,inputFile) :
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
