@@ -356,11 +356,23 @@ class SimResult(object):
             return self.__call__(cols)
     
     def __setitem__(self,Key,Value,Units=None) :
+        """
+        creates s vector with the provided Key or the pair of Values and Units
+        """
         if type(Value) is tuple :
             if len(Value) == 2 :
                 if type(Value[0]) is np.ndarray :
                     if type(Value[1]) is str :
                         Value , Units = Value[0] , Value[1]
+                elif type(Value[0]) is list or type(Value[0]) is tuple :
+                    if type(Value[1]) is str :
+                        Value , Units = np.array(Value[0]) , Value[1]
+                elif type(Value[0]) is int or type(Value[0]) is float :
+                    if type(Value[1]) is str :
+                        Value , Units = [ Value[0] ] * len(self.fieldtime[2]) , Value[1]
+                    elif type(Value[1]) is None :
+                        Value , Units = [ Value[0] ] * len(self.fieldtime[2]) , 'DIMENSIONLESS'
+                    
         if self.is_Key(Key) :
             verbose(self.speak,3,"WARNING, the key '" + Key + "' is already in use. It will be overwritten!")
             
@@ -368,8 +380,22 @@ class SimResult(object):
             if self.is_Key(Value) :
                 Units = self.get_Units(Value)
                 Value = self.get_Vector(Value)[Value]
+            elif self.is_Attribute(Value) :
+                verbose( self.speak , 2 , "the received argument '" + Value + "' is not a Key but an Attribute, every key for the attribute will be processed.")                   
+                KeyList = self.get_KeysFromAttribute(Value)
+                
+                for K in KeyList :
+                    NewKey = mainKey(Key) + ':' + K.split(':')[-1]
+                    verbose( self.speak , 2 , "   processing '" + K + "'") 
+                    self.__setitem__( NewKey , K )
+                return None
+                
         elif type(Value) is list or type(Value) is tuple :
             Value = np.array(Value)
+        
+        elif type(Value) is int or type(Value) is float :
+            Value , Units = [ Value ] * len(self.fieldtime[2]) , 'DIMENSIONLESS'
+            
         if type(Value) is np.ndarray :
             if len(Value) != len(self.fieldtime[2]) :
                 raise TypeError(" the 'Value' array must have the exact same lenght of the simulation vectors: " + str(len(self.fieldtime[2])) )
@@ -383,6 +409,7 @@ class SimResult(object):
                 pass
             else :
                 verbose(self.speak , 2 , " the 'Units' string is not recognized." )
+                
         self.set_Vector( Key , Value , Units , DataType='auto' , overwrite=True)
     
     def __len__(self) :
@@ -1592,6 +1619,15 @@ class SimResult(object):
         if reload == True :
             self.get_Attributes(None,True)
         return self.attributes
+
+    def get_KeysFromAttribute(self,Attribute) :
+        """
+        returns a list of Keys for the given attribute
+        """
+        if self.is_Key( Attribute ) :
+            return Attribute
+        if self.is_Attribute( Attribute ) :
+            return self.attributes[ Attribute ]
 
     def add_Key(self,Key) :
         if type(Key) == str :
