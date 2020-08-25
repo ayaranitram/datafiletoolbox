@@ -2935,14 +2935,14 @@ class SimResult(object):
         The CalculationTuple must start with a number or variable, never with an operator
 
         The operations will be executed in the exact order they are described. i.e.:
-            'FLPR' : ( 'FOPR' , '+' , 'FWPR' ) 
+            'FLPR' = ( 'FOPR' , '+' , 'FWPR' ) 
                 means FLPR = FOPR + FWPR 
                 will add FOPR plus FWPR
-            'WWCT:P1' : ( 'WOPR:P1' , '/' , 'WLPR:P2' ) 
+            'WWCT:P1' = ( 'WOPR:P1' , '/' , 'WLPR:P2' ) 
                 means WWCT:P1 = WOPR:P1 + WLPR:P2 
                 will add FOPR plus FWPR
         but:
-            'R' : ( 'A' , '-', 'B' , '/' , 'C' ) 
+            'R' = ( 'A' , '-', 'B' , '/' , 'C' ) 
                 means R = ( A - B ) / C
                 will add A plus B and the result will be divided by C
 
@@ -2951,7 +2951,7 @@ class SimResult(object):
                 that means R = -1 * B / C + A
         """
         if type( CalculationTuple ) == str :
-            verbose ( self.speak , 3 , ' the received string for CalculatedTuple was converted to tuple,\n  received: ' + CalculationTuple + '\n  converted to: ' + str( CalculationTuple.split() ) )
+            verbose ( self.speak , 3 , ' the received string for CalculatedTuple was converted to tuple,\n  received: ' + CalculationTuple + '\n  converted to: ' + str( multisplit( CalculationTuple , [' ','=','+','-','*','/','^']) ) )
             CalculationTuple = tuple ( CalculationTuple.split() )
         elif type( CalculationTuple ) == list :
             CalculationTuple = tuple( CalculationTuple )
