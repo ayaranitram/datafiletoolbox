@@ -320,7 +320,7 @@ class SimResult(object):
         if Key is not None :
             if type(Key) is list and len(Key) > 0:
                 return self.get_DataFrame(Key,Index)
-            elif type(Key) == str and len(Key) > 0 :
+            elif type(Key) is str and len(Key) > 0 :
                 return self.get_Vector(Key)[Key]
         else :
             print( SimResult.__doc__ )
@@ -468,9 +468,9 @@ class SimResult(object):
         returns the combination of every key in keys with all the items.
         keys and items must be list of strings
         """
-        if type(items) == str :
+        if type(items) is str :
             items = [items]
-        if type(keys) == str :
+        if type(keys) is str :
             keys = [keys]
         ListOfKeys = []
         for k in keys :
@@ -1145,7 +1145,7 @@ class SimResult(object):
         
         returnVector = {}
         
-        if type(WellKeys) == str :
+        if type(WellKeys) is str :
             WellKeys = [WellKeys]
         
         verbose( self.speak , 1 , ' aggregating keys ' + str(WellKeys) )
@@ -1162,7 +1162,7 @@ class SimResult(object):
             KeyUnits = None
             for well in WellsToGroup :
                 KeyUnits = self.get_Unit(key + ':' + well)
-                if type(KeyUnits) == str and len(KeyUnits) > 0 :
+                if type(KeyUnits) is str and len(KeyUnits) > 0 :
                     verbose( self.speak  , 1 , " < units found to be '" + KeyUnits + "' >" )
                     break
             if KeyUnits is None :
@@ -1176,7 +1176,7 @@ class SimResult(object):
             
             
             NewKey = 'G' + key[1:]
-            if AGG + 'of' + key + ':' + ','.join(WellsToGroup) in self.vectors and force == False :
+            if AGG + 'of' + key + ':' + ','.join(WellsToGroup) in self.vectors and force is False :
                 returnVector[NewKey+':'+AggregatedKeyName] = self.vectors[ AGG + 'of' + key + ':' + ','.join(WellsToGroup) ]
             elif key == 'TIME' or key == 'DATE' or key == 'DATES' :
                 returnVector[key+':'+AggregatedKeyName] = self.get_Vector(key)[key]
@@ -1223,7 +1223,8 @@ class SimResult(object):
         Returns KeyVector that exists on full range of array TIME
         """
         KeyTime = np.array(KeyTime,dtype='float')
-            
+        force = bool(force)
+        
         if self.fieldtime == ( None , None , None ) :
             self.set_FieldTime()
         
@@ -1231,7 +1232,7 @@ class SimResult(object):
             verbose(self.speak, 2 , ' <fillZeros> the received vectors are empty, thus, a zero filled vector will be returned with length equal to the field TIME vector.')
             return np.array([0.0]*len(self.fieldtime),dtype='float')
         
-        if force == True or min(KeyTime) > self.fieldtime[0] or max(KeyTime) < self.fieldtime[1] :
+        if force is True or min(KeyTime) > self.fieldtime[0] or max(KeyTime) < self.fieldtime[1] :
             verbose(self.speak, 1 , ' <fillZeros> the received vectors starts on TIME=' + str( KeyTime[0] ) + ', it will be filled to start from TIME' + str(self.fieldtime[0]) +  '.')
             OtherDT = pd.DataFrame( data= { 'vector' : np.array(KeyVector,dtype='float') } , index= np.array(KeyTime,dtype='float') )
             FieldDT = pd.DataFrame( data= { 'vector' : np.array( [0.0]*len(self.fieldtime[2]) ) } , index= np.array(self.fieldtime[2],dtype='float') )
@@ -1252,10 +1253,10 @@ class SimResult(object):
                 print('  ' + str(each))
     
     def set_Name(self,name):
-        if type(name) == list or type(name) == tuple :
+        if type(name) is list or type(name) is tuple :
             if len(name) == 1 :
                 name = name[0]
-        if type(name) == str :
+        if type(name) is str :
             self.name = name
         else :
             verbose( self.speak , 2 , ' Name should be a string'  )
@@ -1267,7 +1268,7 @@ class SimResult(object):
         return self.name
     
     def set_Restart(self,SimResultObject):
-        if type( SimResultObject ) == list :
+        if type( SimResultObject ) is list :
             self.restarts = self.restarts + SimResultObject 
         else :
             self.restarts.append(SimResultObject)
@@ -1307,7 +1308,7 @@ class SimResult(object):
     def set_Continue(self,SimResultObject) :
         self.set_Continuation(SimResultObject)
     def set_Continuation(self,SimResultObject) :
-        if type( SimResultObject ) == list :
+        if type( SimResultObject ) is list :
             self.continuations = self.continuations + SimResultObject 
         else :
             self.continuations.append(SimResultObject)
@@ -1535,15 +1536,16 @@ class SimResult(object):
                 return None
         elif Key in self.attributes :
             return self.keyColors[Key]
-    
+
+
     def set_Verbosity(self,verbosity_level):
         try :
             self.speak = int(verbosity_level)
         except :
-            if type(verbosity_level) == str and verbosity_level.upper() == 'ALL' :
+            if type(verbosity_level) is str and verbosity_level.upper() == 'ALL' :
                 print('Verbosity set to ALL (-1), EVERY message wil be printed.')
                 self.speak = -1
-            elif type(verbosity_level) == str and verbosity_level.upper() == 'MUTE' :
+            elif type(verbosity_level) is str and verbosity_level.upper() == 'MUTE' :
                 print('Verbosity set to MUTE (0), no message wil be printed.')
                 self.speak = -1
             else :
@@ -1589,20 +1591,22 @@ class SimResult(object):
             return True
         else :
             return False
-        
+
+
     def get_Attributes(self,pattern=None,reload=False) :
         """
         extract the attribute name from the keys property,
         basically, the part to the left of the ':' in the key name for wells,
         groups and regions.
         """
-        if len(list(self.attributes.keys())) == 0 or reload == True :
+        reload = bool(reload)
+        if len(list(self.attributes.keys())) == 0 or reload is True :
             props = []
             for each in self.get_Keys() :
                 if ':' in each :
                     attr = mainKey(each)
                     if attr in self.attributes :
-                        if type(self.attributes[ attr ]) == list :
+                        if type(self.attributes[ attr ]) is list :
                             self.attributes[ attr ] = self.attributes[ attr ] + [ each ]
                         else :
                             self.attributes[ attr ] = [ each ]
@@ -1626,11 +1630,14 @@ class SimResult(object):
                 else :
                     props.append( each.strip() )
             return tuple(set(props))
-    
+
+
     def get_AttributesDict(self,reload=False) :
-        if reload == True :
+        reload = bool(reload)
+        if reload is True :
             self.get_Attributes(None,True)
         return self.attributes
+
 
     def get_KeysFromAttribute(self,Attribute) :
         """
@@ -1641,13 +1648,15 @@ class SimResult(object):
         if self.is_Attribute( Attribute ) :
             return self.attributes[ Attribute ]
 
+
     def add_Key(self,Key) :
-        if type(Key) == str :
+        if type(Key) is str :
             Key = Key.strip()
             self.keys = tuple( set( list(self.get_Keys()) + [Key] ) )
         else :
             raise TypeError('Key must be string')
-    
+
+
     def get_Regions(self,pattern=None,reload=False):
         """
         Will return a list of all the region names in case.
@@ -1661,16 +1670,19 @@ class SimResult(object):
             [seq]       matches any character in seq
             [!seq]      matches any character not in seq
         """
+        reload = bool(reload)
+        
         if pattern is not None and type( pattern ) is not str :
             raise TypeError('pattern argument must be a string.')    
     
-        if len(self.regions) == 0 or reload == True :
+        if len(self.regions) == 0 or reload is True :
             self.regions = tuple( self.extract_Regions() )
         if pattern is None :
             return self.regions
         else:
             return tuple( fnmatch.filter( self.regions , pattern ) )# return self.extract_Regions(pattern)       
-    
+
+
     def get_Wells(self,pattern=None,reload=False) :
         """       
         Will return a list of all the well names in case.
@@ -1685,17 +1697,20 @@ class SimResult(object):
             [!seq]      matches any character not in seq
             
         """
+        reload = bool(reload)
+        
         if pattern is not None and type( pattern ) is not str :
             raise TypeError('pattern argument must be a string.')
         
-        if len(self.wells) == 0 or reload == True :
+        if len(self.wells) == 0 or reload is True :
             self.wells = self.extract_Wells() 
 
         if pattern is None :
             return self.wells
         else:
             return tuple( fnmatch.filter( self.wells , pattern ) )
-    
+
+
     def get_Groups(self,pattern=None,reload=False) :
         """       
         Will return a list of all the group names in case.
@@ -1710,17 +1725,20 @@ class SimResult(object):
             [!seq]      matches any character not in seq
             
         """
+        reload = bool(reload)
+        
         if pattern is not None and type( pattern ) is not str :
             raise TypeError('pattern argument must be a string.')
         
-        if len(self.groups) == 0 or reload == True :
+        if len(self.groups) == 0 or reload is True :
             self.groups = self.extract_Groups() 
 
         if pattern is None :
             return self.groups
         else:
             return tuple( fnmatch.filter( self.groups , pattern ) )
-    
+
+
     def get_Keys(self,pattern=None,reload=False) :
         """       
         Will return a list of all the key names in case.
@@ -1735,23 +1753,26 @@ class SimResult(object):
             [!seq]      matches any character not in seq
             
         """
+        reload = bool(reload)
+        
         if pattern is not None and type( pattern ) is not str :
             raise TypeError('pattern argument must be a string.')
         
-        if len(self.keys) == 0 or reload == True :
+        if len(self.keys) == 0 or reload is True :
             self.keys = self.list_Keys() 
 
         if pattern is None :
             return self.keys
         else:
             return tuple( fnmatch.filter( self.keys , pattern ) )
-    
+
+
     def get_Filter(self) :
         return self.filter['filter']
-    
+
     def reset_Filter(self) :
         if self.filter['reset'] :
-            if self.filter['key'] == [None] and self.filter['condition'] == [None ] and self.filter['min'] == [None] and self.filter['max'] == [None] :
+            if self.filter['key'] == [None] and self.filter['condition'] == [None] and self.filter['min'] == [None] and self.filter['max'] == [None] :
                 pass
             else :
                 self.filter = {'key':[None],'min':[None],'max':[None],'condition':[None],'filter':None,'reset':True,'incremental':[None],'operation':[None]}
@@ -1760,7 +1781,8 @@ class SimResult(object):
         else :
             self.filter['reset'] = True
             return False
-    
+
+
     def undo_Filter(self) :
         if self.filterUndo is None :
             verbose(self.speak , -1 , " << not possible to revert last set_Filter operation or already reverted >>")
@@ -1772,7 +1794,8 @@ class SimResult(object):
             verbose(self.speak , -1 , " << last set_Filter has been reverted,\n filter set to previous version >>")
             self.filterUndo = None
             return True
-    
+
+
     def redo_Filter(self) :
         redo = self.filter.copy()
         self.reset_Filter()
@@ -1798,7 +1821,8 @@ class SimResult(object):
                 filterStr = ', '.join(filterStr) + ", IncrementalFilter="+str(Incremental)+", FilterOperation='"+str(Operation)+"'"
                 verbose( self.speak , 2 , " <redo_Filter> applying filter: " + filterStr )
                 self.set_Filter( Key=Key , Condition=Condition , Min=Min , Max=Max , IncrementalFilter=Incremental , FilterOperation=Operation  )
-    
+
+
     def set_Filter(self,Key=None,Condition=None,Min=None,Max=None,Filter=None,IncrementalFilter=True,FilterOperation=None) :
         # support function to validate date string
         def MightBeDate(string) :
@@ -2236,10 +2260,10 @@ class SimResult(object):
                         else :
                             self.filter['reset'] = True
                             return False
-                    
+
+
     def get_Vectors(self,key=None,reload=False):
         return self.get_Vector(key,reload)
-
     def get_Vector(self,key=None,reload=False):
         """
         returns a dictionary with numpy vectors for the selected key(s)
@@ -2258,7 +2282,8 @@ class SimResult(object):
             for each in returnVectors :
                 returnVectors[each] = returnVectors[each][self.filter['filter']]
             return returnVectors
-    
+
+
     def get_VectorWithUnits(self,key=None,reload=False):
         """
         returns a dictionary with a tuple ( units , numpy vectors ) 
@@ -2270,7 +2295,8 @@ class SimResult(object):
         for key in returnVectors :
             returnVectors[key] = ( self.get_Unit(key) , returnVectors[key] )
         return returnVectors  
-    
+
+
     # extract the raw vector, without apply filter and without restarts or continues
     def get_RawVector(self,key=None,reload=False):
         """
@@ -2284,13 +2310,14 @@ class SimResult(object):
         """
         returnVectors = {}
         if self.results != None :
-            if type(key) == str :
+            if type(key) is str :
                 returnVectors[key] = self.checkIfLoaded(key,reload)
-            if type(key) == list or type(key) == tuple :
+            if type(key) is list or type(key) is tuple :
                 listOfKeys = list(set(key))
                 for each in listOfKeys :
                     returnVectors[each] = self.checkIfLoaded(each,reload)        
         return returnVectors
+
 
     def get_UnfilteredVector(self,key=None,reload=False):
         """
@@ -2344,12 +2371,13 @@ class SimResult(object):
         for key in returnVectors :
             returnVectors[key] = ( self.get_Unit(key) , returnVectors[key] )
         return returnVectors    
-            
+
+
     # support functions for get_Vector:
     def checkRestarts(self,key=None,reload=False) :
         returnVectors = {}
         Rlist = self.restarts # + [ self ]
-        if type(key) == str :
+        if type(key) is str :
             key = [ key ]
             
         for K in key :
@@ -2389,11 +2417,12 @@ class SimResult(object):
             for each in returnVectors :
                 returnVectors[each] = returnVectors[each][self.filter['filter']]
             return returnVectors
-    
+
+
     def checkContinuations(self,key=None,reload=False) :
         returnVectors = {}
         Clist = self.continuations # + [ self ]
-        if type(key) == str :
+        if type(key) is str :
             key = [ key ]
             
         for K in key :
@@ -2431,15 +2460,18 @@ class SimResult(object):
             for each in returnVectors :
                 returnVectors[each] = returnVectors[each][self.filter['filter']]
             return returnVectors
-    
+
+
     def checkIfLoaded(self,key,reload) :
         """
         internal function to avoid reloading the same vector twice...
         """
+        reload = bool(reload)
         verbose( self.speak , 1 , ' looking for key ' + str( key ) )
-        if str(key).upper().strip() not in self.vectors or reload == True :
+        if str(key).upper().strip() not in self.vectors or reload is True :
             self.vectors[key.upper().strip()] = self.loadVector(key)
         return self.vectors[key.upper().strip()]
+
 
     def get_VectorWithoutRestart(self,key=None,reload=False):
         """
@@ -2450,14 +2482,15 @@ class SimResult(object):
         """
         returnVectors = {}
         if self.results != None :
-            if type(key) == str :
+            if type(key) is str :
                 returnVectors[key] = self.checkIfLoaded(key,reload)
-            if type(key) == list or type(key) == tuple :
+            if type(key) is list or type(key) is tuple :
                 listOfKeys = list(set(key))
                 for each in listOfKeys :
                     returnVectors[each] = self.checkIfLoaded(each,reload)
         return returnVectors
-    
+
+
     def set_Vector( self , Key , VectorData , Units , DataType='auto' , overwrite=None) :
         """
         Writes a new vector into the dataset 
@@ -2493,7 +2526,7 @@ class SimResult(object):
         else :
             raise TypeError('Key must be a string')
         
-        if Key in self.vectors and overwrite == False :
+        if Key in self.vectors and overwrite is False :
             raise OverwrittingError('the Key ' + Key + ' already exists in the dataset and overwrite parameter is set to False. Set overwrite=True to avoid this message and change the DataVector.')
             
         if type(VectorData) is list or type(VectorData) is tuple :
@@ -2598,16 +2631,17 @@ class SimResult(object):
         
         self.vectors[Key] = VectorData
         self.units[Key] = Units
-        if self.is_Key(Key) == False :
+        if not self.is_Key(Key) :
             self.add_Key(Key) 
         self.get_Attributes(reload=True)
     
     def set_Overwrite(self,overwrite) :
-        if type(overwrite) == bool :
+        if type(overwrite) is bool :
             self.overwrite = overwrite
     def get_Overwrite(self) :
         return self.overwrite
-    
+
+
     def stripUnits(self):
         for key in self.units :
             if self.units[key] is None :
@@ -2616,9 +2650,9 @@ class SimResult(object):
                 self.units[key] = self.units[key].strip('( )').strip("'").strip('"')
                 if 'DíA' in self.units[key] :
                     self.units[key] = self.units[key].replace('DíA','DAY')
-    
+
+
     def fill_FieldBasics(self) :
-        
         np.seterr(divide='ignore', invalid='ignore')
         
         if type(self.get_Vector('FOPR')['FOPR']) == np.ndarray and type(self.get_Vector('FWPR')['FWPR']) == np.ndarray :
@@ -2705,25 +2739,25 @@ class SimResult(object):
             
     
         np.seterr(divide=None, invalid=None)
-    
+
+
     def fill_WellBasics(self) :
-        
         np.seterr(divide='ignore', invalid='ignore')
         
         for well in list(self.get_Wells()) :
-            if type(well) == str and len(well.strip()) > 0 :
+            if type(well) is str and len(well.strip()) > 0 :
                 well = well.strip()
                 verbose( self.speak , 2 , ' calculating basic ratios for the well ' + well )
                 if type(self.get_Vector('WOPR:'+well)['WOPR:'+well]) == np.ndarray and type(self.get_Vector('WWPR:'+well)['WWPR:'+well]) == np.ndarray :
                     # calculated WLPR if not available:
-                    if self.is_Key('WLPR:'+well) == False or len( self.get_Vector('WLPR:'+well)['WLPR:'+well] ) < len( self.get_Vector('WWPR:'+well)['WWPR:'+well] ) or type(self.get_Vector('WLPR:'+well)['WLPR:'+well]) != np.ndarray :
+                    if self.is_Key('WLPR:'+well) is False or len( self.get_Vector('WLPR:'+well)['WLPR:'+well] ) < len( self.get_Vector('WWPR:'+well)['WWPR:'+well] ) or type(self.get_Vector('WLPR:'+well)['WLPR:'+well]) != np.ndarray :
                         try :
                             self.set_Vector( 'WLPR:'+well , np.array( self.get_Vector('WOPR:'+well)['WOPR:'+well] , dtype='float' ) + convertUnit( np.array( self.get_Vector('WWPR:'+well)['WWPR:'+well] , dtype='float' ) , self.get_Unit('WWPR:'+well) , self.get_Unit('WOPR:'+well) , PrintConversionPath=(self.speak==1)) , self.get_Unit('WOPR:'+well) , overwrite=True )
                         except :
                             verbose( self.speak , 2 , 'failed to create missing vector WLPR:'+well)
                     
                     # calculated WWCT if not available:
-                    if self.is_Key('WWCT:'+well) == False or len( self.get_Vector('WWCT:'+well)['WWCT:'+well] ) < len( self.get_Vector('WWPR:'+well)['WWPR:'+well] ) or type(self.get_Vector('WWCT:'+well)['WWCT:'+well]) != np.ndarray :
+                    if self.is_Key('WWCT:'+well) is False or len( self.get_Vector('WWCT:'+well)['WWCT:'+well] ) < len( self.get_Vector('WWPR:'+well)['WWPR:'+well] ) or type(self.get_Vector('WWCT:'+well)['WWCT:'+well]) != np.ndarray :
                         try :
                             Vector = np.array( np.divide( np.array( self.get_Vector('WWPR:'+well)['WWPR:'+well] , dtype='float' ) , convertUnit( np.array(self.get_Vector('WLPR:'+well)['WLPR:'+well], dtype='float' ), self.get_Unit('WLPR:'+well) , self.get_Unit('WWPR:'+well) , PrintConversionPath=(self.speak==1)) ) , dtype='float' ) 
                             Vector = np.nan_to_num( Vector, nan=0.0 , posinf=0.0 , neginf=0.0 )
@@ -2732,7 +2766,7 @@ class SimResult(object):
                             verbose( self.speak , 2 , 'failed to create missing vector WWCT:'+well)
                             
                     # calculated WWOR & WOWR if not available:
-                    if self.is_Key('WWOR:'+well) == False or len( self.get_Vector('WWOR:'+well)['WWOR:'+well] ) < len( self.get_Vector('WWPR:'+well)['WWPR:'+well] ) or type(self.get_Vector('WWOR:'+well)['WWOR:'+well]) != np.ndarray :
+                    if self.is_Key('WWOR:'+well) is False or len( self.get_Vector('WWOR:'+well)['WWOR:'+well] ) < len( self.get_Vector('WWPR:'+well)['WWPR:'+well] ) or type(self.get_Vector('WWOR:'+well)['WWOR:'+well]) != np.ndarray :
                         try :
                             Vector = np.array( np.divide( np.array( self.get_Vector('WWPR:'+well)['WWPR:'+well] , dtype='float' ) , np.array( self.get_Vector('WOPR:'+well)['WOPR:'+well] , dtype='float' ) ) ,dtype='float')
                             Vector = np.nan_to_num( Vector, nan=0.0 , posinf=0.0 , neginf=0.0 )
@@ -2748,7 +2782,7 @@ class SimResult(object):
                             
                 # calculated WGOR if not available:
                 if type(self.get_Vector('WOPR:'+well)['WOPR:'+well]) == np.ndarray and type(self.get_Vector('WGPR:'+well)['WGPR:'+well]) == np.ndarray :
-                    if self.is_Key('WGOR:'+well) == False or len( self.get_Vector('WGOR:'+well)['WGOR:'+well] ) < len( self.get_Vector('WOPR:'+well)['WOPR:'+well] ) or type(self.get_Vector('WGOR:'+well)['WGOR:'+well]) != np.ndarray :
+                    if self.is_Key('WGOR:'+well) is False or len( self.get_Vector('WGOR:'+well)['WGOR:'+well] ) < len( self.get_Vector('WOPR:'+well)['WOPR:'+well] ) or type(self.get_Vector('WGOR:'+well)['WGOR:'+well]) != np.ndarray :
                         try :
                             Vector = np.array( np.divide( np.array( self.get_Vector('WGPR:'+well)['WGPR:'+well] , dtype='float' ) , np.array( self.get_Vector('WOPR:'+well)['WOPR:'+well] , dtype='float' ) ) ,dtype='float')
                             Vector = np.nan_to_num( Vector, nan=0.0 , posinf=0.0 , neginf=0.0 )
@@ -2757,7 +2791,7 @@ class SimResult(object):
                             verbose( self.speak , 2 , 'failed to create missing vector WGOR:'+well)
                 
                 # calculated WOGR if not available:
-                    if self.is_Key('WOGR:'+well) == False or len( self.get_Vector('WOGR:'+well)['WOGR:'+well] ) < len( self.get_Vector('WOPR:'+well)['WOPR:'+well] ) or type(self.get_Vector('WOGR:'+well)['WOGR:'+well]) != np.ndarray :
+                    if self.is_Key('WOGR:'+well) is False or len( self.get_Vector('WOGR:'+well)['WOGR:'+well] ) < len( self.get_Vector('WOPR:'+well)['WOPR:'+well] ) or type(self.get_Vector('WOGR:'+well)['WOGR:'+well]) != np.ndarray :
                         try :
                             Vector = np.array( np.divide( np.array( self.get_Vector('WOPR:'+well)['WOPR:'+well] , dtype='float' ) , np.array( self.get_Vector('WGPR:'+well)['WGPR:'+well] , dtype='float' ) ) ,dtype='float')
                             Vector = np.nan_to_num( Vector, nan=0.0 , posinf=0.0 , neginf=0.0 )
@@ -2767,7 +2801,7 @@ class SimResult(object):
             
                 if type(self.get_Vector('WOPT:'+well)['WOPT:'+well]) == np.ndarray and type(self.get_Vector('WWPT:'+well)['WWPT:'+well]) == np.ndarray :
                     # calculated WLPR if not available:
-                    if self.is_Key('WLPT:'+well) == False or len( self.get_Vector('WLPT:'+well)['WLPT:'+well] ) < len( self.get_Vector('WWPT:'+well)['WWPT:'+well] ) or type(self.get_Vector('WLPT:'+well)['WLPT:'+well]) != np.ndarray :
+                    if self.is_Key('WLPT:'+well) is False or len( self.get_Vector('WLPT:'+well)['WLPT:'+well] ) < len( self.get_Vector('WWPT:'+well)['WWPT:'+well] ) or type(self.get_Vector('WLPT:'+well)['WLPT:'+well]) != np.ndarray :
                         try :
                             self.set_Vector( 'WLPT:'+well , np.array( self.get_Vector('WOPT:'+well)['WOPT:'+well] , dtype='float' ) + convertUnit( np.array(self.get_Vector('WWPT:'+well)['WWPT:'+well], dtype='float'), self.get_Unit('WWPT:'+well) , self.get_Unit('WOPT:'+well) , PrintConversionPath=(self.speak==1) ) , self.get_Unit('WOPT:'+well) , overwrite=True )
                         except :
@@ -2779,7 +2813,8 @@ class SimResult(object):
                                 verbose( self.speak , 2 , 'failed to create missing vector WLPT:'+well)
     
         np.seterr(divide=None, invalid=None)
-        
+
+
     def fill_Basics(self,ItemsNames=[],KeyType='') :
         """
         if the required inputs exists, calculates:
@@ -2805,7 +2840,7 @@ class SimResult(object):
         """
         np.seterr(divide='ignore', invalid='ignore')
         
-        if type(ItemsNames) == str :
+        if type(ItemsNames) is str :
             ItemsNames = [ ItemsNames ]
         
         
@@ -2824,19 +2859,19 @@ class SimResult(object):
             if KeyType != '' :
                 KT = KeyType
                 
-            if type(item) == str and len(item.strip()) > 0 :
+            if type(item) is str and len(item.strip()) > 0 :
                 item = item.strip()
                 verbose( self.speak , 2 , ' calculating basic ratios for the item ' + item )
                 if type(self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item]) == np.ndarray and type(self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item]) == np.ndarray :
                     # calculated WLPR if not available:
-                    if self.is_Key(KT+'LPR'+item) == False or len( self.get_Vector(KT+'LPR'+item)[KT+'LPR'+item] ) < len( self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item] ) or type(self.get_Vector(KT+'LPR'+item)[KT+'LPR'+item]) != np.ndarray :
+                    if self.is_Key(KT+'LPR'+item) is False or len( self.get_Vector(KT+'LPR'+item)[KT+'LPR'+item] ) < len( self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item] ) or type(self.get_Vector(KT+'LPR'+item)[KT+'LPR'+item]) != np.ndarray :
                         try :
                             self.set_Vector( KT+'LPR'+item , np.array( self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item] , dtype='float' ) + np.array( convertUnit(self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item] , dtype='float' , PrintConversionPath=(self.speak==1)) , self.get_Unit(KT+'WPR'+item) , self.get_Unit(KT+'OPR'+item) ) , self.get_Unit(KT+'OPR'+item) , overwrite=True )
                         except :
                             verbose( self.speak , 2 , 'failed to create missing vector '+KT+'LPR'+item)
                     
                     # calculated WWCT if not available:
-                    if self.is_Key(KT+'WCT'+item) == False or len( self.get_Vector(KT+'WCT'+item)[KT+'WCT'+item] ) < len( self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item] ) or type(self.get_Vector(KT+'WCT'+item)[KT+'WCT'+item]) != np.ndarray :
+                    if self.is_Key(KT+'WCT'+item) is False or len( self.get_Vector(KT+'WCT'+item)[KT+'WCT'+item] ) < len( self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item] ) or type(self.get_Vector(KT+'WCT'+item)[KT+'WCT'+item]) != np.ndarray :
                         try :
                             Vector = np.array( np.divide( np.array( self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item] , dtype='float' ) , np.array( convertUnit(self.get_Vector(KT+'LPR'+item)[KT+'LPR'+item], self.get_Unit(KT+'LPR'+item) , self.get_Unit(KT+'WPR'+item) , PrintConversionPath=(self.speak==1)) , dtype='float' ) ) ,dtype='float')
                             Vector = np.nan_to_num( Vector, nan=0.0 , posinf=0.0 , neginf=0.0 )
@@ -2845,7 +2880,7 @@ class SimResult(object):
                             verbose( self.speak , 2 , 'failed to create missing vector '+KT+'WCT'+item)
                             
                     # calculated WWOR & WOWR if not available:
-                    if self.is_Key(KT+'WOR'+item) == False or len( self.get_Vector(KT+'WOR'+item)[KT+'WOR'+item] ) < len( self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item] ) or type(self.get_Vector(KT+'WOR'+item)[KT+'WOR'+item]) != np.ndarray :
+                    if self.is_Key(KT+'WOR'+item) is False or len( self.get_Vector(KT+'WOR'+item)[KT+'WOR'+item] ) < len( self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item] ) or type(self.get_Vector(KT+'WOR'+item)[KT+'WOR'+item]) != np.ndarray :
                         try :
                             Vector = np.array( np.divide( np.array( self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item] , dtype='float' ) , np.array( self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item] , dtype='float' ) ) ,dtype='float')
                             Vector = np.nan_to_num( Vector, nan=0.0 , posinf=0.0 , neginf=0.0 )
@@ -2861,7 +2896,7 @@ class SimResult(object):
                             
                 # calculated WGOR if not available:
                 if type(self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item]) == np.ndarray and type(self.get_Vector(KT+'GPR'+item)[KT+'GPR'+item]) == np.ndarray :
-                    if self.is_Key(KT+'GOR'+item) == False or len( self.get_Vector(KT+'GOR'+item)[KT+'GOR'+item] ) < len( self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item] ) or type(self.get_Vector(KT+'GOR'+item)[KT+'GOR'+item]) != np.ndarray :
+                    if self.is_Key(KT+'GOR'+item) is False or len( self.get_Vector(KT+'GOR'+item)[KT+'GOR'+item] ) < len( self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item] ) or type(self.get_Vector(KT+'GOR'+item)[KT+'GOR'+item]) != np.ndarray :
                         try :
                             Vector = np.array( np.divide( np.array( self.get_Vector(KT+'GPR'+item)[KT+'GPR'+item] , dtype='float' ) , np.array( self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item] , dtype='float' ) ) ,dtype='float')
                             Vector = np.nan_to_num( Vector, nan=0.0 , posinf=0.0 , neginf=0.0 )
@@ -2870,7 +2905,7 @@ class SimResult(object):
                             verbose( self.speak , 2 , 'failed to create missing vector '+KT+'GOR'+item)
                 
                 # calculated WOGR if not available:
-                    if self.is_Key(KT+'OGR'+item) == False or len( self.get_Vector(KT+'OGR'+item)[KT+'OGR'+item] ) < len( self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item] ) or type(self.get_Vector(KT+'OGR'+item)[KT+'OGR'+item]) != np.ndarray :
+                    if self.is_Key(KT+'OGR'+item) is False or len( self.get_Vector(KT+'OGR'+item)[KT+'OGR'+item] ) < len( self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item] ) or type(self.get_Vector(KT+'OGR'+item)[KT+'OGR'+item]) != np.ndarray :
                         try :
                             Vector = np.array( np.divide( np.array( self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item] , dtype='float' ) , np.array( self.get_Vector(KT+'GPR'+item)[KT+'GPR'+item] , dtype='float' ) ) ,dtype='float')
                             Vector = np.nan_to_num( Vector, nan=0.0 , posinf=0.0 , neginf=0.0 )
@@ -2880,7 +2915,7 @@ class SimResult(object):
             
                 if type(self.get_Vector(KT+'OPT'+item)[KT+'OPT'+item]) == np.ndarray and type(self.get_Vector(KT+'WPT'+item)[KT+'WPT'+item]) == np.ndarray :
                     # calculated WLPR if not available:
-                    if self.is_Key(KT+'LPT'+item) == False or len( self.get_Vector(KT+'LPT'+item)[KT+'LPT'+item] ) < len( self.get_Vector(KT+'WPT'+item)[KT+'WPT'+item] ) or type(self.get_Vector(KT+'LPT'+item)[KT+'LPT'+item]) != np.ndarray :
+                    if self.is_Key(KT+'LPT'+item) is False or len( self.get_Vector(KT+'LPT'+item)[KT+'LPT'+item] ) < len( self.get_Vector(KT+'WPT'+item)[KT+'WPT'+item] ) or type(self.get_Vector(KT+'LPT'+item)[KT+'LPT'+item]) != np.ndarray :
                         try :
                             self.set_Vector( KT+'LPT'+item , self.get_Vector(KT+'OPT'+item)[KT+'OPT'+item] + convertUnit(self.get_Vector(KT+'WPT'+item)[KT+'WPT'+item], self.get_Unit(KT+'WPT'+item) , self.get_Unit(KT+'OPT'+item) , PrintConversionPath=(self.speak==1)) , self.get_Unit(KT+'OPT'+item) , overwrite=True )
                         except :
@@ -2892,7 +2927,8 @@ class SimResult(object):
                                 verbose( self.speak , 2 , 'failed to create missing vector '+KT+'LPT'+item)
     
         np.seterr(divide=None, invalid=None)
-    
+
+
     def checkVectorLength(self,Key_or_Array) :
         """
         returns True if the length of the given array or Key corresponds
@@ -2915,7 +2951,8 @@ class SimResult(object):
             return True
         else :
             return False
-    
+
+
     def arithmeticVector(self,Key) :
         """
         returns a calculated vector if the required inputs exist.
@@ -2930,7 +2967,7 @@ class SimResult(object):
         if CalcKey in dictionaries.calculations :
             OK = True
             for Req in dictionaries.calculations[CalcKey][::2] :
-                if type(Req) == str :
+                if type(Req) is str :
                     if type(self.get_Vector(ClassKey+Req+ItemKey)[ClassKey+Req+ItemKey]) == np.ndarray :
                         # is a vector with values...
                         pass
@@ -2945,17 +2982,18 @@ class SimResult(object):
                 for i in range( len( dictionaries.calculations[CalcKey] )) :
                     if i == 0 :
                         # initialize CalculationTuple
-                        if type( dictionaries.calculations[CalcKey][i] ) == str :
+                        if type( dictionaries.calculations[CalcKey][i] ) is str :
                             CalculationTuple = [ ClassKey + dictionaries.calculations[CalcKey][i] + ItemKey ]
                         else :
                             CalculationTuple = [ dictionaries.calculations[CalcKey][i] ]
                     else :
-                        if type( dictionaries.calculations[CalcKey][i] ) == str :
+                        if type( dictionaries.calculations[CalcKey][i] ) is str :
                             CalculationTuple.append( [ ClassKey + dictionaries.calculations[CalcKey][i] + ItemKey ] )
                         else :
                             CalculationTuple.append( [ dictionaries.calculations[CalcKey][i] ] )
                 
                 return self.RPNcalculator( CalculationTuple , Key )
+
 
     def RPNcalculator(self,CalculationTuple,ResultName=None,ResultUnits=None) :
         """
@@ -3096,7 +3134,7 @@ class SimResult(object):
         
         # initialize calculation with first item
         i = 0
-        if type( CalculationTuple[i] ) == str :               
+        if type( CalculationTuple[i] ) is str :               
             if CalculationTuple[i][0] == '-' :
                 if self.is_Key( CalculationTuple[i][1:] ) :
                     Result = self(CalculationTuple[i][1:]) * -1
@@ -3121,7 +3159,7 @@ class SimResult(object):
         while i < len( CalculationTuple ) :
             # following the operations sequence
             
-            if i<len(CalculationTuple) and type( CalculationTuple[i] ) == str and CalculationTuple[i] not in operators :
+            if i<len(CalculationTuple) and type( CalculationTuple[i] ) is str and CalculationTuple[i] not in operators :
                 # extract the next array to apply calculations
                 if CalculationTuple[i][0] == '-' :
                     if self.is_Key( CalculationTuple[i][1:] ) :
@@ -3140,7 +3178,7 @@ class SimResult(object):
                 i += 1 
             
             
-            if i<len(CalculationTuple) and type( CalculationTuple[i] ) == str and CalculationTuple[i] in operators :
+            if i<len(CalculationTuple) and type( CalculationTuple[i] ) is str and CalculationTuple[i] in operators :
                 # appliying calculation
                 if CalculationTuple[i] == '+' :
                     if CalcUnit == NextUnit or NextUnit is None :
@@ -3218,8 +3256,7 @@ class SimResult(object):
                 Units.append(None)
                 NextUnit = Units[-1] # units 
                 i += 1
-                
-            
+
         # check resulting units
         SameUnits = []
         for each in Units :
@@ -3265,18 +3302,19 @@ class SimResult(object):
             DATE[i] = start + np.timedelta64( timedelta(days=TIME[i]) )
         self.set_Vector( 'DATES' , DATE , 'DATE' , overwrite=True )
         self.set_Vector( 'DATE' , DATE , 'DATE' , overwrite=True )
-    
+
     def createYEAR(self) :
         Years = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).year)
         self.set_Vector( 'YEAR' , Years , 'Year' , DataType='int' , overwrite=True) 
-    
+
     def createMONTH(self) :
         Months = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).month)
         self.set_Vector( 'MONTH' , Months , 'Month' , DataType='int' , overwrite=True) 
-    
+
     def createDAY(self) :
         Days = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).day)
         self.set_Vector( 'DAY' , Days , 'Day' , DataType='int' , overwrite=True) 
+
 
     def get_UnitsConverted(self,Key=None,OtherObject_or_NewUnits=None):
         """
@@ -3290,39 +3328,38 @@ class SimResult(object):
         
         """
         # checking input parameters
-        if type(Key) == str :
+        if type(Key) is str :
             Key = [Key]
-        elif type(Key) == list or type(Key) == tuple :
+        elif type(Key) is list or type(Key) is tuple :
             pass
         if Key is None :
             return {}
         if OtherObject_or_NewUnits is None :
             return self.get_Vector(Key, False)
-        
-        
+
         ListOfUnits = False
-        if type(OtherObject_or_NewUnits) == str :
+        if type(OtherObject_or_NewUnits) is str :
             OtherObject_or_NewUnits = [OtherObject_or_NewUnits]
             ListOfUnits = True
-        elif type(OtherObject_or_NewUnits) == list or type(OtherObject_or_NewUnits) == tuple :
+        elif type(OtherObject_or_NewUnits) is list or type(OtherObject_or_NewUnits) is tuple :
             ListOfUnits = True
             
-        if ListOfUnits == True and len(Key) != len(OtherObject_or_NewUnits) :
+        if ListOfUnits is True and len(Key) != len(OtherObject_or_NewUnits) :
             raise TypeError( str(len(Key)) + ' resquested but ' + str(len(OtherObject_or_NewUnits)) + ' units provided.\n          Both should match order and number.' )
-        elif ListOfUnits == True and len(Key) == len(OtherObject_or_NewUnits) :
+        elif ListOfUnits is True and len(Key) == len(OtherObject_or_NewUnits) :
             pass
         else :
             try :
-                if OtherObject_or_NewUnits.SimResult == True :
+                if OtherObject_or_NewUnits.SimResult is True :
                     errors = False
                     TempConversions = []
                     for each in Key :
-                        if OtherObject_or_NewUnits.is_Key(each) == False :
+                        if not OtherObject_or_NewUnits.is_Key(each) :
                             errors = True
                             verbose( self.speak , 3 , 'The requested Key ' + str(each) + ' is not present in the simulation ' + str(OtherObject_or_NewUnits.get_Name()) + '.')
                         else :
                             TempConversions.append( OtherObject_or_NewUnits.get_Unit( each.strip() ) )
-                    if errors == True :
+                    if errors :
                         raise TypeError('at least one requested Key is not present in the simulation ' + str(OtherObject_or_NewUnits.get_Name()) + '.')
                     # OtherObject = OtherObject_or_NewUnits
                     OtherObject_or_NewUnits = TempConversions
@@ -3359,6 +3396,8 @@ class SimResult(object):
         TimeUnits = self.get_Unit('TIME')
         verbose( self.speak , 1 , "<integrate> retrieved series 'TIME' of length " + str(len(Time)) + ' and units ' + str(TimeUnits))
         
+        Numpy = bool(Numpy)
+        ConstantRate = bool(ConstantRate)
         
         OutUnits = ''
         if '/' in VectorUnits :
@@ -3398,12 +3437,11 @@ class SimResult(object):
         if len(Vector) != len(Time) :
             raise TypeError( ' the Key vector ' + InputKey + ' and its TIME does not have the same length: ' + str( len(Vector) ) + ' != ' + str( len(Time) ) + '.' )
         
-        
-        if Numpy == False :
+        if not Numpy :
             # integrating one row at a time, iterating with for:
             verbose( self.speak , 2 , "<integrate> calculating integral for key '" + InputKey + "' using for loor")
             Cumulative = [0.0]
-            if ConstantRate == False :
+            if not ConstantRate :
                 for i in range(len(Vector)-1) :
                     dt = ( Time[i+1] - Time[i] ) * ConvFactor
                     if Vector[i] <= Vector[i+1] :
@@ -3422,7 +3460,7 @@ class SimResult(object):
             verbose( self.speak , 2 , "<integrate> calculating integral for key '" + InputKey + "' using numpy methods")
             for X in ( Time , Vector ) :
                 if type(X) != np.ndarray :
-                    if type(X) == list or type(X) == tuple :
+                    if type(X) is list or type(X) is tuple :
                         try :
                             X = np.array(X,dtype='float')
                         except :
@@ -3430,7 +3468,7 @@ class SimResult(object):
  
             dt = np.diff( Time ) * ConvFactor
             
-            if ConstantRate == False :
+            if not ConstantRate :
                 Vmin = np.minimum( Vector[:-1] , Vector[1:] )
                 Vmax = np.maximum( Vector[:-1] , Vector[1:] )
                 Cumulative = dt * Vmin + dt * ( Vmax - Vmin ) / 2.0
@@ -3444,7 +3482,7 @@ class SimResult(object):
         try :
             self.set_Vector(OutputKey, np.array( Cumulative ) , OutUnits , overwrite=False )
         except OverwrittingError :
-            pass
+            verbose( self.speak , 2 , 'not able to save vector because the Key already exists.')
         return ( OutputKey , np.array( Cumulative ) , OutUnits )
     
     def get_DataFrame(self,Keys=None,Index='TIME') :
@@ -3461,12 +3499,12 @@ class SimResult(object):
         The argument * Index * will be passed as the index of the DataFrame.
         By default will be 'TIME' but could be 'DATES' or any other like 'FOPT'
         """
-        if type(Keys) == str :
+        if type(Keys) is str :
             if Keys == '--EVERYTHING--' :
                 Keys = list( self.get_Keys() )
             else :
                 Keys = [Keys]
-        if type(Index) == list or type(Index) == tuple :
+        if type(Index) is list or type(Index) is tuple :
             if len(Index) > 1 :
                 verbose( self.speak , -1 , '< get_DataFrame > more than value passed in Index argument, only the first one will be used')
             Index = Index[0]
@@ -3492,20 +3530,20 @@ class SimResult(object):
             > a list new units for every Key in the Keys argument
             > a SimResult object, the new units will be extracted from it.
         """
-        if type(Keys) == str :
+        if type(Keys) is str :
             if Keys == '--EVERYTHING--' :
                 Keys = list( self.get_Keys() )
             else :
                 Keys = [Keys]
-        if type(Index) == list or type(Index) == tuple :
+        if type(Index) is list or type(Index) is tuple :
             if len(Index) > 1 :
                 verbose( self.speak , -1 , '< get_DataFrame > more than value passed in Index argument, only the first one will be used')
             Index = Index[0]
-        elif type(Index) == str :
+        elif type(Index) is str :
             pass 
         else :
             try :
-                if Index.SimResult == True :
+                if Index.SimResult is True :
                     if OtherObject_or_NewUnits is None :
                         OtherObject_or_NewUnits = Index
                         Index = 'TIME'
