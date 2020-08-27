@@ -11,7 +11,7 @@ from datafiletoolbox import dictionaries
 from datafiletoolbox.Classes.Errors import OverwrittingError
 from datafiletoolbox.common.stringformat import date as strDate
 from datafiletoolbox.common.stringformat import isDate 
-from datafiletoolbox.common.stringformat import multisplit , isnumeric
+from datafiletoolbox.common.stringformat import multisplit , isnumeric , getnumber
 from datafiletoolbox.common.functions import is_SimulationResult , mainKey , wellFromAttribute
 from datafiletoolbox.common.inout import extension
 from datafiletoolbox.common.inout import verbose 
@@ -173,7 +173,7 @@ class SimResult(object):
         .set_Vector( Key , VectorData , Units , DataType='auto' , overwrite=None)
             loads a vector into the SimulationResult object, arguments are:
                 Key : the name or keyword where the data will be loaded
-                VectorData : a Numpy array (of the same lenght as the arrays already in the results)
+                VectorData : a Numpy array (of the same length as the arrays already in the results)
                 Units : a string indicating the units of these data
                 DataType : the strings 'float', 'int', 'date' or 'auto'
                 overwrite : True or False, if True any existing data under the same Key will be overwritten. 
@@ -372,6 +372,7 @@ class SimResult(object):
                         Value , Units = [ Value[0] ] * len(self.fieldtime[2]) , Value[1]
                     elif type(Value[1]) is None :
                         Value , Units = [ Value[0] ] * len(self.fieldtime[2]) , 'DIMENSIONLESS'
+
                     
         if self.is_Key(Key) :
             verbose(self.speak,3,"WARNING, the key '" + Key + "' is already in use. It will be overwritten!")
@@ -389,6 +390,17 @@ class SimResult(object):
                     verbose( self.speak , 2 , "   processing '" + K + "'") 
                     self.__setitem__( NewKey , K )
                 return None
+            else :
+                # might be calculation
+                if '=' in Value :
+                    calcStr = Key + '=' + Value[Value.index('=')+1:]
+                else :
+                    calcStr = Key + '=' + Value
+                try :
+                    print(calcStr)
+                    return self.RPNcalculator( calcStr )
+                except :
+                    pass
                 
         elif type(Value) is list or type(Value) is tuple :
             Value = np.array(Value)
@@ -398,7 +410,7 @@ class SimResult(object):
             
         if type(Value) is np.ndarray :
             if len(Value) != len(self.fieldtime[2]) :
-                raise TypeError(" the 'Value' array must have the exact same lenght of the simulation vectors: " + str(len(self.fieldtime[2])) )
+                raise TypeError(" the 'Value' array must have the exact same length of the simulation vectors: " + str(len(self.fieldtime[2])) )
             if type(Units) is str :
                 Units = Units.strip('( )')
             elif Units is None :
@@ -836,7 +848,7 @@ class SimResult(object):
         if Unit is None and type(Key) is dict :
             keysDict = Key.copy()  
         elif len(Key) != len(Unit) :
-            raise ValueError('the lists of Keys and Units must have the same lenght')
+            raise ValueError('the lists of Keys and Units must have the same length')
         
         keysDict = dict(zip(Key,Unit))
         
@@ -1175,7 +1187,7 @@ class SimResult(object):
                             print( 'no data for the key ' + str(key + ':' + well ))
                         elif len( self.get_Vector( key + ':' + well )[ key + ':' + well ] ) > 0 :
                             size = len(self.get_Vector( key + ':' + well )[ key + ':' + well ])
-                            verbose( self.speak , 1 , " < inizializing sum vectr with lenght " + str(size) + " >")
+                            verbose( self.speak , 1 , " < inizializing sum vectr with length " + str(size) + " >")
                             returnVector[NewKey+':'+AggregatedKeyName] = self.get_Vector( key + ':' + well )[ key + ':' + well ] * 0.0
                             break
 
@@ -1197,7 +1209,7 @@ class SimResult(object):
                         returnVector[NewKey+':'+AggregatedKeyName] = returnVector[NewKey+':'+AggregatedKeyName] / counter
                         AGG = 'AVG'
                 if counter > 0 :
-                    verbose( self.speak , 3 , ' saving vector ' + NewKey + ':' + AggregatedKeyName + ' of lenght ' + str(len(returnVector[NewKey+':'+AggregatedKeyName])))
+                    verbose( self.speak , 3 , ' saving vector ' + NewKey + ':' + AggregatedKeyName + ' of length ' + str(len(returnVector[NewKey+':'+AggregatedKeyName])))
                     self.set_Vector( AGG + 'of' + key + ':' + ','.join(WellsToGroup) , returnVector[NewKey+':'+AggregatedKeyName] , KeyUnits ,overwrite=True ) 
                     self.set_Vector( NewKey + ':' + AggregatedKeyName , returnVector[NewKey+':'+AggregatedKeyName] , KeyUnits ,overwrite=True ) 
         
@@ -1216,7 +1228,7 @@ class SimResult(object):
             self.set_FieldTime()
         
         if len(KeyTime) == 0 or len(KeyVector) == 0 :
-            verbose(self.speak, 2 , ' <fillZeros> the received vectors are empty, thus, a zero filled vector will be returned with lenght equal to the field TIME vector.')
+            verbose(self.speak, 2 , ' <fillZeros> the received vectors are empty, thus, a zero filled vector will be returned with length equal to the field TIME vector.')
             return np.array([0.0]*len(self.fieldtime),dtype='float')
         
         if force == True or min(KeyTime) > self.fieldtime[0] or max(KeyTime) < self.fieldtime[1] :
@@ -1912,7 +1924,7 @@ class SimResult(object):
             if type(Filter) is list or type(Filter) is tuple :
                 Filter = np.array(Filter) # convert to numpy array
             if type(Filter) is np.ndarray : 
-                if len(Filter) == len(self.fieldtime[2]) : # check Filter has the proper lenght
+                if len(Filter) == len(self.fieldtime[2]) : # check Filter has the proper length
                     if Filter.dtype == 'bool' : # check it has the correct dtype
                         applyFilter( Filter )
                         self.filter['key'].append(None)
@@ -1932,7 +1944,7 @@ class SimResult(object):
                             return False
 
                 else : # filter is not correct
-                    verbose(self.speak , 3 , " the 'Filter' must have the exact same lenght of the simulation vectors: " + str(len(self.fieldtime[2])) )
+                    verbose(self.speak , 3 , " the 'Filter' must have the exact same length of the simulation vectors: " + str(len(self.fieldtime[2])) )
                     return False
                 
         # apply or CALCULATE the Filter     
@@ -2881,6 +2893,29 @@ class SimResult(object):
     
         np.seterr(divide=None, invalid=None)
     
+    def checkVectorLength(self,Key_or_Array) :
+        """
+        returns True if the length of the given array or Key corresponds
+        with the length of the simulation Keys.
+        """
+        if self.is_Key('TIME') :
+            Vlen = len(self('TIME'))
+        elif len(self.keys) > 0 :
+            Vlen = len( self( self.keys[0] ))
+        else :
+            verbose( self.speak , 3 , 'there are no Keys in this object.')
+            return True
+        
+        if self.is_Key(Key_or_Array) :
+            Key_or_Array = self(Key_or_Array)
+        elif self.is_Attribute(Key_or_Array) :
+            Key_or_Array = self[[Key_or_Array]]
+            
+        if len(Key_or_Array) == Vlen :
+            return True
+        else :
+            return False
+    
     def arithmeticVector(self,Key) :
         """
         returns a calculated vector if the required inputs exist.
@@ -2920,164 +2955,307 @@ class SimResult(object):
                         else :
                             CalculationTuple.append( [ dictionaries.calculations[CalcKey][i] ] )
                 
-                return self.calculator( CalculationTuple , Key )
+                return self.RPNcalculator( CalculationTuple , Key )
 
-    def calculator(self,CalculationTuple,ResultName=None,ResultUnits=None) :
+    def RPNcalculator(self,CalculationTuple,ResultName=None,ResultUnits=None) :
         """
         receives a tuple indicating the operation to perform and returns a vector
         with ResultName name 
         
         The CalculationTuple is a sequence of Vectors or Floats and operators:
-        The syntax of the CalculationTuple is:
-            ( 'Vector or float' , 'operator' , 'Vector or float' , 'operator' , 'Vector or float' , 'operator' ... 'Vector or float'  )
+        The syntax of the CalculationTuple follows the Reverser Polish Notation (RPN)
+            ( 'operand' , 'operand' , 'operator' , 'operand' , 'operator' , ... 'operand' , 'operator' )
         
         The accepted operators are: '+' , '-' , '*' , '/' , '^'
         The CalculationTuple must start with a number or variable, never with an operator
 
         The operations will be executed in the exact order they are described. i.e.:
-            'FLPR' = ( 'FOPR' , '+' , 'FWPR' ) 
+           ( 'FLPR' , '=' , 'FOPR' , 'FWPR' , '+' )
                 means FLPR = FOPR + FWPR 
                 will add FOPR plus FWPR
-            'WWCT:P1' = ( 'WOPR:P1' , '/' , 'WLPR:P2' ) 
-                means WWCT:P1 = WOPR:P1 + WLPR:P2 
-                will add FOPR plus FWPR
+           ( 'WWCT:P1' , '=' , 'WOPR:P1' , 'WLPR:P1' , '/' ) 
+                means WWCT:P1 = WOPR:P1 / WLPR:P1 
+                will divide WOPR by WLPR of well P1
         but:
-            'R' = ( 'A' , '-', 'B' , '/' , 'C' ) 
+           ( 'R' , '=' , 'A' , 'B' , '-' , 'C' , '/' )
                 means R = ( A - B ) / C
                 will add A plus B and the result will be divided by C
 
-            to represent R = A - B / C the correct sintax is:
-            'R' : ( -1 , '*' , 'B' , '/', 'C' , '+' , 'A'  ) 
-                that means R = -1 * B / C + A
+            to represent R = A - B / C the correct sintax would be:
+           ( 'R' , '=' , '-B' , 'C' , '/', 'A' , '+' ) 
+                that means R = -B / C + A
+                
+        special operators can be used with Attributes or DataFrames:
+            'sum' will return the total of the all the columns
+            'avg' or 'mean' will return the average of the all the columns
+            'avg0' will return the average of the all the columns, but ignoring the zeros
+            'min' will return the minimum value of the all the columns at each tstep
+            'min0' will return the minimum value of the all the columns at each tstep
+            'max' will return the maximum value of the all the columns at each tstep
+            'std' will return the stardard deviation the all the columns 
         """
+        # supported operators:
+        operators = [' ','**','--','+-','++','*-','/-','=','+','-','*','/','^','sum','avg','mean','min','max','std','avg0','min0']
+        
+        # convert string to calculation tuple
         if type( CalculationTuple ) == str :
-            verbose ( self.speak , 3 , ' the received string for CalculatedTuple was converted to tuple,\n  received: ' + CalculationTuple + '\n  converted to: ' + str( multisplit( CalculationTuple , [' ','=','+','-','*','/','^']) ) )
-            CalculationTuple = tuple ( CalculationTuple.split() )
+            verbose ( self.speak , 2 , ' the received string for CalculatedTuple was converted to tuple,\n  received: ' + CalculationTuple + '\n  converted to: ' + str( tuple( multisplit( CalculationTuple , operators ) ) ) )
+            CalculationTuple = tuple ( multisplit( CalculationTuple , operators ) )
         elif type( CalculationTuple ) == list :
             CalculationTuple = tuple( CalculationTuple )
         if ResultName is None :
-            ResultName = str( CalculationTuple )
-            
+            if CalculationTuple[1] == '=' :
+                ResultName = CalculationTuple[0]
+                verbose ( self.speak , 2 , "found name '" + ResultName + "'")
+                CalculationTuple = CalculationTuple[2:] 
+            else :
+                ResultName = str( CalculationTuple )
+        
+        # simplify equation
+        CalculationTuple = list(CalculationTuple)
+        while '--' in CalculationTuple :
+            where = CalculationTuple.index('--')
+            CalculationTuple[where] = '+'
+        while '+-' in CalculationTuple :
+            where = CalculationTuple.index('+-')
+            CalculationTuple[where] = '-'
+        while '++' in CalculationTuple :
+            where = CalculationTuple.index('++')
+            CalculationTuple[where] = '+'
+        while '**' in CalculationTuple :
+            where = CalculationTuple.index('**')
+            CalculationTuple[where] = '^'
+        while '*-' in CalculationTuple :
+            where = CalculationTuple.index('*-')
+            CalculationTuple[where] = '*'
+            if (where+2) <= len(CalculationTuple) :
+                CalculationTuple = CalculationTuple[:where] + [ CalculationTuple[where] ] + [ '-' + CalculationTuple[where+1] ] + CalculationTuple[where+2:]
+            elif (where+1) <= len(CalculationTuple) :
+                CalculationTuple = CalculationTuple[:where] + [ CalculationTuple[where] ] + [ '-' + CalculationTuple[where+1] ] 
+        while '/-' in CalculationTuple :
+            where = CalculationTuple.index('/-')
+            CalculationTuple[where] = '/'
+            if (where+2) <= len(CalculationTuple) :
+                CalculationTuple = CalculationTuple[:where] + [ CalculationTuple[where] ] + [ '-' + CalculationTuple[where+1] ] + CalculationTuple[where+2:]
+            elif (where+1) <= len(CalculationTuple) :
+                CalculationTuple = CalculationTuple[:where] + [ CalculationTuple[where] ] + [ '-' + CalculationTuple[where+1] ] 
+        
+        while CalculationTuple[0] == '-' :
+            if len(CalculationTuple) > 2 :
+                CalculationTuple = [ '-' + CalculationTuple[1] ] + CalculationTuple[2:]
+            else :
+                CalculationTuple = [ '-' + CalculationTuple[1] ]
+        
+        while CalculationTuple[0] in ['*','+','/'] :
+            verbose( self.speak , 2 , "the first item '" + CalculationTuple.pop(0) + "' is an operand and will ignored") 
+
+        # convert numbers to float or int        
+        for i in range(len(CalculationTuple)) :
+            if isnumeric( CalculationTuple[i] ) :
+                CalculationTuple[i] = getnumber( CalculationTuple[i] )
+        
+        CalculationTuple = tuple(CalculationTuple)
+        verbose ( self.speak , 2 , "calculation simplified to " + str(CalculationTuple))
+        
+        
+        operators = ['+','-','*','/','^','sum','avg','mean','min','max','std','avg0','min0']
         OK = True
         Missing = []
-        for Req in CalculationTuple[::2] :
-            if type(Req) == str :
-                if type(self.get_Vector(Req)[Req]) == np.ndarray :
+        WrongLen = []
+        for Req in CalculationTuple :
+            if type(Req) is str :
+                if Req[0] == '-' :
+                    Req = Req[1:]
+                if self.is_Key(Req) or self.is_Attribute(Req) :
                     # is a vector with values... OK
+                    if not self.checkVectorLength( Req ) :
+                        WrongLen.append(Req)
+                        OK = False
+                elif Req in operators :
+                    # is an operand ... OK
                     pass
                 else :
                     OK = False
                     Missing.append(Req)
-            else :
-                #  should be int or float
+            elif type(Req) is int or type(Req) is float :
+                # is an int or float 
                 pass
-        if not OK :
-            verbose( self.speak , 3 , '\n IMPORTANT: the following required input vectors were not found:\n   -> ' + '\n   -> '.join(Missing) + '\n')
-            return { ResultName : None }
-        else :
-            for i in range(0, len( CalculationTuple ) , 2) :
-                if i == 0 :
-                    # initialize Result vector
-                    if type( CalculationTuple[i] ) == str :
-                        Result = np.array( self.get_Vector( CalculationTuple[i] )[ CalculationTuple[i] ] , dtype='float' )
-                        Units = [ self.get_Unit( CalculationTuple[i] ) ]
-                    else :
-                        Result = CalculationTuple[i]
-                        Units = [None]
-                else :
-                    # following the operations sequence
-                    # extracting Next vector or float
-                    if type( CalculationTuple[i] ) == str :
-                        Next = np.array( self.get_Vector(CalculationTuple[i])[CalculationTuple[i]] , dtype='float' )
-                        Units.append( self.get_Unit( CalculationTuple[i] ) )
-                        CalcUnit = self.get_Unit( CalculationTuple[i] )
-                    else :
-                        Next = CalculationTuple[i]
-                        Units.append(None)
-                        NextUnit = self.get_Unit( CalculationTuple[i] )
-                    # appliying calculation
-                    if CalculationTuple[i-1] == '+' :
-                        if CalcUnit == NextUnit :
-                            Result = Result + Next
-                        elif convertibleUnits( NextUnit , CalcUnit) :
-                            Result = Result + convertUnit(Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1))
-                        else :
-                            CalcUnit = CalcUnit + '+' + NextUnit
-                            Result = Result + Next
+            elif type(Req) is np.ndarray :
+                if not self.checkVectorLength( Req ) :
+                    WrongLen.append(str(Req))
+                    OK = False
 
-                    elif CalculationTuple[i-1] == '-' :
-                        if CalcUnit == NextUnit :
-                            Result = Result - Next
-                        elif convertibleUnits( NextUnit , CalcUnit) :
-                            Result = Result - convertUnit(Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1))
-                        else :
-                            CalcUnit = CalcUnit + '-' + NextUnit
-                            Result = Result - Next
-                            
-                    elif CalculationTuple[i-1] == '*' :
-                        if CalcUnit == NextUnit :
-                            Result = Result * Next
-                        elif convertibleUnits( NextUnit , CalcUnit) :
-                            Result = Result * convertUnit(Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1))
-                        else :
-                            CalcUnit = CalcUnit + '*' + NextUnit
-                            Result = Result * Next
-                        
-                    elif CalculationTuple[i-1] == '/' :
-                        if CalcUnit == NextUnit :
-                            Result = np.divide ( Result , Next )
-                        elif convertibleUnits( NextUnit , CalcUnit) :
-                            Result = np.divide ( Result , convertUnit(Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1)) )
-                            
-                        else :
-                            CalcUnit = CalcUnit + '/' + NextUnit
-                            Result = np.divide( Result , Next )
-                        Result = np.nan_to_num( Result, nan=0.0 , posinf=0.0 , neginf=0.0 )
-                        
-                    elif CalculationTuple[i-1] == '^' :
-                        if CalcUnit == NextUnit :
-                            Result = Result ** Next
-                        elif convertibleUnits( NextUnit , CalcUnit) :
-                            Result = Result ** convertUnit(Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1))
-                        else :
-                            CalcUnit = CalcUnit + '^' + NextUnit
-                            Result = Result ** Next
-            
-            SameUnits = []
-            for each in Units :
-                if each != None :
-                    SameUnits.append(each)
-            if len( set( SameUnits ) ) == 0 :
-                Units = 'DIMENSIONLESS'
-            elif len( set( SameUnits ) ) == 1 :
-                Units = SameUnits[0]
+
+        if not OK :
+            if len(Missing) > 0 :
+                verbose( self.speak , 3 , '\n IMPORTANT: the following required input vectors were not found:\n   -> ' + '\n   -> '.join(Missing) + '\n')
+            if len(WrongLen) > 0 :
+                verbose( self.speak , 3 , '\n IMPORTANT: the following input vectors does not have the correct length:\n   -> ' + '\n   -> '.join(WrongLen) + '\n')
+            return { ResultName : None }
+        
+        
+        # initialize calculation with first item
+        i = 0
+        if type( CalculationTuple[i] ) == str :               
+            if CalculationTuple[i][0] == '-' :
+                if self.is_Key( CalculationTuple[i][1:] ) :
+                    Result = self(CalculationTuple[i][1:]) * -1
+                elif self.is_Attribute( CalculationTuple[i][1:] ) :
+                    Result = self[[CalculationTuple[i][1:]]] * -1
+                Units = [ self.get_Unit( CalculationTuple[i][1:] ) ]
+                    
             else :
-                Units = Units[0]
-                for i in range(1,len( Units )) :
-                    Units.append( CalculationTuple[2*i-1] )
-                    Units.append( Units[i] )
-                Units = str(Units)
-                
-            if ResultUnits is None :
-                ResultUnits = Units
-            elif ResultUnits == Units :
-                # OK
-                pass
-            elif ResultUnits == CalcUnit :
-                # OK
-                Units = CalcUnit
-            elif convertibleUnits( CalcUnit , ResultUnits ) :
-                # OK
-                Result = convertUnit( Result , CalcUnit , ResultUnits , PrintConversionPath=(self.speak==1) )
-            else :
-                print( 'MESSAGE: The provided units are not equal to the calculated units:\n    ' + str(ResultUnits) + ' != ' + Units  )
+                if self.is_Key( CalculationTuple[i] ) :
+                    Result = self(CalculationTuple[i])
+                elif self.is_Attribute( CalculationTuple[i] ) :
+                    Result = self[[CalculationTuple[i]]]
+                Units = [ self.get_Unit( CalculationTuple[i] ) ]
+        else :
+            Result = CalculationTuple[i]
+            Units = [None]
+        CalcUnit = Units[-1] # units 
+        Next = Result.copy()
+        NextUnit = Units[-1]
+        i += 1
+        
+        while i < len( CalculationTuple ) :
+            # following the operations sequence
             
-            self.set_Vector( str( CalculationTuple ) , Result , ResultUnits , 'float' , False )
-            if ResultName != str( CalculationTuple ) :
-                self.vectors[ResultName] = self.vectors[ str( CalculationTuple ) ]
-                self.units[ResultName] = self.units[ str( CalculationTuple ) ]
+            if i<len(CalculationTuple) and type( CalculationTuple[i] ) == str and CalculationTuple[i] not in operators :
+                # extract the next array to apply calculations
+                if CalculationTuple[i][0] == '-' :
+                    if self.is_Key( CalculationTuple[i][1:] ) :
+                        Next = self(CalculationTuple[i][1:]) * -1
+                    elif self.is_Attribute( CalculationTuple[i][1:] ) :
+                        Next = self[[CalculationTuple[i][1:]]] * -1
+                        
+                else :
+                    if self.is_Key( CalculationTuple[i] ) :
+                        Next = self(CalculationTuple[i])
+                    elif self.is_Attribute( CalculationTuple[i] ) :
+                        Next = self[[CalculationTuple[i]]]
+
+                Units.append( self.get_Unit( CalculationTuple[i] ) )
+                NextUnit = Units[-1] # units 
+                i += 1 
+            
+            
+            if i<len(CalculationTuple) and type( CalculationTuple[i] ) == str and CalculationTuple[i] in operators :
+                # appliying calculation
+                if CalculationTuple[i] == '+' :
+                    if CalcUnit == NextUnit or NextUnit is None :
+                        Result = Result + Next
+                    elif convertibleUnits( NextUnit , CalcUnit) :
+                        Result = Result + convertUnit(Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1))
+                    else :
+                        CalcUnit = CalcUnit + '+' + NextUnit
+                        Result = Result + Next
+    
+                elif CalculationTuple[i] == '-' :
+                    if CalcUnit == NextUnit or NextUnit is None :
+                        Result = Result - Next
+                    elif convertibleUnits( NextUnit , CalcUnit) :
+                        Result = Result - convertUnit(Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1))
+                    else :
+                        CalcUnit = CalcUnit + '-' + NextUnit
+                        Result = Result - Next
+                        
+                elif CalculationTuple[i] == '*' :
+                    if CalcUnit == NextUnit or NextUnit is None :
+                        Result = Result * Next
+                    elif convertibleUnits( NextUnit , CalcUnit) :
+                        Result = Result * convertUnit(Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1))
+                    else :
+                        CalcUnit = CalcUnit + '*' + NextUnit
+                        Result = Result * Next
+                    
+                elif CalculationTuple[i] == '/' :
+                    if CalcUnit == NextUnit or NextUnit is None :
+                        Result = np.divide ( Result , Next )
+                    elif convertibleUnits( NextUnit , CalcUnit) :
+                        Result = np.divide ( Result , convertUnit(Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1)) )
+                        
+                    else :
+                        CalcUnit = CalcUnit + '/' + NextUnit
+                        Result = np.divide( Result , Next )
+                    Result = np.nan_to_num( Result, nan=0.0 , posinf=0.0 , neginf=0.0 )
+                    
+                elif CalculationTuple[i] == '^' :
+                    if CalcUnit == NextUnit or NextUnit is None :
+                        Result = Result ** Next
+                    elif convertibleUnits( NextUnit , CalcUnit) :
+                        Result = Result ** convertUnit( Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1) )
+                    else :
+                        CalcUnit = CalcUnit + '^' + NextUnit
+                        Result = Result ** Next
                 
-            return { ResultName : Result }
+                elif CalculationTuple[i] in ['sum','avg','mean','min','max','std'] :
+                    if type( Next ) is pd.core.frame.DataFrame :
+                        if CalculationTuple[i] == 'sum' :
+                            Next = Next.sum(axis=1).to_numpy()
+                        elif CalculationTuple[i] in ['avg','mean'] :
+                            Next = Next.mean(axis=1).to_numpy()
+                        elif CalculationTuple[i] == 'min' :
+                            Next = Next.min(axis=1).to_numpy()
+                        elif CalculationTuple[i] == 'max' :
+                            Next = Next.max(axis=1).to_numpy()
+                        elif CalculationTuple[i] == 'std' :
+                            Next = Next.std(axis=1).to_numpy()
+                        elif CalculationTuple[i] in ['avg0','mean0'] :
+                            Next = Next.replace(0,np.nan).mean(axis=1).to_numpy()
+                        elif CalculationTuple[i] == 'min0' :
+                            Next = Next.replace(0,np.nan).min(axis=1).to_numpy()
+                        if i == 1 : 
+                            Result = Next.copy()
+                    else :
+                        verbose( self.speak , 3 , 'the operator ' + CalculationTuple[i] + ' was ignored because the previous operand is not an Attribute or a DataFrame' )
+                i += 1
+                
+                
+            if i<len(CalculationTuple) and ( type( CalculationTuple[i] ) is np.ndarray or type( CalculationTuple[i] ) is int or type( CalculationTuple[i] ) is float ) :
+                # numbers or arrays
+                Next = CalculationTuple[i]
+                Units.append(None)
+                NextUnit = Units[-1] # units 
+                i += 1
+                
+            
+        # check resulting units
+        SameUnits = []
+        for each in Units :
+            if each != None :
+                SameUnits.append(each)
+        if len( set( SameUnits ) ) == 0 :
+            Units = 'DIMENSIONLESS'
+        elif len( set( SameUnits ) ) == 1 :
+            Units = SameUnits[0]
+        else :
+            Units = Units[0]
+            for i in range(1,len( Units )) :
+                Units.append( CalculationTuple[2*i-1] )
+                Units.append( Units[i] )
+            Units = str(Units)
+            
+        if ResultUnits is None :
+            ResultUnits = Units
+        elif ResultUnits == Units :
+            # OK
+            pass
+        elif ResultUnits == CalcUnit :
+            # OK
+            Units = CalcUnit
+        elif convertibleUnits( CalcUnit , ResultUnits ) :
+            # OK
+            Result = convertUnit( Result , CalcUnit , ResultUnits , PrintConversionPath=(self.speak==1) )
+        else :
+            print( 'MESSAGE: The provided units are not equal to the calculated units:\n    ' + str(ResultUnits) + ' != ' + Units  )
+        
+        self.set_Vector( str( CalculationTuple ) , Result , ResultUnits , 'float' , False )
+        if ResultName != str( CalculationTuple ) :
+            self.vectors[ResultName] = self.vectors[ str( CalculationTuple ) ]
+            self.units[ResultName] = self.units[ str( CalculationTuple ) ]
+            
+        return { ResultName : Result }
             
     def createDATES(self) :
         TIME = self.get_Vector('TIME')['TIME']
@@ -3176,10 +3354,10 @@ class SimResult(object):
             raise TypeError(' InputKey and OutputKey must be strings.')
         Vector = self.get_Vector( InputKey )[ InputKey ]
         VectorUnits = self.get_Unit(InputKey)
-        verbose( self.speak , 1 , "<integrate> retrieved series '" + InputKey + "' of lenght " + str(len(Vector)) + ' and units ' + str(VectorUnits))
+        verbose( self.speak , 1 , "<integrate> retrieved series '" + InputKey + "' of length " + str(len(Vector)) + ' and units ' + str(VectorUnits))
         Time = self.get_Vector( 'TIME' )[ 'TIME' ]
         TimeUnits = self.get_Unit('TIME')
-        verbose( self.speak , 1 , "<integrate> retrieved series 'TIME' of lenght " + str(len(Time)) + ' and units ' + str(TimeUnits))
+        verbose( self.speak , 1 , "<integrate> retrieved series 'TIME' of length " + str(len(Time)) + ' and units ' + str(TimeUnits))
         
         
         OutUnits = ''
@@ -3218,7 +3396,7 @@ class SimResult(object):
         verbose( self.speak , 1 , "<integrate> integrated series units will be " + str(OutUnits))
         
         if len(Vector) != len(Time) :
-            raise TypeError( ' the Key vector ' + InputKey + ' and its TIME does not have the same lenght: ' + str( len(Vector) ) + ' != ' + str( len(Time) ) + '.' )
+            raise TypeError( ' the Key vector ' + InputKey + ' and its TIME does not have the same length: ' + str( len(Vector) ) + ' != ' + str( len(Time) ) + '.' )
         
         
         if Numpy == False :
