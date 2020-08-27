@@ -397,10 +397,10 @@ class SimResult(object):
                 else :
                     calcStr = Key + '=' + Value
                 try :
-                    print(calcStr)
+                    # print(calcStr)
                     return self.RPNcalculator( calcStr )
                 except :
-                    pass
+                    return None
                 
         elif type(Value) is list or type(Value) is tuple :
             Value = np.array(Value)
@@ -2995,18 +2995,18 @@ class SimResult(object):
             'std' will return the stardard deviation the all the columns 
         """
         # supported operators:
-        operators = [' ','**','--','+-','++','*-','/-','=','+','-','*','/','^','sum','avg','mean','min','max','std','avg0','min0']
+        operators = [' ','**','--','+-','++','*-','/-','=','+','-','*','/','^','sum','avg','mean','min','max','std','avg0','min0','mean0']
         
         # convert string to calculation tuple
         if type( CalculationTuple ) == str :
-            verbose ( self.speak , 2 , ' the received string for CalculatedTuple was converted to tuple,\n  received: ' + CalculationTuple + '\n  converted to: ' + str( tuple( multisplit( CalculationTuple , operators ) ) ) )
+            verbose ( self.speak , 1 , ' the received string for CalculatedTuple was converted to tuple,\n  received: ' + CalculationTuple + '\n  converted to: ' + str( tuple( multisplit( CalculationTuple , operators ) ) ) )
             CalculationTuple = tuple ( multisplit( CalculationTuple , operators ) )
         elif type( CalculationTuple ) == list :
             CalculationTuple = tuple( CalculationTuple )
         if ResultName is None :
             if CalculationTuple[1] == '=' :
                 ResultName = CalculationTuple[0]
-                verbose ( self.speak , 2 , "found name '" + ResultName + "'")
+                verbose ( self.speak , 1 , "found Key name '" + ResultName + "'")
                 CalculationTuple = CalculationTuple[2:] 
             else :
                 ResultName = str( CalculationTuple )
@@ -3055,10 +3055,10 @@ class SimResult(object):
                 CalculationTuple[i] = getnumber( CalculationTuple[i] )
         
         CalculationTuple = tuple(CalculationTuple)
-        verbose ( self.speak , 2 , "calculation simplified to " + str(CalculationTuple))
+        verbose ( self.speak , 1 , "calculation simplified to " + str(CalculationTuple))
         
         
-        operators = ['+','-','*','/','^','sum','avg','mean','min','max','std','avg0','min0']
+        operators = ['+','-','*','/','^','sum','avg','mean','min','max','std','avg0','min0','mean0']
         OK = True
         Missing = []
         WrongLen = []
@@ -3189,7 +3189,7 @@ class SimResult(object):
                         CalcUnit = CalcUnit + '^' + NextUnit
                         Result = Result ** Next
                 
-                elif CalculationTuple[i] in ['sum','avg','mean','min','max','std'] :
+                elif CalculationTuple[i] in ['sum','avg','mean','min','max','std','avg0','min0','mean0'] :
                     if type( Next ) is pd.core.frame.DataFrame :
                         if CalculationTuple[i] == 'sum' :
                             Next = Next.sum(axis=1).to_numpy()
