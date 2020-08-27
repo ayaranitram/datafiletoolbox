@@ -3023,23 +3023,29 @@ class SimResult(object):
            ( 'R' , '=' , '-B' , 'C' , '/', 'A' , '+' ) 
                 that means R = -B / C + A
                 
-        special operators can be used with Attributes or DataFrames:
+        Special operators can be used with Attributes or DataFrames:
             'sum' will return the total of the all the columns
             'avg' or 'mean' will return the average of the all the columns
-            'avg0' will return the average of the all the columns, but ignoring the zeros
             'min' will return the minimum value of the all the columns at each tstep
-            'min0' will return the minimum value of the all the columns at each tstep
             'max' will return the maximum value of the all the columns at each tstep
             'std' will return the stardard deviation the all the columns 
+            
+        To ignore 0 in these calculation, the variant of the operator
+        with a '0' sufix can be used. i.e.:
+            'sum0','avg0','mean0','min0','max0','std0'
+            
+            'avg0' or 'mean0' will return the average of the all the columns
+            but ignoring the zeros in the data
+        
         """
         # supported operators:
-        operators = [' ','**','--','+-','++','*-','/-','=','+','-','*','/','^','sum','avg','mean','min','max','std','avg0','min0','mean0']
+        operators = [' ','**','--','+-','++','*-','/-','=','+','-','*','/','^','sum','avg','mean','min','max','std','sum0','avg0','mean0','min0','max0','std0']
         
         # convert string to calculation tuple
-        if type( CalculationTuple ) == str :
+        if type( CalculationTuple ) is str :
             verbose ( self.speak , 1 , ' the received string for CalculatedTuple was converted to tuple,\n  received: ' + CalculationTuple + '\n  converted to: ' + str( tuple( multisplit( CalculationTuple , operators ) ) ) )
             CalculationTuple = tuple ( multisplit( CalculationTuple , operators ) )
-        elif type( CalculationTuple ) == list :
+        elif type( CalculationTuple ) is list :
             CalculationTuple = tuple( CalculationTuple )
         if ResultName is None :
             if CalculationTuple[1] == '=' :
@@ -3096,7 +3102,7 @@ class SimResult(object):
         verbose ( self.speak , 1 , "calculation simplified to " + str(CalculationTuple))
         
         
-        operators = ['+','-','*','/','^','sum','avg','mean','min','max','std','avg0','min0','mean0']
+        operators = ['+','-','*','/','^','sum','avg','mean','min','max','std','sum0','avg0','mean0','min0','max0','std0']
         OK = True
         Missing = []
         WrongLen = []
@@ -3227,8 +3233,11 @@ class SimResult(object):
                         CalcUnit = CalcUnit + '^' + NextUnit
                         Result = Result ** Next
                 
-                elif CalculationTuple[i] in ['sum','avg','mean','min','max','std','avg0','min0','mean0'] :
+                elif CalculationTuple[i] in ['sum','avg','mean','min','max','std','sum0','avg0','mean0','min0','max0','std0'] :
                     if type( Next ) is pd.core.frame.DataFrame :
+                        if CalculationTuple[i][-1] == '0' : 
+                            Next.replace(0,np.nan, inplace=True) #ignore zeros in the data
+                            CalculationTuple[i] = CalculationTuple[i][:-1]
                         if CalculationTuple[i] == 'sum' :
                             Next = Next.sum(axis=1).to_numpy()
                         elif CalculationTuple[i] in ['avg','mean'] :
@@ -3239,10 +3248,6 @@ class SimResult(object):
                             Next = Next.max(axis=1).to_numpy()
                         elif CalculationTuple[i] == 'std' :
                             Next = Next.std(axis=1).to_numpy()
-                        elif CalculationTuple[i] in ['avg0','mean0'] :
-                            Next = Next.replace(0,np.nan).mean(axis=1).to_numpy()
-                        elif CalculationTuple[i] == 'min0' :
-                            Next = Next.replace(0,np.nan).min(axis=1).to_numpy()
                         if i == 1 : 
                             Result = Next.copy()
                     else :
@@ -3288,12 +3293,18 @@ class SimResult(object):
             print( 'MESSAGE: The provided units are not equal to the calculated units:\n    ' + str(ResultUnits) + ' != ' + Units  )
         
         self.set_Vector( str( CalculationTuple ) , Result , ResultUnits , 'float' , False )
+        
+        # a name was given, link the data to the new name
         if ResultName != str( CalculationTuple ) :
             self.vectors[ResultName] = self.vectors[ str( CalculationTuple ) ]
             self.units[ResultName] = self.units[ str( CalculationTuple ) ]
+            if not self.is_Key(ResultName) :
+                self.add_Key(ResultName) 
+            self.get_Attributes(reload=True)
             
         return { ResultName : Result }
-            
+
+
     def createDATES(self) :
         TIME = self.get_Vector('TIME')['TIME']
         start = self.start
