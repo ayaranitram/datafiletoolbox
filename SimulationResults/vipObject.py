@@ -12,6 +12,10 @@ from datafiletoolbox.common.inout import extension
 from datafiletoolbox.common.inout import verbose 
 from datafiletoolbox.common.functions import mainKey
 from datafiletoolbox.common.stringformat import date as strDate
+from datafiletoolbox.dictionaries import UniversalKeys , VIPTypesToExtractVectors
+from datafiletoolbox.common.keywordsConversions import fromECLtoVIP , fromVIPtoECL , fromCSVtoECL
+from datafiletoolbox.dictionaries import ECL2VIPtype , ECL2VIPkey , VIP2ECLtype , VIP2ECLkey
+from datafiletoolbox.dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
 
 from datetime import timedelta
 import pandas as pd
@@ -40,6 +44,7 @@ class VIP(SimResult):
         self.stripUnits()
         self.fill_FieldBasics()
         self.get_Attributes(reload=True)
+        self.initialize()
         
     def selectLoader(self,inputFile) :
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
@@ -243,10 +248,10 @@ class VIP(SimResult):
             SimResult.CSV_Variable2Verbose[ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] ] = self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i] 
             SimResult.CSV_Verbose2Variable[ self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i] ] = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] 
             CSVkeys += [ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] +':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] ]
-            ECLkey = self.fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] )
+            ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] , speak=self.speak )
             if ECLkey != None :
                 ECLkeys += [ ECLkey ]
-                VIPkey , keyType , keyName = self.fromECLtoVIP( ECLkey )
+                VIPkey , keyType , keyName = fromECLtoVIP( ECLkey , self.speak )
                 VIPkeys += [ VIPkey + ':' + keyName ]
             
             fullName = self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]
@@ -267,7 +272,7 @@ class VIP(SimResult):
                 CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i]
             else :
                 CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]
-            ECLkey = self.fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] )
+            ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] , speak=self.speak )
             Vector = self.CSV[CSVname]['[DATA]'][i::numHeaders]
             while len(Vector) > 0 and Vector[-1] == '' :
                 Vector = Vector[:-1]
@@ -415,10 +420,10 @@ class VIP(SimResult):
 
         Variable , Class , Member = self.fromECLtoCSV( key )
         
-        if key in SimResult.UniversalKeys or VIPkey in SimResult.UniversalKeys :
+        if key in UniversalKeys or VIPkey in UniversalKeys :
             keyType = 'MISCELLANEOUS'
             keyName = ''
-            if key in SimResult.UniversalKeys :
+            if key in UniversalKeys :
                 keyword = key
             else : 
                 keyword = VIPkey
@@ -442,7 +447,7 @@ class VIP(SimResult):
                         CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][col]
                     else :
                         CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col]
-                    ECLkey = self.fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][col] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] )
+                    ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][col] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] , speak=self.speak )
                     Vector = self.CSV[CSVname]['[DATA]'][col::numHeaders]
                     while len(Vector) > 0 and Vector[-1] == '' :
                         Vector = Vector[:-1]
@@ -642,8 +647,6 @@ class VIP(SimResult):
         """ 
         internal function to load a numpy vector from the summary files
         """
-        def fromECLtoVIP(key) :
-            return self.fromECLtoVIP(key)
 
         def alreadyVIP(key,SSStype):
             wellVIPkeys = ('BHP','THP')
@@ -655,7 +658,7 @@ class VIP(SimResult):
                 if key in wellVIPkeys :
                     keyName = list(self.get_Wells())
                     SSStype = ['WELL']
-                elif VIPkey in SimResult.UniversalKeys :
+                elif VIPkey in UniversalKeys :
                     keyName = 'ROOT'
                     SSStype = ['FIELD']
                 else :
@@ -686,7 +689,7 @@ class VIP(SimResult):
         if self.ECLstyle == True and forceVIP == False:
             # if key in self.keysECL :
             try :
-                VIPkey , keyType , keyName = fromECLtoVIP(key)
+                VIPkey , keyType , keyName = fromECLtoVIP( key , self.speak )
             except :
                 try :
                     VIPkey , keyType , keyName = alreadyVIP(key,SSStype)
@@ -698,7 +701,7 @@ class VIP(SimResult):
                 VIPkey , keyType , keyName = alreadyVIP(key,SSStype)
             except :
                 try :
-                    VIPkey , keyType , keyName = fromECLtoVIP(key)
+                    VIPkey , keyType , keyName = fromECLtoVIP( key , self.speak )
                 except :
                     pass
         
@@ -879,12 +882,12 @@ class VIP(SimResult):
             if self.ECLstyle :
                 self.keys = tuple( set( list(self.get_Keys()) + [Key] ) )
                 self.keysECL = tuple( set( list(self.get_Keys()) + [Key] ) )
-                VIPkey , keyType , keyName = self.fromECLtoVIP(Key)
+                VIPkey , keyType , keyName = fromECLtoVIP( Key , self.speak )
                 self.keysVIP = tuple( set( list(self.get_Keys()) + [ VIPkey +':'+ keyName ] ) )
             else :
                 self.keys = tuple( set( list(self.get_Keys()) [Key] ) )
                 self.keysVIP = tuple( set( list(self.get_Keys()) + [Key] ) )
-                ECLkey = self.fromVIPtoECL(Key,SSStype)
+                ECLkey = fromVIPtoECL(Key,SSStype,self.speak)
                 self.keysECL = tuple( set( list(self.get_Keys()) + [ECLkey] ) )
             
         else :
@@ -933,12 +936,12 @@ class VIP(SimResult):
         if SSStoExtract is None :
             SSStoExtract = list(self.results.keys())
         for sss in SSStoExtract :
-            if self.results[sss][0] in SimResult.VIPTypesToExtractVectors :
+            if self.results[sss][0] in VIPTypesToExtractVectors :
                 names = list(set( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() ))
                 atts = list( self.results[sss][1]['Data'].keys() )
                
                 for att in atts :
-                    attECL = self.fromVIPtoECL( att , self.results[sss][0] )
+                    attECL = fromVIPtoECL( att , self.results[sss][0] , self.speak )
                     if attECL is None :
                         SimResult.VIPnotECL.append( self.results[sss][0] + ' : ' + att )
                         attECL = ''
@@ -946,7 +949,7 @@ class VIP(SimResult):
                         keysListVIP.append( att + ':' + name )
                         if self.results[sss][0] == 'FIELD' and attECL != '' :
                             keysListECL.append( attECL )
-                        elif self.results[sss][0] in SimResult.VIP2ECLtype and attECL != '' :
+                        elif self.results[sss][0] in VIP2ECLtype and attECL != '' :
                             keysListECL.append( attECL + ':' + name )
         
         if len(SimResult.VIPnotECL) > 0 :
@@ -996,9 +999,9 @@ class VIP(SimResult):
                     return self.units[Key]
                 else : # if self.units[Key] is None:
                     if ':' in Key :
-                        if self.mainKey(Key) in self.units :
-                            if self.units[ self.mainKey(Key) ] is not None :
-                                return self.units[ self.mainKey(Key) ]
+                        if mainKey(Key) in self.units :
+                            if self.units[ mainKey(Key) ] is not None :
+                                return self.units[ mainKey(Key) ]
                             else :
                                 return self.extract_Unit(Key)
             if Key == 'DATES' or Key == 'DATE' :
@@ -1050,8 +1053,8 @@ class VIP(SimResult):
             KeyDict = {}
             for each in self.keys :
                 if ':' in each :
-                    Key.append(self.mainKey(each))
-                    KeyDict[self.mainKey(each)] = each
+                    Key.append( mainKey(each) )
+                    KeyDict[ mainKey(each) ] = each
                 else :
                     Key.append(each)
             Key = list( set (Key) )
@@ -1087,14 +1090,14 @@ class VIP(SimResult):
                         tempUnits[each] = self.extract_Unit(each.strip()).strip('( )').strip("'").strip('"')
             return tempUnits
     
-    def extract_Unit(self,Key) :
+    def extract_Unit(self,Key,SSStype='FIELD') :
         for sss in list(self.results.keys()) :
             for Vector in list(self.results[sss][1]['Units'].keys()) :
                 if Vector == 'DATE' or Vector == 'DATES' :
                     self.units[Vector] = 'DATE'
                 else :
                     if self.ECLstyle == True :
-                        ECLkey = self.fromVIPtoECL( Vector , self.results[sss][0] )
+                        ECLkey = fromVIPtoECL( Vector , self.results[sss][0] , self.speak )
                         if ECLkey != None :                       
                             self.units[ ECLkey ] = self.results[sss][1]['Units'][Vector].strip('( )').strip("'").strip('"')
                     if self.VIPstyle == True :
@@ -1103,13 +1106,13 @@ class VIP(SimResult):
         if self.ECLstyle == True :   
             if Key in self.units :
                 return self.units[Key]
-            elif Key in SimResult.ECL2VIPkey and SimResult.ECL2VIPkey[Key] in self.units :
-                return self.units[ self.fromECLtoVIP(Key) ]
+            elif Key in ECL2VIPkey and ECL2VIPkey[Key] in self.units :
+                return self.units[ fromECLtoVIP( Key , self.speak ) ]
         if self.VIPstyle == True :
             if Key.strip() in self.units :
                 return self.units[Key]
-            elif Key in SimResult.VIP2ECLkey and SimResult.VIP2ECLkey[Key] in self.units :
-                return self.units[ self.fromVIPtoECL[Key] ]
+            elif Key in VIP2ECLkey and VIP2ECLkey[Key] in self.units :
+                return self.units[ fromVIPtoECL( Key , SSStype , self.speak ) ] 
     
     def complete_Units(self) :
         for key in list(self.units.keys()) :
@@ -1119,7 +1122,7 @@ class VIP(SimResult):
                     if self.units[key] is None :
                         self.units[key] = self.extract_Unit(key[:key.index(':')])
                         if self.units[key] is None :
-                            VIPkey = self.fromECLtoVIP(key)
+                            VIPkey = fromECLtoVIP( key , self.speak )
                             for sss in self.results :
                                 self.units[key] = self.results[ VIPkey[1] ][1]['Units'][ VIPkey[0] ].strip('( )').strip("'").strip('"')
                                 if self.units[key] is None :
@@ -1131,7 +1134,7 @@ class VIP(SimResult):
                 else :
                     self.units[key] = self.extract_Unit(key)
                     if self.units[key] is None :
-                        VIPkey = self.fromECLtoVIP(key)
+                        VIPkey = fromECLtoVIP( key , self.speak )
                         for sss in self.results :
                             self.units[key] = self.results[ VIPkey[1] ][1]['Units'][ VIPkey[0] ].strip('( )').strip("'").strip('"')
                             if self.units[key] is None :

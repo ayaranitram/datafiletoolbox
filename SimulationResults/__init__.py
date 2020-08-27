@@ -7,8 +7,13 @@ Created on Sat May 16 20:10:06 2020
 
 from .mainObject import SimResult
 from .vipObject import VIP
-from .eclObject import ECL
-from .loader import loadSimulationResults
 
-__version__ = '0.0.20-05-19'
+try :
+    from .eclObject import ECL
+except ImportError :
+    print ( 'failed import ECL, usually due to fail to import libecl')
+
+from .loader import loadSimulationResults
+ 
+__version__ = '0.0.20-08-16'
 

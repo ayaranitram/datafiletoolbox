@@ -14,15 +14,21 @@ class UndefinedDateFormat(Exception) :
 
 import numpy as np
 
-def multisplit(string,sep=[]) :
+def multisplit(string,sep=[' '],remove=[' ']) :
     """
     receives a string and returns a list with string split by all the separators in sep.
+    the default separator is the blank space ' '.
+    use the remove parameter to indicate the separators that must not be reported in the output list.
+    by default, the blank space is not reported.
     """
     assert type(string) is str
     
     # check sep is list
     if type(sep) is str :
         sep = [sep]
+    
+    # eliminate duplicated separators
+    sep = list( set( sep ) )
     
     # sort sep by lenght
     s = len(sep)
@@ -31,31 +37,51 @@ def multisplit(string,sep=[]) :
             if len(sep[j]) < len(sep[j+1]) :
                 sep[j] , sep[j+1] = sep[j+1] , sep[j]
     
+    # initialize counters
     stringlist = []
-    i = 0
-    x = 0
-    t = len(string)
+    i , x , t = 0 , 0 , len(string)
+    # loop through the entire string
     while i < t :
+        found = False # flag for found separator
+        # look for each separator
         for se in sep :
             s = len(se)
-            if (i+s <= t) :
-                if string[i:i+s] == se :
-                    stringlist += [ string[x:i] , string[i:i+s] ]
-                    x = i+s
-                    i += s
-                    break
-        i += 1
+            if (i+s <= t) and string[i:i+s] == se :
+                stringlist += [ string[x:i] , se ]
+                x = i+s
+                i += s
+                found = True
+                break
+        i += 1 if not found else 0
     stringlist += [ string[x:] ]
-    return stringlist
+    
+    # clean the output
+    newlist = []
+    for part in stringlist :
+        if part not in remove + [''] :
+            newlist += [ part ]
+    
+    return newlist
                 
 
 def isnumeric(string) :
+    """
+    returns True if the string is a number
+    """
     assert type(string) is str
     try :
         float(string)
         return True
     except :
         return False
+
+def getnumber(string) :
+    "returns the number, as integer or float, contained in a string"
+    if isnumeric(string) :
+        try :
+            return int(string)
+        except :
+            return float(string)           
 
 def isDate(dateStr , formatIN='' , speak=False ):
     try :

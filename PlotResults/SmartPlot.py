@@ -240,12 +240,12 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
         for c in range ( NColors , len( Y_Keys ) ) :
             if is_color_like( SimResultObjects[0].get_Color(Y_Keys[c]) ) : 
                 SeriesColors[c] = SimResultObjects[0].get_Color(Y_Keys[c])
-            elif 'BHP' in Y_Keys[c] :
-                SeriesColors[c] = ('darkgray')
             elif 'THP' in Y_Keys[c] :
                 SeriesColors[c] = ('lightgray')
+            elif 'BHP' in Y_Keys[c] :
+                SeriesColors[c] = ('darkgray')
             elif 'BP' in Y_Keys[c] :
-                SeriesColors[c] = ('k')
+                SeriesColors[c] = ('black')
             elif 'QOIL' in Y_Keys[c] :
                 SeriesColors[c] = ( (0,1,0) )
             elif 'OP' in Y_Keys[c] or 'OIL' in Y_Keys[c]:

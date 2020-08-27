@@ -7,6 +7,8 @@ Created on Wed May 13 00:46:05 2020
 
 __version__ = '0.0.20-05-16'
 
+import pandas
+
 def is_SimulationResult(obj) :
     """
     returns True if the object is a SimulationResults object.
@@ -16,7 +18,7 @@ def is_SimulationResult(obj) :
 
 def mainKey(Key) :
     """
-    returns the main part (before the name if the item) of the keyword, MAIN:ITEM
+    returns the main part (before the name of the item) in the keyword, MAIN:ITEM
     """
     if type(Key) is str:
         if len(Key.strip()) > 0 :
@@ -28,7 +30,6 @@ def mainKey(Key) :
         for K in Key :
             results.append( mainKey(K) )
         return list(set(results))
-    
 
 def alternate(start=True):
     """
@@ -41,3 +42,25 @@ def alternate(start=True):
     while start == False :
         yield -1
         yield 1
+
+def wellFromAttribute( listOfAttributes ) :
+    """
+    receives a list of attributes, like:
+        [ 'WOPR:W1' , 'WOPR:W2' , 'WOPR:W3' , ... ]  
+    and return a dictionary of the well names only:
+        { 'WOPR:W1':'W1' , 'WOPR:W2':'W2' , 'WOPR:W3':'W3' , ... }  
+
+    """
+    if type( listOfAttributes ) is str :
+        listOfAttributes = listOfAttributes.split()
+    if type( listOfAttributes ) is tuple or type( listOfAttributes ) is set :
+        listOfAttributes = list( listOfAttributes )
+    if type( listOfAttributes ) is pandas.core.indexes.base.Index :
+        listOfAttributes = list( listOfAttributes )
+    if type( listOfAttributes ) is not list :
+        return {}
+
+    newNames = {}
+    for each in listOfAttributes :
+        newNames[each] = each.split(':')[-1]
+    return newNames
