@@ -5,7 +5,7 @@ Created on Thu Aug  6 14:08:49 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-06-03'
+__version__ = '0.0.20-08-27'
 
 calculations = { 
     # dictionary for the function "arithmeticVector" 
@@ -24,12 +24,12 @@ calculations = {
     # 'R' : ( -1 , '*' , 'B' , '/', 'C' , '+' , 'A'  ) 
     #   that means R = -1 * B / C + A
     
-    'LPR' : ( 'OPR' , '+', 'WPR' ) ,
-    'WCT' : ( 'WPR' , '/', 'LPR'  ) ,
-    'GOR' : ( 'GPR' , '/', 'OPR' ) ,
-    'OGR' : ( 'OPR' , '/', 'GPR' ) ,
-    'WOR' : ( 'WPR' , '/', 'OPR' ) ,
-    'OWR' : ( 'OPR' , '/', 'WPR' ) ,
-    'GLR' : ( 'GPR' , '/', 'LPR' ) ,
-    'LGR' : ( 'LPR' , '/', 'GPR' ) ,
+    'LPR' : ( 'OPR' , 'WPR' , '+' ) ,
+    'WCT' : ( 'WPR' , 'LPR' , '/' ) ,
+    'GOR' : ( 'GPR' , 'OPR' , '/' ) ,
+    'OGR' : ( 'OPR' , 'GPR' , '/' ) ,
+    'WOR' : ( 'WPR' , 'OPR' , '/' ) ,
+    'OWR' : ( 'OPR' , 'WPR' , '/' ) ,
+    'GLR' : ( 'GPR' , 'LPR' , '/' ) ,
+    'LGR' : ( 'LPR' , 'GPR' , '/' ) ,
     }
