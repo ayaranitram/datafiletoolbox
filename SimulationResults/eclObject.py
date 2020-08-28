@@ -43,6 +43,12 @@ class ECL(SimResult):
                 newPath = extension(SummaryFilePath)[2] + extension(SummaryFilePath)[1] + '.SMSPEC'
                 if os.path.isfile(newPath) :
                     SummaryFilePath = newPath
+                else:
+                    newPath = extension(SummaryFilePath)[2] + 'RESULTS/' + extension(SummaryFilePath)[1] + '.SMSPEC' 
+                    if os.path.isfile( newPath ) :
+                        SummaryFilePath = newPath
+                        verbose( self.speak , 3 , "\nWARNING: '.SMSPEC' file found in 'RESULTS' subdirectory, not in the same folder the '.DATA' is present.\n")
+                    
             if os.path.isfile(SummaryFilePath) :
                 verbose( self.speak , 1 , ' > loading summary file:\n  ' + SummaryFilePath)
                 self.results = ecl.summary.EclSum(SummaryFilePath)
