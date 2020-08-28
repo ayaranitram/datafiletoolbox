@@ -3108,7 +3108,7 @@ class SimResult(object):
         WrongLen = []
         for Req in CalculationTuple :
             if type(Req) is str :
-                if Req[0] == '-' :
+                if Req[0] == '-' and Req != '-' :
                     Req = Req[1:]
                 if self.is_Key(Req) or self.is_Attribute(Req) :
                     # is a vector with values... OK
