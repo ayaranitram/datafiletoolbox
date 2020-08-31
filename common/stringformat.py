@@ -13,6 +13,8 @@ class UndefinedDateFormat(Exception) :
     pass
 
 import numpy as np
+import pandas as pd
+import datetime as dt
 
 def multisplit(string,sep=[' '],remove=[' ']) :
     """
@@ -83,14 +85,50 @@ def getnumber(string) :
         except :
             return float(string)           
 
-def isDate(dateStr , formatIN='' , speak=False ):
-    try :
-        date(dateStr , formatIN=formatIN , speak=speak )
-        return True
-    except :
-        return False
+def isDate(dateStr , formatIN='' , speak=False , returnFormat=False ):
+    if formatIN != '' :
+        try :
+            date(dateStr , formatIN=formatIN , speak=speak , returnFormat=returnFormat )
+            if returnFormat :
+                return date(dateStr , formatIN=formatIN , speak=speak , returnFormat=True )
+            return True
+        except :
+            return False
+    
+    else :
+        try :
+            date(dateStr , formatIN='' , speak=speak )
+            if returnFormat :
+                return date(dateStr , formatIN='' , speak=speak , returnFormat=True )
+            return True
+        except :
+            pass
+    
+        formats = [ 'YYYY-MM-DD' , 'YYYY-MMM-DD' , 'MM-DD-YYYY' , 'DD-MMM-YYYY' , 'MMM-DD-YYYY' , 'YYYY-DD-MM' , 'YYYY-DD-MMM' , 'YYYYMMDD' , 'YYYYMMMDD' , 'DD-MM-YY' ,  'MMM-DD-YY' , 'MM-DD-YY'  ]
+        separators = ['-', '/' , ' ' , '\t', '_', ':', ';', ',', '.', '#', "'"]
+        for f in formats :
+            for sep in separators :
+                fIN = f.replace('-',sep) if sep != '-' else f
+                try :
+                    date(dateStr , formatIN=fIN , speak=speak )
+                    if returnFormat :
+                        return fIN
+                    return True
+                except :
+                    pass
+        
+        formats = [ 'YYYYMMDD' , 'YYYYMMMDD' ]
+        for f in formats :
+            try :
+                date(dateStr , formatIN=fIN , speak=speak )
+                if returnFormat :
+                    return f
+                return True
+            except :
+                pass
+    return False
 
-def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 ):
+def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , returnFormat=False ):
     """
     stringformat.date receives a string containing a date or a list of strings
     containing dates and changes the date format to the format especified by
@@ -166,6 +204,14 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 ):
         sample = date[0]
         output = str
 
+    if type(date) is pd._libs.tslibs.timestamps.Timestamp :
+        date = date.date()
+
+    if type(date) is dt.date :
+        date = str( date )
+        if formatIN == '' :
+            formatIN = 'YYYY-MM-DD'
+    
     if type(date) is str :
         sample = date.strip()
         date = [ date ]
@@ -173,7 +219,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 ):
 
     # look for the separator, empty string if not found
     separator = ''
-    for sep in ['/', '-' , ' ' , '\t', '_', ':', ';', '#', "'"] :
+    for sep in ['/', '-' , ' ' , '\t', '_', ':', ';', ',', '.', '#', "'"] :
         if sep in sample :
             separator = sep
             break
@@ -253,8 +299,12 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 ):
             formatIN = orderIN[3].join(formatIN)
             if speak :
                 print(' the input format is: ' + formatIN)
+
         else :
             raise UndefinedDateFormat('unable to idenfy date format, please provide with keyword formatIN')
+            
+        if returnFormat :
+            return formatIN
 
     # read input format from formatIN
     else :
@@ -324,6 +374,10 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 ):
 
     if orderOUT[5] == 0 :
         dateM = ''
+    elif orderOUT[5] == 5 :
+        dateM = orderOUT[1]
+        for i in range(len(dateOUT[dateM])) :
+            dateOUT[dateM][i] = str(int(dateOUT[dateM][i])).zfill(2) + MonthNumber2String[int(dateOUT[dateM][i])]
     elif orderOUT[5] > 2 and orderIN[5] <= 2 :
         dateM = orderOUT[1]
         for i in range(len(dateOUT[dateM])) :

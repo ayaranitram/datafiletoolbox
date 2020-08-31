@@ -5,7 +5,7 @@ Created on Wed May 29 16:22:25 2019
 @author: MCARAYA
 """
 
-__version__ = '1.0.20-06-17'
+__version__ = '1.0.20-08-30'
 
 def verbose(userLevel=0 , programLevel=0 , StringToPrint='') :
     """
@@ -84,8 +84,8 @@ def extension(filepath , NullValue='' , backSlashToSlash=True , backCompatibilit
     
     if backCompatibility :
         return ( filename , extension , path , path+filename+extension )
-    else :
-        return ( extension , filename , path , path+filename+extension )
+
+    return ( extension , filename , path , path+filename+extension )
 
 
 
