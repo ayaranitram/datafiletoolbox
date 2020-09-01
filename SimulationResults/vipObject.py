@@ -12,10 +12,12 @@ from datafiletoolbox.common.inout import extension
 from datafiletoolbox.common.inout import verbose 
 from datafiletoolbox.common.functions import mainKey
 from datafiletoolbox.common.stringformat import date as strDate
+from datafiletoolbox.common.stringformat import getnumber
 from datafiletoolbox.dictionaries import UniversalKeys , VIPTypesToExtractVectors
 from datafiletoolbox.common.keywordsConversions import fromECLtoVIP , fromVIPtoECL , fromCSVtoECL
 from datafiletoolbox.dictionaries import ECL2VIPtype , ECL2VIPkey , VIP2ECLtype , VIP2ECLkey
 from datafiletoolbox.dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
+from datafiletoolbox.common.functions import wellFromAttribute 
 
 from datetime import timedelta
 import pandas as pd
@@ -45,6 +47,8 @@ class VIP(SimResult):
         self.fill_FieldBasics()
         self.get_Attributes(reload=True)
         self.initialize()
+        self.regionNumber = self.extract_Region_Numbers()
+        self.buldSalinityVectors()
         
     def selectLoader(self,inputFile) :
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
@@ -787,7 +791,6 @@ class VIP(SimResult):
                 FieldTime = self.get_Vector('TIME')['TIME'] 
         if FieldTime is not None :
             self.fieldtime = ( min(FieldTime) , max(FieldTime) , FieldTime )
-        
     
     def get_Dates(self) :
         try :
@@ -875,6 +878,61 @@ class VIP(SimResult):
             return tuple(regionsList)
         else :
             return self.regions
+    
+    def directSSS(self,Key,SSStype):
+        SSStype = SSStype.strip()
+        if type(SSStype) is str :
+            SSS = None
+            for SSS in self.SSSfiles :
+                if extension(SSS)[1].upper().endswith( SSStype.upper() ) :
+                    break
+            if SSS is None :
+                print('SSS type ' + SSStype + ' not found')
+                return None
+        
+        SSS = extension(SSS)[1] + extension(SSS)[0]
+        Key = Key.strip()
+        if type(Key) is str :
+            if Key in self.results[SSS][1]['Data'] :
+                return self.results[SSS][1]['Data'][Key]
+            else :
+                print("Key '" + Key + "' not found in SSS " + SSStype )
+                return None
+    
+    def extract_Region_Numbers(self) :
+        Numbers = self.directSSS('#','REGION')
+        Names = self.directSSS('NAME','REGION')
+        regNum = {}
+        
+        if len(Names) != len(Numbers) :
+            print("lenght doesn't match!")
+        for i in range(len(Names)) :
+            regNum[Names[i].strip()] = getnumber(Numbers[i])
+        return regNum
+
+    def buldSalinityVectors(self) :
+        if self.is_Attribute('WSALINITY') :
+            if self.is_Attribute('WWIR') :
+                if self.is_Attribute('WWPR') :
+                    prod = self[['WWPR']]
+                elif self.is_Attribute('WOPR') :
+                    prod = self[['WOPR']]
+                elif self.is_Attribute('WGPR') :
+                    prod = self[['WGPR']]
+                else :
+                    self['WSIR'] = 'WSALINITY'
+                    self.set_Unit('WSIT', 'CONCENTRATION')
+                    return None
+            inje = self[['WWIR']]
+            salt = self[['WSALINITY']]
+            
+            for DF in [salt,prod,inje] :
+                DF.rename( columns = wellFromAttribute(DF.columns) )
+            
+            self['WSIR'] = ( salt * inje>0 ) , self.get_Unit('WSALINITY')
+            # self.set_Unit('WSIR', self.get_Unit('WSALINITY') )
+            self['WSPR'] = ( salt * prod>0 ) , self.get_Unit('WSALINITY')
+            # self.set_Unit('WSPR', self.get_Unit('WSALINITY') )
     
     def add_Key(self,Key,SSStype=None) :
         if type(Key) == str :
