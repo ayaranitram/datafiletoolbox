@@ -3814,4 +3814,212 @@ class SimResult(object):
     #     with open(RestorePath + 'json/units.sro', 'r') as file:
     #         self.units = json.load( file )
             
+    def to_RSM(self, RSMpath=None , RSMleng=12 , RSMcols=10 , ECLkeywordsOnly=True) :
+        """
+        writes all the vectors to an RSM format file
+        """
+        from decimal import Decimal
+        def RSMunits(string) :
+            RSMdict = {#'VIP unit' : [ 'ECL unit' , Multiplier , ShiftX , ShiftY ] -> ECLunit = ( ( VIP_unit + ShiftX ) * Multiplier ) + ShiftY
+                    'FRACTION' : ['','',1,0,0] ,
+                    'DIMENSIONLESS' : ['','',1,0,0] ,
+                    'KPA' : ['BARSA','',0.01,0,0] ,
+                    'STM3/KSM3' : ['SM3/SM3','',1000,0,0] ,
+                   }
+            notChange = ['KPA','K','KG','']
+            dimless = ['DIMENSIONLESS','FRACTION','UNITLESS','NONE','None','RATIO',None]
+            if string in RSMdict.keys() :
+                return RSMdict[string]
+            if string in notChange :
+                return [string,'',1,0,0]
+            if string in dimless :
+                return ['','',1,0,0]
+            if len(string) == 1 :
+                return [string,'',1,0,0]
+
+            string = string.replace('STM3','SM3')
+            
+            if string[0].upper() == 'K' :
+                ret = [string[1:],'',1E3,0,0]
+            elif string[0].upper() == 'M' :
+                ret = [string[1:],'',1E6,0,0]
+            elif string[0].upper() == 'G' :
+                ret = [string[1:],'',1E9,0,0]
+            else :
+                ret = [string,'',1,0,0]
+            
+            return ret
         
+
+        if type(RSMleng) is not int :
+            raise TypeError("RSMleng must be an integer")
+        if type(RSMcols) is not int :
+            raise TypeError("RSMcols must be an integer")  
+    
+        print('\n...working on it: writing RSM file...')
+
+        if RSMpath is None :
+            RSMpath = extension(self.path)[1]
+            for end in [ '_field' , '_well' , '_area' , '_flow' , '_gather' , '_region' ]:
+                if RSMpath.endswith(end) :
+                    RSMpath = RSMpath[:-len(end)]
+                    break 
+            RSMpath = extension(self.path)[0] + RSMpath + '.RSM'
+        elif type(RSMpath) is str :
+            if extension(RSMpath)[0].upper() != '.RSM' :
+                RSMpath = extension(RSMpath)[1] + '.RSM'
+            if extension(RSMpath)[2] == '' :
+               RSMpath = extension(self.path)[2] + RSMpath
+        RSMpath = extension(RSMpath)[3]
+
+        
+        RSMfile = open(RSMpath, 'w' )
+        
+        rsmOutput = self.name
+        for end in [ '_field' , '_well' , '_area' , '_flow' , '_gather' , '_region' ]:
+            if rsmOutput.endswith(end) :
+                rsmOutput = rsmOutput[:-len(end)]
+                break
+        
+        if ECLkeywordsOnly :
+            CleanColumns = []
+            for Key in self.keys :
+                if isECLkey(Key , maxLen=RSMleng) :
+                    CleanColumns.append(Key)
+        else :
+            CleanColumns = self.keys
+            VIPcolLen = max(nplen(np.array(mainKey(self.keys))))
+            if VIPcolLen > RSMleng :
+                verbose( self.speak , 3 , "the lenght of the columns must be set to " + str(VIPcolLen) + " to fit key names." )
+                RSMleng = VIPcolLen
+        
+        # check vectors are numeric
+        NotValueVector = []
+        for each in CleanColumns :
+            print(each)
+            if mainKey(each) in [ 'DATE' , 'DATES' , 'WNAME' ] :
+                NotValueVector.append( each )
+            elif itemKey(each) in [ 'DATE' , 'DATES' ] :
+                NotValueVector.append( each )
+            elif len(self(each)) == 0 :
+                NotValueVector.append( each )
+            elif not isnumeric( str(self(each)[0]) ) :
+                NotValueVector.append( each )
+        for each in NotValueVector :
+            print(CleanColumns.pop( CleanColumns.index(each) ))
+
+        # list of found regions
+        try :
+            REGIONS = self.regionNumber 
+        except :
+            REGIONS = {}
+            for i in range(len(self.regions)) :
+                REGIONS[self.regions[i]] = i+1
+            
+            
+        cc = 0
+        while cc < len(CleanColumns) :
+            progressbar( cc/len(CleanColumns) )
+            line = '\n\tSUMMARY OF RUN ' + rsmOutput + '\n'
+            RSMfile.write(line)
+        
+            line1 = ' \tDATE        '
+            line2 = ' \t            '
+            line3 = ' \t            '
+            line4 = ' \t            '
+            line5 = ' \t            '
+            unitMult = []
+            unitSumY = []
+            unitSumX = []
+            
+            for each in CleanColumns[ cc : cc+RSMcols-1 ] :
+                print(each)
+                if each in [ 'TIME' , 'DAY' , 'MONTH' , 'YEAR' , 'DATE' ] :
+                    line1 = line1 + '\t' + each + ' ' * (RSMleng - len(each))
+                elif itemKey(each) in [ 'TIME' , 'DAY' , 'MONTH' , 'YEAR' , 'DATE' ] :
+                    # is a VIP style keyword
+                    line1 = line1 + '\t' + itemKey(each) + ' ' * (RSMleng - len(itemKey(each)))
+                else :
+                    line1 = line1 + '\t' + mainKey(each) + ' ' * (RSMleng - len(mainKey(each)))
+        
+
+                CombiU = RSMunits( self.get_Units(each) )
+
+                line2 = line2 + '\t'  + CombiU[0] + ' ' * (RSMleng - len(CombiU[0]))
+                line3 = line3 + '\t' + CombiU[1] + ' ' * (RSMleng - len(CombiU[1]))
+        
+                unitMult.append(CombiU[2])
+                unitSumY.append(CombiU[3])
+                unitSumX.append(CombiU[4])
+                
+                if keyType(each) == 'FIELD' :
+                    Combi0 = ''
+                    CombiR=''
+                elif keyType(each) == 'REGION' :
+                    if itemKey(each) not in REGIONS.keys() :
+                        REGIONS[ itemKey(each) ] = len(REGIONS) +1
+                    CombiR = str( REGIONS[ itemKey(each) ] )
+                    Combi0 = mainKey(each)
+                else :
+                    Combi0 = itemKey(each)
+                    CombiR = ''
+                if Combi0 is None :
+                    Combi0 = ''
+                if CombiR is None :
+                    CombiR = ''
+                line4 = line4 + '\t' + Combi0 + ' ' * (RSMleng - len(Combi0))
+                line5 = line5 + '\t' + CombiR + ' ' * (RSMleng - len(CombiR))
+            line1 = line1 + '\n'
+            line2 = line2 + '\n'
+            line3 = line3 + '\n'
+            line4 = line4 + '\n'
+            line5 = line5 + '\n'
+            
+            if len(line3.strip()) == 0 :
+                line3 = line4
+                line4 = line5
+                line5 = ' \t            ' + ( ( '\t' + ( ' ' * RSMleng ) ) * (RSMcols - 1) ) + '\n'
+            
+            line = line1 + line2 + line3 + line4 + line5 # + '\n'
+            RSMfile.write(line)
+            
+            fechas = strDate(self('DATES'),formatOUT='DD-MMM-YYYY')
+            for f in range(len(fechas)) :
+                line = '\t ' + fechas[f]
+                unitN = 0
+        
+                for each in CleanColumns[ cc : cc+RSMcols-1 ] :      
+                    #  the value
+                    value = str( self(each)[f] )
+
+                    if '.' in value :
+                        if 'E' in value :
+                            value = str( ( float(value) + unitSumX[unitN] ) * unitMult[unitN] + unitSumY[unitN] )
+                        else :
+                            value = str( (float(value) + unitSumX[unitN] ) * unitMult[unitN] + unitSumY[unitN] )
+                    else :
+                        value = str( (int(value) + unitSumX[unitN] ) * unitMult[unitN] + unitSumY[unitN] )
+                        
+                    if len(value) > RSMleng :
+                        if len(str(int(float(value)))) <= RSMleng :
+                            value = str(float(value))[:RSMleng]
+                        else :
+                            value = ('%.' + str(RSMleng - 6) + 'E') % Decimal(value)
+    
+                    # preparing and printing the line
+                    if (RSMleng - len(value)) > 0 :
+                        rept = ' ' * (RSMleng - len(value))
+                    else :
+                        rept = ''
+                        
+                    line = line + '\t' + rept + value
+
+                    unitN += 1
+        
+                line = line + '\n'
+                RSMfile.write(line)
+        
+            cc += RSMcols - 1
+        
+        RSMfile.close()
+        print( "RMS file is completed, feel free to open it:\n\n '" + RSMpath + "'\n\nPlease wait for the report of the conversion to be finished." )
