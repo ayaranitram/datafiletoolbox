@@ -5,7 +5,7 @@ Created on Wed May 13 00:46:05 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-05-16'
+__version__ = '0.1.20-09-01'
 
 import pandas
 

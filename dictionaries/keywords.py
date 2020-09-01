@@ -5,7 +5,7 @@ Created on Sun Jan 19 16:03:33 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-08-06'
+__version__ = '0.0.20-09-01'
 
 # highly recommended to automatically create inverse dictionaries in the __init__ module of this folder
 

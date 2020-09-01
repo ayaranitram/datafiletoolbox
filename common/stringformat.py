@@ -7,7 +7,7 @@ Created on Wed Sep 18 12:33:46 2019
 routine intended to manipulate and transform date strings.
 """
 
-__version__ = '0.0.20-06-08'
+__version__ = '0.1.20-09-01'
 
 class UndefinedDateFormat(Exception) :
     pass

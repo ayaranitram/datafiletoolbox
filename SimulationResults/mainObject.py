@@ -5,7 +5,7 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-08-27'
+__version__ = '0.5.20-09-01'
 
 from datafiletoolbox import dictionaries
 from datafiletoolbox.Classes.Errors import OverwrittingError
