@@ -3856,7 +3856,7 @@ class SimResult(object):
         if type(RSMcols) is not int :
             raise TypeError("RSMcols must be an integer")  
     
-        print('\n...working on it: writing RSM file...')
+        print('\n...working on it: preparing the data for the RSM file...')
 
         if RSMpath is None :
             RSMpath = extension(self.path)[1]
@@ -3895,8 +3895,9 @@ class SimResult(object):
         
         # check vectors are numeric
         NotValueVector = []
+        # cc = 0
         for each in CleanColumns :
-            print(each)
+            # progressbar( cc/len(CleanColumns) )
             if mainKey(each) in [ 'DATE' , 'DATES' , 'WNAME' ] :
                 NotValueVector.append( each )
             elif itemKey(each) in [ 'DATE' , 'DATES' ] :
@@ -3905,8 +3906,9 @@ class SimResult(object):
                 NotValueVector.append( each )
             elif not isnumeric( str(self(each)[0]) ) :
                 NotValueVector.append( each )
+            # cc += 1
         for each in NotValueVector :
-            print(CleanColumns.pop( CleanColumns.index(each) ))
+            CleanColumns.pop( CleanColumns.index(each) ) 
 
         # list of found regions
         try :
@@ -3916,10 +3918,11 @@ class SimResult(object):
             for i in range(len(self.regions)) :
                 REGIONS[self.regions[i]] = i+1
             
-            
+        print('\n...working on it: writing the data into the RSM file...')
+        print()
         cc = 0
         while cc < len(CleanColumns) :
-            progressbar( cc/len(CleanColumns) )
+            # progressbar( cc/len(CleanColumns) )
             line = '\n\tSUMMARY OF RUN ' + rsmOutput + '\n'
             RSMfile.write(line)
         
@@ -3933,7 +3936,7 @@ class SimResult(object):
             unitSumX = []
             
             for each in CleanColumns[ cc : cc+RSMcols-1 ] :
-                print(each)
+
                 if each in [ 'TIME' , 'DAY' , 'MONTH' , 'YEAR' , 'DATE' ] :
                     line1 = line1 + '\t' + each + ' ' * (RSMleng - len(each))
                 elif itemKey(each) in [ 'TIME' , 'DAY' , 'MONTH' , 'YEAR' , 'DATE' ] :
@@ -4022,4 +4025,4 @@ class SimResult(object):
             cc += RSMcols - 1
         
         RSMfile.close()
-        print( "RMS file is completed, feel free to open it:\n\n '" + RSMpath + "'\n\nPlease wait for the report of the conversion to be finished." )
+        print( "RMS file is completed, feel free to open it:\n\n '" + RSMpath + "'\n" ) #"\nPlease wait for the report of the conversion to be finished." )
