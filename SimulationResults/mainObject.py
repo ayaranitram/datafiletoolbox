@@ -3850,13 +3850,11 @@ class SimResult(object):
             
             return ret
         
-
+        
         if type(RSMleng) is not int :
             raise TypeError("RSMleng must be an integer")
         if type(RSMcols) is not int :
             raise TypeError("RSMcols must be an integer")  
-    
-        print('\n...working on it: preparing the data for the RSM file...')
 
         if RSMpath is None :
             RSMpath = extension(self.path)[1]
@@ -3864,7 +3862,7 @@ class SimResult(object):
                 if RSMpath.endswith(end) :
                     RSMpath = RSMpath[:-len(end)]
                     break 
-            RSMpath = extension(self.path)[0] + RSMpath + '.RSM'
+            RSMpath = extension(self.path)[2] + RSMpath + '.RSM'
         elif type(RSMpath) is str :
             if extension(RSMpath)[0].upper() != '.RSM' :
                 RSMpath = extension(RSMpath)[1] + '.RSM'
@@ -3872,8 +3870,12 @@ class SimResult(object):
                RSMpath = extension(self.path)[2] + RSMpath
         RSMpath = extension(RSMpath)[3]
 
-        
-        RSMfile = open(RSMpath, 'w' )
+        try :
+            RSMfile = open(RSMpath, 'w' )
+            print('\n...working on it: preparing the data for the RSM file...\n      '+RSMpath)
+        except :
+            print('\n...failed to create the output RSM file...\n      '+RSMpath)
+            return False 
         
         rsmOutput = self.name
         for end in [ '_field' , '_well' , '_area' , '_flow' , '_gather' , '_region' ]:

@@ -41,7 +41,7 @@ __author__ = 'Martin Araya'
 msg = """modulos branch merged into master branch"""
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')
-print(msg)
+# print(msg)
 
 from .common.stringformat import date
 from .common.inout import extension
