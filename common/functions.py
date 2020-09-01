@@ -24,12 +24,77 @@ def mainKey(Key) :
         if len(Key.strip()) > 0 :
             return Key.strip().split(':')[0]
         else :
-            return None
+            return ''
     if type(Key) is list or type(Key) is tuple :
         results = []
         for K in Key :
             results.append( mainKey(K) )
         return list(set(results))
+
+def itemKey(Key) :
+    """
+    returns the item part (after the name of the item) in the keyword, MAIN:ITEM
+    """
+    if type(Key) is str:
+        if len(Key.strip()) > 0 :
+            if ':' in Key.strip() :
+                return Key.strip().split(':')[-1]
+        else :
+            return ''
+    if type(Key) is list or type(Key) is tuple :
+        results = []
+        for K in Key :
+            results.append( itemKey(K) )
+        return list(set(results))
+
+def keyType(Key) :
+    """
+    returns the type of key for an ECL style key:
+        FIELD
+        REGION
+        WELL
+        GROUP
+    """
+    if type(Key) is str :
+        Key = Key.strip()
+        if len(Key)>0 :
+            if Key[0] == 'F' :
+                return 'FIELD'
+            if Key[0] == 'R' :
+                return 'REGION'
+            if Key[0] == 'W' :
+                return 'WELL'
+            if Key[0] == 'G' :
+                return 'GROUP'
+            return 'OTHER'
+
+
+def isECLkey(Key,maxLen=12) :
+    """
+    returns True if the Key is ECL style
+    
+    The maximum accepted lenght for the main part of the Key can be changed 
+    with maxLen parameter. To be compatible with RSM format 12 is a good number. 
+    """
+    if type(maxLen) is not int :
+        raise TypeError("maxLen must be an integer")
+    
+    if type(Key) is list or type(Key) is tuple :
+        results = []
+        for K in Key :
+            results.append( isECLkey(K) )
+        return results
+    
+    if type(Key) is not str :
+        return False
+    if '-' in mainKey(Key) :
+        return False
+    if ' ' in mainKey(Key) :
+        return False
+    if len(mainKey(Key)) > maxLen :
+        return False
+    
+    return True
 
 def alternate(start=True):
     """

@@ -148,7 +148,8 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
 
     speak parameter set to True will print a message showing the input and output formats.
     """
-
+    npDateOnly = lambda x : x.split('T')[0]
+    
     MonthString2Number = {'JAN' :  1 ,
                           'FEB' :  2 ,
                           'MAR' :  3 ,
@@ -176,7 +177,8 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
                           12 : 'DEC'  }
 
     # define if input is a list/tuple of dates or a single date
-
+    sample = str(date)
+    
     if type(date) is list or type(date) is tuple:
         output = list
         if type(date[0]) is str :
@@ -191,8 +193,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
             
     if type(date) is np.ndarray :
         output = list
-        if str(date.dtype) == 'datetime64[ms]' :
-            npDateOnly = lambda x : x.split('T')[0]
+        if 'datetime64' in str(date.dtype) :
             date = list(np.datetime_as_string(date))
             date = list(map( npDateOnly , date ))
             formatIN = 'YYYY-MM-DD'
@@ -200,7 +201,8 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
 
     if type(date) is np.datetime64 :
         formatIN = 'YYYY-MM-DD'
-        date = [ np.datetime_as_string(date).split('T')[0] ]
+        date = list(np.datetime_as_string(date))
+        date = list(map( npDateOnly , date ))
         sample = date[0]
         output = str
 

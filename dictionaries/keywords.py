@@ -65,7 +65,7 @@ VIP2ECLkey = { #'NAME OF COLUMN in VIP sss' : 'base ECL output keyword'
            'SALES GAS' : 'USALEG' ,
            'CUM FUEL GAS' : 'FGT' ,
            'MAKEUP GAS' : 'GIMR' ,
-#               'MAKEUP GAS' : 'UMAKEG' ,
+           'MAKEUP GAS' : 'UMAKEG' ,
            'CUM MKP GAS' : 'GIMT' ,
            'FLARED GAS' : 'UFLAREG' ,
            'SHRINKAGE GAS' : 'USHRINKG' ,

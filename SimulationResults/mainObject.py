@@ -12,10 +12,11 @@ from datafiletoolbox.Classes.Errors import OverwrittingError
 from datafiletoolbox.common.stringformat import date as strDate
 from datafiletoolbox.common.stringformat import isDate 
 from datafiletoolbox.common.stringformat import multisplit , isnumeric , getnumber
-from datafiletoolbox.common.functions import is_SimulationResult , mainKey , wellFromAttribute
+from datafiletoolbox.common.functions import is_SimulationResult , mainKey , itemKey , wellFromAttribute , isECLkey , keyType
 from datafiletoolbox.common.inout import extension
 from datafiletoolbox.common.inout import verbose 
 from datafiletoolbox.PlotResults.SmartPlot import Plot
+from datafiletoolbox.common.progressbar import progressbar
 
 # from .vipObject import VIP
 # from .SimulationResults import ECL
@@ -34,6 +35,8 @@ import random
 import json
 import os
 
+# creating vectorized numpy object for len function
+nplen = np.vectorize(len)
 
 # verbose(1,1,'\n  initializing most commong units conversions...')
 verbose(0,0,convertibleUnits('SM3','MMstb',False))
@@ -372,6 +375,19 @@ class SimResult(object):
                         Value , Units = [ Value[0] ] * len(self.fieldtime[2]) , Value[1]
                     elif type(Value[1]) is None :
                         Value , Units = [ Value[0] ] * len(self.fieldtime[2]) , 'DIMENSIONLESS'
+                elif type(Value[0]) is pd.core.frame.DataFrame :
+                    if type(Value[1]) is str :
+                        Value , Units = Value[0] , Value[1]
+                    elif type(Value[1]) is list or type(Value[1]) is tuple :
+                        pass
+                        # if len(Value[1]) == len(Value[0].columns) :
+                        #     Value , Units = Value[0] , Value[1]
+                        # else :
+                        #     verbose( self.speal , 3 , "not enough units received\n received: " + str(len(Value[1])) + "\n required: " + str(len(Value[0].columns)) )
+                        #     return False
+                    elif type(Value[1]) is None :
+                        Value , Units = Value[0] , 'DIMENSIONLESS'
+                        verbose( self.speak , 3 , "no Units received, set as DIMENSIONLESS.\nto set other units use second argument.\nto set different units for each column, use '!' as separator to define the units as sufix in each name:\n i.e.: MAIN:ITEN!UNIT \n       MAIN!UNIT ")
 
                     
         if self.is_Key(Key) :
@@ -421,7 +437,34 @@ class SimResult(object):
                 pass
             else :
                 verbose(self.speak , 2 , " the 'Units' string is not recognized." )
-                
+        
+        if type(Value) is pd.core.frame.DataFrame :
+            if len(Value) == len(self.fieldtime[2]) :
+                for Col in Value.columns :
+                    if '!' in Col :
+                        Col , ThisUnits = Col.split('!')[0].strip() , Col.split('!')[1].strip()
+                    else :
+                        ThisUnits = Units
+                    if ':' in Col :
+                        ThisMain , ThisItem = Col.split(':')[0].strip() , Col.split(':')[1].strip()
+                    else :
+                        ThisMain , ThisItem = Key , Col.strip()
+                    
+                    if self.is_Key(Col) :
+                        ThisMain = Key
+                    
+                    if ThisItem == '' :
+                        ThisKey = Key
+                    elif ThisItem == Key :
+                        ThisKey = Key
+                    else :
+                        ThisKey = ThisMain + ':' + ThisItem
+
+                    self.set_Vector( ThisKey , Value[Col].to_numpy() , ThisUnits , DataType='auto' , overwrite=True)
+                return None
+            else :
+                verbose( self.speak , 3 , "the lengh of the DataFrame must coincide with the number of steps of this simulation results.")
+
         self.set_Vector( Key , Value , Units , DataType='auto' , overwrite=True)
     
     def __len__(self) :
@@ -841,9 +884,12 @@ class SimResult(object):
         return self.set_Unit(Key)    
     def set_Unit(self,Key,Unit=None,overwrite=False) :
         if type(Key) is str :
-            Key = [Key]
+            if self.is_Key(Key) :
+                Key = [Key]
+            elif self.is_Attribute(Key) :
+                Key = self.attributes[Key]
         if type(Unit) is str :
-            Unit = [Unit]
+            Unit = [Unit]*len(Key)
 
         if Unit is None and type(Key) is dict :
             keysDict = Key.copy()  
