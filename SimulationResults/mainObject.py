@@ -486,7 +486,15 @@ class SimResult(object):
             text = text + '\n STOIP @ first tstep: ' + str(self('FOIP')[0]) + ' ' + self.get_Units('FOIP')
         if self.is_Key('FGIP') :
             text = text + '\n GIP @ first tstep: ' + str(self('FGIP')[0]) + ' ' + self.get_Units('FGIP')
-            
+        
+        if len(self.get_Regions()) > 0 :
+            text = text + '\n distributed in ' + str(len(self.get_Regions())) + ' reporting region' + 's'*(len(self.get_Regions())>1) 
+        
+        text = text + '\n\n With ' + str(len(self.get_Wells())) + ' well' + 's'*(len(self.get_Wells())>1)
+        if len(self.get_Groups()) > 0 and len(self.get_Wells()) > 1 :
+            text = text + ' in ' + str(len(self.get_Groups())) + ' group' + 's'*(len(self.get_Groups())>1)
+        text = text + ':'
+        
         text = text + '\n\n production wells: ' + str( len( self.get_Producers() ) )
         if self.get_OilProducers() != [] :
             text = text + '\n    oil wells' + ' ( with GOR<' + str(self.get_GORcriteria()[0]) + str(self.get_GORcriteria()[1]) + ' ) : ' + str(len( self.get_OilProducers() )) 
