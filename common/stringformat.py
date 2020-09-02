@@ -150,6 +150,17 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
     """
     npDateOnly = lambda x : x.split('T')[0]
     
+    def splitDMMMY(string) :
+        mi,mf = -1,-1
+        for x in range(len(string)) :
+            if not string[x].isdigit() and mf == -1 :
+                mi = x
+            if string[x].isdigit() and mi > -1 :
+                mf = x+1
+                break
+        if mi > 0 and mf > 0 :
+            return [string[:mi],string[mi:mf],string[mf:]]
+    
     MonthString2Number = {'JAN' :  1 ,
                           'FEB' :  2 ,
                           'MAR' :  3 ,
@@ -175,7 +186,9 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
                           10 : 'OCT' ,
                           11 : 'NOV' ,
                           12 : 'DEC'  }
-
+    
+    separator = '' # initialize
+    
     # define if input is a list/tuple of dates or a single date
     sample = str(date)
     
@@ -198,14 +211,16 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
             date = list(map( npDateOnly , date ))
             formatIN = 'YYYY-MM-DD'
             sample = date[0]
+            separator = '-'
 
     if type(date) is np.datetime64 :
         formatIN = 'YYYY-MM-DD'
-        date = list(np.datetime_as_string(date))
-        date = list(map( npDateOnly , date ))
-        sample = date[0]
+        date = np.datetime_as_string(date)
+        date = npDateOnly( date )
+        sample = date
         output = str
-
+        separator = '-'
+        
     if type(date) is pd._libs.tslibs.timestamps.Timestamp :
         date = date.date()
 
@@ -220,15 +235,19 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
         output = str
 
     # look for the separator, empty string if not found
-    separator = ''
-    for sep in ['/', '-' , ' ' , '\t', '_', ':', ';', ',', '.', '#', "'"] :
-        if sep in sample :
-            separator = sep
-            break
+    if separator == '' :
+        for sep in ['/', '-' , ' ' , '\t', '_', ':', ';', ',', '.', '#', "'"] :
+            if sep in sample :
+                separator = sep
+                break
 
     # separate the 1st, 2nd and 3rd components of the DATEs in three lists
-    datelist = separator.join(date).split(separator)
-    datelist = [ datelist[0::3] , datelist[1::3] , datelist[2::3] ]
+    if separator == '' :
+        datelist = list(map(splitDMMMY,date))
+    else :
+        datelist = separator.join(date).split(separator)
+        datelist = [ datelist[0::3] , datelist[1::3] , datelist[2::3] ]
+    
 
 
     # if formatIN is not defined try to guess what it is
