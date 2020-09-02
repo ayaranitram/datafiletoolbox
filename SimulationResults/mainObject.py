@@ -3353,14 +3353,28 @@ class SimResult(object):
 
 
     def createDATES(self) :
-        TIME = self.get_Vector('TIME')['TIME']
-        start = self.start
-        DATE = np.empty(len(TIME), dtype='datetime64[s]')
-        for i in range(len(TIME)) :
-            DATE[i] = start + np.timedelta64( timedelta(days=TIME[i]) )
-        self.set_Vector( 'DATES' , DATE , 'DATE' , overwrite=True )
-        self.set_Vector( 'DATE' , DATE , 'DATE' , overwrite=True )
-
+        if self.is_Key('TIME') is True and self.start is not None :
+            TIME = self.get_Vector('TIME')['TIME']
+            start = self.start
+            DATE = np.empty(len(TIME), dtype='datetime64[s]')
+            for i in range(len(TIME)) :
+                DATE[i] = start + np.timedelta64( timedelta(days=TIME[i]) )
+            self.set_Vector( 'DATES' , DATE , 'DATE' , overwrite=True )
+            self.set_Vector( 'DATE' , DATE , 'DATE' , overwrite=True )
+        elif self.is_Key('YEAR') is True and self.is_Key('MONTH') is True and self.is_Key('DAY') is True :
+            YEAR = self.get_Vector('YEAR')['YEAR']
+            MONTH = self.get_Vector('MONTH')['MONTH']
+            DAY = self.get_Vector('DAY')['DAY']
+            tupleDate = lambda d : str(d).strip('()').replace(', ','-')
+            DATE = strDate(list(map(tupleDate,zip(YEAR,MONTH,DAY))),formatIN='YYYY-MM-DD',formatOUT='DD-MMM-YYYY')
+            self.set_Start( DATE[0] )
+            DATE = np.array(pd.to_datetime(DATE),dtype='datetime64[s]')
+            self.set_Vector( 'DATES' , DATE , 'DATE' , overwrite=True )
+            self.set_Vector( 'DATE' , DATE , 'DATE' , overwrite=True )
+        else :
+            verbose( self.speak , 3 , "Not possible to create 'DATE' key, the requiered data is not available")
+            return False
+            
     def createYEAR(self) :
         Years = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).year)
         self.set_Vector( 'YEAR' , Years , 'Year' , DataType='int' , overwrite=True) 
