@@ -41,11 +41,15 @@ def loadSimulationResults(FullPath=None,Simulator=None,Verbosity=2) :
     
     if Simulator in ['ECL','E100','E300','ECLIPSE','IX','INTERSECT','TNAV','TNAVIGATOR'] :
         if okECL is True :
-            return ECL(FullPath,Verbosity)
+            OBJ = ECL(FullPath,Verbosity)
         else :
             print( 'ECL object not loaded')
-    if Simulator in ['VIP'] :
-        return VIP(FullPath,Verbosity)
-    if Simulator in ['NX','NEXUS']:
-        return VIP(FullPath,Verbosity)
-
+    elif Simulator in ['VIP'] :
+        OBJ = VIP(FullPath,Verbosity)
+    elif Simulator in ['NX','NEXUS']:
+        OBJ = VIP(FullPath,Verbosity)
+    
+    if Verbosity != 0 :
+        print(OBJ.__repr__())
+    return OBJ
+    
