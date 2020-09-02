@@ -3829,9 +3829,11 @@ class SimResult(object):
     #     with open(RestorePath + 'json/units.sro', 'r') as file:
     #         self.units = json.load( file )
             
-    def to_RSM(self, RSMpath=None , RSMleng=12 , RSMcols=10 , ECLkeywordsOnly=True) :
+    def to_RSM(self, Keys='--all' , RSMpath=None , RSMleng=12 , RSMcols=10 , includeDATE=True , ECLkeywordsOnly=True) :
         """
-        writes all the vectors to an RSM format file
+        writes the selected vectors, or all the vectors by default, to an RSM format file.
+        
+        
         """
         from decimal import Decimal
         def RSMunits(string) :
@@ -3865,11 +3867,34 @@ class SimResult(object):
             
             return ret
         
+        includeDATE = bool(includeDATE)
+        ECLkeywordsOnly = bool(ECLkeywordsOnly)
+        
         
         if type(RSMleng) is not int :
             raise TypeError("RSMleng must be an integer")
         if type(RSMcols) is not int :
             raise TypeError("RSMcols must be an integer")  
+
+        if type(Keys) is str and len(self.get_Keys(Keys)) == 0 and RSMpath is None :
+            Keys = Keys.strip()
+            if os.path.isfile(extension(Keys)[3]) :
+                RSMpath = Keys
+                Keys = '--all'
+            elif os.path.isdir(extension(Keys)[3]) :
+                RSMpath = extension(self.path)[1]
+                for end in [ '_field' , '_well' , '_area' , '_flow' , '_gather' , '_region' ]:
+                    if RSMpath.endswith(end) :
+                        RSMpath = RSMpath[:-len(end)]
+                        break 
+                if extension(Keys[-1])[3] == '/' :
+                    RSMpath = extension(Keys[-1])[3] + RSMpath + '.RSM'
+                else :
+                    RSMpath = extension(Keys[-1])[3] + '/' + RSMpath + '.RSM'
+                Keys = '--all'
+            elif os.path.isdir(extension(Keys)[2]) :
+                RSMpath = extension(Keys)[2] + extension(Keys)[1] + '.RSM'
+                Keys = '--all'
 
         if RSMpath is None :
             RSMpath = extension(self.path)[1]
@@ -3880,7 +3905,7 @@ class SimResult(object):
             RSMpath = extension(self.path)[2] + RSMpath + '.RSM'
         elif type(RSMpath) is str :
             if extension(RSMpath)[0].upper() != '.RSM' :
-                RSMpath = extension(RSMpath)[1] + '.RSM'
+                RSMpath = extension(RSMpath)[2] + extension(RSMpath)[1] + '.RSM'
             if extension(RSMpath)[2] == '' :
                RSMpath = extension(self.path)[2] + RSMpath
         RSMpath = extension(RSMpath)[3]
@@ -3898,17 +3923,34 @@ class SimResult(object):
                 rsmOutput = rsmOutput[:-len(end)]
                 break
         
-        if ECLkeywordsOnly :
-            CleanColumns = []
-            for Key in self.keys :
-                if isECLkey(Key , maxLen=RSMleng) :
-                    CleanColumns.append(Key)
+        if Keys == '--all' :
+            if ECLkeywordsOnly :
+                CleanColumns = []
+                for Key in self.keys :
+                    if isECLkey(Key , maxLen=RSMleng) :
+                        CleanColumns.append(Key)
+            else :
+                CleanColumns = self.keys
+                VIPcolLen = max(nplen(np.array(mainKey(self.keys))))
+                if VIPcolLen > RSMleng :
+                    verbose( self.speak , 3 , "\nIMPORTANT: the lenght of the columns must be set to " + str(VIPcolLen) + " to fit key names." )
+                    RSMleng = VIPcolLen
         else :
-            CleanColumns = self.keys
-            VIPcolLen = max(nplen(np.array(mainKey(self.keys))))
-            if VIPcolLen > RSMleng :
-                verbose( self.speak , 3 , "the lenght of the columns must be set to " + str(VIPcolLen) + " to fit key names." )
-                RSMleng = VIPcolLen
+            CleanColumns = []
+            if type(Keys) is str :
+                Keys = [ Keys ]
+            for K in Keys :
+                if len( self.get_KeysFromAttribute( K ) ) > 0 :
+                    CleanColumns += self.get_KeysFromAttribute( K )
+                elif len( self.get_Keys( K ) ) > 0 :
+                    CleanColumns += list( self.get_KeysFromAttribute( K ) )
+                    verbose( self.speak , 3 , "\nMESSAGE: " + str( len( self.get_Keys( K ) ) ) + " keys found for the pattern '" + K + "':\n" + str( self.get_Keys( K ) ).strip('()') )
+                else :
+                    verbose( self.speak , 3 , "\nWARNING: the key '" + K + "' is not valid.")
+        
+        if len(CleanColumns) == 0 :
+            verbose( self.speak , 3 , "\nERROR: no valid keys found to export to the RSM.")
+            return False
         
         # check vectors are numeric
         NotValueVector = []
@@ -3926,6 +3968,43 @@ class SimResult(object):
             # cc += 1
         for each in NotValueVector :
             CleanColumns.pop( CleanColumns.index(each) ) 
+        
+        # move the following keys to the front
+        for each in ['YEARS', 'YEAR', 'DAY', 'MONTH', 'TIME', 'DATES', 'DATE'] :
+            if each in CleanColumns :
+                CleanColumns.pop( CleanColumns.index(each) )
+                CleanColumns = [each] + CleanColumns
+        
+        # create DATE key if required
+        if 'DATE' in CleanColumns or 'DATES' in CleanColumns or includeDATE :
+            if not self.is_Key('DATE') :
+                if self.is_Key('DATES') :
+                    self['DATE'] = 'DATES'
+                else :
+                    try:
+                        self.createDATES()
+                        verbose( self.speak , 3 , "MESSAGE: DATE key created" )
+                    except :
+                        pass
+        
+        if includeDATE :
+            if self.is_Key('DATE') :
+                if 'DATE' not in CleanColumns :
+                    verbose( self.speak , 3 , "MESSAGE: added 'DATE'")
+                    CleanColumns = ['DATE'] + CleanColumns
+            else :
+                if self.createDATES() is None :
+                    verbose( self.speak , 3 , "MESSAGE: DATE created and added to the RSM" )
+                    CleanColumns = ['DATE'] + CleanColumns
+                else :
+                    verbose( self.speak , 3 , "WARNING: DATE key is not available." )
+                    
+                    
+        
+        if 'DATE' in CleanColumns and 'DATES' in CleanColumns :
+            if (self('DATE') == self('DATES')).all() :
+                CleanColumns.pop( CleanColumns.index('DATES') )
+                verbose( self.speak , 2 , "MESSAGE: removed duplicated key DATES")
 
         # list of found regions
         try :
@@ -3937,6 +4016,45 @@ class SimResult(object):
             
         print('\n...working on it: writing the data into the RSM file...')
         print()
+        
+        # prepare the time column
+        fechas = None
+        if self.is_Key('DATE') :
+            fechas = strDate(self('DATE'),formatOUT='DD-MMM-YYYY')
+            CleanColumns.pop( CleanColumns.index('DATE') )
+        elif self.is_Key('TIME') :
+            fechas = list(map(str,self('TIME')))
+            verbose( self.speak , 3 , "WARNING: DATE key is not available, will use TIME as index to create the RSM." )
+        elif self.is_Key('YEAR') or self.is_Key('MONTH') or self.is_Key('DAY') :
+            T = []
+            for t in ['DAY','MONTH','YEAR'] :
+                if self.is_Key(t) :
+                    T.append(t)
+            if len(T) == 1 :
+                fecha = list(map(str,self(T[0])))
+                verbose( self.speak , 3 , "WARNING: neither DATE or TIME keys are available,\nthe         the key '" + T[0] + "' will be used as index to create the RSM." )
+            elif len(T) == 2 :
+                formatStr = lambda s : str(s[0])+'-'+str(s[1]) 
+                fechas = list(map(formatStr,zip(T[0],T[1])))
+                verbose( self.speak , 3 , "WARNING: neither DATE or TIME keys are available,\nthe         the keys '" + T[0] + "'-'" + T[1] + "' will be used as index to create the RSM." )
+            elif len(T) == 3 :
+                formatStr = lambda s : str(s[0])+'-'+str(s[1])+'-'+str(s[2])
+                fechas = list(map(formatStr,zip(T[0],T[1],T[2])))
+                verbose( self.speak , 3 , "WARNING: neither DATE or TIME keys are available,\nthe         the keys '" + T[0] + "'-'" + T[1] + "'-'" + T[2] + "' will be used as index to create the RSM." )
+        else :
+            FieldKeys = list(self.get_Keys('FPR*')) + list(self.get_Keys('F*T'))
+            for F in ['FOPT','FGPT','FPRH','FPR','FPRP','FWIT','FGIT','FWPT'] :
+                if F in FieldKeys :
+                    fechas = list(map(str,self(F)))
+                    verbose( self.speak , 3 , "WARNING: neither DATE or TIME keys are available,\nthe         the key '" + F + "' will be used as index to create the RSM." )
+                    break
+        if fechas is None :
+            for K in CleanColumns :
+                if self.is_Key(K) :
+                    fechas = list(map(str,self(K)))
+                    verbose( self.speak , 3 , "WARNING: neither DATE or TIME keys are available,\nthe         the key '" + K + "' will be used as index to create the RSM." )
+                    break
+        
         cc = 0
         while cc < len(CleanColumns) :
             # progressbar( cc/len(CleanColumns) )
@@ -3965,7 +4083,7 @@ class SimResult(object):
 
                 CombiU = RSMunits( self.get_Units(each) )
 
-                line2 = line2 + '\t'  + CombiU[0] + ' ' * (RSMleng - len(CombiU[0]))
+                line2 = line2 + '\t' + CombiU[0] + ' ' * (RSMleng - len(CombiU[0]))
                 line3 = line3 + '\t' + CombiU[1] + ' ' * (RSMleng - len(CombiU[1]))
         
                 unitMult.append(CombiU[2])
@@ -4002,8 +4120,7 @@ class SimResult(object):
             
             line = line1 + line2 + line3 + line4 + line5 # + '\n'
             RSMfile.write(line)
-            
-            fechas = strDate(self('DATES'),formatOUT='DD-MMM-YYYY')
+                             
             for f in range(len(fechas)) :
                 line = '\t ' + fechas[f]
                 unitN = 0
