@@ -1690,9 +1690,10 @@ class SimResult(object):
         returns a list of Keys for the given attribute
         """
         if self.is_Key( Attribute ) :
-            return Attribute
+            return [ Attribute ]	
         if self.is_Attribute( Attribute ) :
             return self.attributes[ Attribute ]
+        return []
 
 
     def add_Key(self,Key) :
