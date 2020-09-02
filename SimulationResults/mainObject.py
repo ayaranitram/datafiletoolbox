@@ -3913,6 +3913,7 @@ class SimResult(object):
         try :
             RSMfile = open(RSMpath, 'w' )
             print('\n...working on it: preparing the data for the RSM file...\n      '+RSMpath)
+            RSMfile.close()
         except :
             print('\n...failed to create the output RSM file...\n      '+RSMpath)
             return False 
@@ -4055,6 +4056,8 @@ class SimResult(object):
                     verbose( self.speak , 3 , "WARNING: neither DATE or TIME keys are available,\nthe         the key '" + K + "' will be used as index to create the RSM." )
                     break
         
+        RSMfile = open(RSMpath, 'w' )
+        
         cc = 0
         while cc < len(CleanColumns) :
             # progressbar( cc/len(CleanColumns) )
@@ -4160,3 +4163,9 @@ class SimResult(object):
         
         RSMfile.close()
         print( "RMS file is completed, feel free to open it:\n\n '" + RSMpath + "'\n" ) #"\nPlease wait for the report of the conversion to be finished." )
+        try :
+            RSMfile.close()
+        except :
+            pass
+        return None
+        
