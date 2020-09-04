@@ -443,8 +443,11 @@ class SimResult(object):
                 for Col in Value.columns :
                     if '!' in Col :
                         Col , ThisUnits = Col.split('!')[0].strip() , Col.split('!')[1].strip()
-                    else :
+                    elif Units is not None :
                         ThisUnits = Units
+                    else :
+                        ThisUnits = 'DIMENSIONLESS'
+                        
                     if ':' in Col :
                         ThisMain , ThisItem = Col.split(':')[0].strip() , Col.split(':')[1].strip()
                     else :
