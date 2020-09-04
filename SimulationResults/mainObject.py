@@ -316,6 +316,7 @@ class SimResult(object):
         """
         self.get_Producers()
         self.get_Injectors()
+        
     
     def __call__(self,Key=None,Index=None) :
         if Index is None :
@@ -389,7 +390,6 @@ class SimResult(object):
                         Value , Units = Value[0] , 'DIMENSIONLESS'
                         verbose( self.speak , 3 , "no Units received, set as DIMENSIONLESS.\nto set other units use second argument.\nto set different units for each column, use '!' as separator to define the units as sufix in each name:\n i.e.: MAIN:ITEN!UNIT \n       MAIN!UNIT ")
 
-                    
         if self.is_Key(Key) :
             verbose(self.speak,3,"WARNING, the key '" + Key + "' is already in use. It will be overwritten!")
             
@@ -801,8 +801,7 @@ class SimResult(object):
         
     def get_GORcriteria( self ) :
         return self.GORcriteria
-        
-        
+            
     def set_plotUnits(self,UnitSystem_or_CustomUnitsDictionary='FIELD') :
         if type(UnitSystem_or_CustomUnitsDictionary) is str :
             if UnitSystem_or_CustomUnitsDictionary.upper() in ['F','FIELD'] :

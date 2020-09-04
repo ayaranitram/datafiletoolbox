@@ -5,7 +5,7 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.20-09-01'
+__version__ = '0.1.20-09-04'
 
 from datafiletoolbox.SimulationResults.mainObject import SimResult
 from datafiletoolbox.common.inout import extension
@@ -899,6 +899,39 @@ class VIP(SimResult):
                 print("Key '" + Key + "' not found in SSS " + SSStype )
                 return None
     
+    def get_VIPkeys(self,SSStype=None) :
+        SSStype = SSStype.strip()
+        if type(SSStype) is str :
+            SSS = None
+            for SSS in self.SSSfiles :
+                if extension(SSS)[1].upper().endswith( SSStype.upper() ) :
+                    break
+            if SSS is None :
+                print('SSS type ' + SSStype + ' not found')
+                return None
+            else :
+                SSS = [ extension(SSS)[1] + extension(SSS)[0] ]
+        elif SSStype is None :
+            SSS = []
+            for each in self.SSSfiles :
+                SSS += [ extension(SSS)[1] + extension(SSS)[0] ]
+        elif type(SSStype) is list or type(SSStype) is tuple :
+            SSS = []
+            for Stype in SSStype :
+                for Sfile in self.SSSfiles :
+                    if extension(Sfile)[1].upper().endswith( Stype.upper() ) :
+                        SSS += [ extension(SSS)[1] + extension(SSS)[0] ]
+            if SSS == [] :
+                print('SSS type ' + SSStype + ' not found')
+                return None
+        
+        output = []
+        for each in SSS :
+            output += list( self.results[each][1]['Data'].keys() )
+        return output         
+
+
+
     def extract_Region_Numbers(self) :
         Numbers = self.directSSS('#','REGION')
         Names = self.directSSS('NAME','REGION')
@@ -1201,7 +1234,7 @@ class VIP(SimResult):
                         verbose( self.speak , 3 , 'impossible to found unit system for key ' + key )
                     else :
                         verbose( self.speak , 1 , 'found unit system ' + self.units[key] + ' for key ' + key )
-                    
+    
     def OUTPAVG(self,KeyArguments=None,ECLkey=None) :
         if ECLkey is not None :
             if type(ECLkey) is str :
@@ -1296,4 +1329,49 @@ class VIP(SimResult):
                 self.OUTPAVG(ECLkey=WBPkey+':'+W)
             return None
 
-
+    def get_TotalReservoirVolumes(self) :
+        # for FIELD
+        rv = []
+        for each in ['FVPRO','FVPRG','FVPRW'] :
+            if self.is_Key(each) :
+                rv.append( each )
+        if len(rv) == 1 :
+            self['FVPR'] = rv[0]
+        elif len(rv) == 2 :
+            self['FVPR'] = rv[0] + ' ' + rv[1] + ' +'
+        elif len(rv) == 3 :
+            self['FVPR'] = rv[0] + ' ' + rv[1] + ' + ' + rv[2] + ' +'
+        
+        # for WELL
+        rv = []
+        for each in ['WVPRO','WVPRG','WVPRW'] :
+            if self.is_Attribute(each) :
+                rv.append( each )
+        if len(rv) == 1 :
+            self['WVPR'] = rv[0]
+        elif len(rv) == 2 :
+            self['WVPR'] = rv[0] + ' ' + rv[1] + ' +'
+        elif len(rv) == 3 :
+            self['WVPR'] = rv[0] + ' ' + rv[1] + ' + ' + rv[2] + ' +'
+        
+        # for GROUP
+        rv = []
+        for each in ['GVPRO','GVPRG','GVPRW'] :
+            if self.is_Attribute(each) :
+                rv.append( each )
+        if len(rv) == 1 :
+            self['GVPR'] = rv[0]
+        elif len(rv) == 2 :
+            self['GVPR'] = rv[0] + ' ' + rv[1] + ' +'
+        elif len(rv) == 3 :
+            self['GVPR'] = rv[0] + ' ' + rv[1] + ' + ' + rv[2] + ' +'
+        rv = []
+        for each in ['GVIRO','GVIRG','GVIRW'] :
+            if self.is_Attribute(each) :
+                rv.append( each )
+        if len(rv) == 1 :
+            self['GVIR'] = rv[0]
+        elif len(rv) == 2 :
+            self['GVIR'] = rv[0] + ' ' + rv[1] + ' +'
+        elif len(rv) == 3 :
+            self['GVIR'] = rv[0] + ' ' + rv[1] + ' + ' + rv[2] + ' +'

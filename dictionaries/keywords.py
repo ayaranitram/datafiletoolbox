@@ -5,7 +5,7 @@ Created on Sun Jan 19 16:03:33 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-09-01'
+__version__ = '0.0.20-09-04'
 
 # highly recommended to automatically create inverse dictionaries in the __init__ module of this folder
 
@@ -40,6 +40,7 @@ VIP2ECLkey = { #'NAME OF COLUMN in VIP sss' : 'base ECL output keyword'
            'BHP' : 'BHP' ,
            'THP' : 'THP' ,
            'AVG PRES' : 'BP' ,
+           'DRWDN PRES' : 'UDD' ,
            'OIL-IN-PLACE' : 'OIP' ,
            'GAS-IN-PLACE' : 'GIP' ,
            'HCPV PRES' : 'PR' ,
@@ -50,29 +51,42 @@ VIP2ECLkey = { #'NAME OF COLUMN in VIP sss' : 'base ECL output keyword'
            'GAS POT INJ' : 'GPI' ,
            'WTR POT INJ' : 'WPI' ,
            'NGL FEED RATE' : 'UNGLFR' ,
-           'NGL LIQ RATE' : 'UNGLLR' ,
-#               'NGL LIQ RATE' : 'NLPR' ,
+           'NGL LIQ RATE' : 'NLPR' , # 'UNGLLR' 
            'NGL VAP RATE' : 'UNGLVR' ,
            'CUM NGL PROD' : 'NLPT' ,
-#               'LPG FEED RATE' : 'O6PR' ,
+           # 'LPG FEED RATE' : 'O6PR' ,
            'LPG FEED RATE' : 'ULPGFR' ,
-#               'LPG LIQ RATE' : 'O6PR' ,
+           # 'LPG LIQ RATE' : 'O6PR' ,
            'LPG LIQ RATE' : 'ULPGLR' ,
            'LPG VAP RATE' : 'ULPGVR' ,
            'CUM LPG PROD' : 'O6PT' ,
            'FUEL GAS' : 'FGR' ,
-#               'FUEL GAS' : 'UFUELG' ,
-           'SALES GAS' : 'USALEG' ,
-           'CUM FUEL GAS' : 'FGT' ,
-           'MAKEUP GAS' : 'GIMR' ,
-           'MAKEUP GAS' : 'UMAKEG' ,
+           'CUM FUEL GAS' : 'FGT' ,#          
+           'FUEL GAS' : 'UFUELG' ,
+           'SALES GAS' : 'SGR' , # 'USALEG' 
+           'CUM SALES GAS' : 'SGT' ,
+           'MAKEUP GAS' : 'GIMR' , # 'UMAKEG' 
            'CUM MKP GAS' : 'GIMT' ,
-           'FLARED GAS' : 'UFLAREG' ,
+           'FLARED GAS' : 'UFLARER' ,
+           'CUM FLARED GAS' : 'UFLARET' ,
            'SHRINKAGE GAS' : 'USHRINKG' ,
            '# PROD' : 'MWPR' ,
            '# GLIFT' : 'MWPL' ,
            '# WINJ' : 'UAWI' ,
            '# GINJ' : 'UAGI' ,
+           '#ACTIVE' : 'UACTIWELL' ,
+           'RES OIL P RATE' : 'FVPRO' ,
+           'RES GAS P RATE' : 'FVPRG' ,
+           'RES WTR P RATE' : 'FVPRW' ,
+           'RES OIL I RATE' : 'FVIRO' ,
+           'RES GAS I RATE' : 'FVIRG' ,
+           'RES WTR I RATE' : 'FVIRW' ,
+           'CUM RES OIL PR' : 'FVPTO' ,
+           'CUM RES GAS PR' : 'FVPTG' ,
+           'CUM RES WTR PR' : 'FVPTW' ,
+           'CUM RES OIL IN' : 'FVITO' ,
+           'CUM RES GAS IN' : 'FVITG' ,
+           'CUM RES WTR IN' : 'FVITW' ,
            }
 
 VIP2ECLtype = {'WELL' : 'W' ,
