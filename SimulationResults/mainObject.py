@@ -594,7 +594,7 @@ class SimResult(object):
         if 'WaterInjectors' not in self.wellsLists or reload is True :
             verbose( self.printMessages , 1 , '# extrating data to count water injection wells' )
             if self.is_Attribute('WWIR') :
-                self.wellsLists['WaterInjectors'] = list( self[['WWIR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) 
+                self.wellsLists['WaterInjectors'] = list( wellFromAttribute( (self[['WWIR']].replace(0,np.nan).dropna(axis=1,how='all')).columns ).values() ) 
             else :
                 self.wellsLists['WaterInjectors'] = []
         return self.wellsLists['WaterInjectors']
@@ -606,7 +606,7 @@ class SimResult(object):
         if 'GasInjectors' not in self.wellsLists or reload is True :
             verbose( self.printMessages , 1 , '# extrating data to count gas injection wells' )
             if self.is_Attribute('WGIR') :
-                self.wellsLists['GasInjectors'] = list( self[['WGIR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) 
+                self.wellsLists['GasInjectors'] = list( wellFromAttribute( (self[['WGIR']].replace(0,np.nan).dropna(axis=1,how='all')).columns ).values() ) 
             else :
                 self.wellsLists['GasInjectors'] = []
         return self.wellsLists['GasInjectors']
@@ -618,7 +618,7 @@ class SimResult(object):
         if 'OilInjectors' not in self.wellsLists or reload is True :
             verbose( self.printMessages , 1 , '# extrating data to count oil injection wells' )
             if self.is_Attribute('WOIR') :
-                self.wellsLists['OilInjectors'] = list( self[['WOIR']].replace(0,np.nan).dropna(axis=1,how='all').columns ) 
+                self.wellsLists['OilInjectors'] = list( wellFromAttribute( (self[['WOIR']].replace(0,np.nan).dropna(axis=1,how='all')).columns ).values() ) 
             else :
                 self.wellsLists['OilInjectors'] = []
         return self.wellsLists['OilInjectors']
