@@ -3838,7 +3838,7 @@ class SimResult(object):
     #     with open(RestorePath + 'json/units.sro', 'r') as file:
     #         self.units = json.load( file )
             
-    def to_RSM(self, Keys='--all' , RSMpath=None , RSMleng=12 , RSMcols=10 , includeDATE=True , ECLkeywordsOnly=True) :
+    def to_RSM(self, Keys='--all' , RSMpath=None , RSMleng=12 , RSMcols=10 , includeDATE=True , ECLkeywordsOnly=True , RegionNames=False) :
         """
         writes the selected vectors, or all the vectors by default, to an RSM format file.
         
@@ -4017,12 +4017,12 @@ class SimResult(object):
                 verbose( self.speak , 2 , "MESSAGE: removed duplicated key DATES")
 
         # list of found regions
-        try :
+        try : #if type(self) is VIP :
             REGIONS = self.regionNumber 
-        except :
+        except : # else :
             REGIONS = {}
             for i in range(len(self.regions)) :
-                REGIONS[self.regions[i]] = i+1
+                REGIONS[self.regions[i]] = self.regions[i]
             
         print('\n...working on it: writing the data into the RSM file...')
         print()
@@ -4109,7 +4109,10 @@ class SimResult(object):
                     if itemKey(each) not in REGIONS.keys() :
                         REGIONS[ itemKey(each) ] = len(REGIONS) +1
                     CombiR = str( REGIONS[ itemKey(each) ] )
-                    Combi0 = mainKey(each)
+                    if RegionNames :
+                        Combi0 = itemKey(each).strip() if itemKey(each).strip() != CombiR.strip() else mainKey(each)
+                    else :
+                        Combi0 = ''
                 else :
                     Combi0 = itemKey(each)
                     CombiR = ''
@@ -4171,7 +4174,7 @@ class SimResult(object):
             cc += RSMcols - 1
         
         RSMfile.close()
-        print( "RMS file is completed, feel free to open it:\n\n '" + RSMpath + "'\n" ) #"\nPlease wait for the report of the conversion to be finished." )
+        print( "the RMS file is completed, feel free to open it:\n\n '" + RSMpath + "'\n" ) #"\nPlease wait for the report of the conversion to be finished." )
         try :
             RSMfile.close()
         except :
