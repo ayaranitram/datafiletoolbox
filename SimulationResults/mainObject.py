@@ -5,7 +5,7 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.5.20-09-01'
+__version__ = '0.5.20-09-07'
 
 from datafiletoolbox import dictionaries
 from datafiletoolbox.Classes.Errors import OverwrittingError
@@ -317,7 +317,6 @@ class SimResult(object):
         self.get_Producers()
         self.get_Injectors()
         
-    
     def __call__(self,Key=None,Index=None) :
         if Index is None :
             Index = self.DTindex
@@ -413,9 +412,9 @@ class SimResult(object):
                 else :
                     calcStr = Key + '=' + Value
                 try :
-                    # print(calcStr)
                     return self.RPNcalculator( calcStr )
                 except :
+                    verbose( self.speak , 2 , "failed to treat '" + Value + "' as a calculation string." )
                     return None
                 
         elif type(Value) is list or type(Value) is tuple :
@@ -3329,10 +3328,10 @@ class SimResult(object):
         elif len( set( SameUnits ) ) == 1 :
             Units = SameUnits[0]
         else :
-            Units = Units[0]
-            for i in range(1,len( Units )) :
-                Units.append( CalculationTuple[2*i-1] )
-                Units.append( Units[i] )
+            # Units = SameUnits[0]
+            # for i in range(1,len( SameUnits )) :
+            #     Units.append( CalculationTuple[2*i-1] )
+            #     Units.append( SameUnits[i] )
             Units = str(Units)
             
         if ResultUnits is None :
@@ -3349,7 +3348,7 @@ class SimResult(object):
         else :
             print( 'MESSAGE: The provided units are not equal to the calculated units:\n    ' + str(ResultUnits) + ' != ' + Units  )
         
-        self.set_Vector( str( CalculationTuple ) , Result , ResultUnits , 'float' , False )
+        self.set_Vector( str( CalculationTuple ) , Result , ResultUnits , 'float' , True )
         
         # a name was given, link the data to the new name
         if ResultName != str( CalculationTuple ) :
