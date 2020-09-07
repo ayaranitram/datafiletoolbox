@@ -1330,48 +1330,55 @@ class VIP(SimResult):
             return None
 
     def get_TotalReservoirVolumes(self) :
-        # for FIELD
-        rv = []
-        for each in ['FVPRO','FVPRG','FVPRW'] :
-            if self.is_Key(each) :
-                rv.append( each )
-        if len(rv) == 1 :
-            self['FVPR'] = rv[0]
-        elif len(rv) == 2 :
-            self['FVPR'] = rv[0] + ' ' + rv[1] + ' +'
-        elif len(rv) == 3 :
-            self['FVPR'] = rv[0] + ' ' + rv[1] + ' + ' + rv[2] + ' +'
         
-        # for WELL
-        rv = []
-        for each in ['WVPRO','WVPRG','WVPRW'] :
-            if self.is_Attribute(each) :
-                rv.append( each )
-        if len(rv) == 1 :
-            self['WVPR'] = rv[0]
-        elif len(rv) == 2 :
-            self['WVPR'] = rv[0] + ' ' + rv[1] + ' +'
-        elif len(rv) == 3 :
-            self['WVPR'] = rv[0] + ' ' + rv[1] + ' + ' + rv[2] + ' +'
+        for IP in ['I','P'] :
+            for TR in ['R','T'] :
+                # for FIELD
+                for OGW in ['O','G','W'] :
+                    rv = []
+                    key = 'FV'+IP+TR+OGW
+                    if self.is_Key( key ) :
+                        rv.append( key )
+                
+                key = 'FV'+IP+TR
+                if len(rv) > 0 :
+                    verbose( self.speak , 1 , 'adding up reservoir volumes for ' + key )
+                    
+                if len(rv) == 1 :
+                    self[key] = self(rv[0]) , self.get_Units(rv[0])
+                elif len(rv) == 2 :
+                    self[key] = self(rv[0]) + self(rv[1]) , self.get_Units(rv[0])
+                elif len(rv) == 3 :
+                    self[key] = self(rv[0]) + self(rv[1]) + self(rv[2]) , self.get_Units(rv[0])
         
-        # for GROUP
-        rv = []
-        for each in ['GVPRO','GVPRG','GVPRW'] :
-            if self.is_Attribute(each) :
-                rv.append( each )
-        if len(rv) == 1 :
-            self['GVPR'] = rv[0]
-        elif len(rv) == 2 :
-            self['GVPR'] = rv[0] + ' ' + rv[1] + ' +'
-        elif len(rv) == 3 :
-            self['GVPR'] = rv[0] + ' ' + rv[1] + ' + ' + rv[2] + ' +'
-        rv = []
-        for each in ['GVIRO','GVIRG','GVIRW'] :
-            if self.is_Attribute(each) :
-                rv.append( each )
-        if len(rv) == 1 :
-            self['GVIR'] = rv[0]
-        elif len(rv) == 2 :
-            self['GVIR'] = rv[0] + ' ' + rv[1] + ' +'
-        elif len(rv) == 3 :
-            self['GVIR'] = rv[0] + ' ' + rv[1] + ' + ' + rv[2] + ' +'
+                # for WELL , GROUP , REGION
+                for T in ['W','G','R'] :
+                    for OGW in ['O','G','W'] :
+                        rv = []
+                        key = T+'V'+IP+TR+OGW
+                        if self.is_Attribute( key ) :
+                            rv.append( key )
+                    
+                    key = T+'V'+IP+TR
+                    if len(rv) > 0 :
+                        verbose( self.speak , 1 , 'adding up reservoir volumes for ' + key )
+                        
+                    if len(rv) == 1 :
+                        df = self[[rv[0]]]
+                        df.rename( columns=wellFromAttribute(df.columns) , inplace=True )
+                        self[key] = df , self.get_Units(rv[0])
+                    elif len(rv) == 2 :
+                        df0 = self[[rv[0]]]
+                        df0.rename( columns=wellFromAttribute(df0.columns) , inplace=True )
+                        df1 = self[[rv[1]]]
+                        df1.rename( columns=wellFromAttribute(df1.columns) , inplace=True )
+                        self[key] = df0 + df1 , self.get_Units(rv[0])
+                    elif len(rv) == 3 :
+                        df0 = self[[rv[0]]]
+                        df0.rename( columns=wellFromAttribute(df0.columns) , inplace=True )
+                        df1 = self[[rv[1]]]
+                        df1.rename( columns=wellFromAttribute(df1.columns) , inplace=True )
+                        df2 = self[[rv[2]]]
+                        df2.rename( columns=wellFromAttribute(df2.columns) , inplace=True )
+                        self[key] = df0 + df1 + df2 , self.get_Units(rv[0])
+                
