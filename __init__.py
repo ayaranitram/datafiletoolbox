@@ -46,3 +46,4 @@ print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')
 from .common.stringformat import date
 from .common.inout import extension
 from .common.keywordsConversions import fromECLtoVIP , fromVIPtoECL
+from .SimulationResults.loader import loadSimulationResults
