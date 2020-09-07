@@ -5,7 +5,7 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.20-09-04'
+__version__ = '0.1.20-09-07'
 
 from datafiletoolbox.SimulationResults.mainObject import SimResult
 from datafiletoolbox.common.inout import extension
@@ -46,9 +46,10 @@ class VIP(SimResult):
         self.stripUnits()
         self.fill_FieldBasics()
         self.get_Attributes(reload=True)
-        self.initialize()
         self.regionNumber = self.extract_Region_Numbers()
         self.buldSalinityVectors()
+        self.get_TotalReservoirVolumes()
+        self.initialize()
         
     def selectLoader(self,inputFile) :
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
@@ -880,6 +881,9 @@ class VIP(SimResult):
             return self.regions
     
     def directSSS(self,Key,SSStype):
+        """
+        returns the string column from the SSS file for the required Key.
+        """
         SSStype = SSStype.strip()
         if type(SSStype) is str :
             SSS = None
@@ -900,39 +904,56 @@ class VIP(SimResult):
                 return None
     
     def get_VIPkeys(self,SSStype=None) :
-        SSStype = SSStype.strip()
+        """
+        returns a dictinary with the SSStype as keys and the kewords found in each SSS file.
+        """
+        
         if type(SSStype) is str :
+            SSStype = SSStype.strip()
             SSS = None
-            for SSS in self.SSSfiles :
-                if extension(SSS)[1].upper().endswith( SSStype.upper() ) :
+            for Sfile in self.SSSfiles :
+                if extension(Sfile)[1].upper().endswith( SSStype.upper() ) :
+                    SSS = Sfile
                     break
             if SSS is None :
                 print('SSS type ' + SSStype + ' not found')
-                return None
+                return {}
             else :
                 SSS = [ extension(SSS)[1] + extension(SSS)[0] ]
         elif SSStype is None :
             SSS = []
-            for each in self.SSSfiles :
-                SSS += [ extension(SSS)[1] + extension(SSS)[0] ]
+            for Sfile in self.SSSfiles :
+                SSS += [ extension(Sfile)[1] + extension(Sfile)[0] ]
         elif type(SSStype) is list or type(SSStype) is tuple :
             SSS = []
             for Stype in SSStype :
                 for Sfile in self.SSSfiles :
                     if extension(Sfile)[1].upper().endswith( Stype.upper() ) :
-                        SSS += [ extension(SSS)[1] + extension(SSS)[0] ]
+                        SSS += [ extension(Sfile)[1] + extension(Sfile)[0] ]
             if SSS == [] :
                 print('SSS type ' + SSStype + ' not found')
-                return None
+                return {}
         
-        output = []
+        output = {}
         for each in SSS :
-            output += list( self.results[each][1]['Data'].keys() )
+            output[ extension(each)[1].split('_')[-1].upper() ] = list( self.results[each][1]['Data'].keys() )
         return output         
 
-
+    def SSSkeys_asECL(self) :
+        """
+        returns a list of the keys in the SSS file converted to ECL style
+        """
+        Kdicts = fromVIPtoECL( self.get_VIPkeys() )
+        output = []
+        for S in Kdicts :
+            output += Kdicts[S]
+        return output
 
     def extract_Region_Numbers(self) :
+        """
+        reads the region numbers from the SSS file and creates a dictionary for 
+        regiond names and number.
+        """
         Numbers = self.directSSS('#','REGION')
         Names = self.directSSS('NAME','REGION')
         regNum = {}
@@ -944,6 +965,10 @@ class VIP(SimResult):
         return regNum
 
     def buldSalinityVectors(self) :
+        """
+        creates the ECL style salinity vectors WWIR and WWPR from 
+        the SALINITY vector from VIP and production and injection rates.
+        """
         if self.is_Attribute('WSALINITY') :
             if self.is_Attribute('WWIR') :
                 if self.is_Attribute('WWPR') :
