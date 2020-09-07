@@ -4,12 +4,15 @@ Created on Thu Aug  6 13:59:36 2020
 
 @author: MCARAYA
 """
+
+__version__ = '0.1.20-09-01'
+
 from datafiletoolbox.dictionaries import ECL2VIPtype , ECL2VIPkey , VIP2ECLtype , VIP2ECLkey
 from datafiletoolbox.dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
 from datafiletoolbox.common.inout import verbose 
 from datafiletoolbox.dictionaries import UniversalKeys
 from datafiletoolbox.common.functions import mainKey
-    
+
 def testECLmolarKey(key) :
     if '_' in key :
         if ':' in key :
@@ -149,6 +152,17 @@ def fromECLtoVIP(key,speak=0) :
     return VIPkey , keyType , keyName
 
 def fromVIPtoECL(key,SSStype=None,speak=0):
+    """
+    converts VIP style keyword to ECL style keyword.
+    """
+    if type(key) is dict :
+        output = {}
+        for SSS in key :
+            output[SSS] = []
+            for K in key[SSS] :
+                output[SSS] += [ fromVIPtoECL( K , SSS ) ]
+        return output
+    
     if SSStype != None :
         S = ' of ' + str(SSStype)
     else :

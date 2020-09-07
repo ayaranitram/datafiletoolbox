@@ -5,7 +5,7 @@ Created on Sun Jan 19 16:03:33 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-09-04'
+__version__ = '0.1.20-09-07'
 
 # highly recommended to automatically create inverse dictionaries in the __init__ module of this folder
 
@@ -16,11 +16,12 @@ VIPTypesToExtractVectors = ( 'FIELD' , 'WELL' , 'AREA', 'REGION' )
 # KnownCSVsections = ( '[S3INFO]' , '[HEADERS]' , '[DATA]' ) # not used
 
 VIP2ECLkey = { #'NAME OF COLUMN in VIP sss' : 'base ECL output keyword' 
-            'DATE' : 'DATE' ,
-            'TIME' : 'TIME' ,
-            'DAY' : 'DAY' ,
-            'MONTH' : 'MONTH' ,
-            'YEAR' : 'YEAR' ,
+           '#' : '#' , # NUMBER  
+           'DATE' : 'DATE' ,
+           'TIME' : 'TIME' ,
+           'DAY' : 'DAY' ,
+           'MONTH' : 'MONTH' ,
+           'YEAR' : 'YEAR' ,
            'GAS PRD RATE' : 'GPR' ,
            'OIL PRD RATE' : 'OPR' , 
            'WTR PRD RATE' : 'WPR' ,
@@ -67,26 +68,31 @@ VIP2ECLkey = { #'NAME OF COLUMN in VIP sss' : 'base ECL output keyword'
            'CUM SALES GAS' : 'SGT' ,
            'MAKEUP GAS' : 'GIMR' , # 'UMAKEG' 
            'CUM MKP GAS' : 'GIMT' ,
+           'MKP FUEL GAS' : 'UMKFUEL' ,
            'FLARED GAS' : 'UFLARER' ,
            'CUM FLARED GAS' : 'UFLARET' ,
            'SHRINKAGE GAS' : 'USHRINKG' ,
+           'CUM SHRNK GAS' : 'USHRINKGT' ,
            '# PROD' : 'MWPR' ,
            '# GLIFT' : 'MWPL' ,
            '# WINJ' : 'UAWI' ,
            '# GINJ' : 'UAGI' ,
            '#ACTIVE' : 'UACTIWELL' ,
-           'RES OIL P RATE' : 'FVPRO' ,
-           'RES GAS P RATE' : 'FVPRG' ,
-           'RES WTR P RATE' : 'FVPRW' ,
-           'RES OIL I RATE' : 'FVIRO' ,
-           'RES GAS I RATE' : 'FVIRG' ,
-           'RES WTR I RATE' : 'FVIRW' ,
-           'CUM RES OIL PR' : 'FVPTO' ,
-           'CUM RES GAS PR' : 'FVPTG' ,
-           'CUM RES WTR PR' : 'FVPTW' ,
-           'CUM RES OIL IN' : 'FVITO' ,
-           'CUM RES GAS IN' : 'FVITG' ,
-           'CUM RES WTR IN' : 'FVITW' ,
+           'RES OIL P RATE' : 'VPRO' ,
+           'RES GAS P RATE' : 'VPRG' ,
+           'RES WTR P RATE' : 'VPRW' ,
+           'RES OIL I RATE' : 'VIRO' ,
+           'RES GAS I RATE' : 'VIRG' ,
+           'RES WTR I RATE' : 'VIRW' ,
+           'CUM RES OIL PR' : 'VPTO' ,
+           'CUM RES GAS PR' : 'VPTG' ,
+           'CUM RES WTR PR' : 'VPTW' ,
+           'CUM RES OIL IN' : 'VITO' ,
+           'CUM RES GAS IN' : 'VITG' ,
+           'CUM RES WTR IN' : 'VITW' ,
+           'PRODUCTION' : 'UPON' , # days production ON
+           'INJECTION' : 'UION' , # days injection ON
+           'GAS AVAIL/INJ' : 'UGASAVIN' ,
            }
 
 VIP2ECLtype = {'WELL' : 'W' ,
