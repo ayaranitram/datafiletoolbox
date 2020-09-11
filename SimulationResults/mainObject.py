@@ -471,9 +471,9 @@ class SimResult(object):
     
     def __len__(self) :
         """
-        return the number of keys * number of time steps in the dataset
+        return the number of time steps in the dataset
         """
-        return self.len_Keys() * self.len_tSteps()
+        return self.len_tSteps()
     
     def __str__(self) :
         return self.name
