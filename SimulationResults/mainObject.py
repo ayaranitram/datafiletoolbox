@@ -2440,14 +2440,14 @@ class SimResult(object):
             VectorsList = []
             verbose( self.speak , 1 , " preparing key '" + str(K) + "'")
             for R in Rlist :
-                try :
+                if R.is_Key(K) :
                     # try to extract the not-filtered vector from the simulation
                     Vector = R.get_RawVector(K)[K]
                     #Vector = R.get_UnfilteredVector(K)[K]
                     verbose( self.speak , 1 , "     reading from restart " + str(R) )
-                except :
+                else :
                     # if failed to extract, create a zeros vector of the 'TIME' size
-                    Vector = np.zeros( len(R.get_RawVector(K)[K]) )
+                    Vector = np.zeros( len(R) )
                     #Vector = np.zeros( len(R.get_UnfilteredVector(K)[K]) )
                     verbose( self.speak , 1 , "     filling with zeros for restart "+ str(R) )
                 
@@ -2485,13 +2485,13 @@ class SimResult(object):
             VectorsList = []
             verbose( self.speak , 1 , " preparing key '" + str(K) + "'")
             for C in Clist :
-                try :
+                if C.is_Key(K) :
                     # try to extract the not-filtered vector from the simulation
                     Vector = C.get_RawVector(K)[K]
                     verbose( self.speak , 1 , "     reading from restart " + str(C) )
-                except :
+                else :
                     # if failed to extract, create a zeros vector of the 'TIME' size
-                    Vector = np.zeros( len(C.get_RawVector(K)[K]) )
+                    Vector = np.zeros( len(C) )
                     verbose( self.speak , 1 , "     filling with zeros for restart "+ str(C) )
                 
                 # apply filter
