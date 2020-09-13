@@ -5,7 +5,7 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-05-19'
+__version__ = '0.0.20-09-13'
 
 from datafiletoolbox.SimulationResults.mainObject import SimResult
 from datafiletoolbox.common.functions import mainKey
@@ -53,8 +53,7 @@ class ECL(SimResult):
                     
             if os.path.isfile(SummaryFilePath) :
                 verbose( self.speak , 1 , ' > loading summary file:\n  ' + SummaryFilePath)
-                #self.results = ecl.summary.EclSum(SummaryFilePath)
-                self.results = EclSum(SummaryFilePath)
+                self.results = EclSum(SummaryFilePath) # ecl.summary.EclSum(SummaryFilePath)
                 self.name = extension(SummaryFilePath)[1]
                 self.set_FieldTime()
                 self.get_Wells(reload=True)

@@ -35,10 +35,10 @@ Created on Tue Jul  9 21:23:27 2019
 
 # from bases.units import convertUnit
 
-__version__ = '0.2.20-09-02'
+__version__ = '0.2.20-09-13'
 __author__ = 'Martin Araya'
 
-msg = """implementing libecl 2.9.0 from pypi, released on May 2020"""
+msg = """implementing libecl 2.9.1 from pypi, released on Aug 2020"""
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')
 # print(msg)
