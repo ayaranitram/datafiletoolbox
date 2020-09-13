@@ -21,7 +21,7 @@ import os
 #os.environ['PATH'] = eclPath + ';' + os.environ['PATH']
 
 #from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
-import ecl
+from ecl.summary import EclSum
 #from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import summary
        
 class ECL(SimResult):
@@ -45,7 +45,8 @@ class ECL(SimResult):
                     SummaryFilePath = newPath
             if os.path.isfile(SummaryFilePath) :
                 verbose( self.speak , 1 , ' > loading summary file:\n  ' + SummaryFilePath)
-                self.results = ecl.summary.EclSum(SummaryFilePath)
+                #self.results = ecl.summary.EclSum(SummaryFilePath)
+                self.results = EclSum(SummaryFilePath)
                 self.name = extension(SummaryFilePath)[1]
                 self.set_FieldTime()
                 self.get_Wells(reload=True)
