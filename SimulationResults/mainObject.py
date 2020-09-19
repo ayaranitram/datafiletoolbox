@@ -475,6 +475,30 @@ class SimResult(object):
         """
         return self.len_tSteps()
     
+    def first(self,Key) :
+        """
+        returns only the first value of the array
+        """
+        if type(Key) is str :
+            if self.is_Key(Key) :
+                return self(Key)[0]
+            if self.is_Attribute(Key) :
+                return self[Key].iloc[0]
+        elif type(Key) is list :
+            return self[Key].iloc[0]
+    
+    def last(self,Key) :
+        """
+        returns only the first value of the array
+        """
+        if type(Key) is str :
+            if self.is_Key(Key) :
+                return self(Key)[-1]
+            if self.is_Attribute(Key) :
+                return self[Key].iloc[-1]
+        elif type(Key) is list :
+            return self[Key].iloc[-1]
+    
     def __str__(self) :
         return self.name
     
