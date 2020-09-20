@@ -16,7 +16,7 @@ from datafiletoolbox.common.stringformat import getnumber
 from datafiletoolbox.dictionaries import UniversalKeys , VIPTypesToExtractVectors
 from datafiletoolbox.common.keywordsConversions import fromECLtoVIP , fromVIPtoECL , fromCSVtoECL
 from datafiletoolbox.dictionaries import ECL2VIPtype , ECL2VIPkey , VIP2ECLtype , VIP2ECLkey
-from datafiletoolbox.dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
+# from datafiletoolbox.dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
 from datafiletoolbox.common.functions import wellFromAttribute 
 
 from datetime import timedelta
@@ -36,7 +36,7 @@ class VIP(SimResult):
         self.VIPstyle=False
         self.keysECL = ()
         self.keysVIP = ()
-        self.keysCSV = ()
+        # self.keysCSV = ()
         self.results = {}
         # self.CSV = False
         self.LPGcorrected = False
@@ -693,7 +693,7 @@ class VIP(SimResult):
             
       ####################### end of auxiliar functions #######################
         
-        if SSStype == [] and self.CSV == False:
+        if SSStype == [] : # and self.CSV == False:
             for sss in list(self.results.keys()) :
                 SSStype += [self.results[sss][0]]
         elif type(SSStype) == str :
