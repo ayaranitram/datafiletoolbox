@@ -7,6 +7,7 @@ Created on Sat May 16 20:10:06 2020
 
 from .mainObject import SimResult
 from .vipObject import VIP
+from .CSVSimResultNexusDesktopObject import NexusDesktopCSV
 
 try :
     from .eclObject import ECL

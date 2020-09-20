@@ -5,7 +5,7 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.20-09-07'
+__version__ = '0.1.20-09-20'
 
 from datafiletoolbox.SimulationResults.mainObject import SimResult
 from datafiletoolbox.common.inout import extension
@@ -14,7 +14,7 @@ from datafiletoolbox.common.functions import mainKey
 from datafiletoolbox.common.stringformat import date as strDate
 from datafiletoolbox.common.stringformat import getnumber
 from datafiletoolbox.dictionaries import UniversalKeys , VIPTypesToExtractVectors
-from datafiletoolbox.common.keywordsConversions import fromECLtoVIP , fromVIPtoECL , fromCSVtoECL
+from datafiletoolbox.common.keywordsConversions import fromECLtoVIP , fromVIPtoECL #, fromCSVtoECL
 from datafiletoolbox.dictionaries import ECL2VIPtype , ECL2VIPkey , VIP2ECLtype , VIP2ECLkey
 # from datafiletoolbox.dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
 from datafiletoolbox.common.functions import wellFromAttribute 
@@ -29,6 +29,7 @@ class VIP(SimResult):
     """
     object to contain VIP results read from .sss ASCII output 
     """
+
     def __init__(self,inputFile=None,verbosity=2) :
         SimResult.__init__(self,verbosity=verbosity)
         self.kind = VIP
@@ -39,24 +40,38 @@ class VIP(SimResult):
         # self.keysCSV = ()
         self.results = {}
         # self.CSV = False
+        self.VIPnotECL = []
         self.LPGcorrected = False
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             self.selectLoader(inputFile)
-        self.complete_Units()
+        self.initialize()
+    
+    def keys(self) :
+        if self.ECLstyle :
+            return self.keysECL
+        if self.VIPstyle :
+            return self.keysVIP
+    
+    def initialize(self) :
+        """
+        run intensive routines, to have the data loaded and ready
+        """
         self.stripUnits()
         self.fill_FieldBasics()
         self.get_Attributes(reload=True)
+        self.complete_Units()
         self.regionNumber = self.extract_Region_Numbers()
         self.buldSalinityVectors()
         self.get_TotalReservoirVolumes()
-        self.initialize()
+        SimResult.initialize(self)
         
     def selectLoader(self,inputFile) :
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             inputFile = inputFile.strip()
-        # if extension(inputFile)[0].upper() == '.CSV' :
-        #     self.loadCSV(inputFile) 
-        if extension(inputFile)[0].upper() == '.SSS' :
+        if extension(inputFile)[0].upper() == '.CSV' :
+            from datafiletoolbox.SimulationResults.CSVSimResultNexusDesktopObject import NexusDesktopCSV
+            return NexusDesktopCSV( inputFile , self.speak )
+        elif extension(inputFile)[0].upper() == '.SSS' :
             self.loadSSS(inputFile)
         elif extension(inputFile)[0].upper() == '.DAT' :
             for sss in [ '_field.sss','_well.sss','_region.sss','_area.sss','_flow.sss','_node.sss','_gather.sss' ] :
@@ -1038,22 +1053,27 @@ class VIP(SimResult):
         If pattern is None you will get all the keys of summary
         object.
         """
-        if self.ECLstyle :
-            self.keys = self.keysECL
-        else :
-            self.keys = self.keysVIP
+        # if self.ECLstyle :
+        #     self.keys = self.keysECL
+        # else :
+        #     self.keys = self.keysVIP
         
         if len(self.keys) == 0 or reload == True :
-            self.keys = []
-            self.keys +=  list( self.extract_Keys(pattern) )
+            keys = []
+            keys +=  list( self.extract_Keys() )
             for extra in ( 'TIME' , 'DATE' , 'DATES' ) :
-                if extra not in self.keys :
-                    self.keys.append(extra) 
-            self.keys = tuple( self.keys )
+                if extra not in keys :
+                    keys.append(extra) 
+            keys = tuple( keys )
+        if self.ECLstyle :
+            self.keysECL = keys
+        else :
+            self.keysVIP = keys
+            
         if pattern is None :
-            if self.ECLstyle == True :
+            if self.ECLstyle is True :
                 return self.keysECL
-            elif self.VIPstyle == True :
+            elif self.VIPstyle is True :
                 return self.keysVIP
             else :
                 return self.keys
@@ -1076,7 +1096,7 @@ class VIP(SimResult):
                 for att in atts :
                     attECL = fromVIPtoECL( att , self.results[sss][0] , self.speak )
                     if attECL is None :
-                        SimResult.VIPnotECL.append( self.results[sss][0] + ' : ' + att )
+                        self.VIPnotECL.append( self.results[sss][0] + ' : ' + att )
                         attECL = ''
                     for name in names :
                         keysListVIP.append( att + ':' + name )
@@ -1085,7 +1105,7 @@ class VIP(SimResult):
                         elif self.results[sss][0] in VIP2ECLtype and attECL != '' :
                             keysListECL.append( attECL + ':' + name )
         
-        if len(SimResult.VIPnotECL) > 0 :
+        if len(self.VIPnotECL) > 0 :
             verbose( self.speak , -1 , '\nsome VIP attributes was not recognized as ECL style attributes,\nto get a report of these attributes use the method:\n  .report_VIP_AttributesNotTo_ECL() \n')                
         keysListVIP = list( set( keysListVIP ) )
         keysListVIP.sort()

@@ -5,11 +5,12 @@ Created on Wed May 13 00:45:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-05-19'
+__version__ = '0.0.20-09-20'
 
 from datafiletoolbox.common.inout import extension
 #from datafiletoolbox.SimulationResults.mainObject import SimResult
 from datafiletoolbox.SimulationResults.vipObject import VIP
+from datafiletoolbox.SimulationResults.CSVSimResultNexusDesktopObject import NexusDesktopCSV
 
 okECL = False
 try :
@@ -35,10 +36,12 @@ def loadSimulationResults(FullPath=None,Simulator=None,Verbosity=2) :
             Simulator = 'VIP'
         elif extension(FullPath)[0].upper() in ['.FSC','.SS_FIELD','.SS_WELLS','.SS_REGIONS','.SS_NETWORK'] :
             Simulator = 'NEXUS'
+        elif extension(FullPath)[0].upper() in ['.CSV'] :
+            Simulator = 'NexusDesktopSimResult'
     elif type(Simulator) is str and len(Simulator.strip()) > 0 :
         Simulator = Simulator.strip().upper()
 
-    
+    OBJ = None
     if Simulator in ['ECL','E100','E300','ECLIPSE','IX','INTERSECT','TNAV','TNAVIGATOR'] :
         if okECL is True :
             OBJ = ECL(FullPath,Verbosity)
@@ -46,10 +49,12 @@ def loadSimulationResults(FullPath=None,Simulator=None,Verbosity=2) :
             print( 'ECL object not loaded')
     elif Simulator in ['VIP'] :
         OBJ = VIP(FullPath,Verbosity)
-    elif Simulator in ['NX','NEXUS']:
+    elif Simulator in ['NX','NEXUS'] :
         OBJ = VIP(FullPath,Verbosity)
+    elif Simulator in ['NexusDesktopSimResult'] :
+        OBJ = NexusDesktopCSV(FullPath,Verbosity)
     
-    if Verbosity != 0 :
+    if OBJ is not None and Verbosity != 0 :
         print(OBJ.__repr__())
     return OBJ
     
