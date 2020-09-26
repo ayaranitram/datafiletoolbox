@@ -5,7 +5,7 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.5.20-09-07'
+__version__ = '0.5.20-09-20'
 
 from datafiletoolbox import dictionaries
 from datafiletoolbox.Classes.Errors import OverwrittingError
@@ -226,10 +226,10 @@ class SimResult(object):
     
     ### define common dictionaries and constants
         
-    VIPnotECL = []
+    # VIPnotECL = []
     
-    CSV_Variable2Verbose = {}
-    CSV_Verbose2Variable = {}
+    # CSV_Variable2Verbose = {}
+    # CSV_Verbose2Variable = {}
     
     def writeCSVtoPandas(self,CSVFilePath):
         if self.path is None :
@@ -340,10 +340,15 @@ class SimResult(object):
                     return None
                 elif len(meti.columns) == 1 :
                     verbose( self.speak , 2 , " a single item match the pattern,\n return the series for the item '" + meti.columns[0] + "':")
-                    return meti[meti.columns[0]]
+                    if type(self.null) is type(None) :
+                        return meti[meti.columns[0]]
+                    return meti.replace(self.null,0)[meti.columns[0]]
                 else :
                     verbose( self.speak , 2 , " multiple items match the pattern,\n return a dataframe with all the matching items:")
-                    return meti
+                    if type(self.null) is type(None) :
+                        return meti
+                    return meti.replace(self.null,0)
+                    
         if type(item) is list :
             cols = []
             for each in item :
@@ -474,6 +479,30 @@ class SimResult(object):
         return the number of time steps in the dataset
         """
         return self.len_tSteps()
+    
+    def first(self,Key) :
+        """
+        returns only the first value of the array
+        """
+        if type(Key) is str :
+            if self.is_Key(Key) :
+                return self(Key)[0]
+            if self.is_Attribute(Key) :
+                return self[Key].iloc[0]
+        elif type(Key) is list :
+            return self[Key].iloc[0]
+    
+    def last(self,Key) :
+        """
+        returns only the first value of the array
+        """
+        if type(Key) is str :
+            if self.is_Key(Key) :
+                return self(Key)[-1]
+            if self.is_Attribute(Key) :
+                return self[Key].iloc[-1]
+        elif type(Key) is list :
+            return self[Key].iloc[-1]
     
     def __str__(self) :
         return self.name
@@ -656,14 +685,14 @@ class SimResult(object):
                 
                 self.wellsLists['WaterProducers'] = list( prodCheck.columns ) 
                 
-        elif self.is_Attribute('WWCT') :
-            waterCheck = self[['WWPR']]
-            waterCheck = waterCheck.rename( columns=wellFromAttribute( waterCheck.columns ) )
-            waterCheck = ( waterCheck >= self.WCcriteria ).replace(False,np.nan).dropna(axis=1,how='all')
-            self.wellsLists['WaterProducers'] = list( waterCheck.columns ) 
-            
-        else :
-            self.wellsLists['WaterProducers'] = []
+            elif self.is_Attribute('WWCT') :
+                waterCheck = self[['WWPR']]
+                waterCheck = waterCheck.rename( columns=wellFromAttribute( waterCheck.columns ) )
+                waterCheck = ( waterCheck >= self.WCcriteria ).replace(False,np.nan).dropna(axis=1,how='all')
+                self.wellsLists['WaterProducers'] = list( waterCheck.columns ) 
+                
+            else :
+                self.wellsLists['WaterProducers'] = []
         
         return self.wellsLists['WaterProducers']
     
@@ -2613,7 +2642,7 @@ class SimResult(object):
                 Units = 'API'
                 verbose( self.speak , 2 , '\nIMPORTANT: the selected Units: ' + Units + ' were chaged to "API" for the vector with key name ' + Key + '.')
             elif ( ' / ' in Units and unit.isUnit(Units.replace(' / ','/')) ) or ( '/ ' in Units and unit.isUnit(Units.replace('/ ','/')) ) or ( ' /' in Units and unit.isUnit(Units.replace(' /','/')) ) :
-                verbose( self.speak , 2 , "\nMESSAGE: the selected Units: '" + Units +"' were chaged to " + Units.replace(' /','/').replace('/ ','/')  + ' for the vector with key name ' + Key + '.')
+                verbose( self.speak , 1 , "\nMESSAGE: the selected Units: '" + Units +"' were chaged to " + Units.replace(' /','/').replace('/ ','/')  + ' for the vector with key name ' + Key + '.')
                 Units = Units.replace('/ ','/').replace(' /','/')
             else :
                 verbose( self.speak , 3 , "\nIMPORTANT: the selected Units: '" + Units +"' are not recognized by the programm and will not be able to convert this Vector " + str(Key) +' into other units.' )

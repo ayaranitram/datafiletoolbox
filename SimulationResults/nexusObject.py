@@ -5,7 +5,7 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.20-09-20'
+__version__ = '0.1.20-09-07'
 
 from datafiletoolbox.SimulationResults.mainObject import SimResult
 from datafiletoolbox.common.inout import extension
@@ -14,9 +14,9 @@ from datafiletoolbox.common.functions import mainKey
 from datafiletoolbox.common.stringformat import date as strDate
 from datafiletoolbox.common.stringformat import getnumber
 from datafiletoolbox.dictionaries import UniversalKeys , VIPTypesToExtractVectors
-from datafiletoolbox.common.keywordsConversions import fromECLtoVIP , fromVIPtoECL #, fromCSVtoECL
+from datafiletoolbox.common.keywordsConversions import fromECLtoVIP , fromVIPtoECL , fromCSVtoECL
 from datafiletoolbox.dictionaries import ECL2VIPtype , ECL2VIPkey , VIP2ECLtype , VIP2ECLkey
-# from datafiletoolbox.dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
+from datafiletoolbox.dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
 from datafiletoolbox.common.functions import wellFromAttribute 
 
 from datetime import timedelta
@@ -29,7 +29,6 @@ class VIP(SimResult):
     """
     object to contain VIP results read from .sss ASCII output 
     """
-
     def __init__(self,inputFile=None,verbosity=2) :
         SimResult.__init__(self,verbosity=verbosity)
         self.kind = VIP
@@ -37,59 +36,35 @@ class VIP(SimResult):
         self.VIPstyle=False
         self.keysECL = ()
         self.keysVIP = ()
-        # self.keysCSV = ()
+        self.keysCSV = ()
         self.results = {}
-        # self.CSV = False
-        self.VIPnotECL = []
+        self.CSV = False
         self.LPGcorrected = False
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             self.selectLoader(inputFile)
-        self.initialize()
-    
-    def keys(self) :
-        if self.ECLstyle :
-            return self.keysECL
-        if self.VIPstyle :
-            return self.keysVIP
-    
-    def initialize(self) :
-        """
-        run intensive routines, to have the data loaded and ready
-        """
+        self.complete_Units()
         self.stripUnits()
         self.fill_FieldBasics()
         self.get_Attributes(reload=True)
-        self.complete_Units()
         self.regionNumber = self.extract_Region_Numbers()
         self.buldSalinityVectors()
         self.get_TotalReservoirVolumes()
-        SimResult.initialize(self)
+        self.initialize()
         
     def selectLoader(self,inputFile) :
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             inputFile = inputFile.strip()
         if extension(inputFile)[0].upper() == '.CSV' :
-            from datafiletoolbox.SimulationResults.CSVSimResultNexusDesktopObject import NexusDesktopCSV
-            return NexusDesktopCSV( inputFile , self.speak )
+            self.loadCSV(inputFile) 
         elif extension(inputFile)[0].upper() == '.SSS' :
             self.loadSSS(inputFile)
-        elif extension(inputFile)[0].upper() == '.DAT' :
-            for sss in [ '_field.sss','_well.sss','_region.sss','_area.sss','_flow.sss','_node.sss','_gather.sss' ] :
-                sssFile = None
-                if os.path.isfile( extension(inputFile)[1] + sss ) :
-                    sssFile = extension(inputFile)[1] + sss 
-                    break
-            if sssFile is not None :
-                self.loadSSS(sssFile)
-            else :
-                verbose( self.speak , 3 , " not possible to find SSS file for the .dat file\n   '" + inputFile + "'")
         
     def use_ECLstyle(self):
         if len(self.keysECL) == 0 :
             verbose( self.speak , 0 , ' ECL style keys: ' + str( self.extract_Keys() ) )
         if len(self.keysECL) > 0 :
             self.keys = self.keysECL
-            verbose( self.speak , 0 , ' attributes as ECL style: ' + str( self.get_Attributes() ) )
+            verbose( self.speak , 0 , 'attributes as ECL style: ' + str( self.get_Attributes() ) )
             self.ECLstyle = True
             self.VIPstyle = False
             verbose( self.speak , 3 , ' Using ECL style keys')
@@ -123,27 +98,27 @@ class VIP(SimResult):
             return 'using ECL style'              
         return 'error in style, highly recommended to regenerate style'
     
-    # def loadCSV(self,CSVFilePath):
-    #     """
-    #     load data from CSV file exported from SimResults applicaion of the Nexus Desktop suite.
-    #     """
-    #     if type(CSVFilePath) == str and len(CSVFilePath.strip()) > 0 :
-    #         CSVFilePath = CSVFilePath.strip()
-    #     if os.path.isfile( CSVFilePath ) == False :
-    #         raise FileNotFoundError('No such file found for: ' + str(CSVFilePath) )
-    #     else :
-    #         Temporal = self.CSVread( CSVFilePath )
-    #         if Temporal != {} :
-    #             if self.CSV == False :
-    #                 self.CSV = {}
-    #             self.CSV[extension(CSVFilePath)[1]] = Temporal
-    #             self.CSVextractBacis()
-    #             self.set_FieldTime()
-    #             self.get_Vector('DATE')
-    #             self.get_Wells(reload=True)
-    #             self.CSVextractBacis()
-    #             self.CSVextractHeaders()
-    
+    def loadCSV(self,CSVFilePath):
+        """
+        load data from CSV file exported from SimResults applicaion of the Nexus Desktop suite.
+        """
+        if type(CSVFilePath) == str and len(CSVFilePath.strip()) > 0 :
+            CSVFilePath = CSVFilePath.strip()
+        if os.path.isfile( CSVFilePath ) == False :
+            raise FileNotFoundError('No such file found for: ' + str(CSVFilePath) )
+        else :
+            Temporal = self.CSVread( CSVFilePath )
+            if Temporal != {} :
+                if self.CSV == False :
+                    self.CSV = {}
+                self.CSV[extension(CSVFilePath)[1]] = Temporal
+                self.CSVextractBacis()
+                self.set_FieldTime()
+                self.get_Vector('DATE')
+                self.get_Wells(reload=True)
+                self.CSVextractBacis()
+                self.CSVextractHeaders()
+
     def loadSSS(self,SSSFilePath):
         if type(SSSFilePath) == str :
             SSSFilePath = SSSFilePath.strip()
@@ -178,419 +153,418 @@ class VIP(SimResult):
                     self.LPGcorrected = True
                     verbose( self.speak , 2 , 'Successfully applied LPG correction for VIP sss reports.')
 
-    # def CSVread(self,CSVFilePath) :
-    #     """
-    #     extract the data from the CSV file exported from SimResults applicaion of the Nexus Desktop suite.
-    #     Pandas doesn't read this kind of CSV correctly.'
-    #     """
-    #     if self.path is None :
-    #         self.path = CSVFilePath
-    #     CSVfile = open(CSVFilePath,'r')
-    #     CSVlines = CSVfile.read()
-    #     CSVfile.close()
-    #     CSVlines = CSVlines.split('\n')
+    def CSVread(self,CSVFilePath) :
+        """
+        extract the data from the CSV file exported from SimResults applicaion of the Nexus Desktop suite.
+        Pandas doesn't read this kind of CSV correctly.'
+        """
+        if self.path is None :
+            self.path = CSVFilePath
+        CSVfile = open(CSVFilePath,'r')
+        CSVlines = CSVfile.read()
+        CSVfile.close()
+        CSVlines = CSVlines.split('\n')
         
-    #     row = 0
-    #     section = ''
-    #     CSVdict = {}
+        row = 0
+        section = ''
+        CSVdict = {}
         
-    #     while row < len(CSVlines) :
-    #         cell0 = CSVlines[ row ].split(',')[0].split('=')[0]
-    #         if cell0 == '[S3INFO]' :
-    #             section = cell0
-    #             CSVdict[section] = {}
+        while row < len(CSVlines) :
+            cell0 = CSVlines[ row ].split(',')[0].split('=')[0]
+            if cell0 == '[S3INFO]' :
+                section = cell0
+                CSVdict[section] = {}
                 
-    #         elif cell0 == '[HEADERS]' :
-    #             section = cell0
-    #             CSVdict[section] = {}
+            elif cell0 == '[HEADERS]' :
+                section = cell0
+                CSVdict[section] = {}
                 
-    #         elif cell0 == '[DATA]' :
-    #             section = cell0
-    #             CSVdict[section] = []
-    #             if '[' in ','.join( CSVlines[row+1:] ) and ']' in ','.join( CSVlines[row+1:] ) :
-    #                 segmentEnd =','.join( CSVlines[row+1:] ).index('[')
-    #                 CSVdict[section] = ','.join( CSVlines[row+1:] )[: segmentEnd ].split(',')
-    #                 dataRows = len( CSVdict[section] ) / len( CSVdict['[HEADERS]']['VARIABLE'] )
-    #                 if int(dataRows) == dataRows :
-    #                     row = row + dataRows 
-    #                 else :
-    #                     pass
-    #             else :
-    #                 CSVdict[section] = ','.join( CSVlines[row+1:] ).split(',')
-    #                 row = len(CSVlines)
-    #         else :
-    #             if '[' in CSVlines[ row ].split(',')[0].split('=')[0][0] and ']' in CSVlines[ row ].split(',')[0].split('=')[0][-1] :
-    #                 section = CSVlines[ row ].split(',')[0].split('=')[0]
-    #             else :
-    #                 CSVdict[section][ cell0 ] = [ CSVlines[ row ].split(',')[0].split('=')[1] ] + CSVlines[ row ].split(',')[1:]
-    #         row += 1
-    #     return CSVdict
+            elif cell0 == '[DATA]' :
+                section = cell0
+                CSVdict[section] = []
+                if '[' in ','.join( CSVlines[row+1:] ) and ']' in ','.join( CSVlines[row+1:] ) :
+                    segmentEnd =','.join( CSVlines[row+1:] ).index('[')
+                    CSVdict[section] = ','.join( CSVlines[row+1:] )[: segmentEnd ].split(',')
+                    dataRows = len( CSVdict[section] ) / len( CSVdict['[HEADERS]']['VARIABLE'] )
+                    if int(dataRows) == dataRows :
+                        row = row + dataRows 
+                    else :
+                        pass
+                else :
+                    CSVdict[section] = ','.join( CSVlines[row+1:] ).split(',')
+                    row = len(CSVlines)
+            else :
+                if '[' in CSVlines[ row ].split(',')[0].split('=')[0][0] and ']' in CSVlines[ row ].split(',')[0].split('=')[0][-1] :
+                    section = CSVlines[ row ].split(',')[0].split('=')[0]
+                else :
+                    CSVdict[section][ cell0 ] = [ CSVlines[ row ].split(',')[0].split('=')[1] ] + CSVlines[ row ].split(',')[1:]
+            row += 1
+        return CSVdict
 
-    # def CSVextractBacis(self, CSVname='' ) :
-    #     if CSVname == '' :
-    #         CSVname = list( self.CSV.keys() )[-1]
+    def CSVextractBacis(self, CSVname='' ) :
+        if CSVname == '' :
+            CSVname = list( self.CSV.keys() )[-1]
         
-    #     if self.name is None :
-    #         try:
-    #             self.name = self.CSV[CSVname]['[S3INFO]']['ORIGIN'][0]
-    #         except :
-    #             pass
-    #     if self.start is None :
-    #         try :
-    #             self.start = np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ) ,'s')
-    #         except:
-    #             pass
-    #     else :
-    #         try :
-    #             if self.start > np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ) ,'s') :
-    #                 self.start = np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ) ,'s')
-    #         except :
-    #             pass
-    #     try :        
-    #         self.null = self.CSV[CSVname]['[S3INFO]']['NULLVALUE'][0]
-    #         nullSet = True
-    #     except :
-    #         nullSet = False
-    #     if nullSet == True :
-    #         try :
-    #             self.null = int(self.null)
-    #         except :
-    #             try :
-    #                 self.null = float(self.null)
-    #             except:
-    #                 pass
+        if self.name is None :
+            try:
+                self.name = self.CSV[CSVname]['[S3INFO]']['ORIGIN'][0]
+            except :
+                pass
+        if self.start is None :
+            try :
+                self.start = np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ) ,'s')
+            except:
+                pass
+        else :
+            try :
+                if self.start > np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ) ,'s') :
+                    self.start = np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ) ,'s')
+            except :
+                pass
+        try :        
+            self.null = self.CSV[CSVname]['[S3INFO]']['NULLVALUE'][0]
+            nullSet = True
+        except :
+            nullSet = False
+        if nullSet == True :
+            try :
+                self.null = int(self.null)
+            except :
+                try :
+                    self.null = float(self.null)
+                except:
+                    pass
     
-    # def CSVextractHeaders(self, CSVname='' ):
-    #     if CSVname == '' :
-    #         CSVname = list( self.CSV.keys() )[-1]
+    def CSVextractHeaders(self, CSVname='' ):
+        if CSVname == '' :
+            CSVname = list( self.CSV.keys() )[-1]
             
-    #     CSVkeys = []
-    #     ECLkeys = []
-    #     VIPkeys = []
-    #     CSVwells = []
-    #     for i in range( len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] ) ):
-    #         if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ) > 0 :
-    #             self.units[ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] ] = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
-    #             if self.CSV[CSVname]['[HEADERS]']['CLASS'][i].strip().upper() == 'WELL' :
-    #                 CSVwells += [ self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ]
-    #         else :
-    #             self.units[ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] ] = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
-    #         SimResult.CSV_Variable2Verbose[ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] ] = self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i] 
-    #         SimResult.CSV_Verbose2Variable[ self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i] ] = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] 
-    #         CSVkeys += [ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] +':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] ]
-    #         ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] , speak=self.speak )
-    #         if ECLkey != None :
-    #             ECLkeys += [ ECLkey ]
-    #             VIPkey , keyType , keyName = fromECLtoVIP( ECLkey , self.speak )
-    #             VIPkeys += [ VIPkey + ':' + keyName ]
+        CSVkeys = []
+        ECLkeys = []
+        VIPkeys = []
+        CSVwells = []
+        for i in range( len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] ) ):
+            if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ) > 0 :
+                self.units[ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] ] = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
+                if self.CSV[CSVname]['[HEADERS]']['CLASS'][i].strip().upper() == 'WELL' :
+                    CSVwells += [ self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ]
+            else :
+                self.units[ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] ] = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
+            SimResult.CSV_Variable2Verbose[ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] ] = self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i] 
+            SimResult.CSV_Verbose2Variable[ self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i] ] = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] 
+            CSVkeys += [ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] +':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] ]
+            ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] , speak=self.speak )
+            if ECLkey != None :
+                ECLkeys += [ ECLkey ]
+                VIPkey , keyType , keyName = fromECLtoVIP( ECLkey , self.speak )
+                VIPkeys += [ VIPkey + ':' + keyName ]
             
-    #         fullName = self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]
-    #         self.pandasColumns[fullName] = [ self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] , self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , self.CSV[CSVname]['[HEADERS]']['UNITS'][i] , self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i] ]
+            fullName = self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]
+            self.pandasColumns[fullName] = [ self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] , self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , self.CSV[CSVname]['[HEADERS]']['UNITS'][i] , self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i] ]
         
-    #     CSVwells = list ( set( list( self.wells ) + list( set( CSVwells ) ) ) )
-    #     CSVwells.sort()
-    #     self.wells = tuple ( CSVwells )
-    #     self.keysCSV = tuple ( set( list( self.keysCSV ) + list( set( CSVkeys ) ) ) )
-    #     self.keysVIP = tuple ( set(  list( self.keysVIP ) + list( set( VIPkeys ) ) ) )
-    #     self.keysECL = tuple ( set(  list( self.keysECL ) + list( set( ECLkeys ) ) ) )
+        CSVwells = list ( set( list( self.wells ) + list( set( CSVwells ) ) ) )
+        CSVwells.sort()
+        self.wells = tuple ( CSVwells )
+        self.keysCSV = tuple ( set( list( self.keysCSV ) + list( set( CSVkeys ) ) ) )
+        self.keysVIP = tuple ( set(  list( self.keysVIP ) + list( set( VIPkeys ) ) ) )
+        self.keysECL = tuple ( set(  list( self.keysECL ) + list( set( ECLkeys ) ) ) )
     
-    # def CSVextractVectors(self, CSVname ):
-    #     numHeaders = len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] )
+    def CSVextractVectors(self, CSVname ):
+        numHeaders = len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] )
         
-    #     for i in range( numHeaders ) :
-    #         if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ) > 0 :
-    #             CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i]
-    #         else :
-    #             CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]
-    #         ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] , speak=self.speak )
-    #         Vector = self.CSV[CSVname]['[DATA]'][i::numHeaders]
-    #         while len(Vector) > 0 and Vector[-1] == '' :
-    #             Vector = Vector[:-1]
-    #         if len(Vector) > 0 :
-    #             Unit = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
-    #             verbose( self.speak , 1 , ' Setting vector for CSV key ' + CSVkey )
-    #             self.set_Vector( Key=CSVkey , VectorData=Vector , Units=Unit , DataType='auto' , overwrite=True) 
-    #             if ECLkey != None and len(ECLkey) > 0 :
-    #                 verbose( self.speak , 1 , ' Setting vector for ECL key ' + ECLkey )
-    #                 self.set_Vector( Key=ECLkey , VectorData=Vector , Units=Unit , DataType='auto' , overwrite=True) 
+        for i in range( numHeaders ) :
+            if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ) > 0 :
+                CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i]
+            else :
+                CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]
+            ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] , speak=self.speak )
+            Vector = self.CSV[CSVname]['[DATA]'][i::numHeaders]
+            while len(Vector) > 0 and Vector[-1] == '' :
+                Vector = Vector[:-1]
+            if len(Vector) > 0 :
+                Unit = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
+                verbose( self.speak , 1 , ' Setting vector for CSV key ' + CSVkey )
+                self.set_Vector( Key=CSVkey , VectorData=Vector , Units=Unit , DataType='auto' , overwrite=True) 
+                if ECLkey != None and len(ECLkey) > 0 :
+                    verbose( self.speak , 1 , ' Setting vector for ECL key ' + ECLkey )
+                    self.set_Vector( Key=ECLkey , VectorData=Vector , Units=Unit , DataType='auto' , overwrite=True) 
         
-    #     if 'TIME' in self.CSV[CSVname]['[HEADERS]']['VARIABLE'] :
-    #         iTIME = self.CSV[CSVname]['[HEADERS]']['VARIABLE'].index('TIME')
-    #         start = np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ) ,'s')
-    #         TIME = self.CSV[CSVname]['[DATA]'][iTIME::numHeaders]
-    #         while len(TIME) > 0 and TIME[-1] == '' :
-    #             TIME = TIME[:-1]
-    #         DATE = np.empty(len(TIME), dtype='datetime64[s]')
-    #         for i in range(len(TIME)) :
-    #             DATE[i] = start + np.timedelta64( timedelta(days=TIME[i]) )  
+        if 'TIME' in self.CSV[CSVname]['[HEADERS]']['VARIABLE'] :
+            iTIME = self.CSV[CSVname]['[HEADERS]']['VARIABLE'].index('TIME')
+            start = np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ) ,'s')
+            TIME = self.CSV[CSVname]['[DATA]'][iTIME::numHeaders]
+            while len(TIME) > 0 and TIME[-1] == '' :
+                TIME = TIME[:-1]
+            DATE = np.empty(len(TIME), dtype='datetime64[s]')
+            for i in range(len(TIME)) :
+                DATE[i] = start + np.timedelta64( timedelta(days=TIME[i]) )  
                 
-    # def get_csvVector(self, CSVname=None , CLASS='' , MEMBER='' , VARIABLE='' ):
-    #     if CSVname is None :
-    #         CSVnames = list( self.CSV.keys() )
-    #     elif type(CSVname) == str :
-    #         CSVnames = [ CSVname ]
-    #     Results = {}
-    #     # Unit = None
-    #     # Verbose = None
-    #     Data = None
-    #     Vector = None
-    #     for CSVname in CSVnames :
-    #         verbose( self.speak , 1 , ' looking into the CSV ' + CSVname )
-    #         numHeaders = len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] )
+    def get_csvVector(self, CSVname=None , CLASS='' , MEMBER='' , VARIABLE='' ):
+        if CSVname is None :
+            CSVnames = list( self.CSV.keys() )
+        elif type(CSVname) == str :
+            CSVnames = [ CSVname ]
+        Results = {}
+        # Unit = None
+        # Verbose = None
+        Data = None
+        Vector = None
+        for CSVname in CSVnames :
+            verbose( self.speak , 1 , ' looking into the CSV ' + CSVname )
+            numHeaders = len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] )
             
-    #         # headers = {'CLASS' : [] , 'MEMBER' : [] , 'VARIABLE' : []}
-    #         Results[CSVname] = {}
-    #         for col in range( numHeaders ) :
-    #             CLASSflag = False
-    #             MEMBERflag = False
-    #             VARIABLEflag = False
+            # headers = {'CLASS' : [] , 'MEMBER' : [] , 'VARIABLE' : []}
+            Results[CSVname] = {}
+            for col in range( numHeaders ) :
+                CLASSflag = False
+                MEMBERflag = False
+                VARIABLEflag = False
                                    
-    #             if CLASS != '' and self.CSV[CSVname]['[HEADERS]']['CLASS'][col].strip() == MEMBER :
-    #                 verbose( self.speak , 1 , 'mathcing CLASS')
-    #                 CLASSflag = True
-    #             elif CLASS == '' :
-    #                 CLASSflag = True
-    #             if MEMBER != '' and self.CSV[CSVname]['[HEADERS]']['MEMBER'][col].strip() == MEMBER :
-    #                 verbose( self.speak , 1 , 'mathcing MEMBER')
-    #                 MEMBERflag = True
-    #             elif MEMBER == '' :
-    #                 MEMBERflag = True
-    #             if VARIABLE != '' and self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col].strip() == MEMBER :
-    #                 verbose( self.speak , 1 , 'mathcing VARIABLE')
-    #                 VARIABLEflag = True
-    #             elif VARIABLE == '' :
-    #                 VARIABLEflag = True
+                if CLASS != '' and self.CSV[CSVname]['[HEADERS]']['CLASS'][col].strip() == MEMBER :
+                    verbose( self.speak , 1 , 'mathcing CLASS')
+                    CLASSflag = True
+                elif CLASS == '' :
+                    CLASSflag = True
+                if MEMBER != '' and self.CSV[CSVname]['[HEADERS]']['MEMBER'][col].strip() == MEMBER :
+                    verbose( self.speak , 1 , 'mathcing MEMBER')
+                    MEMBERflag = True
+                elif MEMBER == '' :
+                    MEMBERflag = True
+                if VARIABLE != '' and self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col].strip() == MEMBER :
+                    verbose( self.speak , 1 , 'mathcing VARIABLE')
+                    VARIABLEflag = True
+                elif VARIABLE == '' :
+                    VARIABLEflag = True
                 
-    #             if CLASSflag * MEMBERflag * VARIABLEflag == 1 :
-    #                 verbose( self.speak , 1 , '\nVECTOR ' + CLASS + ':' + MEMBER + ':' + VARIABLE + ' FOUND!\n')
-    #                 Data = self.CSV[CSVname]['[DATA]'][col::numHeaders]
-    #                 Data = tuple(Data)
-    #                 Vector = list(Data)
-    #                 while len(Vector) > 0 and Vector[-1] == '' :
-    #                     Vector = Vector[:-1]
-    #                 if len(Vector) > 0 :
-    #                     Temp = []
-    #                     Failed = True
-    #                     if '.' in ' '.join(Vector) or 'E-' in ' '.join(Vector) or 'E+' in ' '.join(Vector):
-    #                         for v in range(len(Vector)) :
-    #                             try :
-    #                                 Temp.append( float(Vector[v]) )
-    #                                 Failed = False
-    #                             except:
-    #                                 break
-    #                     else :
-    #                         for v in range(len(Vector)) :
-    #                             try :
-    #                                 if Vector[v].isdigit() :
-    #                                     Temp.append( int(Vector[v]) )
-    #                                     Failed = False
-    #                                 else :
-    #                                     try :
-    #                                         Temp.append( float(Vector[v]) )
-    #                                         Failed = False
-    #                                     except:
-    #                                         break
-    #                             except:
-    #                                 break
-    #                     if not Failed : 
-    #                         Vector = np.array(Temp)
-    #                     else :
-    #                         Vector = np.array(Vector)
-    #                 if CSVname not in Results :
-    #                     Results[CSVname] = {}
-    #                 Results[CSVname][col] = {}
-    #                 Results[CSVname][col]['CLASS'] = self.CSV[CSVname]['[HEADERS]']['CLASS'][col]
-    #                 Results[CSVname][col]['MEMBER'] = self.CSV[CSVname]['[HEADERS]']['MEMBER'][col]
-    #                 Results[CSVname][col]['VARIABLE'] = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col]
-    #                 Results[CSVname][col]['UNITS'] = self.CSV[CSVname]['[HEADERS]']['UNITS'][col]
-    #                 Results[CSVname][col]['VERBOSE'] = self.CSV[CSVname]['[HEADERS]']['VERBOSE'][col]
-    #                 Results[CSVname][col]['DATA'] = Data
-    #                 Results[CSVname][col]['NumpyArray'] = Vector
-    #     tot = 0
-    #     for CSVname in CSVnames :
-    #         tot += len( list( Results[CSVname].keys() ) )
-    #     verbose( self.speak , 2 , ' ' + str(tot) + ' matches found for ' + CLASS + ':' + MEMBER + ':' + VARIABLE + '.')
-    #     return Results
+                if CLASSflag * MEMBERflag * VARIABLEflag == 1 :
+                    verbose( self.speak , 1 , '\nVECTOR ' + CLASS + ':' + MEMBER + ':' + VARIABLE + ' FOUND!\n')
+                    Data = self.CSV[CSVname]['[DATA]'][col::numHeaders]
+                    Data = tuple(Data)
+                    Vector = list(Data)
+                    while len(Vector) > 0 and Vector[-1] == '' :
+                        Vector = Vector[:-1]
+                    if len(Vector) > 0 :
+                        Temp = []
+                        Failed = True
+                        if '.' in ' '.join(Vector) or 'E-' in ' '.join(Vector) or 'E+' in ' '.join(Vector):
+                            for v in range(len(Vector)) :
+                                try :
+                                    Temp.append( float(Vector[v]) )
+                                    Failed = False
+                                except:
+                                    break
+                        else :
+                            for v in range(len(Vector)) :
+                                try :
+                                    if Vector[v].isdigit() :
+                                        Temp.append( int(Vector[v]) )
+                                        Failed = False
+                                    else :
+                                        try :
+                                            Temp.append( float(Vector[v]) )
+                                            Failed = False
+                                        except:
+                                            break
+                                except:
+                                    break
+                        if not Failed : 
+                            Vector = np.array(Temp)
+                        else :
+                            Vector = np.array(Vector)
+                    if CSVname not in Results :
+                        Results[CSVname] = {}
+                    Results[CSVname][col] = {}
+                    Results[CSVname][col]['CLASS'] = self.CSV[CSVname]['[HEADERS]']['CLASS'][col]
+                    Results[CSVname][col]['MEMBER'] = self.CSV[CSVname]['[HEADERS]']['MEMBER'][col]
+                    Results[CSVname][col]['VARIABLE'] = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col]
+                    Results[CSVname][col]['UNITS'] = self.CSV[CSVname]['[HEADERS]']['UNITS'][col]
+                    Results[CSVname][col]['VERBOSE'] = self.CSV[CSVname]['[HEADERS]']['VERBOSE'][col]
+                    Results[CSVname][col]['DATA'] = Data
+                    Results[CSVname][col]['NumpyArray'] = Vector
+        tot = 0
+        for CSVname in CSVnames :
+            tot += len( list( Results[CSVname].keys() ) )
+        verbose( self.speak , 2 , ' ' + str(tot) + ' matches found for ' + CLASS + ':' + MEMBER + ':' + VARIABLE + '.')
+        return Results
                 
-    # def CSVloadVector(self, key , VIPkey='' , keyType='' , keyName='' , CSVname=None ):
+    def CSVloadVector(self, key , VIPkey='' , keyType='' , keyName='' , CSVname=None ):
         
-    #     key = key.strip().upper()
+        key = key.strip().upper()
         
-    #     if key in ( 'DATE' , 'DATES' ) :
-    #         DATEflag = key
-    #         key = 'TIME'
-    #     else :
-    #         DATEflag = False
+        if key in ( 'DATE' , 'DATES' ) :
+            DATEflag = key
+            key = 'TIME'
+        else :
+            DATEflag = False
         
-    #     keyword = key
+        keyword = key
         
-    #     if CSVname is None :
-    #         CSVnames = list( self.CSV.keys() )
-    #     elif type(CSVname) == str :
-    #         CSVnames = [ CSVname ]
+        if CSVname is None :
+            CSVnames = list( self.CSV.keys() )
+        elif type(CSVname) == str :
+            CSVnames = [ CSVname ]
         
-    #     if keyName == '' :
-    #         if ':' in key and len(key.split(':')[1])>0 :
-    #             keyName = key.split(':')[1]
-    #     else :
-    #         keyName = keyName.strip()
+        if keyName == '' :
+            if ':' in key and len(key.split(':')[1])>0 :
+                keyName = key.split(':')[1]
+        else :
+            keyName = keyName.strip()
         
-    #     if keyType == '' :
-    #         if ':' in key :
-    #             if key.split(':')[1] in self.get_Wells() :
-    #                 keyType = 'WELL'
-    #         elif ':' in VIPkey :
-    #             if VIPkey.split(':')[1] in self.get_Wells() :
-    #                 keyType = 'WELL'
-    #         elif key[0] == 'F' :
-    #             keyType = 'FIELD'
-    #             keyName = 'FIELD'
-    #         elif key[0] == 'W' :
-    #             keyType = 'WELL'
+        if keyType == '' :
+            if ':' in key :
+                if key.split(':')[1] in self.get_Wells() :
+                    keyType = 'WELL'
+            elif ':' in VIPkey :
+                if VIPkey.split(':')[1] in self.get_Wells() :
+                    keyType = 'WELL'
+            elif key[0] == 'F' :
+                keyType = 'FIELD'
+                keyName = 'FIELD'
+            elif key[0] == 'W' :
+                keyType = 'WELL'
 
-    #     Variable , Class , Member = self.fromECLtoCSV( key )
+        Variable , Class , Member = self.fromECLtoCSV( key )
         
-    #     if key in UniversalKeys or VIPkey in UniversalKeys :
-    #         keyType = 'MISCELLANEOUS'
-    #         keyName = ''
-    #         if key in UniversalKeys :
-    #             keyword = key
-    #         else : 
-    #             keyword = VIPkey
+        if key in UniversalKeys or VIPkey in UniversalKeys :
+            keyType = 'MISCELLANEOUS'
+            keyName = ''
+            if key in UniversalKeys :
+                keyword = key
+            else : 
+                keyword = VIPkey
 
-    #     elif key in ( 'BHP' , 'THP' ) or VIPkey in ( 'BHP' , 'THP' ) :
-    #         keyType == 'WELL'
+        elif key in ( 'BHP' , 'THP' ) or VIPkey in ( 'BHP' , 'THP' ) :
+            keyType == 'WELL'
             
-    #     if keyName == 'ROOT' :
-    #         keyName = 'FIELD'
+        if keyName == 'ROOT' :
+            keyName = 'FIELD'
 
-    #     FOUNDflag = False
-    #     for CSVname in CSVnames :
-    #         numHeaders = len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] )
-    #         verbose( self.speak , -1 , ' looking for vector for key: ' + str(key) + ' where variable=' + Variable + ', class=' + Class + ' or ' + keyType + ' and member=' + Member + ' or ' + keyName )
-    #         for col in range( numHeaders ) :
-    #             if ( self.CSV[CSVname]['[HEADERS]']['CLASS'][col] == keyType or self.CSV[CSVname]['[HEADERS]']['CLASS'][col] == Class ) and \
-    #                ( self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] == keyName or self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] == Member ) and \
-    #                ( self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] == Variable or self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] == keyword ) :
-    #                 verbose( self.speak , -1 , ' found vector for key: ' + str(key) + ' where variable=' + self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] + ', class=' + self.CSV[CSVname]['[HEADERS]']['CLASS'][col] + ' and member=' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] + '.' )
-    #                 if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] ) > 0 :
-    #                     CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][col]
-    #                 else :
-    #                     CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col]
-    #                 ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][col] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] , speak=self.speak )
-    #                 Vector = self.CSV[CSVname]['[DATA]'][col::numHeaders]
-    #                 while len(Vector) > 0 and Vector[-1] == '' :
-    #                     Vector = Vector[:-1]
-    #                 if len(Vector) > 0 :
-    #                     Temp = []
-    #                     Failed = True
-    #                     if '.' in ' '.join(Vector) or 'E-' in ' '.join(Vector) or 'E+' in ' '.join(Vector):
-    #                         for i in range(len(Vector)) :
-    #                             try :
-    #                                 Temp.append( float(Vector[i]) )
-    #                                 Failed = False
-    #                             except:
-    #                                 break
-    #                     else :
-    #                         for i in range(len(Vector)) :
-    #                             try :
-    #                                 if Vector[i].isdigit() :
-    #                                     Temp.append( int(Vector[i]) )
-    #                                     Failed = False
-    #                                 else :
-    #                                     try :
-    #                                         Temp.append( float(Vector[i]) )
-    #                                         Failed = False
-    #                                     except:
-    #                                         break
-    #                             except:
-    #                                 break
-    #                     if not Failed : 
-    #                         Vector = np.array(Temp)
-    #                     else :
-    #                         Vector = np.array(Vector)
-    #                     Unit = self.CSV[CSVname]['[HEADERS]']['UNITS'][col]
-    #                     verbose( self.speak , 1 , ' Setting vector for CSV key ' + CSVkey )
-    #                     self.set_Vector( Key=CSVkey , VectorData=Vector , Units=Unit , DataType='auto' , overwrite=True) 
-    #                     if ECLkey != None and len(ECLkey) > 0 :
-    #                         verbose( self.speak , 1 , ' Setting vector for ECL key ' + ECLkey )
-    #                         self.set_Vector( Key=ECLkey , VectorData=Vector , Units=Unit , DataType='auto' , overwrite=True) 
-    #                     FOUNDflag = True
-    #                     if type(DATEflag) == str  :
-    #                         verbose( self.speak , 1 , ' Creating date vector for CSV key ' + DATEflag )
-    #                         start = np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ) , 's' )
-    #                         TIME = self.vectors['TIME']
-    #                         DATE = np.empty(len(TIME), dtype='datetime64[s]')
-    #                         for i in range(len(TIME)) :
-    #                             DATE[i] = start + np.timedelta64( timedelta(days=TIME[i]) )  
-    #                         self.vectors[DATEflag] = DATE
-    #                         self.units[DATEflag] = 'DATE'
-    #                     break
+        FOUNDflag = False
+        for CSVname in CSVnames :
+            numHeaders = len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] )
+            verbose( self.speak , -1 , ' looking for vector for key: ' + str(key) + ' where variable=' + Variable + ', class=' + Class + ' or ' + keyType + ' and member=' + Member + ' or ' + keyName )
+            for col in range( numHeaders ) :
+                if ( self.CSV[CSVname]['[HEADERS]']['CLASS'][col] == keyType or self.CSV[CSVname]['[HEADERS]']['CLASS'][col] == Class ) and \
+                   ( self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] == keyName or self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] == Member ) and \
+                   ( self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] == Variable or self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] == keyword ) :
+                    verbose( self.speak , -1 , ' found vector for key: ' + str(key) + ' where variable=' + self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] + ', class=' + self.CSV[CSVname]['[HEADERS]']['CLASS'][col] + ' and member=' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] + '.' )
+                    if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] ) > 0 :
+                        CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][col]
+                    else :
+                        CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col]
+                    ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][col] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] , speak=self.speak )
+                    Vector = self.CSV[CSVname]['[DATA]'][col::numHeaders]
+                    while len(Vector) > 0 and Vector[-1] == '' :
+                        Vector = Vector[:-1]
+                    if len(Vector) > 0 :
+                        Temp = []
+                        Failed = True
+                        if '.' in ' '.join(Vector) or 'E-' in ' '.join(Vector) or 'E+' in ' '.join(Vector):
+                            for i in range(len(Vector)) :
+                                try :
+                                    Temp.append( float(Vector[i]) )
+                                    Failed = False
+                                except:
+                                    break
+                        else :
+                            for i in range(len(Vector)) :
+                                try :
+                                    if Vector[i].isdigit() :
+                                        Temp.append( int(Vector[i]) )
+                                        Failed = False
+                                    else :
+                                        try :
+                                            Temp.append( float(Vector[i]) )
+                                            Failed = False
+                                        except:
+                                            break
+                                except:
+                                    break
+                        if not Failed : 
+                            Vector = np.array(Temp)
+                        else :
+                            Vector = np.array(Vector)
+                        Unit = self.CSV[CSVname]['[HEADERS]']['UNITS'][col]
+                        verbose( self.speak , 1 , ' Setting vector for CSV key ' + CSVkey )
+                        self.set_Vector( Key=CSVkey , VectorData=Vector , Units=Unit , DataType='auto' , overwrite=True) 
+                        if ECLkey != None and len(ECLkey) > 0 :
+                            verbose( self.speak , 1 , ' Setting vector for ECL key ' + ECLkey )
+                            self.set_Vector( Key=ECLkey , VectorData=Vector , Units=Unit , DataType='auto' , overwrite=True) 
+                        FOUNDflag = True
+                        if type(DATEflag) == str  :
+                            verbose( self.speak , 1 , ' Creating date vector for CSV key ' + DATEflag )
+                            start = np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ) , 's' )
+                            TIME = self.vectors['TIME']
+                            DATE = np.empty(len(TIME), dtype='datetime64[s]')
+                            for i in range(len(TIME)) :
+                                DATE[i] = start + np.timedelta64( timedelta(days=TIME[i]) )  
+                            self.vectors[DATEflag] = DATE
+                            self.units[DATEflag] = 'DATE'
+                        break
         
-    #     if FOUNDflag == False :
-    #         verbose( self.speak , 2 , 'vector corresponding to key ' + key + ' not found in CSV data.')
-    #     else :
-    #         if type(DATEflag) == str :
-    #             return DATE
-    #         else:
-    #             return Vector
+        if FOUNDflag == False :
+            verbose( self.speak , 2 , 'vector corresponding to key ' + key + ' not found in CSV data.')
+        else :
+            if type(DATEflag) == str :
+                return DATE
+            else:
+                return Vector
     
-    # def CSVgenerateResults(self) :
-    #     for CSVname in list( self.CSV.keys() ) :
-    #         self.CSV[CSVname] = self.CSV[CSVname]
-    #         numHeaders = len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] )
-    #         numRows = int( len( self.CSV[CSVname]['[DATA]'] ) / numHeaders )
+    def CSVgenerateResults(self) :
+        for CSVname in list( self.CSV.keys() ) :
+            self.CSV[CSVname] = self.CSV[CSVname]
+            numHeaders = len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] )
+            numRows = int( len( self.CSV[CSVname]['[DATA]'] ) / numHeaders )
 
-    #         # generate the diccionaries for every CLASS:
-    #         verbose( self.speak , 3 , ' generating raw data dictionary from CSV table,\n  > preparing results dictionary\n    ... please wait ...')
-    #         for sss in list( set( self.CSV[CSVname]['[HEADERS]']['CLASS'] ) ) :
-    #             if sss not in self.results.keys() :
-    #                 self.results[ str(sss) + '@' + extension(self.path)[1]+extension(self.path)[0] ] = ( str(sss) , { 'Data':{} , 'Units':{} } ) 
+            # generate the diccionaries for every CLASS:
+            verbose( self.speak , 3 , ' generating raw data dictionary from CSV table,\n  > preparing results dictionary\n    ... please wait ...')
+            for sss in list( set( self.CSV[CSVname]['[HEADERS]']['CLASS'] ) ) :
+                if sss not in self.results.keys() :
+                    self.results[ str(sss) + '@' + extension(self.path)[1]+extension(self.path)[0] ] = ( str(sss) , { 'Data':{} , 'Units':{} } ) 
             
-    #         # generate Units dictionary
-    #         verbose( self.speak , 3 , '  > loading units\n    ... please wait ...')
-    #         for i in range( numHeaders ) :
-    #             self.results[ self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + '@' + extension(self.path)[1]+extension(self.path)[0] ][1]['Units'][ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] ] = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
+            # generate Units dictionary
+            verbose( self.speak , 3 , '  > loading units\n    ... please wait ...')
+            for i in range( numHeaders ) :
+                self.results[ self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + '@' + extension(self.path)[1]+extension(self.path)[0] ][1]['Units'][ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] ] = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
             
-    #         # load the series from [DATA] into results dictionary
-    #         verbose( self.speak , 3 , '  > transforming and loading data series\n    ... please wait ...')
-    #         for i in range( numHeaders ) :
-    #             Vector = self.CSV[CSVname]['[DATA]'][i::numHeaders]
-    #             while len( Vector ) > 0 and Vector[-1] == '' :
-    #                 Vector = Vector[:-1]
-    #             if len(Vector) != numRows :
-    #                 print('issue with rows', len(Vector) , numRows )
-    #             if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] ) > 0 :
-    #                 Name = self.CSV[CSVname]['[HEADERS]']['MEMBER'][i]
-    #             else :
-    #                 Name = 'ROOT'
-    #             self.results[ self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + '@' + extension(self.path)[1]+extension(self.path)[0] ][1]['Data'][ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]+':'+Name ] = Vector
-    #         verbose( self.speak , 3 , '  > DONE! results dictionary generated.')
+            # load the series from [DATA] into results dictionary
+            verbose( self.speak , 3 , '  > transforming and loading data series\n    ... please wait ...')
+            for i in range( numHeaders ) :
+                Vector = self.CSV[CSVname]['[DATA]'][i::numHeaders]
+                while len( Vector ) > 0 and Vector[-1] == '' :
+                    Vector = Vector[:-1]
+                if len(Vector) != numRows :
+                    print('issue with rows', len(Vector) , numRows )
+                if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] ) > 0 :
+                    Name = self.CSV[CSVname]['[HEADERS]']['MEMBER'][i]
+                else :
+                    Name = 'ROOT'
+                self.results[ self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + '@' + extension(self.path)[1]+extension(self.path)[0] ][1]['Data'][ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]+':'+Name ] = Vector
+            verbose( self.speak , 3 , '  > DONE! results dictionary generated.')
         
-    #     verbose( self.speak , 3 , '  > checking the transformed data\n    ... please wait ...')
-    #     OK = True
-    #     for CSV in list( self.results.keys() ) :
-    #         KEYsLenght = []
-    #         for KEY in list( self.results[CSV][1]['Data'].keys() ) :
-    #             KEYsLenght.append( len( self.results[CSV][1]['Data'][KEY] ) )
-    #         if max(KEYsLenght) == min(KEYsLenght) :
-    #             verbose( self.speak , 3 , '  > ' + str(CSV) + ' properly created with ' + str( numHeaders ) + ' columns and ' + str( max(KEYsLenght) ) + ' rows.')
-    #         else :
-    #             print( max(KEYsLenght) , min(KEYsLenght) , numRows)
-    #             verbose( self.speak , -1 , '  > ' + str(CSV) + ' issue: ' + str( numHeaders ) + ' columns and ' + str( max(KEYsLenght) ) + ' rows.')
-    #             OK = False
+        verbose( self.speak , 3 , '  > checking the transformed data\n    ... please wait ...')
+        OK = True
+        for CSV in list( self.results.keys() ) :
+            KEYsLenght = []
+            for KEY in list( self.results[CSV][1]['Data'].keys() ) :
+                KEYsLenght.append( len( self.results[CSV][1]['Data'][KEY] ) )
+            if max(KEYsLenght) == min(KEYsLenght) :
+                verbose( self.speak , 3 , '  > ' + str(CSV) + ' properly created with ' + str( numHeaders ) + ' columns and ' + str( max(KEYsLenght) ) + ' rows.')
+            else :
+                print( max(KEYsLenght) , min(KEYsLenght) , numRows)
+                verbose( self.speak , -1 , '  > ' + str(CSV) + ' issue: ' + str( numHeaders ) + ' columns and ' + str( max(KEYsLenght) ) + ' rows.')
+                OK = False
         
-    #     if OK :
-    #         verbose( self.speak , 3 , '  > DONE! results dictionary generated.')
-    #     else :
-    #         verbose( self.speak , -1 , '  > results dictionary generated with issues.')
+        if OK :
+            verbose( self.speak , 3 , '  > DONE! results dictionary generated.')
+        else :
+            verbose( self.speak , -1 , '  > results dictionary generated with issues.')
         
     def reload(self) :
-        # if self.CSV == False :
-        #     self.loadSSS(self.path)
-        # else :
-        #     self.loadCSV(self.path)
-        self.loadSSS(self.path)
+        if self.CSV == False :
+            self.loadSSS(self.path)
+        else :
+            self.loadCSV(self.path)
     
     def strip(self,VIPkey,stringToStrip=' ') :
         """
@@ -708,7 +682,7 @@ class VIP(SimResult):
             
       ####################### end of auxiliar functions #######################
         
-        if SSStype == [] : # and self.CSV == False:
+        if SSStype == [] and self.CSV == False:
             for sss in list(self.results.keys()) :
                 SSStype += [self.results[sss][0]]
         elif type(SSStype) == str :
@@ -743,8 +717,8 @@ class VIP(SimResult):
         
         
         ###### in case of CSV load :
-        # if self.CSV != False :
-        #     return self.CSVloadVector( key , VIPkey , keyType , keyName ) 
+        if self.CSV != False :
+            return self.CSVloadVector( key , VIPkey , keyType , keyName ) 
         ###### in case of CSV load.
         
         for keyType in keyTypeList :
@@ -834,19 +808,16 @@ class VIP(SimResult):
     def extract_Wells(self) : #,pattern=None) :
         # preparing object attribute
         wellsList = list( self.wells )
-        # if self.CSV == False :
-        #     for sss in self.results :
-        #         if self.results[sss][0] == 'WELL' :
-        #             wellsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() ) 
-        # else :
-        #     for CSVname in self.CSV :
-        #         for i in range( len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] ) ):
-        #             if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ) > 0 :
-        #                 if self.CSV[CSVname]['[HEADERS]']['CLASS'][i].strip().upper() == 'WELL' :
-        #                     wellsList += [ self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ]
-        for sss in self.results :
-            if self.results[sss][0] == 'WELL' :
-                wellsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() ) 
+        if self.CSV == False :
+            for sss in self.results :
+                if self.results[sss][0] == 'WELL' :
+                    wellsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() ) 
+        else :
+            for CSVname in self.CSV :
+                for i in range( len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] ) ):
+                    if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ) > 0 :
+                        if self.CSV[CSVname]['[HEADERS]']['CLASS'][i].strip().upper() == 'WELL' :
+                            wellsList += [ self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ]
         wellsList = list( set( wellsList ) )
         wellsList.sort()
         self.wells = tuple( wellsList ) 
@@ -890,15 +861,12 @@ class VIP(SimResult):
     def extract_Regions(self,pattern=None) :
         # preparing object attribute
         regionsList = list( self.regions )
-        # if self.CSV == False :
-        #     for sss in self.results :
-        #         if self.results[sss][0] == 'REGION' :
-        #             regionsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() ) 
-        # else :
-        #     pass
-        for sss in self.results :
-            if self.results[sss][0] == 'REGION' :
-                regionsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() ) 
+        if self.CSV == False :
+            for sss in self.results :
+                if self.results[sss][0] == 'REGION' :
+                    regionsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() ) 
+        else :
+            pass
         regionsList = list( set( regionsList ) )
         regionsList.sort()
         self.regions = tuple( regionsList ) 
@@ -1053,27 +1021,22 @@ class VIP(SimResult):
         If pattern is None you will get all the keys of summary
         object.
         """
-        # if self.ECLstyle :
-        #     self.keys = self.keysECL
-        # else :
-        #     self.keys = self.keysVIP
+        if self.ECLstyle :
+            self.keys = self.keysECL
+        else :
+            self.keys = self.keysVIP
         
         if len(self.keys) == 0 or reload == True :
-            keys = []
-            keys +=  list( self.extract_Keys() )
+            self.keys = []
+            self.keys +=  list( self.extract_Keys(pattern) )
             for extra in ( 'TIME' , 'DATE' , 'DATES' ) :
-                if extra not in keys :
-                    keys.append(extra) 
-            keys = tuple( keys )
-        if self.ECLstyle :
-            self.keysECL = keys
-        else :
-            self.keysVIP = keys
-            
+                if extra not in self.keys :
+                    self.keys.append(extra) 
+            self.keys = tuple( self.keys )
         if pattern is None :
-            if self.ECLstyle is True :
+            if self.ECLstyle == True :
                 return self.keysECL
-            elif self.VIPstyle is True :
+            elif self.VIPstyle == True :
                 return self.keysVIP
             else :
                 return self.keys
@@ -1096,7 +1059,7 @@ class VIP(SimResult):
                 for att in atts :
                     attECL = fromVIPtoECL( att , self.results[sss][0] , self.speak )
                     if attECL is None :
-                        self.VIPnotECL.append( self.results[sss][0] + ' : ' + att )
+                        SimResult.VIPnotECL.append( self.results[sss][0] + ' : ' + att )
                         attECL = ''
                     for name in names :
                         keysListVIP.append( att + ':' + name )
@@ -1105,7 +1068,7 @@ class VIP(SimResult):
                         elif self.results[sss][0] in VIP2ECLtype and attECL != '' :
                             keysListECL.append( attECL + ':' + name )
         
-        if len(self.VIPnotECL) > 0 :
+        if len(SimResult.VIPnotECL) > 0 :
             verbose( self.speak , -1 , '\nsome VIP attributes was not recognized as ECL style attributes,\nto get a report of these attributes use the method:\n  .report_VIP_AttributesNotTo_ECL() \n')                
         keysListVIP = list( set( keysListVIP ) )
         keysListVIP.sort()
