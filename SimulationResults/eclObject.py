@@ -15,16 +15,24 @@ from datafiletoolbox.common.inout import verbose
 import numpy as np
 import os
 
-#eclPath = extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib/python' 
-#os.environ['PYTHONPATH'] = eclPath + ';' + os.environ['PYTHONPATH']
-#eclPath = eclPath + ';' + extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib'
-#eclPath = eclPath + ';' + extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
-#os.environ['PATH'] = eclPath + ';' + os.environ['PATH']
 
-#from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
-from ecl.summary import EclSum
-#from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import summary
-       
+try :
+    # try to use libecl instalation from pypi.org
+    from ecl.summary import EclSum
+    from ecl.version import version as libecl_version
+    print('\n using libecl version ' + str(libecl_version))
+except :
+    # try to use my compiled version of libecl from https://github.com/equinor/libecl
+    eclPath = extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib/python' 
+    os.environ['PYTHONPATH'] = eclPath + ';' + os.environ['PYTHONPATH']
+    eclPath = eclPath + ';' + extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib'
+    eclPath = eclPath + ';' + extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
+    os.environ['PATH'] = eclPath + ';' + os.environ['PATH']
+    #from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
+    from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary import EclSum
+    print('\n using ecl from https://github.com/equinor/libecl compiled for Windows10')
+
+
 class ECL(SimResult):
     """
     object to contain eclipse format results read from SMSPEC using libecl from equinor 
