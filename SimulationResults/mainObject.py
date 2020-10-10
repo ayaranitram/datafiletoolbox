@@ -1791,7 +1791,7 @@ class SimResult(object):
             self.wells = self.extract_Wells() 
 
         if pattern is None :
-            return self.wells
+            return tuple(self.wells)
         else:
             return tuple( fnmatch.filter( self.wells , pattern ) )
 
