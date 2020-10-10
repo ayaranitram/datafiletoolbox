@@ -113,7 +113,7 @@ class ECL(SimResult):
         return self.results.numpy_dates
     
     def extract_Wells(self) :
-        self.wells = self.results.wells() 
+        self.wells = tuple( self.results.wells() )
         return self.wells
     
     def extract_Groups(self,pattern=None,reload=False) :
