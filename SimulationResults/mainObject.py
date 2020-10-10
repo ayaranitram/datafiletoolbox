@@ -12,7 +12,7 @@ from datafiletoolbox.Classes.Errors import OverwrittingError
 from datafiletoolbox.common.stringformat import date as strDate
 from datafiletoolbox.common.stringformat import isDate 
 from datafiletoolbox.common.stringformat import multisplit , isnumeric , getnumber
-from datafiletoolbox.common.functions import is_SimulationResult , mainKey , itemKey , wellFromAttribute , isECLkey , keyType
+from datafiletoolbox.common.functions import is_SimulationResult , mainKey , itemKey , wellFromAttribute , isECLkey , keyType , tamiz
 from datafiletoolbox.common.inout import extension
 from datafiletoolbox.common.inout import verbose 
 from datafiletoolbox.PlotResults.SmartPlot import Plot
@@ -330,10 +330,30 @@ class SimResult(object):
     
     def __getitem__(self, item) :
         if type(item) is tuple :
-            pass # what to do with the tupple?
+            if len(item)==0 :
+                return None
+            else :
+                keys , indexes = tamiz( item )
+                meti = self.__getitem__(keys)
+                if meti is None :
+                    return None
+                try :
+                    return meti.loc[indexes]
+                except :
+                    try :
+                        return meti.iloc[indexes]
+                    except :
+                        return None
+                    
         if type(item) is str :
             if self.is_Key(item) :
                 return self.__call__([item])[item]
+            if item in self.wells or item in self.groups or item in self.regions :
+                keys = list( self.get_Keys('*:'+item) )
+                return self.__getitem__(keys)
+            if item in ['FIELD','ROOT'] :
+                keys = list( self.get_Keys('F*') )
+                return self.__getitem__(keys)
             else :
                 meti = self.__getitem__([item])
                 if meti is None :
@@ -360,8 +380,21 @@ class SimResult(object):
                 elif ':' in each :
                     attribute , pattern = each.split(':')
                     cols += self.keyGen(attribute,pattern)
+                elif each in self.wells or each in self.groups or each in self.regions :
+                    cols += list( self.get_Keys('*:'+each) )
+                elif each in ['FIELD','ROOT'] :
+                    cols += list( self.get_Keys('F*') )
 
             return self.__call__(cols)
+        
+        else :
+            try:
+                return self.__getitem__( list( self.get_Keys() ) ).loc[item]
+            except :
+                try :
+                    return self.__getitem__( list( self.get_Keys() ) ).iloc[item]
+                except:
+                    return None
     
     def __setitem__(self,Key,Value,Units=None) :
         """
