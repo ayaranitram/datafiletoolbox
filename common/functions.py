@@ -129,3 +129,23 @@ def wellFromAttribute( listOfAttributes ) :
     for each in listOfAttributes :
         newNames[each] = each.split(':')[-1]
     return newNames
+
+def tamiz( ListOrTuple ) :
+    strings = []
+    others = []
+    
+    if type(ListOrTuple) is str :
+        strings += [ ListOrTuple ]
+    elif type(ListOrTuple) is list or type(ListOrTuple) is tuple :
+        for each in ListOrTuple :
+            if type(each) is list or type(each) is tuple :
+                expanded = tamiz(each)
+                strings += expanded[0]
+                others += expanded[1]
+            elif type(each) is str :
+                strings += [each]
+            else :
+                others += [each]
+    else :
+        others += [ListOrTuple]
+    return strings , others
