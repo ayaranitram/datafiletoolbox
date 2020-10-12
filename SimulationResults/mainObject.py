@@ -358,6 +358,9 @@ class SimResult(object):
             if item in ['FIELD','ROOT'] :
                 keys = list( self.get_Keys('F*') )
                 return self.__getitem__(keys)
+            if len( self.get_Keys(item) ) > 0 :
+                keys = list( self.get_Keys(item) )
+                return self.__getitem__(keys)
             else :
                 meti = self.__getitem__([item])
                 if meti is None :
@@ -388,6 +391,8 @@ class SimResult(object):
                     cols += list( self.get_Keys('*:'+each) )
                 elif each in ['FIELD','ROOT'] :
                     cols += list( self.get_Keys('F*') )
+                else :
+                    cols += list( self.get_Keys(each) )
 
             return self.__call__(cols)
         
