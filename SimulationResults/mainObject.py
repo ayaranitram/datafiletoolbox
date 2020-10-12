@@ -316,6 +316,10 @@ class SimResult(object):
         """
         self.get_Producers()
         self.get_Injectors()
+    
+    @property
+    def index(self) :
+        return self[[ self.keys[0] ]].index
         
     def __call__(self,Key=None,Index=None) :
         if Index is None :
