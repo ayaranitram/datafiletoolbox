@@ -1023,35 +1023,37 @@ class SimDataFrame(DataFrame) :
                 elif k[0].upper() == 'G' :
                     pass
         return ListOfKeys
-        
 
-from datafiletoolbox import loadSimulationResults
-V = loadSimulationResults('/Volumes/git/sampleData/e100/YE_2017_P10_LGR_LA-4HD_VF_30102017.UNSMRY')
-DF = V[['F?PR','DATE','LANOI3X','LA1XST','WOPR']]
-U = V.get_Units(['F?PR','DATE','LANOI3X','LA1XST','WOPR'])
-S = DF['WOPT:LA1XST']
-Us = U['WOPT:LA1XST']
 
-testS = SimSeries( units=Us , data=S )
-print( testS )
 
-testDF = SimDataFrame( data=DF , units=U )
-print(testDF)
-Z = testDF[-1]
-# # Series2Frame(Z)
-A = testDF['WOPR:LANOI3X']
-B = testDF['WOPR:LA1XST']
-F = testDF[['FOPR','FWPR']]
-R1 = A + B
-R2 = A - B
-B.units = 'm3/day'
-testDF.find_Keys('!DATE')
-testDF['FOPT'] = R1
-print(testDF.get_Units('FOPT'))
-print(testDF['FOPT'])
-print(testDF[-1])
-print(testDF)
-G = F[['FOPR','FWPR']]
-G.units = {'FOPR': 'M3/DAY', 'FWPR': 'MSCF/DAY'}
-G = -G
+if __name__ == 'main' :
+    from datafiletoolbox import loadSimulationResults
+    V = loadSimulationResults('/Volumes/git/sampleData/e100/YE_2017_P10_LGR_LA-4HD_VF_30102017.UNSMRY')
+    DF = V[['F?PR','DATE','LANOI3X','LA1XST','WOPR']]
+    U = V.get_Units(['F?PR','DATE','LANOI3X','LA1XST','WOPR'])
+    S = DF['WOPT:LA1XST']
+    Us = U['WOPT:LA1XST']
+    
+    testS = SimSeries( units=Us , data=S )
+    print( testS )
+    
+    testDF = SimDataFrame( data=DF , units=U )
+    print(testDF)
+    Z = testDF[-1]
+    # # Series2Frame(Z)
+    A = testDF['WOPR:LANOI3X']
+    B = testDF['WOPR:LA1XST']
+    F = testDF[['FOPR','FWPR']]
+    R1 = A + B
+    R2 = A - B
+    B.units = 'm3/day'
+    testDF.find_Keys('!DATE')
+    testDF['FOPT'] = R1
+    print(testDF.get_Units('FOPT'))
+    print(testDF['FOPT'])
+    print(testDF[-1])
+    print(testDF)
+    G = F[['FOPR','FWPR']]
+    G.units = {'FOPR': 'M3/DAY', 'FWPR': 'MSCF/DAY'}
+    G = -G
 
