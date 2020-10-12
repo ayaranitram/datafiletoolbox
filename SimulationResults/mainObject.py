@@ -953,6 +953,31 @@ class SimResult(object):
                                 return self.plotUnits[M]
 
     def get_Units(self,Key='--EveryType--') :
+        if type(Key) is str :
+            if Key not in self.keys and Key not in self.attributes :
+                if Key in self.wells or Key in self.groups or Key in self.regions :
+                    Key = list( self.get_Keys('*:'+Key) )
+                elif Key in ['FIELD','ROOT'] :
+                    Key = list( self.get_Keys('F*') )
+                elif len(self.get_Keys(Key)) > 0 :
+                    Key = list( self.get_Keys(Key) )
+        if type(Key) is list :
+            Keys = []
+            for each in Key :
+                if each in self.keys :
+                    Keys += [each]
+                elif each in self.attributes :
+                    Keys += self.attributes[each]
+                elif each in self.wells or each in self.groups or each in self.regions :
+                    Key += list( self.get_Keys('*:'+each) )
+                elif each in ['FIELD','ROOT'] :
+                    Keys += list( self.get_Keys('F*') )
+                elif len(self.get_Keys(each)) > 0 :
+                    Keys += list( self.get_Keys(each) )
+                else :
+                    Keys += [each]
+            Key = Keys[:]
+                
         return self.get_Unit(Key)
 
     def set_Units(self,Key,Unit=None,overwrite=False) :
