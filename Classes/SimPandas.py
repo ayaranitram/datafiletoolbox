@@ -1,0 +1,1057 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Oct 11 11:14:32 2020
+
+@author: martin
+"""
+from io import StringIO
+from shutil import get_terminal_size
+from pandas._config import get_option
+from pandas.io.formats import console
+
+import fnmatch
+import warnings
+from pandas import Series , DataFrame
+import numpy as np
+
+from bases.units import unit # to use unit.isUnit method
+from bases.units import convertUnit, unitProduct, unitDivision
+from bases.units import convertible as convertibleUnits
+
+from datafiletoolbox.common.stringformat import multisplit
+
+_SERIES_WARNING_MSG = """\
+    You are passing unitless data to the SimSeries constructor. Currently,
+    it falls back to returning a pandas Series. But in the future, we will start
+    to raise a TypeError instead."""
+
+def _simseries_constructor_with_fallback(data=None, index=None, units=None, **kwargs):
+    """
+    A flexible constructor for SimSeries._constructor, which needs to be able
+    to fall back to a Series (if a certain operation does not produce
+    units)
+    """
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=_SERIES_WARNING_MSG,
+                category=FutureWarning,
+                module="SimPandas[.*]",
+            )
+            return SimSeries(data=data, index=index, units=units, **kwargs)
+    except TypeError:
+        return Series(data=data, index=index, **kwargs)
+
+
+def Series2Frame(aSimSeries) :
+    """
+    when a row is extracted from a DataFrame, Pandas returns a Series in wich
+    the columns of the DataFrame are converted to the indexes of the Series and
+    the extracted index from the DataFrame is set as the Name of the Series.
+    
+    This function returns the proper DataFrame view of such Series.
+    
+    Works with SimSeries as well as with Pandas standard Series 
+    """
+    if isinstance(aSimSeries, SimSeries) :
+        try :
+            return SimDataFrame( data=dict( zip( list(aSimSeries.index) , aSimSeries.to_list() ) ) , units=aSimSeries.get_Units() , index=[aSimSeries.name] , dtype=aSimSeries.dtype )
+        except :
+            return aSimSeries
+    if isinstance(aSimSeries, Series) :
+        try :
+            return DataFrame( data=dict( zip( list(aSimSeries.index) , aSimSeries.to_list() ) ) , index=[aSimSeries.name] , dtype=aSimSeries.dtype )
+        except :
+            return aSimSeries
+
+class SimSeries(Series) :
+    """
+    A Series object designed to store data with units.
+
+    Parameters
+    ----------
+    data : array-like, dict, scalar value
+        The data to store in the SimSeries.
+    index : array-like or Index
+        The index for the SimSeries.
+    units : string or dictionary of units (optional)
+        Can be any string, but only units acepted by the UnitConverter will
+        be considered when doing arithmetic calculations with other SimSeries 
+        or SimDataFrames.
+
+    kwargs
+        Additional arguments passed to the Series constructor,
+         e.g. ``name``.
+
+    See Also
+    --------
+    SimDataFrame
+    pandas.Series
+
+    """
+    
+    _metadata = ["units","indexKey","speak"]
+    
+    def __init__(self, data=None , units=None , index=None , speak=False , *args , **kwargs) :
+        Uname = None
+        Udict = None
+        self.units = None
+        self.speak = bool(speak)
+        
+        indexInput = None
+        if 'index' in kwargs and type(kwargs['index']) is not None :
+            indexInput = kwargs['index']
+        elif len(args) >= 3 and args[2] is not None :
+            indexInput = args[2]
+        if isinstance(indexInput,(SimSeries,Series)) :
+            if type(indexInput.name) is str :
+                indexInput = indexInput.name
+        if indexInput is None and isinstance(data,(SimSeries,SimDataFrame)) and type(data.indexKey) is str :
+            indexInput = data.indexKey
+        if indexInput is None and 'indexKey' in kwargs :
+            indexInput = kwargs['indexKey']
+        self.indexKey = indexInput
+        
+        if type(units) is dict :
+            Udict , units = units , None
+            if len(Udict) == 1 :
+                if type( Udict[ list(Udict.keys())[0] ] ) is str :
+                    Uname = list(Udict.keys())[0]
+                    units = Udict[ Uname ]                    
+        if type(units) is str :
+            self.units = units
+        kwargs.pop('indexKey',None) 
+        super().__init__(data=data, index=index, *args, **kwargs)
+        if self.name is None and Uname is not None :
+            self.name = Uname
+        if self.name is not None and self.units is None and Udict is not None :
+            if self.name in Udict :
+                self.units = Udict[ self.name ]
+            else :
+                for each in self.index :
+                    if each in Udict :
+                        if type(self.units) is dict :
+                            self.units[each] = Udict[each]
+                        else :
+                            self.units = { each:Udict[each] }
+                    else :
+                        if type(self.units) is dict :
+                            self.units[each] = 'UNITLESS'
+                        else :
+                            self.units = { each:'UNITLESS' }
+    
+    @property
+    def _constructor(self):
+        return _simseries_constructor_with_fallback
+    @property
+    def _constructor_expanddim(self):
+        # from datafiletoolbox.SimPandas.simframe import SimDataFrame
+        return SimDataFrame
+
+    def as_Series(self) :
+        return Series( self )
+    @property
+    def Series(self) :
+        return self.as_Series()
+    @property
+    def S(self) :
+        return self.as_Series()
+    
+    def __neg__(self) :
+        result = -self.as_Series()
+        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+    
+    def __add__(self,other) :
+        # both SimSeries
+        if isinstance(other, SimSeries) :
+            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if type(self.units) is str and type(other.units) is str :
+                if self.units == other.units :
+                    result = self.add(other)
+                    return SimSeries( data=result , units=self.units , dtype=self.dtype )
+                elif convertibleUnits( other.units , self.units ) :
+                    otherC = convertUnit( other , other.units , self.units , self.speak )
+                    result = self.add(otherC)
+                    return SimSeries( data=result , units=self.units , dtype=self.dtype )
+                elif convertibleUnits( self.units , other.units ) :
+                    selfC = convertUnit( self , self.units , other.units , self.speak )
+                    result = other.add(selfC)
+                    return SimSeries( data=result , units=other.units , dtype=other.dtype )
+                else :
+                    result = self.add(other)
+                    return SimSeries( data=result , units=self.units+'+'+other.units , dtype=self.dtype )
+            else :
+                raise NotImplementedError
+        
+        # let's Pandas deal with other types, maintain units and dtype
+        result = self.as_Series() + other
+        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+
+    def __sub__(self,other) :
+        # both SimSeries
+        if isinstance(other, SimSeries) :
+            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if type(self.units) is str and type(other.units) is str :
+                if self.units == other.units :
+                    result = self.sub(other)
+                    return SimSeries( data=result , units=self.units , dtype=self.dtype )
+                elif convertibleUnits( other.units , self.units ) :
+                    otherC = convertUnit( other , other.units , self.units , self.speak )
+                    result = self.sub(otherC)
+                    return SimSeries( data=result , units=self.units , dtype=self.dtype )
+                elif convertibleUnits( self.units , other.units ) :
+                    selfC = convertUnit( self , self.units , other.units , self.speak )
+                    result = other.sub(selfC)
+                    return SimSeries( data=result , units=other.units , dtype=other.dtype )
+                else :
+                    result = self.sub(other)
+                    return SimSeries( data=result , units=self.units+'-'+other.units , dtype=self.dtype )
+            else :
+                raise NotImplementedError
+
+        # let's Pandas deal with other types, maintain units and dtype
+        result = self.as_Series() - other
+        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+    
+    def __mul__(self,other) :
+        # both SimSeries
+        if isinstance(other, SimSeries) :
+            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if type(self.units) is str and type(other.units) is str :
+                if self.units == other.units :
+                    result = self.mul(other)
+                    unitsResult = unitProduct(self.units,other.units)
+                    return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
+                elif convertibleUnits( other.units , self.units ) :
+                    otherC = convertUnit( other , other.units , self.units , self.speak )
+                    result = self.mul(otherC)
+                    unitsResult = unitProduct(self.units,other.units)
+                    return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
+                elif convertibleUnits( self.units , other.units ) :
+                    selfC = convertUnit( self , self.units , other.units , self.speak )
+                    result = other.mul(selfC)
+                    unitsResult = unitProduct(other.units,self.units)
+                    return SimSeries( data=result , units=unitsResult , dtype=other.dtype )
+                else :
+                    result = self.mul(other)
+                    unitsResult = unitProduct(self.units,other.units)
+                    return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
+            else :
+                raise NotImplementedError
+        
+        # let's Pandas deal with other types (types with no units), maintain units and dtype
+        result = self.as_Series() * other
+        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+
+    def __truediv__(self,other) :
+        # both SimSeries
+        if isinstance(other, SimSeries) :
+            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if type(self.units) is str and type(other.units) is str :
+                if self.units == other.units :
+                    result = self.truediv(other)
+                    unitsResult = unitDivision(self.units,other.units)
+                    return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
+                elif convertibleUnits( other.units , self.units ) :
+                    otherC = convertUnit( other , other.units , self.units , self.speak )
+                    result = self.truediv(otherC)
+                    unitsResult = unitDivision(self.units,other.units)
+                    return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
+                elif convertibleUnits( self.units , other.units ) :
+                    selfC = convertUnit( self , self.units , other.units , self.speak )
+                    result = other.truediv(selfC)
+                    unitsResult = unitDivision(other.units,self.units)
+                    return SimSeries( data=result , units=unitsResult , dtype=other.dtype )
+                else :
+                    result = self.truediv(other)
+                    unitsResult = unitDivision(self.units,other.units)
+                    return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
+            else :
+                raise NotImplementedError
+        
+        # let's Pandas deal with other types (types with no units), maintain units and dtype
+        result = self.as_Series() / other
+        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+
+    def __floordiv__(self,other) :
+        # both SimSeries
+        if isinstance(other, SimSeries) :
+            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if type(self.units) is str and type(other.units) is str :
+                if self.units == other.units :
+                    result = self.floordiv(other)
+                    unitsResult = unitDivision(self.units,other.units)
+                    return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
+                elif convertibleUnits( other.units , self.units ) :
+                    otherC = convertUnit( other , other.units , self.units , self.speak )
+                    result = self.floordiv(otherC)
+                    unitsResult = unitDivision(self.units,other.units)
+                    return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
+                elif convertibleUnits( self.units , other.units ) :
+                    selfC = convertUnit( self , self.units , other.units , self.speak )
+                    result = other.floordiv(selfC)
+                    unitsResult = unitDivision(other.units,self.units)
+                    return SimSeries( data=result , units=unitsResult , dtype=other.dtype )
+                else :
+                    result = self.floordiv(other)
+                    unitsResult = unitDivision(self.units,other.units)
+                    return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
+            else :
+                raise NotImplementedError
+        
+        # let's Pandas deal with other types (types with no units), maintain units and dtype
+        result = self.as_Series() // other
+        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+    
+    def __mod__(self,other) :
+        # both SimSeries
+        if isinstance(other, SimSeries) :
+            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if type(self.units) is str and type(other.units) is str :
+                if self.units == other.units :
+                    result = self.mod(other)
+                    return SimSeries( data=result , units=self.units , dtype=self.dtype )
+                elif convertibleUnits( other.units , self.units ) :
+                    otherC = convertUnit( other , other.units , self.units , self.speak )
+                    result = self.mod(otherC)
+                    return SimSeries( data=result , units=self.units , dtype=self.dtype )
+                elif convertibleUnits( self.units , other.units ) :
+                    selfC = convertUnit( self , self.units , other.units , self.speak )
+                    result = other.mod(selfC)
+                    return SimSeries( data=result , units=other.units , dtype=other.dtype )
+                else :
+                    result = self.mod(other)
+                    return SimSeries( data=result , units=self.units , dtype=self.dtype )
+            else :
+                raise NotImplementedError
+        
+        # let's Pandas deal with other types, maintain units and dtype
+        result = self.as_Series() % other
+        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+
+    def __pow__(self,other) :
+        # both SimSeries
+        if isinstance(other, SimSeries) :
+            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if type(self.units) is str and type(other.units) is str :
+                if self.units == other.units :
+                    result = self.pow(other)
+                    unitsResult = self.units+'^'+other.units
+                    return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
+                elif convertibleUnits( other.units , self.units ) :
+                    otherC = convertUnit( other , other.units , self.units , self.speak )
+                    result = self.floordiv(otherC)
+                    unitsResult = self.units+'^'+other.units
+                    return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
+                elif convertibleUnits( self.units , other.units ) :
+                    selfC = convertUnit( self , self.units , other.units , self.speak )
+                    result = other.floordiv(selfC)
+                    unitsResult = other.units+'^'+self.units
+                    return SimSeries( data=result , units=unitsResult , dtype=other.dtype )
+                else :
+                    result = self.floordiv(other)
+                    unitsResult = self.units+'^'+other.units
+                    return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
+            else :
+                raise NotImplementedError
+        
+        # let's Pandas deal with other types (types with no units), maintain units and dtype
+        result = self.as_Series() // other
+        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+    
+    def __repr__(self) -> str :
+        """
+        Return a string representation for a particular Series, with Units.
+        """
+        # from Pandas Series
+        buf = StringIO("")
+        width, height = get_terminal_size()
+        max_rows = (
+            height
+            if get_option("display.max_rows") == 0
+            else get_option("display.max_rows")
+        )
+        min_rows = (
+            height
+            if get_option("display.max_rows") == 0
+            else get_option("display.min_rows")
+        )
+        show_dimensions = get_option("display.show_dimensions")
+
+        self.to_string(
+            buf=buf,
+            name=self.name,
+            dtype=self.dtype,
+            min_rows=min_rows,
+            max_rows=max_rows,
+            length=show_dimensions,
+        )
+        result = buf.getvalue()
+        
+        if type(self.units) is str :
+            return result + ', Units: ' + self.units
+        elif type(self.units) is dict :
+            result = result.split('\n')
+            for n in range(len(result)-1) :
+                keys = result[n] + ' '
+                i , f = 0 , 0
+                while i < len(keys) :
+                    f = keys.index(' ',i) 
+                    key = keys[i:f]
+                    if key == '...' :
+                        i = len(keys)
+                        continue
+                    while key not in self.index and f <= len(keys) :
+                        f = keys.index(' ',f+1) 
+                        key = keys[i:f]
+                    if key not in self.index :
+                        i = len(keys)
+                        continue
+                    if key in self.units :
+                        result[n] += '    ' + self.units[key].strip()
+                    i = len(keys)
+            result = '\n'.join(result)
+            return result
+    
+    def get_units(self) :
+        return self.get_Units()
+    def get_Units(self) :
+        if type(self.units) is str and type(self.name) is str :
+            uDic = { str(self.name) : self.units }
+        elif type(self.units) is dict :
+            uDic = {}
+            for each in self.index :
+                if each in self.units :
+                    uDic[each] = self.units[each]
+                else :
+                    uDic[each] = 'UNITLESS'
+        return uDic
+
+    def copy(self) :
+        if type(self.units) is dict :
+            return SimSeries( data=self.as_Series().copy(True) , units=self.units.copy() , dtype=self.dtype , indexKey=self.indexKey )
+        return SimSeries( data=self.as_Series().copy(True) , units=self.units , dtype=self.dtype , indexKey=self.indexKey )
+    
+class SimDataFrame(DataFrame) :
+    """
+    A SimDataFrame object is a pandas.DataFrame that units associated with to 
+    each column. In addition to the standard DataFrame constructor arguments,
+    SimDataFrame also accepts the following keyword arguments:
+
+    Parameters
+    ----------
+    units : string or dictionary of units (optional)
+        Can be any string, but only units acepted by the UnitConverter will
+        be considered when doing arithmetic calculations with other SimSeries 
+        or SimDataFrames.
+
+    See Also
+    --------
+    SimSeries
+    pandas.DataFrame
+    
+    """
+    _metadata = ["units","indexKey","speak"]
+    
+    def __init__(self , data=None , units=None , index=None , speak=False , *args , **kwargs) :
+        self.units = None
+        self.speak = bool(speak)
+        
+        indexInput = None
+        if 'index' in kwargs and type(kwargs['index']) is not None :
+            indexInput = kwargs['index']
+        elif len(args) >= 3 and args[2] is not None :
+            indexInput = args[2]
+        if isinstance(indexInput,(SimSeries,Series)) :
+            if type(indexInput.name) is str :
+                indexInput = indexInput.name
+        if indexInput is None and isinstance(data,(SimSeries,SimDataFrame)) and type(data.indexKey) is str :
+            indexInput = data.indexKey
+        if indexInput is None and 'indexKey' in kwargs :
+            indexInput = kwargs['indexKey']
+        self.indexKey = indexInput
+        kwargs.pop('indexKey',None)        
+        super().__init__(data=data,index=index,*args, **kwargs)
+        if self.units is None :
+            if type(units) is str :
+                self.units = {}
+                for key in list( self.columns ) :
+                    self.units[ key ] = units
+            if type(units) is list or type(units) is tuple :
+                if len(units) == len(self.columns) :
+                    self.units = dict( zip( list(self.columns) , units ) )
+            if type(units) is dict and len(units)>0 :
+                self.units = {}
+                for key in list( self.columns ) :
+                    if key in units :
+                        self.units[key] = units[key]
+                    else :
+                        self.units[key] = 'UNITLESS'
+    
+    # @property
+    # def _constructor(self):
+    #     return SimDataFrame
+    
+    def as_DataFrame(self) :
+        return DataFrame( self )
+    @property
+    def DataFrame(self) :
+        return self.as_DataFrame()
+    @property
+    def DF(self) :
+        return self.as_DataFrame()
+    
+    def __neg__(self) :
+        result = -self.as_DataFrame()
+        return SimDataFrame( data=result , units=self.units , indexKey=self.indexKey )
+    
+    def __add__(self,other) :
+        # both SimDataFra,es
+        if isinstance(other, SimDataFrame) :
+            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
+                Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            otherC = other.copy()
+            selfC = self.copy()
+            for col in self.columns :
+                if col in other.columns :
+                    if self.get_Units(col)[col] == other.get_Units(col)[col] :
+                        pass # OK
+                    elif convertibleUnits( other.get_Units(col)[col] , self.get_Units(col)[col] ) :
+                        otherC[col] = convertUnit( other[col] , other.get_Units(col)[col] , self.get_Units(col)[col] , self.speak )
+                    elif convertibleUnits( self.get_Units(col)[col] , other.get_Units(col)[col] ) :
+                        selfC[col] = convertUnit( self[col] , self.get_Units(col)[col] , other.get_Units(col)[col] , self.speak )
+                    else :
+                        selfC.units[col] = self.get_Units(col)[col]+'+'+other.get_Units(col)[col]
+                else :
+                    selfC.units[col] = other.get_Units(col)[col]
+            result = selfC.add(otherC)
+            return SimDataFrame( data=result , units=selfC.units , indexKey=self.indexKey )
+        
+        # let's Pandas deal with other types, maintain units and dtype
+        result = self.as_DataFrame() + other
+        return SimDataFrame( data=result , units=self.units , indexKey=self.indexKey )
+    
+    def __sub__(self,other) :
+        # both SimDataFra,es
+        if isinstance(other, SimDataFrame) :
+            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
+                Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            otherC = other.copy()
+            selfC = self.copy()
+            for col in self.columns :
+                if col in other.columns :
+                    if self.get_Units(col)[col] == other.get_Units(col)[col] :
+                        pass # OK
+                    elif convertibleUnits( other.get_Units(col)[col] , self.get_Units(col)[col] ) :
+                        otherC[col] = convertUnit( other[col] , other.get_Units(col)[col] , self.get_Units(col)[col] , self.speak )
+                    elif convertibleUnits( self.get_Units(col)[col] , other.get_Units(col)[col] ) :
+                        selfC[col] = convertUnit( self[col] , self.get_Units(col)[col] , other.get_Units(col)[col] , self.speak )
+                    else :
+                        selfC.units[col] = self.get_Units(col)[col]+'+'+other.get_Units(col)[col]
+                else :
+                    selfC.units[col] = other.get_Units(col)[col]
+            result = selfC.sub(otherC)
+            return SimDataFrame( data=result , units=selfC.units , indexKey=self.indexKey )
+        
+        # let's Pandas deal with other types, maintain units and dtype
+        result = self.as_DataFrame() - other
+        return SimDataFrame( data=result , units=self.units , indexKey=self.indexKey )
+    
+    def copy(self) :
+        return SimDataFrame( data=self.as_DataFrame().copy(True) , units=self.units.copy() , indexKey=self.indexKey )
+    
+    def __call__(self,key=None) :
+        if key is None :
+            key = self.columns
+
+        result = self.__getitem__(key)
+        if isinstance(result,SimSeries) :
+            result = result.to_numpy()
+        return result
+    
+    def __setitem__(self, key, value , units=None):
+        
+        if type(key) is str :
+            key = key.strip()
+        
+        if units is None :
+            if isinstance(value,SimSeries) :
+                if type(value.units) is str :
+                    uDic = { str(key) : value.units }
+                elif type(value.units) is dict :
+                    uDic = value.units
+            elif isinstance(value,SimDataFrame) :
+                pass
+            else :
+                uDic = { str(key) : 'UNITLESS' }
+        elif type(units) is str :
+            uDic = { str(key) : units.strip() }
+        elif type(units) is dict :
+            raise NotImplementedError
+        else :
+            raise NotImplementedError
+        
+        before = len(self.columns)
+        super().__setitem__(key,value)
+        after = len(self.columns)
+        
+        if after == before :
+            self.new_Units(key,uDic[key])
+        elif after > before :
+            for c in range( before , after ) :
+                if self.columns[c] in self.columns[ before : after ] :
+                    self.new_Units( self.columns[c] , uDic[ self.columns[c] ] )
+                else :
+                    self.new_Units( self.columns[c] , 'UNITLESS' )
+    
+    def __getitem__(self, key) :
+        
+        if type(key) is str and key not in self.columns :
+            key = list( self.find_Keys(key) )
+        elif type(key) is list :
+            keyList , key = key , []
+            for each in keyList :
+                if type(each) is str and each not in self.columns :
+                    key += list( self.find_Keys(each) )
+                elif type(each) is str and each in self.columns :
+                    key += [ each ]
+                else :
+                    key += list( self.find_Keys(each) )
+        
+        byIndex = False
+        try :
+            result = super().__getitem__(key)
+        except :
+            try :
+                result = self.loc[key]
+                byIndex = True
+            except :
+                try :
+                    result = self.iloc[key]
+                    byIndex = True
+                except :
+                    result = dict()
+        
+        if isinstance(result,DataFrame) :
+            resultUnits = self.get_Units(result.columns)
+            result = SimDataFrame(data=result , units=resultUnits)
+        elif isinstance(result,Series) :
+            if result.name is None or type(result.name) is not str :
+                # this Series is one index for multiple columns
+                resultUnits = self.get_Units(result.index)
+            else :
+                resultUnits = self.get_Units(result.name)
+            result = SimSeries(data=result , units=resultUnits)
+        
+        if byIndex :
+            result = Series2Frame(result)
+        
+        return result
+        
+    def __repr__(self) -> str:
+        """
+        Return a string representation for a particular DataFrame, with Units.
+        """
+        def thisColumnMaxLen() :
+            thisColumn = [None]*len( result[1:-2] )
+            for line in range(len(result[1:-2])) :
+                rawLine = multisplit( result[1:-1][line] , ['  ',' -'] )
+                thisLine = []
+                for raw in rawLine :
+                    if len(raw.strip(' -')) > 0 :
+                        thisLine.append( raw )
+                thisColumn[line] = len(thisLine[keyN])
+            return max( thisColumn ) 
+        
+        buf = StringIO("")
+        if self._info_repr():
+            self.info(buf=buf)
+            return buf.getvalue()
+
+        max_rows = get_option("display.max_rows")
+        min_rows = get_option("display.min_rows")
+        max_cols = get_option("display.max_columns")
+        max_colwidth = get_option("display.max_colwidth")
+        show_dimensions = get_option("display.show_dimensions")
+        if get_option("display.expand_frame_repr"):
+            width, _ = console.get_console_size()
+        else:
+            width = None
+        self.to_string(
+            buf=buf,
+            max_rows=max_rows,
+            min_rows=min_rows,
+            max_cols=max_cols,
+            line_width=width,
+            max_colwidth=max_colwidth,
+            show_dimensions=show_dimensions,
+        )
+        
+        result = buf.getvalue()
+        
+        if result.startswith('Empty DataFrame\n') :
+            return result
+        
+        result = result.split('\n')
+        UnitsLine = ''
+        keys = result[0] + ' '
+        keyN = 0
+        i , f = 0 , 0
+        while i < len(keys) :
+            
+            if keys[i] == ' ' :
+                i += 1
+                continue
+            else :
+                f = keys.index(' ',i) 
+                key = keys[i:f]
+                keyN += 1
+                
+                if key == '...' :
+                    UnitsLine += '  ...'
+                    
+                # key might be a column name
+                else :
+                    while key not in self.columns and f <= len(keys) :
+                        f = keys.index(' ',f+1) 
+                        key = keys[i:f]
+                    maxLen = max( thisColumnMaxLen() , len(key) )
+                    if key in self.units :
+                        UnitLabel = self.units[key].strip()
+                        if len(UnitLabel) < maxLen :
+                            UnitLabel = ' ' * ( maxLen - len(UnitLabel) ) + UnitLabel
+                        elif len(UnitLabel) > maxLen :
+                            UnitLabel = UnitLabel[:maxLen]
+                    else :
+                        UnitLabel = ' ' * maxLen
+                    UnitsLine += '  ' + UnitLabel
+                i = f
+        
+        keyN = 0
+        indexColumnLen = thisColumnMaxLen()
+        UnitsLabel = 'Units'
+        if indexColumnLen < 5 :
+            UnitsLabel = UnitsLabel[:indexColumnLen] + ':'
+        elif indexColumnLen > 6 :
+            UnitsLabel = UnitsLabel + ':' + ' '*(indexColumnLen-6-1)
+        else :
+            UnitsLabel = UnitsLabel + ':'
+        
+        UnitsLine = UnitsLabel + UnitsLine
+        result = result[0] + '\n' + UnitsLine + '\n' + '\n'.join(result[1:])
+        return result
+
+    @property
+    def wells(self) :
+        objs = []
+        for each in list( self.columns ) :
+            if ':' in each and each[0] == 'W' :
+                objs += [each.split(':')[-1]]
+        return tuple(set(objs))
+    def get_Wells(self,pattern=None) :
+        """       
+        Will return a tuple of all the well names in case.
+
+        If the pattern variable is different from None only wells
+        matching the pattern will be returned; the matching is based
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
+            
+        """
+        if pattern is not None and type( pattern ) is not str :
+            raise TypeError('pattern argument must be a string.')
+        if pattern is None :
+            return tuple(self.wells)
+        else:
+            return tuple( fnmatch.filter( self.wells , pattern ) )
+
+    @property
+    def groups(self) :
+        objs = []
+        for each in list( self.columns ) :
+            if ':' in each and each[0] == 'G' :
+                objs += [each.split(':')[-1]]
+        return tuple(set(objs))
+    def get_Groups(self,pattern=None) :
+        """       
+        Will return a tuple of all the group names in case.
+
+        If the pattern variable is different from None only groups
+        matching the pattern will be returned; the matching is based
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
+            
+        """        
+        if pattern is not None and type( pattern ) is not str :
+            raise TypeError('pattern argument must be a string.')
+        if pattern is None :
+            return self.groups
+        else:
+            return tuple( fnmatch.filter( self.groups , pattern ) )
+        
+    @property
+    def regions(self) :
+        objs = []
+        for each in list( self.columns ) :
+            if ':' in each and each[0] == 'R' :
+                objs += [each.split(':')[-1]]
+        return tuple(set(objs))
+    def get_Regions(self,pattern=None):
+        """
+        Will return a tuple of all the region names in case.
+
+        If the pattern variable is different from None only regions
+        matching the pattern will be returned; the matching is based
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
+        """
+        if pattern is not None and type( pattern ) is not str :
+            raise TypeError('pattern argument must be a string.')    
+        if pattern is None :
+            return self.regions
+        else:
+            return tuple( fnmatch.filter( self.regions , pattern ) )
+        
+    @property
+    def attributes(self) :
+        atts = {}
+        for each in list( self.columns ) :
+            if ':' in each :
+                if each.split(':')[0] in atts :
+                    atts[each.split(':')[0]] += [each.split(':')[-1]]
+                else :
+                    atts[each.split(':')[0]] = [each.split(':')[-1]]
+            else :
+                if each not in atts :
+                    atts[each] = []
+        for att in atts :
+            atts[att] = list(set(atts[att]))
+        return atts
+    def get_Attributes(self,pattern=None) :
+        """
+        Will return a tuple of all the attributes names in case.
+
+        If the pattern variable is different from None only attributes
+        matching the pattern will be returned; the matching is based
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
+        """
+        if pattern is None :
+            return tuple(self.attributes.keys())
+        else :
+            return tuple( fnmatch.filter( tuple(self.attributes.keys()) , pattern ) )
+    
+    def get_Keys(self,pattern=None) :
+        """       
+        Will return a tuple of all the key names in case.
+
+        If the pattern variable is different from None only keys
+        matching the pattern will be returned; the matching is based
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
+            
+        """
+        if pattern is not None and type( pattern ) is not str :
+            raise TypeError('pattern argument must be a string.\nreceived '+str(type(pattern))+' with value '+str(pattern))
+        if pattern is None :
+            return tuple( self.columns )
+        else:
+            return tuple( fnmatch.filter( tuple( self.columns ) , pattern ) )
+    
+    def find_Keys(self,criteria=None) :
+        """       
+        Will return a tuple of all the key names in case.
+        
+        If criteria is provided, only keys matching the pattern will be returned.
+        Accepted criterias can be:
+            > well, group or region names. 
+              All the keys related to that name will be returned
+            > attributes. 
+              All the keys related to that attribute will be returned
+            > a fmatch compatible pattern:
+                Pattern     Meaning
+                *           matches everything
+                ?           matches any single character
+                [seq]       matches any character in seq
+                [!seq]      matches any character not in seq
+            
+            additionally, ! can be prefixed to a key to return other keys but 
+            that particular one:
+                '!KEY'     will return every key but not 'KEY'.
+                           It will only work with a single key.
+        """
+        keys = []
+        if type(criteria) is str and len(criteria.strip()) > 0 :
+            if criteria.strip()[0] == '!' and len(criteria.strip()) > 1 :
+                keys = list( self.columns )
+                keys.remove(criteria[1:])
+                return tuple( keys )
+            criteria = [criteria]
+        elif type(criteria) is not list :
+            try :
+                criteria = list(criteria)
+            except :
+                pass
+        for key in criteria :
+            if type(key) is str and key not in self.columns :
+                if key in self.wells or key in self.groups or key in self.regions :
+                    keys += list(self.get_Keys('*:'+key))
+                elif key in self.attributes :
+                    keys += list( self.keyGen( key , self.attributes[key] ) )
+                else :
+                    keys += list(self.get_Keys(key))
+            elif type(key) is str and key in self.columns :
+                keys += [ key ] 
+            else :
+                keys += list( self.find_Keys(key) )
+        return tuple(keys)
+    
+    def get_units(self,items=None) :
+        return self.get_Units(items)
+    def get_Units(self,items=None) :
+        if items is None :
+            return self.units
+        uDic = {}
+        if type(items) is str :
+            items = [items]
+        for each in items :
+            if each in self.units :
+                uDic[each] = self.units[each]
+            elif each in self.wells or each in self.groups or each in self.regions :
+                for Key in self.get_Keys('*:'+each) :
+                    uDic[each] = self.units[each]
+            elif each in self.attributes :
+                for att in self.keyGen( each , self.attributes[each] ) :
+                    if att in self.units :
+                        uDic[att] = self.units[att]
+                    else :
+                        uDic[att] = 'UNITLESS'
+            elif len( self.get_Keys(each) ) > 0 :
+                for key in self.get_Keys(each) :
+                    uDic[key] = self.units[key]
+        return uDic
+    
+    def keysByUnits(self) :
+        """
+        returns a dictionary of the units present in the SimDataFrame as keys
+        and a list of the columns that has that units. 
+        """
+        kDic = {}
+        for k,v in self.units.items() :
+            if v in kDic :
+                kDic[v] += [k]
+            else :
+                kDic[v] = [k]
+        return kDic
+            
+    
+    def new_Units(self,key,units) :
+        if type(key) is str :
+            key = key.strip()
+        if type(units) is str :
+            units = units.strip()
+        
+        if key not in self.units :
+            self.units[key] = units
+        else :
+            print( "overwritting existing units for key '" + key + "': " + self.units[key] + ' -> ' + units )
+            self.units[key] = units
+    
+    def is_Key(self,Key) :
+        if type(Key) != str or len(Key)==0 :
+            return False
+        if Key in self.get_Keys() :
+            return True
+        else :
+            return False
+
+    def keyGen(self,mainKeys=[],itemKeys=[]) :
+        """
+        returns the combination of every key in keys with all the items.
+        keys and items must be list of strings
+        """
+        if type(itemKeys) is str :
+            itemKeys = [itemKeys]
+        if type(mainKeys) is str :
+            mainKeys = [mainKeys]
+        ListOfKeys = []
+        for k in mainKeys :
+            k.strip(' :')
+            if self.is_Key(k) :
+                ListOfKeys.append(k)
+            for i in itemKeys :
+                i = i.strip(' :')
+                if self.is_Key(k+':'+i) :
+                    ListOfKeys.append( k+':'+i )
+                elif k[0].upper() == 'W' :
+                    wells = self.get_Wells(i)
+                    if len(wells) > 0 :
+                        for w in wells :
+                            if self.is_Key(k+':'+w) :
+                                ListOfKeys.append( k+':'+w )
+                elif k[0].upper() == 'R' :
+                    pass
+                elif k[0].upper() == 'G' :
+                    pass
+        return ListOfKeys
+        
+
+from datafiletoolbox import loadSimulationResults
+V = loadSimulationResults('/Volumes/git/sampleData/e100/YE_2017_P10_LGR_LA-4HD_VF_30102017.UNSMRY')
+DF = V[['F?PR','DATE','LANOI3X','LA1XST','WOPR']]
+U = V.get_Units(['F?PR','DATE','LANOI3X','LA1XST','WOPR'])
+S = DF['WOPT:LA1XST']
+Us = U['WOPT:LA1XST']
+
+testS = SimSeries( units=Us , data=S )
+print( testS )
+
+testDF = SimDataFrame( data=DF , units=U )
+print(testDF)
+Z = testDF[-1]
+# # Series2Frame(Z)
+A = testDF['WOPR:LANOI3X']
+B = testDF['WOPR:LA1XST']
+F = testDF[['FOPR','FWPR']]
+R1 = A + B
+R2 = A - B
+B.units = 'm3/day'
+testDF.find_Keys('!DATE')
+testDF['FOPT'] = R1
+print(testDF.get_Units('FOPT'))
+print(testDF['FOPT'])
+print(testDF[-1])
+print(testDF)
+G = F[['FOPR','FWPR']]
+G.units = {'FOPR': 'M3/DAY', 'FWPR': 'MSCF/DAY'}
+G = -G
+
