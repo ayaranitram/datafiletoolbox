@@ -1777,7 +1777,7 @@ class SimResult(object):
 
     def get_Regions(self,pattern=None,reload=False):
         """
-        Will return a list of all the region names in case.
+        Will return a tuple of all the region names in case.
 
         If the pattern variable is different from None only regions
         matching the pattern will be returned; the matching is based
@@ -1803,7 +1803,7 @@ class SimResult(object):
 
     def get_Wells(self,pattern=None,reload=False) :
         """       
-        Will return a list of all the well names in case.
+        Will return a tuple of all the well names in case.
 
         If the pattern variable is different from None only wells
         matching the pattern will be returned; the matching is based
@@ -1831,7 +1831,7 @@ class SimResult(object):
 
     def get_Groups(self,pattern=None,reload=False) :
         """       
-        Will return a list of all the group names in case.
+        Will return a tuple of all the group names in case.
 
         If the pattern variable is different from None only groups
         matching the pattern will be returned; the matching is based
@@ -1859,7 +1859,7 @@ class SimResult(object):
 
     def get_Keys(self,pattern=None,reload=False) :
         """       
-        Will return a list of all the key names in case.
+        Will return a tuple of all the key names in case.
 
         If the pattern variable is different from None only keys
         matching the pattern will be returned; the matching is based
