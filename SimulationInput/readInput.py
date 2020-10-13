@@ -7,7 +7,7 @@ Created on Tue Jul  9 21:23:27 2019
 routines to read keywords in eclipse style
 """
 
-from inout import verbose
+from datafiletoolbox.common.inout import verbose 
 
 def readKeyword( filename , speak=0 ):
     """
@@ -31,7 +31,7 @@ def readKeyword( filename , speak=0 ):
     try :
         ignoredKeywords = ZeroArgumentsKeywords
     except :
-        from datafiletoolbox import ZeroArgumentsKeywords
+        from datafiletoolbox.SimulationInput.keywords import ZeroArgumentsKeywords
         ignoredKeywords = ZeroArgumentsKeywords
     keywordsIndex = []
 
