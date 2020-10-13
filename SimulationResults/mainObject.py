@@ -5,7 +5,7 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.5.20-09-20'
+__version__ = '0.5.20-10-13'
 
 from datafiletoolbox import dictionaries
 from datafiletoolbox.Classes.Errors import OverwrittingError
@@ -1918,6 +1918,64 @@ class SimResult(object):
         else:
             return tuple( fnmatch.filter( self.keys , pattern ) )
 
+    def find_Keys(self,criteria=None,reload=False) :
+        """       
+        Will return a tuple of all the key names in case.
+        
+        If criteria is provided, only keys matching the pattern will be returned.
+        Accepted criterias can be:
+            > well, group or region names. 
+              All the keys related to that name will be returned
+            > attributes. 
+              All the keys related to that attribute will be returned
+            > a fmatch compatible pattern:
+                Pattern     Meaning
+                *           matches everything
+                ?           matches any single character
+                [seq]       matches any character in seq
+                [!seq]      matches any character not in seq
+            
+            additionally, ! can be prefixed to a key to return other keys but 
+            that particular one:
+                '!KEY'     will return every key but not 'KEY'.
+                           It will only work with a single key.
+        """
+        reload = bool(reload)
+        
+        if len(self.keys) == 0 or reload is True :
+            self.keys = self.get_Keys(reload=reload)
+        
+        if criteria is not None and ( type(criteria) is not str or type(criteria) is not list ) :
+            raise TypeError('criteria argument must be a string or list of strings.')
+        
+        if criteria is None :
+            return self.keys
+        
+        keys = []
+        if type(criteria) is str and len(criteria.strip()) > 0 :
+            if criteria.strip()[0] == '!' and len(criteria.strip()) > 1 :
+                keys = list( self.keys )
+                keys.remove(criteria[1:])
+                return tuple( keys )
+            criteria = [criteria]
+        elif type(criteria) is not list :
+            try :
+                criteria = list(criteria)
+            except :
+                raise TypeError('criteria argument must be a string or list of strings.')
+        for key in criteria :
+            if type(key) is str and key not in self.keys :
+                if key in self.wells or key in self.groups or key in self.regions :
+                    keys += list(self.get_Keys('*:'+key))
+                elif key in self.attributes :
+                    keys += list( self.keyGen( key , self.attributes[key] ) )
+                else :
+                    keys += list(self.get_Keys(key))
+            elif type(key) is str and key in self.keys :
+                keys += [ key ] 
+            else :
+                keys += list( self.find_Keys(key) )
+        return tuple(keys)
 
     def get_Filter(self) :
         return self.filter['filter']
