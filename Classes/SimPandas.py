@@ -5,6 +5,9 @@ Created on Sun Oct 11 11:14:32 2020
 
 @author: martin
 """
+
+__version__ = '0.5.20-10-14'
+
 from io import StringIO
 from shutil import get_terminal_size
 from pandas._config import get_option
@@ -420,7 +423,7 @@ class SimSeries(Series) :
                         result[n] += '    ' + self.units[key].strip()
                     i = len(keys)
             result = '\n'.join(result)
-            return result
+            return '\n' + result
     
     def get_units(self) :
         return self.get_Units()
@@ -614,20 +617,40 @@ class SimDataFrame(DataFrame) :
                     self.new_Units( self.columns[c] , 'UNITLESS' )
     
     def __getitem__(self, key) :
+
+        byIndex = False
+        indexFilter = None
         
         if type(key) is str and key not in self.columns :
-            key = list( self.find_Keys(key) )
+            if bool( self.find_Keys(key) ) :
+                key = list( self.find_Keys(key) )
+            else :
+                try :
+                    return self.filter(key)
+                except :
+                    raise ValueError ('filter conditions not valid:\n   '+ key) 
+
         elif type(key) is list :
-            keyList , key = key , []
+            keyList , key , filters = key , [] , []
             for each in keyList :
                 if type(each) is str and each not in self.columns :
-                    key += list( self.find_Keys(each) )
+                    if bool( self.find_Keys(each) ) :
+                        key += list( self.find_Keys(each) )
+                    else :
+                        filters += [each]
                 elif type(each) is str and each in self.columns :
-                    key += [ each ]
+                    key += [each]
                 else :
                     key += list( self.find_Keys(each) )
-        
-        byIndex = False
+
+            if bool(filters) :
+                try :
+                    indexFilter = self.filter(filters,returnFilter=True)
+                except :
+                    raise Warning ('filter conditions are not valid:\n   '+ ' and '.join(filters) )
+                if not indexFilter.any() :
+                    raise Warning ('filter conditions removed every row :\n   '+ ' and '.join(filters) )
+
         try :
             result = super().__getitem__(key)
         except :
@@ -654,6 +677,9 @@ class SimDataFrame(DataFrame) :
         
         if byIndex :
             result = Series2Frame(result)
+        
+        if indexFilter is not None :
+            return result[indexFilter]
         
         return result
         
@@ -698,7 +724,7 @@ class SimDataFrame(DataFrame) :
         
         result = buf.getvalue()
         
-        if result.startswith('Empty DataFrame\n') :
+        if result.startswith('Empty SimDataFrame\n') or result.startswith('Empty DataFrame\n') :
             return result
         
         result = result.split('\n')
@@ -747,7 +773,7 @@ class SimDataFrame(DataFrame) :
             UnitsLabel = UnitsLabel + ':'
         
         UnitsLine = UnitsLabel + UnitsLine
-        result = result[0] + '\n' + UnitsLine + '\n' + '\n'.join(result[1:])
+        result = '\n' + result[0] + '\n' + UnitsLine + '\n' + '\n'.join(result[1:])
         return result
 
     @property
@@ -909,6 +935,8 @@ class SimDataFrame(DataFrame) :
                 '!KEY'     will return every key but not 'KEY'.
                            It will only work with a single key.
         """
+        if criteria is None :
+            return tuple( self.columns )
         keys = []
         if type(criteria) is str and len(criteria.strip()) > 0 :
             if criteria.strip()[0] == '!' and len(criteria.strip()) > 1 :
@@ -1023,12 +1051,262 @@ class SimDataFrame(DataFrame) :
                 elif k[0].upper() == 'G' :
                     pass
         return ListOfKeys
+    
+    def filter(self,conditions=None,**kwargs) :
+        """
+        Returns a filtered SimDataFrame based on conditions argument.
+        
+        To filter over a column simply use the name of the column in the 
+        condition:
+            'NAME>0'
+        
+        In case the column name has white spaces, enclose it in ' or " or [ ]:
+            "'BLANK SPACE'>0"
+            '"BLANK SPACE">0'
+            '[BLANK SPACE]>0'
+            
+        To set several conditions together the operatos 'and' and 'or' 
+        are accepted:
+            'NAME>0 and LAST>0'
+        
+        To filter only over the index set the condition directly:
+            '>0'
+        or use the key '.index' or '.i' to refer to the index of the SimDataFrame.
+        
+        To remove null values append '.notnull' to the column name:
+            'NAME.notnull'
+        To keep only null values append '.null' to the column name:
+            'NAME'.null
+            
+        In case the filter criteria is applied on a DataFrame, not a Series, 
+        the resulting filter needs to be aggregated into a single column.
+        By default, the aggregation criteria will return True if any of the
+        columns is True.
+        This aggregation behaviour can be changed to return True only if all 
+        the columns are True:
+            'MULTIPLE_COLUMNS'.any  needs just one column True to return True
+            'MULTIPLE_COLUMNS'.any  needs all the columns True to return True
+        
+        """
+        returnString = False
+        if 'returnString' in kwargs :
+            returnString = bool( kwargs['returnString'] )
+        returnFilter = False
+        if 'returnFilter' in kwargs :
+            returnFilter = bool( kwargs['returnFilter'] )
+        returnFrame = False
+        if 'returnFrame' in kwargs :
+            returnFrame = bool( kwargs['returnFrame'] )
+        if not returnFilter and not returnString :
+            returnFrame = True
+        
+        
+        specialOperation = ['.notnull','.null','.isnull','.abs']
+        numpyOperation = ['.sqrt','.log10','.log2','.log','.ln']
+        pandasAggregation = ['.any','.all']
+        PandasAgg = ''
+        
+        def KeyToString(filterStr,key,PandasAgg) :
+            if len(key) > 0 :
+                # catch particular operations performed by Pandas
+                foundSO , foundNO = '' , '' 
+                if key in specialOperation :
+                    if filterStr[-1] == ' ' :
+                        filterStr = filterStr.rstrip()
+                    filterStr += key+'()'
+                else :
+                    for SO in specialOperation :
+                        if key.strip().endswith(SO) :
+                            key = key[:-len(SO)]
+                            foundSO = ( SO if SO != '.null' else '.isnull' ) + '()'
+                            break
+                # catch particular operations performed by Numpy
+                if key in numpyOperation :
+                    raise ValueError( "wrong syntax for '"+key+" (blank space before) in:\n   "+conditions)
+                else :
+                    for NO in numpyOperation :
+                        if key.strip().endswith(NO) :
+                            key = key[:-len(NO)]
+                            NO = '.log' if NO == '.ln' else NO
+                            filterStr += 'np' + NO + '('
+                            foundNO = ' )'
+                            break
+                # catch aggregation operations performed by Pandas
+                if key in pandasAggregation :
+                    PandasAgg = key+'(axis=1)'
+                else :
+                    for PA in pandasAggregation :
+                        if key.strip().endswith(PA) :
+                            PandasAgg = PA+'(axis=1)'
+                            break
+                # if key is the index
+                if key in ['.i','.index'] :
+                    filterStr = filterStr.rstrip()
+                    filterStr += ' self.index'
+                # if key is a column
+                elif key in self.columns :
+                    filterStr = filterStr.rstrip()
+                    filterStr += " self['"+key+"']"
+                # key might be a wellname, attribute or a pattern
+                elif len( self.find_Keys(key) ) == 1 :
+                    filterStr = filterStr.rstrip()
+                    filterStr += " self['"+ self.find_Keys(key)[0] +"']"
+                elif len( self.find_Keys(key) ) > 1 :
+                    filterStr = filterStr.rstrip()
+                    filterStr += " self["+ str( list(self.find_Keys(key)) ) +"]"
+                    PandasAgg = '.any(axis=1)'
+                else :
+                    filterStr += ' ' + key
+                filterStr = filterStr.rstrip()
+                filterStr += foundSO + foundNO
+                key = ''
+            return filterStr , key , PandasAgg
+                        
+        if type(conditions) is not str :
+            if type(conditions) is not list :
+                try :
+                    conditions = list(conditions)
+                except :
+                    raise TypeError('conditions argument must be a string.')
+            conditions = ' and '.join(conditions)
+        
+        conditions = conditions.strip() + ' '
+        
+        # find logical operators and translate to correct key
+        AndOrNot = False
+        if ' and ' in conditions :
+            conditions = conditions.replace(' and ',' & ')
+        if ' or ' in conditions :
+            conditions = conditions.replace(' or ',' | ')
+        if ' not ' in conditions :
+            conditions = conditions.replace(' not ',' ~ ')
+        if '&' in conditions :
+            AndOrNot = True
+        elif '|' in conditions :
+            AndOrNot = True
+        elif '~' in conditions :
+            AndOrNot = True
 
+        # create Pandas compatible condition string
+        filterStr =  ' ' + '('*AndOrNot 
+        key = ''
+        cond , oper = '' , '' 
+        i = 0
+        while i < len(conditions) :
+            
+            # catch logital operators
+            if conditions[i] in ['&',"|",'~'] :
+                filterStr , key , PandasAgg = KeyToString(filterStr,key,PandasAgg) 
+                filterStr = filterStr.rstrip()
+                filterStr += ' )' + PandasAgg + ' ' + conditions[i] + ' ('
+                PandasAgg = ''
+                i += 1
+                continue
+            
+            # catch enclosed strings
+            if conditions[i] in ['"',"'",'['] :
+                if conditions[i] in ['"',"'"] :
+                    try :
+                        f = conditions.index( conditions[i] , i+1 )
+                    except :
+                        raise ValueError('wring syntax, closing ' + conditions[i] + ' not found in:\n   '+conditions)
+                else :
+                    try :
+                        f = conditions.index( ']' , i+1 )
+                    except :
+                        raise ValueError("wring syntax, closing ']' not found in:\n   "+conditions)
+                if f > i+1 :
+                    key = conditions[i+1:f]
+                    filterStr , key , PandasAgg = KeyToString(filterStr,key,PandasAgg) 
+                    i = f+1
+                    continue
+            
+            # pass blank spaces
+            if conditions[i] == ' ' :
+                filterStr , key , PandasAgg = KeyToString(filterStr,key,PandasAgg) 
+                if len(filterStr) > 0 and filterStr[-1] != ' ' :
+                    filterStr += ' '
+                i += 1
+                continue
+            
+            # pass parenthesis
+            if conditions[i] in ['(',')'] :
+                filterStr , key , PandasAgg = KeyToString(filterStr,key,PandasAgg) 
+                filterStr += conditions[i]
+                i += 1
+                continue
+                
+            # catch conditions
+            if conditions[i] in ['=','>','<','!'] :
+                cond = ''
+                f = i+1
+                while conditions[f] in ['=','>','<','!'] :
+                    f += 1
+                cond = conditions[i:f]
+                if cond == '=' :
+                    cond = '=='
+                elif cond in ['=>','=<','=!'] :
+                    cond = cond[::-1]
+                elif cond in ['><','<>'] :
+                    cond = '!='
+                filterStr , key , PandasAgg = KeyToString(filterStr,key,PandasAgg) 
+                filterStr = filterStr.rstrip()
+                filterStr += ' ' + cond
+                i += len(cond)
+                continue
+            
+            # catch operations
+            if conditions[i] in ['+','-','*','/','%','^'] :
+                oper = ''
+                f = i+1
+                while conditions[f] in ['+','-','*','/','%','^'] :
+                    f += 1
+                oper = conditions[i:f]
+                oper = oper.replace('^','**')
+                filterStr , key , PandasAgg = KeyToString(filterStr,key,PandasAgg) 
+                filterStr = filterStr.rstrip()
+                filterStr += ' ' + oper
+                i += len(oper)
+                continue
+            
+            # catch other characters
+            else :
+                key += conditions[i]
+                i += 1
+                continue
+        
+        # clean up
+        filterStr = filterStr.strip()
+        # check missing key, means .index by default
+        if filterStr[0] in ['=','>','<','!'] :
+            filterStr = 'self.index ' + filterStr
+        elif filterStr[-1] in ['=','>','<','!'] :
+            filterStr = filterStr + ' self.index' 
+        # close last parethesis and aggregation
+        filterStr += ' )' * bool( AndOrNot + bool(PandasAgg) ) + PandasAgg
+        # open parenthesis for aggregation, if needed
+        if not AndOrNot and bool(PandasAgg) :
+            filterStr = '( ' + filterStr
+        
+        retTuple = []
+        
+        if returnString :
+            retTuple += [ filterStr ]
+        if returnFilter :
+            retTuple += [ eval( filterStr ) ]
+        if returnFrame :
+            retTuple += [ self[ eval( filterStr ) ] ]
+        
+        if len( retTuple ) == 1 :
+            return retTuple[0]
+        else :
+            return tuple( retTuple )
+        
 
-
-if __name__ == 'main' :
+if __name__ == '__main__' :
     from datafiletoolbox import loadSimulationResults
-    V = loadSimulationResults('/Volumes/git/sampleData/e100/YE_2017_P10_LGR_LA-4HD_VF_30102017.UNSMRY')
+    # V = loadSimulationResults('/Volumes/git/sampleData/e100/YE_2017_P10_LGR_LA-4HD_VF_30102017.UNSMRY')
+    V = loadSimulationResults('C:/Users/mcaraya/OneDrive - Cepsa/git/sampleData/e100/YE_2017_P10_LGR_LA-4HD_VF_30102017.UNSMRY')
     DF = V[['F?PR','DATE','LANOI3X','LA1XST','WOPR']]
     U = V.get_Units(['F?PR','DATE','LANOI3X','LA1XST','WOPR'])
     S = DF['WOPT:LA1XST']
@@ -1056,4 +1334,11 @@ if __name__ == 'main' :
     G = F[['FOPR','FWPR']]
     G.units = {'FOPR': 'M3/DAY', 'FWPR': 'MSCF/DAY'}
     G = -G
-
+    # print(testDF.filter('FOPR<0'))
+    print(testDF.filter('WOPR>0',returnString=True))
+    print(testDF.filter('WOPR>0 and .i>10',returnFilter=True))
+    print(testDF.filter('WOPR>0'))
+    print(testDF.filter('WOPR>0 and .i>10'))
+    print(testDF.filter('>10'))
+    print(testDF.filter('10<.index<50',returnString=True))
+    print(testDF.filter(['WOPR>0','']))
