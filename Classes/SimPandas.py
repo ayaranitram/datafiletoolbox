@@ -58,12 +58,14 @@ def Series2Frame(aSimSeries) :
     
     Works with SimSeries as well as with Pandas standard Series 
     """
-    if isinstance(aSimSeries, SimSeries) :
+    if isinstance(aSimSeries,DataFrame) :
+        return aSimSeries
+    if type(aSimSeries) is SimSeries :
         try :
             return SimDataFrame( data=dict( zip( list(aSimSeries.index) , aSimSeries.to_list() ) ) , units=aSimSeries.get_Units() , index=[aSimSeries.name] , dtype=aSimSeries.dtype )
         except :
             return aSimSeries
-    if isinstance(aSimSeries, Series) :
+    if type(aSimSeries) is Series :
         try :
             return DataFrame( data=dict( zip( list(aSimSeries.index) , aSimSeries.to_list() ) ) , index=[aSimSeries.name] , dtype=aSimSeries.dtype )
         except :
@@ -95,7 +97,7 @@ class SimSeries(Series) :
 
     """
     
-    _metadata = ["units","indexKey","speak"]
+    _metadata = ["units","speak"]
     
     def __init__(self, data=None , units=None , index=None , speak=False , *args , **kwargs) :
         Uname = None
@@ -103,30 +105,53 @@ class SimSeries(Series) :
         self.units = None
         self.speak = bool(speak)
         
+        # validaton
+        if isinstance(data,DataFrame) and len(data.columns)>1 :
+            raise ValueError( "'data' paramanter can be an instance of DataFrame but must have only one column.")
+        
         indexInput = None
-        if 'index' in kwargs and type(kwargs['index']) is not None :
+        # catch index keyword from input parameters
+        if index is not None :
+            indexInput = index
+        elif 'index' in kwargs and kwargs['index'] is not None :
             indexInput = kwargs['index']
         elif len(args) >= 3 and args[2] is not None :
             indexInput = args[2]
-        if isinstance(indexInput,(SimSeries,Series)) :
+        # if index is a Series, get the name
+        elif isinstance(indexInput,Series):
             if type(indexInput.name) is str :
                 indexInput = indexInput.name
-        if indexInput is None and isinstance(data,(SimSeries,SimDataFrame)) and type(data.indexKey) is str :
-            indexInput = data.indexKey
-        if indexInput is None and 'indexKey' in kwargs :
-            indexInput = kwargs['indexKey']
-        self.indexKey = indexInput
+        # if index is None and data is SimSeries or SimDataFrame get the name
+        elif type(data) in [SimSeries,SimDataFrame] and type(data.index.name) is str and len(data.index.name)>0 :
+            indexInput = data.index.name
         
+        # catch units or get from data if it is SimDataFrame or SimSeries
         if type(units) is dict :
             Udict , units = units , None
             if len(Udict) == 1 :
                 if type( Udict[ list(Udict.keys())[0] ] ) is str :
                     Uname = list(Udict.keys())[0]
                     units = Udict[ Uname ]                    
-        if type(units) is str :
+        elif type(units) is str :
             self.units = units
-        kwargs.pop('indexKey',None) 
+        elif units is None and type(data) is SimSeries :
+                units = data.units
+        
+        # remove arguments not known by Pandas
+        kwargs.pop('indexName',None)
+        # convert to pure Pandas
+        if type(data) in [ SimDataFrame , SimSeries ] :
+            data = data.to_Pandas()
         super().__init__(data=data, index=index, *args, **kwargs)
+        
+        # set the name of the index
+        if ( self.index.name is None or ( type(self.index.name) is str and len(self.index.name)==0 ) ) and ( type(indexInput) is str and len(indexInput)>0 ) :
+            self.index.name = indexInput       
+        # overwrite the index.name with input from the argument indexName
+        if 'indexName' in kwargs and type(kwargs['indexName']) is str and len(kwargs['indexName'].strip())>0 :
+            self.set_indexName(kwargs['indexName'])
+        
+        # set the units
         if self.name is None and Uname is not None :
             self.name = Uname
         if self.name is not None and self.units is None and Udict is not None :
@@ -153,6 +178,16 @@ class SimSeries(Series) :
         # from datafiletoolbox.SimPandas.simframe import SimDataFrame
         return SimDataFrame
 
+    def set_index(self,Name) :
+        self.set_indexName( Name )
+
+    def set_indexName(self,Name) :
+        if type(Name) is str :
+            self.index.name = Name
+
+    def to_Pandas(self) :
+        return self.as_Series()
+
     def as_Series(self) :
         return Series( self )
     @property
@@ -169,8 +204,8 @@ class SimSeries(Series) :
     def __add__(self,other) :
         # both SimSeries
         if isinstance(other, SimSeries) :
-            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
-                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
                 if self.units == other.units :
                     result = self.add(other)
@@ -196,8 +231,8 @@ class SimSeries(Series) :
     def __sub__(self,other) :
         # both SimSeries
         if isinstance(other, SimSeries) :
-            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
-                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
                 if self.units == other.units :
                     result = self.sub(other)
@@ -223,8 +258,8 @@ class SimSeries(Series) :
     def __mul__(self,other) :
         # both SimSeries
         if isinstance(other, SimSeries) :
-            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
-                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
                 if self.units == other.units :
                     result = self.mul(other)
@@ -254,8 +289,8 @@ class SimSeries(Series) :
     def __truediv__(self,other) :
         # both SimSeries
         if isinstance(other, SimSeries) :
-            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
-                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
                 if self.units == other.units :
                     result = self.truediv(other)
@@ -285,8 +320,8 @@ class SimSeries(Series) :
     def __floordiv__(self,other) :
         # both SimSeries
         if isinstance(other, SimSeries) :
-            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
-                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
                 if self.units == other.units :
                     result = self.floordiv(other)
@@ -316,8 +351,8 @@ class SimSeries(Series) :
     def __mod__(self,other) :
         # both SimSeries
         if isinstance(other, SimSeries) :
-            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
-                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
                 if self.units == other.units :
                     result = self.mod(other)
@@ -343,8 +378,8 @@ class SimSeries(Series) :
     def __pow__(self,other) :
         # both SimSeries
         if isinstance(other, SimSeries) :
-            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
-                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
                 if self.units == other.units :
                     result = self.pow(other)
@@ -441,8 +476,8 @@ class SimSeries(Series) :
 
     def copy(self) :
         if type(self.units) is dict :
-            return SimSeries( data=self.as_Series().copy(True) , units=self.units.copy() , dtype=self.dtype , indexKey=self.indexKey )
-        return SimSeries( data=self.as_Series().copy(True) , units=self.units , dtype=self.dtype , indexKey=self.indexKey )
+            return SimSeries( data=self.as_Series().copy(True) , units=self.units.copy() , dtype=self.dtype , indexName=self.index.name )
+        return SimSeries( data=self.as_Series().copy(True) , units=self.units , dtype=self.dtype , indexName=self.index.name )
     
 class SimDataFrame(DataFrame) :
     """
@@ -463,46 +498,83 @@ class SimDataFrame(DataFrame) :
     pandas.DataFrame
     
     """
-    _metadata = ["units","indexKey","speak"]
+    _metadata = ["units","speak"]
     
     def __init__(self , data=None , units=None , index=None , speak=False , *args , **kwargs) :
         self.units = None
         self.speak = bool(speak)
         
         indexInput = None
-        if 'index' in kwargs and type(kwargs['index']) is not None :
+        # catch index keyword from input parameters
+        if index is not None :
+            indexInput = index
+        elif 'index' in kwargs and kwargs['index'] is not None :
             indexInput = kwargs['index']
         elif len(args) >= 3 and args[2] is not None :
             indexInput = args[2]
-        if isinstance(indexInput,(SimSeries,Series)) :
+        # if index is a Series, get the name
+        elif isinstance(indexInput,Series) :
             if type(indexInput.name) is str :
                 indexInput = indexInput.name
-        if indexInput is None and isinstance(data,(SimSeries,SimDataFrame)) and type(data.indexKey) is str :
-            indexInput = data.indexKey
-        if indexInput is None and 'indexKey' in kwargs :
-            indexInput = kwargs['indexKey']
-        self.indexKey = indexInput
-        kwargs.pop('indexKey',None)        
+        # if index is None and data is SimSeries or SimDataFrame get the name
+        elif type(data) in [SimSeries,SimDataFrame] and type(data.index.name) is str and len(data.index.name)>0 :
+            indexInput = data.index.name
+        
+        # if units is None data is SimDataFrame or SimSeries get the units
+        if units is None :
+            if type(data) is SimDataFrame :
+                units = data.units.copy()
+            elif type(data) is SimSeries :
+                if type(data.units) is dict :
+                    units = data.units.copy()
+                elif type(data.name) is str and type(data.units) is str :
+                    units = { data.name : data.units }
+        
+        # remove arguments not known by Pandas
+        kwargs.pop('indexName',None)
+        # convert to pure Pandas
+        if type(data) in [ SimDataFrame , SimSeries ] :
+            data = data.to_Pandas()
         super().__init__(data=data,index=index,*args, **kwargs)
-        if self.units is None :
-            if type(units) is str :
-                self.units = {}
-                for key in list( self.columns ) :
-                    self.units[ key ] = units
-            if type(units) is list or type(units) is tuple :
-                if len(units) == len(self.columns) :
-                    self.units = dict( zip( list(self.columns) , units ) )
-            if type(units) is dict and len(units)>0 :
-                self.units = {}
-                for key in list( self.columns ) :
-                    if key in units :
-                        self.units[key] = units[key]
-                    else :
-                        self.units[key] = 'UNITLESS'
+
+        # set the name of the index
+        if ( self.index.name is None or ( type(self.index.name) is str and len(self.index.name)==0 ) ) and ( type(indexInput) is str and len(indexInput)>0 ) :
+            self.index.name = indexInput
+        # overwrite the index.name with input from the argument indexName
+        if 'indexName' in kwargs and type(kwargs['indexName']) is str and len(kwargs['indexName'].strip())>0 :
+            self.set_indexName(kwargs['indexName'])
+
+        # set the units
+        if type(units) is str :
+            self.units = {}
+            for key in list( self.columns ) :
+                self.units[ key ] = units
+        elif type(units) is list or type(units) is tuple :
+            if len(units) == len(self.columns) :
+                self.units = dict( zip( list(self.columns) , units ) )
+        elif type(units) is dict and len(units)>0 :
+            self.units = {}
+            for key in list( self.columns ) :
+                if key in units :
+                    self.units[key] = units[key]
+                else :
+                    self.units[key] = 'UNITLESS'
     
     # @property
     # def _constructor(self):
     #     return SimDataFrame
+    
+    def set_indexName(self,Name) :
+        if type(Name) is str and len(Name.strip())>0:
+            self.index.name = Name
+    
+    def set_index(self,key,drop=False,append=False,inplace=True,verify_integrity=False,**kwargs) :
+        if key not in self.columns :
+            raise ValueError( "The key '"+str(key)+"' is not a column name of this DataFrame.")
+        super().set_index(key,drop=drop,append=append,inplace=inplace,verify_integrity=verify_integrity,**kwargs)
+    
+    def to_Pandas(self) :
+        return self.as_DataFrame()
     
     def as_DataFrame(self) :
         return DataFrame( self )
@@ -515,13 +587,13 @@ class SimDataFrame(DataFrame) :
     
     def __neg__(self) :
         result = -self.as_DataFrame()
-        return SimDataFrame( data=result , units=self.units , indexKey=self.indexKey )
+        return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
     
     def __add__(self,other) :
         # both SimDataFra,es
         if isinstance(other, SimDataFrame) :
-            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
-                Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             otherC = other.copy()
             selfC = self.copy()
             for col in self.columns :
@@ -537,17 +609,17 @@ class SimDataFrame(DataFrame) :
                 else :
                     selfC.units[col] = other.get_Units(col)[col]
             result = selfC.add(otherC)
-            return SimDataFrame( data=result , units=selfC.units , indexKey=self.indexKey )
+            return SimDataFrame( data=result , units=selfC.units , indexName=self.index.name )
         
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_DataFrame() + other
-        return SimDataFrame( data=result , units=self.units , indexKey=self.indexKey )
+        return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
     
     def __sub__(self,other) :
         # both SimDataFra,es
         if isinstance(other, SimDataFrame) :
-            if self.indexKey is not None and other.indexKey is not None and self.indexKey != other.indexKey :
-                Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.indexKey+"' != '"+other.indexKey+"'")
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             otherC = other.copy()
             selfC = self.copy()
             for col in self.columns :
@@ -563,14 +635,14 @@ class SimDataFrame(DataFrame) :
                 else :
                     selfC.units[col] = other.get_Units(col)[col]
             result = selfC.sub(otherC)
-            return SimDataFrame( data=result , units=selfC.units , indexKey=self.indexKey )
+            return SimDataFrame( data=result , units=selfC.units , indexName=self.index.name )
         
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_DataFrame() - other
-        return SimDataFrame( data=result , units=self.units , indexKey=self.indexKey )
+        return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
     
     def copy(self) :
-        return SimDataFrame( data=self.as_DataFrame().copy(True) , units=self.units.copy() , indexKey=self.indexKey )
+        return SimDataFrame( data=self.as_DataFrame().copy(True) , units=self.units.copy() , indexName=self.index.name )
     
     def __call__(self,key=None) :
         if key is None :
@@ -618,31 +690,63 @@ class SimDataFrame(DataFrame) :
     
     def __getitem__(self, key) :
 
+        if isinstance(key,(Series)) or type(key) is np.array :
+            if str(key.dtype) == 'bool' :
+                return self._getbyFilter(key)
+
         byIndex = False
         indexFilter = None
+        indexes = None
+        slices = None
         
+        ### convert tuple argument to list
+        if type(key) is tuple :
+            key = list(key)
+        
+        ### if key is a string but not a column name, check if it is an item, attribute, pattern, filter or index
         if type(key) is str and key not in self.columns :
-            if bool( self.find_Keys(key) ) :
+            
+            if bool( self.find_Keys(key) ) : # catch the column names this key represent
                 key = list( self.find_Keys(key) )
-            else :
-                try :
-                    return self.filter(key)
+            else : # key is not a column name
+                try : # to evalue as a filter
+                    return self._getbyCriteria(key)
                 except :
-                    raise ValueError ('filter conditions not valid:\n   '+ key) 
-
+                    try : # to evaluate as an index value
+                        return self._getbyIndex(key)
+                    except :
+                        raise ValueError ('requested key is not a valid column name, pattern, index or filter criteria:\n   '+ key) 
+        
+        ### key is a list, have to check every item in the list
         elif type(key) is list :
-            keyList , key , filters = key , [] , []
+            keyList , key , filters , indexes , slices = key , [] , [] , [] , []
             for each in keyList :
-                if type(each) is str and each not in self.columns :
-                    if bool( self.find_Keys(each) ) :
-                        key += list( self.find_Keys(each) )
-                    else :
-                        filters += [each]
-                elif type(each) is str and each in self.columns :
+                ### the key is a column name
+                if type(each) is slice :
+                    slices += [each]
+                elif each in self.columns :
                     key += [each]
+                ### if key is a string but not a column name, check if it is an item, attribute, pattern, filter or index
+                elif type(each) is str :
+                    if bool( self.find_Keys(each) ) : # catch the column names this key represent
+                        key += list( self.find_Keys(each) )
+                    else : # key is not a column name, might be a filter or index
+                        try : # to evalue as a filter
+                            trash = self.filter(each,returnFilter=True)
+                            filters += [each]
+                        except :
+                            try : # to evaluate as an index value
+                                trash = self._getbyIndex(each)
+                                indexes += [each]
+                            except :
+                                # discard this item
+                                print(' the paramenter '+str(each)+' is not valid.')
+                
+                ### must be an index, not a column name o relative, not a filter, not in the index
                 else :
-                    key += list( self.find_Keys(each) )
+                    indexes += [each]
 
+            ### get the filter array, if filter criteria was provided
             if bool(filters) :
                 try :
                     indexFilter = self.filter(filters,returnFilter=True)
@@ -650,24 +754,22 @@ class SimDataFrame(DataFrame) :
                     raise Warning ('filter conditions are not valid:\n   '+ ' and '.join(filters) )
                 if not indexFilter.any() :
                     raise Warning ('filter conditions removed every row :\n   '+ ' and '.join(filters) )
-
-        try :
-            result = super().__getitem__(key)
-        except :
-            try :
-                result = self.loc[key]
-                byIndex = True
-            except :
-                try :
-                    result = self.iloc[key]
-                    byIndex = True
-                except :
-                    result = dict()
         
-        if isinstance(result,DataFrame) :
+        ### attempt to get the desired keys, first as column names, then as indexes
+        if bool(key) :
+            try :
+                result = self._getbyColumn(key)
+            except :
+                result = self._getbyIndex(key)
+                if result is not None : byIndex = True
+        else :
+            result = SimDataFrame( data=self )
+        
+        ### convert returned object to SimDataFrame or SimSeries accordingly
+        if type(result) is DataFrame :
             resultUnits = self.get_Units(result.columns)
             result = SimDataFrame(data=result , units=resultUnits)
-        elif isinstance(result,Series) :
+        elif type(result) is Series :
             if result.name is None or type(result.name) is not str :
                 # this Series is one index for multiple columns
                 resultUnits = self.get_Units(result.index)
@@ -675,22 +777,99 @@ class SimDataFrame(DataFrame) :
                 resultUnits = self.get_Units(result.name)
             result = SimSeries(data=result , units=resultUnits)
         
+        ### apply filter array if applicable
+        if indexFilter is not None :
+            result = result[indexFilter.array]
+        
+        ### apply indexes and slices
+        if bool(indexes) or bool(slices) :
+            indexeslices = indexes + slices
+            iresult = Series2Frame(result._getbyIndex(indexeslices[0]))
+            if len(indexeslices) > 1 :
+                for i in indexeslices[1:] :
+                    iresult = iresult.append( Series2Frame(result._getbyIndex(i)) )
+            try :
+                result = iresult.sort_index()
+            except :
+                result = iresult
+        
+        # ### apply slices
+        # if bool(slices) :
+        #     sresult = Series2Frame(result._getbyIndex(slices[0]))
+        #     if len(slices) > 1 :
+        #         for s in slices[1:] :
+        #             sresult = sresult.append( Series2Frame(result._getbyIndex(s)) )
+        #     result = sresult
+        
+        ### if is a single row return it as a DataFrame instead of a Series
         if byIndex :
             result = Series2Frame(result)
         
-        if indexFilter is not None :
-            return result[indexFilter]
-        
         return result
+    
+    def _getbyFilter(self,key) :
+        """
+        ** helper function to __getitem__ method **
+        
+        try to get a filtered DataFrame or Series ( .filter[key] )
+        
+        """
+        if len(key) != len(self.DF) :
+            raise ValueError( 'Filter wrong length ' + len(key) + ' instead of ' + len(self.DF) )
+        if not isinstance(key,(Series,SimSeries)) and type(key) is not np.array :
+            raise TypeError( "Filter must be a Series or Array" )
+        else :
+            if str(key.dtype) != 'bool' :
+                raise TypeError( "Filter dtype must be 'bool'" )
+        
+        return super().loc(key)
+    
+    def _getbyCriteria(self,key) :
+        """
+        ** helper function to __getitem__ method **
+        
+        try to get a filtered DataFrame or Series ( .filter[key] )
+        
+        """
+        return self.filter(key)
+    
+    def _getbyColumn(self,key) :
+        """
+        ** helper function to __getitem__ method **
+        
+        try to get a column by column name ( .__getitem__[key] )
+        
+        """
+        return super().__getitem__(key)
+        
+    
+    def _getbyIndex(self,key) :
+        """
+        ** helper function to __getitem__ method **
+        
+        try to get a row by index value ( .loc[key] ) or by position ( .iloc[key] )
+        
+        """
+        # try to find key by index value using .loc
+        try :
+            return self.loc[key]
+        except :
+            # try to find key by index position using .loc
+            try :
+                return self.iloc[key]
+            except :
+                raise ValueError(' ' + str(key) + ' is not a valid index value or position.')
         
     def __repr__(self) -> str:
         """
         Return a string representation for a particular DataFrame, with Units.
         """
+        firstRow = 1 if self.index.name is None else 2
+        lastRow = -2
         def thisColumnMaxLen() :
-            thisColumn = [None]*len( result[1:-2] )
-            for line in range(len(result[1:-2])) :
-                rawLine = multisplit( result[1:-1][line] , ['  ',' -'] )
+            thisColumn = [None]*len( result[firstRow:lastRow] )
+            for line in range(len(result[firstRow:lastRow])) :
+                rawLine = multisplit( result[firstRow:lastRow][line] , ['  ',' -'] )
                 thisLine = []
                 for raw in rawLine :
                     if len(raw.strip(' -')) > 0 :
@@ -748,7 +927,7 @@ class SimDataFrame(DataFrame) :
                 # key might be a column name
                 else :
                     while key not in self.columns and f <= len(keys) :
-                        f = keys.index(' ',f+1) 
+                        f = keys.index(' ',f+1)
                         key = keys[i:f]
                     maxLen = max( thisColumnMaxLen() , len(key) )
                     if key in self.units :
@@ -1142,18 +1321,18 @@ class SimDataFrame(DataFrame) :
                 # if key is the index
                 if key in ['.i','.index'] :
                     filterStr = filterStr.rstrip()
-                    filterStr += ' self.index'
+                    filterStr += ' self.DF.index'
                 # if key is a column
                 elif key in self.columns :
                     filterStr = filterStr.rstrip()
-                    filterStr += " self['"+key+"']"
+                    filterStr += " self.DF['"+key+"']"
                 # key might be a wellname, attribute or a pattern
                 elif len( self.find_Keys(key) ) == 1 :
                     filterStr = filterStr.rstrip()
-                    filterStr += " self['"+ self.find_Keys(key)[0] +"']"
+                    filterStr += " self.DF['"+ self.find_Keys(key)[0] +"']"
                 elif len( self.find_Keys(key) ) > 1 :
                     filterStr = filterStr.rstrip()
-                    filterStr += " self["+ str( list(self.find_Keys(key)) ) +"]"
+                    filterStr += " self.DF["+ str( list(self.find_Keys(key)) ) +"]"
                     PandasAgg = '.any(axis=1)'
                 else :
                     filterStr += ' ' + key
@@ -1279,9 +1458,9 @@ class SimDataFrame(DataFrame) :
         filterStr = filterStr.strip()
         # check missing key, means .index by default
         if filterStr[0] in ['=','>','<','!'] :
-            filterStr = 'self.index ' + filterStr
+            filterStr = 'self.DF.index ' + filterStr
         elif filterStr[-1] in ['=','>','<','!'] :
-            filterStr = filterStr + ' self.index' 
+            filterStr = filterStr + ' self.DF.index' 
         # close last parethesis and aggregation
         filterStr += ' )' * bool( AndOrNot + bool(PandasAgg) ) + PandasAgg
         # open parenthesis for aggregation, if needed
@@ -1292,10 +1471,11 @@ class SimDataFrame(DataFrame) :
         
         if returnString :
             retTuple += [ filterStr ]
+        filterArray = eval( filterStr )
         if returnFilter :
-            retTuple += [ eval( filterStr ) ]
+            retTuple += [ filterArray ]
         if returnFrame :
-            retTuple += [ self[ eval( filterStr ) ] ]
+            retTuple += [ self.DF[ filterArray ] ]
         
         if len( retTuple ) == 1 :
             return retTuple[0]
@@ -1303,42 +1483,51 @@ class SimDataFrame(DataFrame) :
             return tuple( retTuple )
         
 
-if __name__ == '__main__' :
-    from datafiletoolbox import loadSimulationResults
-    # V = loadSimulationResults('/Volumes/git/sampleData/e100/YE_2017_P10_LGR_LA-4HD_VF_30102017.UNSMRY')
-    V = loadSimulationResults('C:/Users/mcaraya/OneDrive - Cepsa/git/sampleData/e100/YE_2017_P10_LGR_LA-4HD_VF_30102017.UNSMRY')
-    DF = V[['F?PR','DATE','LANOI3X','LA1XST','WOPR']]
-    U = V.get_Units(['F?PR','DATE','LANOI3X','LA1XST','WOPR'])
-    S = DF['WOPT:LA1XST']
-    Us = U['WOPT:LA1XST']
-    
-    testS = SimSeries( units=Us , data=S )
-    print( testS )
-    
-    testDF = SimDataFrame( data=DF , units=U )
-    print(testDF)
-    Z = testDF[-1]
-    # # Series2Frame(Z)
-    A = testDF['WOPR:LANOI3X']
-    B = testDF['WOPR:LA1XST']
-    F = testDF[['FOPR','FWPR']]
-    R1 = A + B
-    R2 = A - B
-    B.units = 'm3/day'
-    testDF.find_Keys('!DATE')
-    testDF['FOPT'] = R1
-    print(testDF.get_Units('FOPT'))
-    print(testDF['FOPT'])
-    print(testDF[-1])
-    print(testDF)
-    G = F[['FOPR','FWPR']]
-    G.units = {'FOPR': 'M3/DAY', 'FWPR': 'MSCF/DAY'}
-    G = -G
-    # print(testDF.filter('FOPR<0'))
-    print(testDF.filter('WOPR>0',returnString=True))
-    print(testDF.filter('WOPR>0 and .i>10',returnFilter=True))
-    print(testDF.filter('WOPR>0'))
-    print(testDF.filter('WOPR>0 and .i>10'))
-    print(testDF.filter('>10'))
-    print(testDF.filter('10<.index<50',returnString=True))
-    print(testDF.filter(['WOPR>0','']))
+###########
+# test data
+from datafiletoolbox import loadSimulationResults
+# V = loadSimulationResults('/Volumes/git/sampleData/e100/YE_2017_P10_LGR_LA-4HD_VF_30102017.UNSMRY')
+V = loadSimulationResults('C:/Users/mcaraya/OneDrive - Cepsa/git/sampleData/e100/YE_2017_P10_LGR_LA-4HD_VF_30102017.UNSMRY')
+DF = V[['F?PR','DATE','LA1XST','LANOI3X','WOPR']]
+U = V.get_Units(['F?PR','DATE','LANOI3X','LA1XST','WOPR'])
+S = DF['WOPT:LA1XST']
+Us = U['WOPT:LA1XST']
+
+testS = SimSeries( units=Us , data=S )
+print( testS )
+
+testDF = SimDataFrame( data=DF , units=U )
+print(testDF)
+Z = testDF[-1]
+# # Series2Frame(Z)
+A = testDF['WOPR:LANOI3X']
+B = testDF['WOPR:LA1XST']
+F = testDF[['FOPR','FWPR']]
+R1 = A + B
+R2 = A - B
+B.units = 'm3/day'
+testDF.find_Keys('!DATE')
+testDF['FOPT'] = R1
+print(testDF.get_Units('FOPT'))
+print(testDF['FOPT'])
+print(testDF[-1])
+testDF.index.name = 'ABC'
+print(testDF)
+G = F[['FOPR','FWPR']]
+G.units = {'FOPR': 'M3/DAY', 'FWPR': 'MSCF/DAY'}
+G = -G
+# print(testDF.filter('FOPR<0'))
+print(testDF.filter('WOPR>0',returnString=True))
+print(testDF.filter('WOPR>0 and .i>10',returnFilter=True))
+print(testDF.filter('WOPR>0'))
+print(testDF.filter('WOPR>0 and .i>10'))
+print(testDF.filter('>10'))
+# print(testDF.filter('10<.index<50',returnString=True))
+print(testDF.filter(['WOPR>0','WWCT<0.01']))
+print(testDF['WOPR>0','WWCT<0.01'])
+print(testDF['WWCT'])
+print(testDF[0:5])
+print(testDF[0:5,'FOPT','WOPR'])
+print(testDF[0:5,2020,-1,'FOPT','WOPR'])
+testDF.set_index('DATE')
+print(testDF[0:5,2020,-1,'FOPT','WOPR'])
