@@ -104,7 +104,7 @@ def isDate(dateStr , formatIN='' , speak=False , returnFormat=False ):
         except :
             pass
     
-        formats = [ 'YYYY-MM-DD' , 'YYYY-MMM-DD' , 'MM-DD-YYYY' , 'DD-MMM-YYYY' , 'MMM-DD-YYYY' , 'YYYY-DD-MM' , 'YYYY-DD-MMM' , 'YYYYMMDD' , 'YYYYMMMDD' , 'DD-MM-YY' ,  'MMM-DD-YY' , 'MM-DD-YY'  ]
+        formats = [ 'DD-MM-YYYY','DD-MMM-YYYY','YYYY-MM-DD' , 'YYYY-MMM-DD' , 'MM-DD-YYYY' , 'MMM-DD-YYYY' , 'YYYY-DD-MM' , 'YYYY-DD-MMM' , 'YYYYMMDD' , 'YYYYMMMDD' , 'DD-MM-YY' ,  'MMM-DD-YY' , 'MM-DD-YY'  ]
         separators = ['-', '/' , ' ' , '\t', '_', ':', ';', ',', '.', '#', "'"]
         for f in formats :
             for sep in separators :
@@ -221,7 +221,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
         output = str
         separator = '-'
         
-    if type(date) is pd._libs.tslibs.timestamps.Timestamp :
+    if type(date) is pd.Timestamp : # pd._libs.tslibs.timestamps.Timestamp
         date = date.date()
 
     if type(date) is dt.date :
@@ -230,7 +230,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
             formatIN = 'YYYY-MM-DD'
     
     if type(date) is str :
-        sample = date.strip()
+        sample = date.strip(' "\'')
         date = [ date ]
         output = str
 
