@@ -35,15 +35,17 @@ Created on Tue Jul  9 21:23:27 2019
 
 # from bases.units import convertUnit
 
-__version__ = '0.2.20-09-13'
+__version__ = '0.2.20-10-16'
 __author__ = 'Martin Araya'
+
+__all__ = ['date','isDate','multisplit','extension']
 
 msg = """     implementing libecl 2.9.1 from pypi, released on Aug 2020"""
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')
-print(msg)
+# print(msg)
 
-from .common.stringformat import date
+from .common.stringformat import date , isDate , multisplit
 from .common.inout import extension
 from .common.keywordsConversions import fromECLtoVIP , fromVIPtoECL
 from .SimulationResults.loader import loadSimulationResults

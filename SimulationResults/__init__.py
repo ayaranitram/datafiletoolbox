@@ -5,6 +5,8 @@ Created on Sat May 16 20:10:06 2020
 @author: martin
 """
 
+__all__ = ['loadSimulationResults']
+
 from .mainObject import SimResult
 from .vipObject import VIP
 from .CSVSimResultNexusDesktopObject import NexusDesktopCSV
