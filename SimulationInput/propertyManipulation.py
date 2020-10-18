@@ -12,7 +12,7 @@ routines:
 
 __version__ = '0.0.20-05-16'
 
-from datafiletoolbox.common.inout import verbose
+from datafiletoolbox._common.inout import verbose
 
 def expandKeyword( keywordValues , speak=0 , expandDefaults=True) :
     """

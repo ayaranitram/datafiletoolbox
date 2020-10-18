@@ -5,15 +5,16 @@ Created on Thu Aug  6 13:59:36 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.20-09-01'
+__version__ = '0.1.20-10-17'
+__all__ = ['fromECLtoVIP','fromVIPtoECL','fromCSVtoECL','fromECLtoCSV']
 
-from datafiletoolbox.dictionaries import ECL2VIPtype , ECL2VIPkey , VIP2ECLtype , VIP2ECLkey
-from datafiletoolbox.dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
-from datafiletoolbox.common.inout import verbose 
-from datafiletoolbox.dictionaries import UniversalKeys
-from datafiletoolbox.common.functions import mainKey
+from .._dictionaries import ECL2VIPtype , ECL2VIPkey , VIP2ECLtype , VIP2ECLkey
+from .._dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
+from .._dictionaries import UniversalKeys
+from .inout import _verbose 
+from .functions import _mainKey
 
-def testECLmolarKey(key) :
+def _testECLmolarKey(key) :
     if '_' in key :
         if ':' in key :
             var = key.strip().split(':')[0].upper()
@@ -58,7 +59,7 @@ def testECLmolarKey(key) :
     else :
         return False
     
-def testCSVmolarKey(variableORkey,CLASStype=None,MEMBER=None) :
+def _testCSVmolarKey(variableORkey,CLASStype=None,MEMBER=None) :
     variableORkey = variableORkey.strip().upper()
     if ':' in variableORkey :
         if MEMBER is None and len(variableORkey.split(':')[1]) > 0 :
@@ -102,8 +103,11 @@ def testCSVmolarKey(variableORkey,CLASStype=None,MEMBER=None) :
     return ECLkey
     
 def fromECLtoVIP(key,speak=0) :
-    verbose( speak , 1 , 'translating ' + str(key) + ' from ECL to VIP style.')
-    test = testECLmolarKey(key)
+    """
+    converts a keyword in ECL style to VIP SSS style
+    """
+    _verbose( speak , 1 , 'translating ' + str(key) + ' from ECL to VIP style.')
+    test = _testECLmolarKey(key)
     if type(test) == tuple :
         return test[0] , test[1] , test[2]
     
@@ -148,12 +152,12 @@ def fromECLtoVIP(key,speak=0) :
         else :
             VIPkey = keyRoot
 
-    verbose( speak , 1 ,'ECLIPSE key ' + key + ' interpreted as VIP key ' + VIPkey + ' for ' + str(keyType) + ' summary for the item ' + keyName )
+    _verbose( speak , 1 ,'ECLIPSE key ' + key + ' interpreted as VIP key ' + VIPkey + ' for ' + str(keyType) + ' summary for the item ' + keyName )
     return VIPkey , keyType , keyName
 
 def fromVIPtoECL(key,SSStype=None,speak=0):
     """
-    converts VIP style keyword to ECL style keyword.
+    converts VIP SSS style keyword to ECL style keyword.
     """
     if type(key) is dict :
         output = {}
@@ -167,7 +171,7 @@ def fromVIPtoECL(key,SSStype=None,speak=0):
         S = ' of ' + str(SSStype)
     else :
         S = ''
-    verbose( speak , 1 , 'translating ' + str(key) + S + ' from VIP to ECL style.')
+    _verbose( speak , 1 , 'translating ' + str(key) + S + ' from VIP to ECL style.')
     key = key.strip().upper()
     if ':' in key :
         keyName = key[key.index(':')+1:]
@@ -204,14 +208,17 @@ def fromVIPtoECL(key,SSStype=None,speak=0):
             keyType = ''
    
     if keyRoot == '' :
-        verbose( speak , 1 ,'CSV variable ' + key + ' not converted to ECL key.' )
+        _verbose( speak , 1 ,'CSV variable ' + key + ' not converted to ECL key.' )
         return None
     ECLkey = keyType + ConvertedRoot + keyName
-    verbose( speak , 1 ,'VIP key ' + key + ' interpreted as ECL key ' + ECLkey )
+    _verbose( speak , 1 ,'VIP key ' + key + ' interpreted as ECL key ' + ECLkey )
     return ECLkey
 
 def fromCSVtoECL(variableORkey,CLASStype=None,MEMBER=None,speak=0):
-    test = testCSVmolarKey(variableORkey,CLASStype,MEMBER)
+    """
+    converts keyword from CSV style exported from Halliburton SimResults application to ECL style.
+    """
+    test = _testCSVmolarKey(variableORkey,CLASStype,MEMBER)
     if type(test) == str :
         return test
     
@@ -219,7 +226,7 @@ def fromCSVtoECL(variableORkey,CLASStype=None,MEMBER=None,speak=0):
         C = ' of class ' + str(CLASStype)
     if MEMBER != None :
         M = ' for ' + str(MEMBER)
-    verbose( speak , 1 , 'translating ' + str(variableORkey) + C + M + ' from CSV to ECL style.')
+    _verbose( speak , 1 , 'translating ' + str(variableORkey) + C + M + ' from CSV to ECL style.')
     
     keyType = None
     if CLASStype != None :
@@ -235,7 +242,7 @@ def fromCSVtoECL(variableORkey,CLASStype=None,MEMBER=None,speak=0):
     else :
         keyName = None
         
-    key = mainKey(variableORkey).upper()
+    key = _mainKey(variableORkey).upper()
     if key in UniversalKeys :
         keyType = ''
     if key in CSV2ECLkey :
@@ -243,13 +250,16 @@ def fromCSVtoECL(variableORkey,CLASStype=None,MEMBER=None,speak=0):
     else :
         keyRoot = None 
     
-    verbose( speak , 1 , str(keyType) + ' ' + str(keyRoot) + ' ' + str(keyName) )
+    _verbose( speak , 1 , str(keyType) + ' ' + str(keyRoot) + ' ' + str(keyName) )
     if keyRoot != None and keyType != None and keyName != None :
         return keyType + keyRoot + keyName
 
 def fromECLtoCSV(key,speak=0) :
-    verbose( speak , 1 , 'translating ' + str(key) + ' from ECL to CSV style.')
-    test = testECLmolarKey(key)
+    """
+    converts keyword from ECL style to CSV style exported from Halliburton SimResults application. 
+    """
+    _verbose( speak , 1 , 'translating ' + str(key) + ' from ECL to CSV style.')
+    test = _testECLmolarKey(key)
     if type(test) == tuple :
         return test[0] , test[1] , test[2]
     
@@ -296,5 +306,5 @@ def fromECLtoCSV(key,speak=0) :
         else :
             CSVkey = keyRoot
 
-    verbose( speak , 1 ,'ECLIPSE key ' + key + ' interpreted as CSV key ' + CSVkey + ' for ' + str(keyType) + ' summary for the item ' + keyName )
+    _verbose( speak , 1 ,'ECLIPSE key ' + key + ' interpreted as CSV key ' + CSVkey + ' for ' + str(keyType) + ' summary for the item ' + keyName )
     return CSVkey , keyType , keyName

@@ -5,9 +5,10 @@ Created on Wed May 13 15:00:45 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-05-16'
+__version__ = '0.0.20-10-18'
+__all__ = ['SquareDifferences']
 
-from datafiletoolbox.common.inout import verbose
+from .._common.inout import _verbose
 import numpy as np
 import pandas as pd
 
@@ -50,31 +51,31 @@ def SquareDifferences( SimResultObjects=[] , AttributesOrKeys=[] , TimeSteps=Non
     Atts = []
     TimeKind = 'TIME'
     verbosity = SimResultObjects[0].get_Verbosity()
-    verbose( verbosity , 1 , ' < SqDiff > sarting with verbosity set to ' + str(verbosity))
+    _verbose( verbosity , 1 , ' < SqDiff > sarting with verbosity set to ' + str(verbosity))
     
-    verbose( verbosity , 1 , ' < SqDiff > the following objects will be used:')
+    _verbose( verbosity , 1 , ' < SqDiff > the following objects will be used:')
     if verbosity > 0 :
         for obj in SimResultObjects :
-            verbose( verbosity , 1 , ' < SqDiff > ' + str( obj.get_Name() ))
+            _verbose( verbosity , 1 , ' < SqDiff > ' + str( obj.get_Name() ))
         
     
     # split keys from attributes
-    verbose( verbosity , 1 , ' < SqDiff > checking AttributesOrKeys list:')
-    verbose( verbosity , 0 , ' < SqDiff >   Keys          Attributes')
+    _verbose( verbosity , 1 , ' < SqDiff > checking AttributesOrKeys list:')
+    _verbose( verbosity , 0 , ' < SqDiff >   Keys          Attributes')
     
     if type(AttributesOrKeys) == str :
         AttributesOrKeys = [AttributesOrKeys]
     for each in AttributesOrKeys :
         if ':' in each :
             MatchingKeys.append(each.strip())
-            verbose( verbosity , 0 , ' < SqDiff >   ' + each.strip() )
+            _verbose( verbosity , 0 , ' < SqDiff >   ' + each.strip() )
         elif each.strip()[0] == 'W' or each.strip()[0] == 'G' or each.strip()[0] == 'R' :
             Atts.append(each.strip())
-            verbose( verbosity , 0 , ' < SqDiff >                 ' + each.strip() )
+            _verbose( verbosity , 0 , ' < SqDiff >                 ' + each.strip() )
         else :
             MatchingKeys.append(each.strip())
-            verbose( verbosity , 0 , ' < SqDiff >   ' + each.strip() )
-    verbose( verbosity , 1 , ' < SqDiff > found ' + str(len(MatchingKeys)) + ' Keys and ' + str(len(Atts)) + ' Attributes,')
+            _verbose( verbosity , 0 , ' < SqDiff >   ' + each.strip() )
+    _verbose( verbosity , 1 , ' < SqDiff > found ' + str(len(MatchingKeys)) + ' Keys and ' + str(len(Atts)) + ' Attributes,')
     
     # extract the keys corresponding to the attributes
     for obj in SimResultObjects :
@@ -88,50 +89,50 @@ def SquareDifferences( SimResultObjects=[] , AttributesOrKeys=[] , TimeSteps=Non
     # keep only keys matching all the objects and 
     for obj in SimResultObjects :
         MatchingKeys = list( set(MatchingKeys).intersection(set( obj.get_Keys() )) )
-    verbose( verbosity , 1 , ' < SqDiff > totalizing ' + str(len(MatchingKeys)) + ' Keys after extending the Attributes and removing duplicates.')
+    _verbose( verbosity , 1 , ' < SqDiff > totalizing ' + str(len(MatchingKeys)) + ' Keys after extending the Attributes and removing duplicates.')
 
     if TimeSteps is None :
-        verbose( verbosity , 1 , ' < SqDiff > TimeSteps not received, all the matching timesteps will be used.')
+        _verbose( verbosity , 1 , ' < SqDiff > TimeSteps not received, all the matching timesteps will be used.')
         TimeSteps = list()
         for obj in SimResultObjects :
-            verbose( verbosity , 0 , ' < SqDiff > getting TimeSteps from ' + str(obj.get_Name()) + '\n < SqDiff > extracted ' + str(len( list( obj.get_Vector( TimeKind )[ TimeKind ] ))) + ' ' + TimeKind + '.' )
+            _verbose( verbosity , 0 , ' < SqDiff > getting TimeSteps from ' + str(obj.get_Name()) + '\n < SqDiff > extracted ' + str(len( list( obj.get_Vector( TimeKind )[ TimeKind ] ))) + ' ' + TimeKind + '.' )
             TimeSteps += list( obj.get_Vector( TimeKind )[ TimeKind ] )
-        verbose( verbosity , 1 , ' < SqDiff > ' + str(len(TimeSteps)) + ' TimeSteps found.')
+        _verbose( verbosity , 1 , ' < SqDiff > ' + str(len(TimeSteps)) + ' TimeSteps found.')
         TimeSteps = list( set( TimeSteps ) )
         TimeSteps.sort()
-        verbose( verbosity , 1 , ' < SqDiff > ' + str(len(TimeSteps)) + ' sorted TimeSteps found.')
+        _verbose( verbosity , 1 , ' < SqDiff > ' + str(len(TimeSteps)) + ' sorted TimeSteps found.')
         if Interpolate == False :
             for obj in SimResultObjects :
-                verbose( verbosity , 1 , ' < SqDiff > looking for matching TimeSteps for ' + obj.get_Name() )
+                _verbose( verbosity , 1 , ' < SqDiff > looking for matching TimeSteps for ' + obj.get_Name() )
                 TimeSteps = list( set( TimeSteps ).intersection( set( list( obj.get_Vector( TimeKind )[ TimeKind ] ) ) ) )
-        verbose( verbosity , 1 , ' < SqDiff > ' + str(len(TimeSteps)) + ' TimeSteps found, from ' + str(TimeSteps[0]) + ' to ' + str(TimeSteps[-1]) + '.' )
+        _verbose( verbosity , 1 , ' < SqDiff > ' + str(len(TimeSteps)) + ' TimeSteps found, from ' + str(TimeSteps[0]) + ' to ' + str(TimeSteps[-1]) + '.' )
                 
     else :
-        verbose( verbosity , 1 , ' < SqDiff > ' + str(len(TimeSteps)) + ' TimeSteps received, from ' + str(TimeSteps[0]) + ' to ' + str(TimeSteps[-1]) + '.' )
+        _verbose( verbosity , 1 , ' < SqDiff > ' + str(len(TimeSteps)) + ' TimeSteps received, from ' + str(TimeSteps[0]) + ' to ' + str(TimeSteps[-1]) + '.' )
         if type(TimeSteps[0]) == type( SimResultObjects[0].get_Vector('DATES')['DATES'][0] )        :
             TimeKind = 'DATES'
         elif type(TimeSteps[0]) == type( SimResultObjects[0].get_Vector('TIME')['TIME'][0] ) :
             TimeKind = 'TIME'
         else :
-            verbose( verbosity , -1 , ' < SqDiff > TimeSteps set by default to TIME')
+            _verbose( verbosity , -1 , ' < SqDiff > TimeSteps set by default to TIME')
             TimeKind = 'TIME'
-        verbose( verbosity , 1 , ' < SqDiff > TimeSteps found to be of type ' + TimeKind )
+        _verbose( verbosity , 1 , ' < SqDiff > TimeSteps found to be of type ' + TimeKind )
         if Interpolate == False :
             for obj in SimResultObjects :
                 TimeSteps = list( set( TimeSteps ).intersection( set( obj.get_Vector( TimeKind )[ TimeKind ] ) ) )
             if len(TimeSteps) > 0 :
-                verbose( verbosity , 1 , ' < SqDiff > ' + str(len(TimeSteps)) + ' TimeSteps found matching the simulation data TimeSteps, from ' + str(TimeSteps[0]) + ' to ' + str(TimeSteps[-1]) + '.' )
+                _verbose( verbosity , 1 , ' < SqDiff > ' + str(len(TimeSteps)) + ' TimeSteps found matching the simulation data TimeSteps, from ' + str(TimeSteps[0]) + ' to ' + str(TimeSteps[-1]) + '.' )
             else :
-                verbose( verbosity , 2 , ' < SqDiff > ' + 'No matching TimeSteps in the input profiles.' )
+                _verbose( verbosity , 2 , ' < SqDiff > ' + 'No matching TimeSteps in the input profiles.' )
         else :
             for obj in SimResultObjects :
                 MatchingTimeSteps = list( set( TimeSteps ).intersection( set( obj.get_Vector( TimeKind )[ TimeKind ] ) ) )
             if len(TimeSteps) - len(MatchingTimeSteps) > 0 :
-                verbose( verbosity , 2 , ' < SqDiff > WARNING: data will be interpolated for ' + str( len(TimeSteps) - len(MatchingTimeSteps) ) + ' TimeSteps not found in the simulation results.\n < SqDiff > WARNING: Set Interpolate=False to avoid this behaviour.' )
+                _verbose( verbosity , 2 , ' < SqDiff > WARNING: data will be interpolated for ' + str( len(TimeSteps) - len(MatchingTimeSteps) ) + ' TimeSteps not found in the simulation results.\n < SqDiff > WARNING: Set Interpolate=False to avoid this behaviour.' )
     
     # calculate differences:
     # request base DataFrame:
-    verbose( verbosity , 1 , ' < SqDiff >  prepating the Pandas DataFrames, please wait...')
+    _verbose( verbosity , 1 , ' < SqDiff >  prepating the Pandas DataFrames, please wait...')
     baseDF = SimResultObjects[0].get_DataFrame( Keys=MatchingKeys , Index=TimeKind )
     baseDF.replace([SimResultObjects[0].null], np.nan, inplace=True )
     baseDF.interpolate(axis=0,inplace=True)
@@ -173,5 +174,5 @@ def SquareDifferences( SimResultObjects=[] , AttributesOrKeys=[] , TimeSteps=Non
         # add square difference to totalization DataFrame
         sumDF = sumDF + deltaDF
         sumDF.dropna(axis=0 , inplace=True)
-    verbose( verbosity , -1 , ' < SqDiff >  resulting total SquareDifference is: ' + str( sumDF.sum(axis=1).sum(axis=0) ) )
+    _verbose( verbosity , -1 , ' < SqDiff >  resulting total SquareDifference is: ' + str( sumDF.sum(axis=1).sum(axis=0) ) )
     return ( sumDF.sum(axis=1).sum(axis=0) , sumDF.sum(axis=0) , pd.DataFrame(data=sumDF.sum(axis=1),index=sumDF.index,columns=['SquareDifferences']) , sumDF ,  dictOfDF  )

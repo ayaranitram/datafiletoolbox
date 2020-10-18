@@ -5,7 +5,8 @@ Created on Wed May 13 00:31:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-06-08' 
+__version__ = '0.2.20-10-18' 
+__all__ = ['Plot']
 
 import time
 import random
@@ -15,9 +16,9 @@ import matplotlib.dates as mdates
 from matplotlib.colors import is_color_like
 
 
-from datafiletoolbox.common.functions import is_SimulationResult
-from datafiletoolbox.common.inout import verbose
-from datafiletoolbox.common.functions import mainKey
+from .._common.functions import _is_SimulationResult
+from .._common.inout import _verbose
+from .._common.functions import _mainKey
 from bases.units import convertUnit
 
 timeout = 0.1
@@ -35,7 +36,7 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
     # ensure SimResultObjects is not empty and is OK
     if len(SimResultObjects) == 0 :
         raise TypeError('<Plot> at least one SimResult object is required (first argument).')
-    if not is_SimulationResult(SimResultObjects) and type(SimResultObjects) is not list and type(SimResultObjects) is not tuple :
+    if not _is_SimulationResult(SimResultObjects) and type(SimResultObjects) is not list and type(SimResultObjects) is not tuple :
         raise TypeError('<Plot> SimResultObjects must be a SimResult object or a list of SimResult objects.')
     if type(SimResultObjects) is not list :
         SimResultObjects = [SimResultObjects]
@@ -44,7 +45,7 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
         
     CheckedList = []
     for each in range(len(SimResultObjects)) :
-        if is_SimulationResult( SimResultObjects[each] ) :
+        if _is_SimulationResult( SimResultObjects[each] ) :
             CheckedList.append( SimResultObjects[each] )
         else :
             if each == 0 :
@@ -178,12 +179,12 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
         for i in range( len(Y_Keys) ) :
             if Y_Keys[i].split(':')[0] in Y_Names :
                 Y_Axis[i] = Y_Names[ Y_Keys[i].split(':')[0] ]
-                verbose( SimResultObjects[0].get_Verbosity() , 1 , "<Plot> Axis for '" + Y_Keys[i] + "' is " + str(Y_Names[ Y_Keys[i].split(':')[0] ]))
+                _verbose( SimResultObjects[0].get_Verbosity() , 1 , "<Plot> Axis for '" + Y_Keys[i] + "' is " + str(Y_Names[ Y_Keys[i].split(':')[0] ]))
             else :
                 Y_Names[ Y_Keys[i].split(':')[0] ] = Y_Counter%2
                 Y_Axis[i] = Y_Counter%2
                 Y_Counter += 1
-                verbose( SimResultObjects[0].get_Verbosity() , 1 , "<Plot> Axis for '" + Y_Keys[i] + "' is " + str(Y_Names[ Y_Keys[i].split(':')[0] ]))
+                _verbose( SimResultObjects[0].get_Verbosity() , 1 , "<Plot> Axis for '" + Y_Keys[i] + "' is " + str(Y_Names[ Y_Keys[i].split(':')[0] ]))
             time.sleep(timeout)
     if len(Y_Axis) != len(Y_Keys) :
         print('<Plot> found ' + str(len(Y_Axis)) + ' Y_Axis but ' + str(len(Y_Keys)) + ' Y_Keys.',Y_Axis,Y_Keys) 
@@ -555,10 +556,10 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
             if N < 10 :
                 plotLabels += [ l.get_label() ]
                 LegendLines += [ l ]
-            elif mainKey(l.get_label()) not in labeled :
-                plotLabels  += [ mainKey(l.get_label()) ]
+            elif _mainKey(l.get_label()) not in labeled :
+                plotLabels  += [ _mainKey(l.get_label()) ]
                 LegendLines += [ l ]
-                labeled.append( mainKey(l.get_label()) )
+                labeled.append( _mainKey(l.get_label()) )
             else :
                 plotLabels  += [ None ]
                 LegendLines += [ None ]

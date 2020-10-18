@@ -7,7 +7,7 @@ Created on Tue Jul  9 21:23:27 2019
 routines to read keywords in eclipse style
 """
 
-from datafiletoolbox.common.inout import verbose 
+from datafiletoolbox._common.inout import verbose 
 
 def readKeyword( filename , speak=0 ):
     """

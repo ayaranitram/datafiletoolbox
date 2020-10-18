@@ -5,16 +5,17 @@ Created on Wed May 13 00:45:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-09-20'
+__version__ = '0.0.20-10-18'
+__all__ = ['loadSimulationResults']
 
-from datafiletoolbox.common.inout import extension
+from .._common.inout import _extension
 #from datafiletoolbox.SimulationResults.mainObject import SimResult
-from datafiletoolbox.SimulationResults.vipObject import VIP
-from datafiletoolbox.SimulationResults.CSVSimResultNexusDesktopObject import NexusDesktopCSV
+from .vipObject import VIP as _VIP
+from .CSVSimResultNexusDesktopObject import NexusDesktopCSV as _NexusDesktopCSV
 
 okECL = False
 try :
-    from datafiletoolbox.SimulationResults.eclObject import ECL
+    from .eclObject import ECL as _ECL
     okECL = True
 except ImportError :
     print ( 'failed import ECL, usually due to fail to import libecl')
@@ -30,13 +31,13 @@ def loadSimulationResults(FullPath=None,Simulator=None,Verbosity=2) :
         print( 'Please provide the path to the simulation results as string.')
         return None
     if Simulator is None :
-        if extension(FullPath)[0].upper() in ['.SMSPEC','.UNSMRY','.DATA'] :
+        if _extension(FullPath)[0].upper() in ['.SMSPEC','.UNSMRY','.DATA'] :
             Simulator = 'ECLIPSE'
-        elif extension(FullPath)[0].upper() in ['.DAT','.SSS'] :
+        elif _extension(FullPath)[0].upper() in ['.DAT','.SSS'] :
             Simulator = 'VIP'
-        elif extension(FullPath)[0].upper() in ['.FSC','.SS_FIELD','.SS_WELLS','.SS_REGIONS','.SS_NETWORK'] :
+        elif _extension(FullPath)[0].upper() in ['.FSC','.SS_FIELD','.SS_WELLS','.SS_REGIONS','.SS_NETWORK'] :
             Simulator = 'NEXUS'
-        elif extension(FullPath)[0].upper() in ['.CSV'] :
+        elif _extension(FullPath)[0].upper() in ['.CSV'] :
             Simulator = 'NexusDesktopSimResult'
     elif type(Simulator) is str and len(Simulator.strip()) > 0 :
         Simulator = Simulator.strip().upper()
@@ -44,15 +45,15 @@ def loadSimulationResults(FullPath=None,Simulator=None,Verbosity=2) :
     OBJ = None
     if Simulator in ['ECL','E100','E300','ECLIPSE','IX','INTERSECT','TNAV','TNAVIGATOR'] :
         if okECL is True :
-            OBJ = ECL(FullPath,Verbosity)
+            OBJ = _ECL(FullPath,Verbosity)
         else :
             print( 'ECL object not loaded')
     elif Simulator in ['VIP'] :
-        OBJ = VIP(FullPath,Verbosity)
+        OBJ = _VIP(FullPath,Verbosity)
     elif Simulator in ['NX','NEXUS'] :
-        OBJ = VIP(FullPath,Verbosity)
+        OBJ = _VIP(FullPath,Verbosity)
     elif Simulator in ['NexusDesktopSimResult'] :
-        OBJ = NexusDesktopCSV(FullPath,Verbosity)
+        OBJ = _NexusDesktopCSV(FullPath,Verbosity)
     
     if OBJ is not None and Verbosity != 0 :
         print(OBJ.__repr__())

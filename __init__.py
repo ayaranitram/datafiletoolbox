@@ -9,43 +9,27 @@ Created on Tue Jul  9 21:23:27 2019
 @author: martin
 """
 
-# import datetime
-# import numpy
-# import pandas
-
-# from datafiletoolbox.common.inout import extension
-# from datafiletoolbox.common.inout import verbose
-# from datafiletoolbox.common.stringformat import date
-# from datafiletoolbox.common.loader import loadSimulationResults
-# from datafiletoolbox.SimPlot.SmartPlot import Plot
-
-# from datafiletoolbox.SimulationResults.oneObject import *
-
-# from datafiletoolbox.SimulationResults.mainObject import SimResult
-# from datafiletoolbox.SimulationResults.vipObject import VIP
-# from datafiletoolbox.SimulationResults.eclObject import ECL
-
-# from .common.functions import mainKey
-# from .common.functions import is_SimulationResult
-
-# from .SimInput.propertyManipulation import *
-# from .SimInput.simObject import *
-
-# from .SimulationResults import *
-
-# from bases.units import convertUnit
-
-__version__ = '0.2.20-10-16'
+__version__ = '0.2.20-10-18'
 __author__ = 'Martin Araya'
 
-__all__ = ['date','isDate','multisplit','extension']
+__all__ = ['stringformat','extension','Alternate','SimPandas']
 
-msg = """     implementing libecl 2.9.1 from pypi, released on Aug 2020"""
+_msg = """     implementing libecl 2.9.1 from pypi, released on Aug 2020"""
 
 print('\n >>> Datafile Tool Box ' + str(__version__) + ' loaded <<<')
-# print(msg)
+# print(_msg)
 
-from .common.stringformat import date , isDate , multisplit
-from .common.inout import extension
-from .common.keywordsConversions import fromECLtoVIP , fromVIPtoECL
+from ._Classes.Iterators import Alternate
+from ._Classes import SimPandas
+from ._Classes.SimPandas import SimSeries , SimDataFrame
+
+from ._common.eclDATES import simDate as ECLdate
+from ._common.functions import _mainKey as mainKey , _itemKey as itemKey , tamiz
+from ._common.inout import _extension as extension
+from ._common.keywordsConversions import fromECLtoVIP , fromVIPtoECL , fromECLtoCSV , fromCSVtoECL
+from ._common import stringformat
+from ._common.stringformat import date as strDate , isDate , multisplit , isnumeric , getnumber
+
 from .SimulationResults.loader import loadSimulationResults
+
+

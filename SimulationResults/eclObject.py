@@ -5,16 +5,16 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-09-13'
+__version__ = '0.1.20-10-18'
+__all__ = ['ECL']
 
-from datafiletoolbox.SimulationResults.mainObject import SimResult
-from datafiletoolbox.common.functions import mainKey
-from datafiletoolbox.common.inout import extension
-from datafiletoolbox.common.inout import verbose 
+from .mainObject import SimResult as _SimResult
+from .._common.functions import _mainKey
+from .._common.inout import _extension
+from .._common.inout import _verbose
 
 import numpy as np
 import os
-
 
 try :
     # try to use libecl instalation from pypi.org
@@ -23,22 +23,22 @@ try :
     print('\n using libecl version ' + str(libecl_version))
 except :
     # try to use my compiled version of libecl from https://github.com/equinor/libecl
-    eclPath = extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib/python' 
+    eclPath = _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib/python' 
     os.environ['PYTHONPATH'] = eclPath + ';' + os.environ['PYTHONPATH']
-    eclPath = eclPath + ';' + extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib'
-    eclPath = eclPath + ';' + extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
+    eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib'
+    eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
     os.environ['PATH'] = eclPath + ';' + os.environ['PATH']
     #from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
     from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary import EclSum
     print('\n using ecl from https://github.com/equinor/libecl compiled for Windows10')
 
 
-class ECL(SimResult):
+class ECL(_SimResult):
     """
     object to contain eclipse format results read from SMSPEC using libecl from equinor 
     """
     def __init__(self,inputFile=None,verbosity=2) :
-        SimResult.__init__(self,verbosity=verbosity)
+        _SimResult.__init__(self,verbosity=verbosity)
         self.kind = ECL
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             self.loadSummary(inputFile)
@@ -49,27 +49,27 @@ class ECL(SimResult):
             SummaryFilePath = SummaryFilePath.strip()
             if self.path is None :
                 self.path = SummaryFilePath
-            if extension(SummaryFilePath)[0] != '.SMSPEC' :
-                newPath = extension(SummaryFilePath)[2] + extension(SummaryFilePath)[1] + '.SMSPEC'
+            if _extension(SummaryFilePath)[0] != '.SMSPEC' :
+                newPath = _extension(SummaryFilePath)[2] + _extension(SummaryFilePath)[1] + '.SMSPEC'
                 if os.path.isfile(newPath) :
                     SummaryFilePath = newPath
                 else:
-                    newPath = extension(SummaryFilePath)[2] + 'RESULTS/' + extension(SummaryFilePath)[1] + '.SMSPEC' 
+                    newPath = _extension(SummaryFilePath)[2] + 'RESULTS/' + _extension(SummaryFilePath)[1] + '.SMSPEC' 
                     if os.path.isfile( newPath ) :
                         SummaryFilePath = newPath
-                        verbose( self.speak , 3 , "\nWARNING: '.SMSPEC' file found in 'RESULTS' subdirectory, not in the same folder the '.DATA' is present.\n")
+                        _verbose( self.speak , 3 , "\nWARNING: '.SMSPEC' file found in 'RESULTS' subdirectory, not in the same folder the '.DATA' is present.\n")
                     
             if os.path.isfile(SummaryFilePath) :
-                verbose( self.speak , 1 , ' > loading summary file:\n  ' + SummaryFilePath)
+                _verbose( self.speak , 1 , ' > loading summary file:\n  ' + SummaryFilePath)
                 self.results = EclSum(SummaryFilePath) # ecl.summary.EclSum(SummaryFilePath)
-                self.name = extension(SummaryFilePath)[1]
+                self.name = _extension(SummaryFilePath)[1]
                 self.set_FieldTime()
                 self.get_Wells(reload=True)
                 self.get_Groups(reload=True)
                 self.get_Regions(reload=True)
                 self.get_Keys(reload=True)
                 self.units = self.get_Unit(self.keys)
-                verbose( self.speak , 1 , 'simulation runs from ' +  str( self.get_Dates()[0] ) + ' to ' + str( self.get_Dates()[-1] ) )
+                _verbose( self.speak , 1 , 'simulation runs from ' +  str( self.get_Dates()[0] ) + ' to ' + str( self.get_Dates()[-1] ) )
                 self.set_Vector('DATE' , self.get_Vector('DATES')['DATES'],self.get_Unit('DATES') , DataType='datetime' , overwrite=True)
                 self.stripUnits()
                 self.get_Attributes(reload=True)
@@ -239,8 +239,8 @@ class ECL(SimResult):
             KeyDict = {}
             for each in self.keys :
                 if ':' in each :
-                    Key.append( mainKey(each) )
-                    KeyDict[ mainKey(each) ] = each
+                    Key.append( _mainKey(each) )
+                    KeyDict[ _mainKey(each) ] = each
                 else :
                     Key.append(each)
             Key = list( set (Key) )

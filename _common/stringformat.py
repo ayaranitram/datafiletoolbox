@@ -7,10 +7,10 @@ Created on Wed Sep 18 12:33:46 2019
 routine intended to manipulate and transform date strings.
 """
 
-__version__ = '0.1.20-09-01'
+__version__ = '0.1.20-10-17'
+__all__ = ['multisplit','isnumeric','getnumber','isDate','date']
 
-class UndefinedDateFormat(Exception) :
-    pass
+from .._Classes.Errors import UndefinedDateFormat
 
 import numpy as np
 import pandas as pd
@@ -128,6 +128,17 @@ def isDate(dateStr , formatIN='' , speak=False , returnFormat=False ):
                 pass
     return False
 
+def splitDMMMY(string) :
+    mi,mf = -1,-1
+    for x in range(len(string)) :
+        if not string[x].isdigit() and mf == -1 :
+            mi = x
+        if string[x].isdigit() and mi > -1 :
+            mf = x+1
+            break
+    if mi > 0 and mf > 0 :
+        return [string[:mi],string[mi:mf],string[mf:]]
+
 def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , returnFormat=False ):
     """
     stringformat.date receives a string containing a date or a list of strings
@@ -149,17 +160,6 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
     speak parameter set to True will print a message showing the input and output formats.
     """
     npDateOnly = lambda x : x.split('T')[0]
-    
-    def splitDMMMY(string) :
-        mi,mf = -1,-1
-        for x in range(len(string)) :
-            if not string[x].isdigit() and mf == -1 :
-                mi = x
-            if string[x].isdigit() and mi > -1 :
-                mf = x+1
-                break
-        if mi > 0 and mf > 0 :
-            return [string[:mi],string[mi:mf],string[mf:]]
     
     MonthString2Number = {'JAN' :  1 ,
                           'FEB' :  2 ,

@@ -8,8 +8,11 @@ Created on Wed Jul 17 22:59:49 2019
 routine to export, write to ASCII file in eclipse style a property.
 """
 
-from inout import verbose
-from inout import extension
+__version__ = '0.0.20-10-16'
+__all__ = ['exportProperty']
+
+from .._common.inout import _extension , _verbose 
+from os import getcwd
 
 def exportProperty(keywordName , KeywordValues , outputFile='' , ECHOkeyword=False , charactersPerLine = 128 , speak=0) :
     """
@@ -30,7 +33,7 @@ def exportProperty(keywordName , KeywordValues , outputFile='' , ECHOkeyword=Fal
     valuesPerLine = charactersPerLine - 3
 
     if len(outputFile) == 0 :
-        outputFile = pwd + '/' + str(keywordName) +  '.inc'
+        outputFile = getcwd() + '/' + str(keywordName) +  '.inc'
 
     if type(KeywordValues) == list :
         KeywordValues = ' ' + ' '.join(KeywordValues) + ' '
@@ -40,7 +43,7 @@ def exportProperty(keywordName , KeywordValues , outputFile='' , ECHOkeyword=Fal
         if KeywordValues[-1] != ' ' :
             KeywordValues = KeywordValues + ' '
     else :
-        verbose(speak , 3 , '  ERROR : incorrect type of input KeywordValues in property ' + str(keywordName) )
+        _verbose(speak , 3 , '  ERROR : incorrect type of input KeywordValues in property ' + str(keywordName) )
         return 'incorrect type of input KeywordValues'
 
     totalvalues = len(KeywordValues)
@@ -74,19 +77,19 @@ def exportProperty(keywordName , KeywordValues , outputFile='' , ECHOkeyword=Fal
 
         if prog < 100*lastValue//totalvalues :
             prog = 100*lastValue//totalvalues
-            verbose(speak , 1 , 'writing property ' + str(keywordName) + ' | ' + str(prog) + '%')
+            _verbose(speak , 1 , 'writing property ' + str(keywordName) + ' | ' + str(prog) + '%')
 
     file.write('/ \n')
     file.close()
 
     if prog < 100 :
-        verbose(speak , 1 , 'writing property ' + str(keywordName) + ' | 100%')
+        _verbose(speak , 1 , 'writing property ' + str(keywordName) + ' | 100%')
 
-    verbose(speak , 2 , 'property written ' + str(keywordName) + ' -> Done!')
+    _verbose(speak , 2 , 'property written ' + str(keywordName) + ' -> Done!')
 
     return True
 
 
 def multiExport(keywordName , KeywordValues , outputFile='') :
     for key in range(len(keywordName)) :
-        exportProperty(keywordName[key] , KeywordValues[key] , str(extension(outputFile)[2] + extension(outputFile)[0] + '_' + keywordName[key] + extension(outputFile)[1] ) )
+        exportProperty(keywordName[key] , KeywordValues[key] , str(_extension(outputFile)[2] + _extension(outputFile)[0] + '_' + keywordName[key] + _extension(outputFile)[1] ) )

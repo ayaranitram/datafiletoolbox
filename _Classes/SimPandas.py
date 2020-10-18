@@ -6,7 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.5.20-10-14'
+__version__ = '0.5.20-10-18'
+__all__ = ['SimSeries','SimPandas']
 
 from io import StringIO
 from shutil import get_terminal_size
@@ -23,7 +24,15 @@ from bases.units import unit # to use unit.isUnit method
 from bases.units import convertUnit, unitProduct, unitDivision
 from bases.units import convertible as convertibleUnits
 
-from datafiletoolbox import multisplit , isDate , date as strDate
+try :
+    from datafiletoolbox import multisplit , isDate , strDate
+except :
+    try:
+        from .._common.stringformat import multisplit , isDate , date as strDate
+    except :
+        raise ImportError( " please install 'datafiletoolbox'.")
+
+__all__ = ['SimSeries','SimDataFrame']
 
 _SERIES_WARNING_MSG = """\
     You are passing unitless data to the SimSeries constructor. Currently,
@@ -49,7 +58,7 @@ def _simseries_constructor_with_fallback(data=None, index=None, units=None, **kw
         return Series(data=data, index=index, **kwargs)
 
 
-def Series2Frame(aSimSeries) :
+def _Series2Frame(aSimSeries) :
     """
     when a row is extracted from a DataFrame, Pandas returns a Series in wich
     the columns of the DataFrame are converted to the indexes of the Series and
@@ -98,13 +107,16 @@ class SimSeries(Series) :
 
     """
     
-    _metadata = ["units","speak"]
+    __all__ = ['SimSeries','SimDataFrame']
+    
+    _metadata = ["units","speak",'index.units']
     
     def __init__(self, data=None , units=None , index=None , speak=False , *args , **kwargs) :
         Uname = None
         Udict = None
         self.units = None
         self.speak = bool(speak)
+        self.index.units = None
         
         # validaton
         if isinstance(data,DataFrame) and len(data.columns)>1 :
@@ -125,6 +137,7 @@ class SimSeries(Series) :
         # if index is None and data is SimSeries or SimDataFrame get the name
         elif type(data) in [SimSeries,SimDataFrame] and type(data.index.name) is str and len(data.index.name)>0 :
             indexInput = data.index.name
+            self.index.units = data.index.units.copy() if type(data.index.units) is dict else data.index.units
         
         # catch units or get from data if it is SimDataFrame or SimSeries
         if type(units) is dict :
@@ -147,7 +160,7 @@ class SimSeries(Series) :
         
         # set the name of the index
         if ( self.index.name is None or ( type(self.index.name) is str and len(self.index.name)==0 ) ) and ( type(indexInput) is str and len(indexInput)>0 ) :
-            self.index.name = indexInput       
+            self.index.name = indexInput
         # overwrite the index.name with input from the argument indexName
         if 'indexName' in kwargs and type(kwargs['indexName']) is str and len(kwargs['indexName'].strip())>0 :
             self.set_indexName(kwargs['indexName'])
@@ -170,6 +183,14 @@ class SimSeries(Series) :
                             self.units[each] = 'UNITLESS'
                         else :
                             self.units = { each:'UNITLESS' }
+        if Udict is not None and self.index.name is not None and self.index.name in Udict :
+            self.indexUnits = Udict[self.index.name]
+        # overwrite the indexUnits with input from the argument indexName
+        if 'indexUnits' in kwargs and type(kwargs['indexUnits']) is str and len(kwargs['indexUnits'].strip())>0 :
+            self.index.units = kwargs['indexUnits']
+        elif 'indexUnits' in kwargs and type(kwargs['indexUnits']) is dict and len(kwargs['indexUnits'])>0 :
+            self.index.units = kwargs['indexUnits'].copy()
+        
     
     @property
     def _constructor(self):
@@ -179,12 +200,18 @@ class SimSeries(Series) :
         # from datafiletoolbox.SimPandas.simframe import SimDataFrame
         return SimDataFrame
 
-    def set_index(self,Name) :
-        self.set_indexName( Name )
+    def set_index(self,name) :
+        self.set_indexName( name )
 
-    def set_indexName(self,Name) :
-        if type(Name) is str :
-            self.index.name = Name
+    def set_indexName(self,name) :
+        if type(name) is str and len(name.strip())>0 :
+            self.index.name = name
+    
+    def set_indexUnits(self,units) :
+        if type(units) is str and len(units.strip())>0 :
+            self.index.units = units.strip()
+        elif type(units) is dict and len(units)>0 :
+            self.index.units = units
 
     def to_Pandas(self) :
         return self.as_Series()
@@ -1028,10 +1055,10 @@ class SimDataFrame(DataFrame) :
         ### apply indexes and slices
         if bool(indexes) or bool(slices) :
             indexeslices = indexes + slices
-            iresult = Series2Frame(result._getbyIndex(indexeslices[0]))
+            iresult = _Series2Frame(result._getbyIndex(indexeslices[0]))
             if len(indexeslices) > 1 :
                 for i in indexeslices[1:] :
-                    iresult = iresult.append( Series2Frame(result._getbyIndex(i)) )
+                    iresult = iresult.append( _Series2Frame(result._getbyIndex(i)) )
             try :
                 result = iresult.sort_index()
             except :
@@ -1039,7 +1066,7 @@ class SimDataFrame(DataFrame) :
         
         ### if is a single row return it as a DataFrame instead of a Series
         if byIndex :
-            result = Series2Frame(result)
+            result = _Series2Frame(result)
         
         return result
     
@@ -1795,58 +1822,3 @@ class SimDataFrame(DataFrame) :
         else :
             return tuple( retTuple )
         
-
-###########
-# test data
-from datafiletoolbox import loadSimulationResults
-# V = loadSimulationResults('/Volumes/git/sampleData/e100/YE_2017_P10_LGR_LA-4HD_VF_30102017.UNSMRY')
-V = loadSimulationResults('C:/Users/mcaraya/OneDrive - Cepsa/git/sampleData/e100/YE_2017_P10_LGR_LA-4HD_VF_30102017.UNSMRY')
-DF = V[['F?PR','DATE','LA1XST','LANOI3X','WOPR']]
-U = V.get_Units(['F?PR','DATE','LANOI3X','LA1XST','WOPR'])
-S = DF['WOPT:LA1XST']
-Us = U['WOPT:LA1XST']
-
-testS = SimSeries( units=Us , data=S )
-print( testS )
-
-testDF = SimDataFrame( data=DF , units=U )
-print(testDF)
-Z = testDF[-1]
-# # Series2Frame(Z)
-A = testDF['WOPR:LANOI3X']
-B = testDF['WOPR:LA1XST']
-F = testDF[['FOPR','FWPR']]
-B.units = 'm3/day'
-R1 = A + B
-R2 = A - B
-testDF.find_Keys('!DATE')
-testDF['FOPT'] = R1
-print(testDF.get_Units('FOPT'))
-print(testDF['FOPT'])
-print(testDF[-1])
-testDF.index.name = 'ABC'
-print(testDF)
-G = F[['FOPR','FWPR']]
-G.units = {'FOPR': 'M3/DAY', 'FWPR': 'MSCF/DAY'}
-G = -G
-# print(testDF.filter('FOPR<0'))
-print(testDF.filter('WOPR>0',returnString=True))
-print(testDF.filter('WOPR>0 and .i>10',returnFilter=True))
-print(testDF.filter('WOPR>0'))
-print(testDF.filter('WOPR>0 and .i>10'))
-print(testDF.filter('>10'))
-# print(testDF.filter('10<.index<50',returnString=True))
-print(testDF.filter(['WOPR>0','WWCT<0.01']))
-print(testDF['WOPR>0','WWCT<0.01'])
-print(testDF['WWCT'])
-print(testDF[500:1500])
-print(testDF[500:1500,'FOPT','WOPR'])
-print(testDF[0:5,2020,-1,'FOPT','WOPR'])
-testDF.set_index('DATE')
-print(testDF[0:5,2020,-1,'FOPT','WOPR'])
-print(testDF['2038-09-01','2020-01-01'])
-print(testDF['< 2020-08-01'])
-testDF.set_index('FOPT')
-print(testDF['>0 and <500'])
-print(testDF['>0','<500'])
-print(testDF['>0 and <500 and WOPR>10'])

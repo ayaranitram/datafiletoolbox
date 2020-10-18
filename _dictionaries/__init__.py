@@ -5,6 +5,8 @@ Created on Thu Aug  6 14:36:56 2020
 @author: MCARAYA
 """
 
+__version__ = '0.0.20-08-06'
+
 from .calculations import *
 from .unitsSystems import *
 from .keywords import *
@@ -28,5 +30,3 @@ for each in CSV2ECLtype :
 CSV2VIPkey = {}
 for each in VIP2CSVkey :
     CSV2VIPkey[VIP2CSVkey[each]] = each
-
-__version__ = '0.0.20-08-06'

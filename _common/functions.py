@@ -5,18 +5,19 @@ Created on Wed May 13 00:46:05 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.20-09-01'
+__version__ = '0.1.20-10-17'
+__all__ = ['_mainKey','_itemKey','_keyType','_wellFromAttribute','tamiz']
 
 import pandas
 
-def is_SimulationResult(obj) :
+def _is_SimulationResult(obj) :
     """
     returns True if the object is a SimulationResults object.
     """
     return 'SimulationResults.' in str(type(obj)) 
 
 
-def mainKey(Key) :
+def _mainKey(Key) :
     """
     returns the main part (before the name of the item) in the keyword, MAIN:ITEM
     """
@@ -28,10 +29,10 @@ def mainKey(Key) :
     if type(Key) is list or type(Key) is tuple :
         results = []
         for K in Key :
-            results.append( mainKey(K) )
+            results.append( _mainKey(K) )
         return list(set(results))
 
-def itemKey(Key) :
+def _itemKey(Key) :
     """
     returns the item part (after the name of the item) in the keyword, MAIN:ITEM
     """
@@ -44,10 +45,10 @@ def itemKey(Key) :
     if type(Key) is list or type(Key) is tuple :
         results = []
         for K in Key :
-            results.append( itemKey(K) )
+            results.append( _itemKey(K) )
         return list(set(results))
 
-def keyType(Key) :
+def _keyType(Key) :
     """
     returns the type of key for an ECL style key:
         FIELD
@@ -69,7 +70,7 @@ def keyType(Key) :
             return 'OTHER'
 
 
-def isECLkey(Key,maxLen=12) :
+def _isECLkey(Key,maxLen=12) :
     """
     returns True if the Key is ECL style
     
@@ -82,33 +83,21 @@ def isECLkey(Key,maxLen=12) :
     if type(Key) is list or type(Key) is tuple :
         results = []
         for K in Key :
-            results.append( isECLkey(K) )
+            results.append( _isECLkey(K) )
         return results
     
     if type(Key) is not str :
         return False
-    if '-' in mainKey(Key) :
+    if '-' in _mainKey(Key) :
         return False
-    if ' ' in mainKey(Key) :
+    if ' ' in _mainKey(Key) :
         return False
-    if len(mainKey(Key)) > maxLen :
+    if len(_mainKey(Key)) > maxLen :
         return False
     
     return True
 
-def alternate(start=True):
-    """
-    returns +1 or -1 alternating between them.
-    start = True will return +1 on first call
-    """
-    while start == True :
-        yield 1
-        yield -1
-    while start == False :
-        yield -1
-        yield 1
-
-def wellFromAttribute( listOfAttributes ) :
+def _wellFromAttribute( listOfAttributes ) :
     """
     receives a list of attributes, like:
         [ 'WOPR:W1' , 'WOPR:W2' , 'WOPR:W3' , ... ]  
@@ -131,6 +120,14 @@ def wellFromAttribute( listOfAttributes ) :
     return newNames
 
 def tamiz( ListOrTuple ) :
+    """
+    receives a list or tuple of strings and other types mixed
+    returns a tuple where :
+        the item 0 is a list of the strings 
+        the item 1 is a list of the other types
+        
+    list and tuples inside are recursevely processed
+    """
     strings = []
     others = []
     

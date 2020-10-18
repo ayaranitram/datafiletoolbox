@@ -7,7 +7,11 @@ Created on Sat Jul 27 14:49:56 2019
 """
 
 from math import floor
-def monthStr2Int(month) :
+from datetime import date
+
+__all__ = ['simDate']
+
+def _monthStr2Int(month) :
     """
     receives a month as string in english and
     return the corresponding integer for that month.
@@ -48,7 +52,7 @@ def monthStr2Int(month) :
     except :
         print( " not recognized month string: '" + str(month) + "'" )
 
-from datetime import date
+
 def simDate(DateArgument) :
     """
     simDate convert a date string in eclipse format to a datetime.date object.
@@ -61,6 +65,6 @@ def simDate(DateArgument) :
     try :
         DateArgument[1] = int(DateArgument[1])
     except:
-        DateArgument[1] = monthStr2Int(DateArgument[1])
+        DateArgument[1] = _monthStr2Int(DateArgument[1])
     DateArgument[2] = int(DateArgument[2])
     return date(DateArgument[2],DateArgument[1],DateArgument[0])

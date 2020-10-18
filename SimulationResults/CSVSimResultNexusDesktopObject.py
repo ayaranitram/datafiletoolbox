@@ -5,33 +5,32 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.20-09-20'
+__version__ = '0.1.20-10-18'
+__all__ = ['NexusDesktopCSV']
 
-from datafiletoolbox.SimulationResults.mainObject import SimResult
-from datafiletoolbox.SimulationResults.vipObject import VIP
-from datafiletoolbox.common.inout import extension
-from datafiletoolbox.common.inout import verbose 
-from datafiletoolbox.common.functions import mainKey
-from datafiletoolbox.common.stringformat import date as strDate
-from datafiletoolbox.common.stringformat import getnumber
-from datafiletoolbox.dictionaries import UniversalKeys , VIPTypesToExtractVectors
-from datafiletoolbox.common.keywordsConversions import fromECLtoVIP , fromVIPtoECL , fromCSVtoECL , fromECLtoCSV
+from .mainObject import SimResult as _SimResult
+from .vipObject import VIP as _VIP
+from .._common.inout import _extension , _verbose
+# from datafiletoolbox._common.functions import _mainKey
+# from datafiletoolbox._common.stringformat import date as _strDate
+# from datafiletoolbox._common.stringformat import _getnumber
+from .._dictionaries import UniversalKeys as _UniversalKeys # , VIPTypesToExtractVectors as _VIPTypesToExtractVectors
+from .._common.keywordsConversions import fromECLtoVIP as _fromECLtoVIP , fromCSVtoECL as _fromCSVtoECL , fromECLtoCSV as _fromECLtoCSV#, fromVIPtoECL
 # from datafiletoolbox.dictionaries import ECL2VIPtype , ECL2VIPkey , VIP2ECLtype , VIP2ECLkey
-from datafiletoolbox.dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
-from datafiletoolbox.common.functions import wellFromAttribute 
+# from datafiletoolbox._dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
+# from datafiletoolbox._common.functions import wellFromAttribute 
 
 from datetime import timedelta
 import pandas as pd
 import numpy as np
 import os
 
-
-class NexusDesktopCSV(VIP):
+class NexusDesktopCSV(_VIP):
     """
     object to contain simulation results read from .CSV file exported from NexusDesktop SimResults application 
     """
     def __init__(self,inputFile=None,verbosity=2) :
-        SimResult.__init__(self,verbosity=verbosity)
+        _SimResult.__init__(self,verbosity=verbosity)
         self.kind = NexusDesktopCSV
         self.ECLstyle=True
         self.VIPstyle=False
@@ -65,44 +64,44 @@ class NexusDesktopCSV(VIP):
         # self.regionNumber = self.extract_Region_Numbers()
         self.buldSalinityVectors()
         self.get_TotalReservoirVolumes()
-        SimResult.initialize(self)
+        _SimResult.initialize(self)
         
     def selectLoader(self,inputFile) :
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             inputFile = inputFile.strip()
-        if extension(inputFile)[0].upper() == '.CSV' :
+        if _extension(inputFile)[0].upper() == '.CSV' :
             self.loadCSV(inputFile) 
-        # elif extension(inputFile)[0].upper() == '.SSS' :
+        # elif _extension(inputFile)[0].upper() == '.SSS' :
         #     self.loadSSS(inputFile)
         
     def use_ECLstyle(self):
         if len(self.keysECL) == 0 :
-            verbose( self.speak , 0 , ' ECL style keys: ' + str( self.extract_Keys() ) )
+            _verbose( self.speak , 0 , ' ECL style keys: ' + str( self.extract_Keys() ) )
         if len(self.keysECL) > 0 :
             self.keys = self.keysECL
-            verbose( self.speak , 0 , 'attributes as ECL style: ' + str( self.get_Attributes() ) )
+            _verbose( self.speak , 0 , 'attributes as ECL style: ' + str( self.get_Attributes() ) )
             self.ECLstyle = True
             self.VIPstyle = False
-            verbose( self.speak , 3 , ' Using ECL style keys')
+            _verbose( self.speak , 3 , ' Using ECL style keys')
         else :
             self.VIPstyle = 'ERROR'
-            verbose( self.speak , 3 , ' Unable to convert to ECL style keys')
+            _verbose( self.speak , 3 , ' Unable to convert to ECL style keys')
             if type(self.ECLstyle) == bool :
                 self.use_VIPstyle()
         self.complete_Units()
 
     def use_VIPstyle(self):
         if len(self.keysVIP) == 0 :
-            verbose( self.speak , 0 , ' VIP style keys: ' + str( self.extract_Keys() ) )
+            _verbose( self.speak , 0 , ' VIP style keys: ' + str( self.extract_Keys() ) )
         if len(self.keysVIP) > 0 :
             self.keys = self.keysVIP
-            verbose( self.speak , 0 , 'attributes as VIP style: ' + str( self.get_Attributes() ) )
+            _verbose( self.speak , 0 , 'attributes as VIP style: ' + str( self.get_Attributes() ) )
             self.ECLstyle = False
             self.VIPstyle = True
-            verbose( self.speak , 3 , ' Using VIP style keys')
+            _verbose( self.speak , 3 , ' Using VIP style keys')
         else :
             self.ECLstyle = 'ERROR'
-            verbose( self.speak , 3 , ' Unable to get VIP style keys.')
+            _verbose( self.speak , 3 , ' Unable to get VIP style keys.')
             if type(self.VIPstyle) == bool :
                 self.use_ECLstyle()
         self.complete_Units()
@@ -127,7 +126,7 @@ class NexusDesktopCSV(VIP):
             if Temporal != {} :
                 if self.CSV == False :
                     self.CSV = {}
-                self.CSV[extension(CSVFilePath)[1]] = Temporal
+                self.CSV[_extension(CSVFilePath)[1]] = Temporal
                 self.get_Vector('DATE')
 
 
@@ -138,9 +137,9 @@ class NexusDesktopCSV(VIP):
     #             self.path = SSSFilePath
 
     #         self.SSSfiles = self.SSSparts( SSSFilePath )
-    #         self.name = extension(SSSFilePath)[1]
+    #         self.name = _extension(SSSFilePath)[1]
     #         for file in self.SSSfiles :
-    #             self.results[ extension(file)[1] + extension(file)[0] ] = self.SSSread( file )
+    #             self.results[ _extension(file)[1] + _extension(file)[0] ] = self.SSSread( file )
     #         self.strip('NAME')
     #         self.set_FieldTime()
     #         self.get_Vector('DATE')
@@ -149,13 +148,13 @@ class NexusDesktopCSV(VIP):
     #         self.get_Regions(reload=True)
     #         self.get_Keys(reload=True)
     #         self.units = self.get_Unit(self.keys)
-    #         verbose( self.speak , 1 , 'simulation runs from ' +  str( self.get_Dates()[0] ) + ' to ' + str( self.get_Dates()[-1] ) )
+    #         _verbose( self.speak , 1 , 'simulation runs from ' +  str( self.get_Dates()[0] ) + ' to ' + str( self.get_Dates()[-1] ) )
     #     else :
     #         print("SummaryFilePath must be a string")
     
     # def correction_for_LPG_from_VIPsss(self) :
     #     if self.LPGcorrected :
-    #         verbose( self.speak , 2 , 'LPG correction for VIP sss reports is already applied.')
+    #         _verbose( self.speak , 2 , 'LPG correction for VIP sss reports is already applied.')
     #     else :
     #         for LPGkey in ( 'LPG LIQ RATE' , 'FULPGLR'  ) :
     #             if self.is_Key( LPGkey ) :
@@ -163,7 +162,7 @@ class NexusDesktopCSV(VIP):
     #                 Corrected = Before * 0.1292 / 33.4962
     #                 self.set_Vector( LPGkey , Corrected , self.get_Unit(LPGkey) , DataType='float' , overwrite=True )
     #                 self.LPGcorrected = True
-    #                 verbose( self.speak , 2 , 'Successfully applied LPG correction for VIP sss reports.')
+    #                 _verbose( self.speak , 2 , 'Successfully applied LPG correction for VIP sss reports.')
 
     def CSVread(self,CSVFilePath) :
         """
@@ -265,10 +264,10 @@ class NexusDesktopCSV(VIP):
             self.CSV_Variable2Verbose[ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] ] = self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i] 
             self.CSV_Verbose2Variable[ self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i] ] = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] 
             CSVkeys += [ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] +':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] ]
-            ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] , speak=self.speak )
+            ECLkey = _fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] , speak=self.speak )
             if ECLkey != None :
                 ECLkeys += [ ECLkey ]
-                VIPkey , keyType , keyName = fromECLtoVIP( ECLkey , self.speak )
+                VIPkey , keyType , keyName = _fromECLtoVIP( ECLkey , self.speak )
                 VIPkeys += [ VIPkey + ':' + keyName ]
             
             fullName = self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]
@@ -293,16 +292,16 @@ class NexusDesktopCSV(VIP):
                 CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i]
             else :
                 CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]
-            ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] , speak=self.speak )
+            ECLkey = _fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] , speak=self.speak )
             Vector = self.CSV[CSVname]['[DATA]'][i::numHeaders]
             while len(Vector) > 0 and Vector[-1] == '' :
                 Vector = Vector[:-1]
             if len(Vector) > 0 :
                 Unit = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
-                verbose( self.speak , 1 , ' Setting vector for CSV key ' + CSVkey )
+                _verbose( self.speak , 1 , ' Setting vector for CSV key ' + CSVkey )
                 self.set_Vector( Key=CSVkey , VectorData=Vector , Units=Unit , DataType='auto' , overwrite=True) 
                 if ECLkey != None and len(ECLkey) > 0 :
-                    verbose( self.speak , 1 , ' Setting vector for ECL key ' + ECLkey )
+                    _verbose( self.speak , 1 , ' Setting vector for ECL key ' + ECLkey )
                     self.set_Vector( Key=ECLkey , VectorData=Vector , Units=Unit , DataType='auto' , overwrite=True) 
         
         if 'TIME' in self.CSV[CSVname]['[HEADERS]']['VARIABLE'] :
@@ -326,7 +325,7 @@ class NexusDesktopCSV(VIP):
         Data = None
         Vector = None
         for CSVname in CSVnames :
-            verbose( self.speak , 1 , ' looking into the CSV ' + CSVname )
+            _verbose( self.speak , 1 , ' looking into the CSV ' + CSVname )
             numHeaders = len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] )
             
             # headers = {'CLASS' : [] , 'MEMBER' : [] , 'VARIABLE' : []}
@@ -337,23 +336,23 @@ class NexusDesktopCSV(VIP):
                 VARIABLEflag = False
                                    
                 if CLASS != '' and self.CSV[CSVname]['[HEADERS]']['CLASS'][col].strip() == MEMBER :
-                    verbose( self.speak , 1 , 'mathcing CLASS')
+                    _verbose( self.speak , 1 , 'mathcing CLASS')
                     CLASSflag = True
                 elif CLASS == '' :
                     CLASSflag = True
                 if MEMBER != '' and self.CSV[CSVname]['[HEADERS]']['MEMBER'][col].strip() == MEMBER :
-                    verbose( self.speak , 1 , 'mathcing MEMBER')
+                    _verbose( self.speak , 1 , 'mathcing MEMBER')
                     MEMBERflag = True
                 elif MEMBER == '' :
                     MEMBERflag = True
                 if VARIABLE != '' and self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col].strip() == MEMBER :
-                    verbose( self.speak , 1 , 'mathcing VARIABLE')
+                    _verbose( self.speak , 1 , 'mathcing VARIABLE')
                     VARIABLEflag = True
                 elif VARIABLE == '' :
                     VARIABLEflag = True
                 
                 if CLASSflag * MEMBERflag * VARIABLEflag == 1 :
-                    verbose( self.speak , 1 , '\nVECTOR ' + CLASS + ':' + MEMBER + ':' + VARIABLE + ' FOUND!\n')
+                    _verbose( self.speak , 1 , '\nVECTOR ' + CLASS + ':' + MEMBER + ':' + VARIABLE + ' FOUND!\n')
                     Data = self.CSV[CSVname]['[DATA]'][col::numHeaders]
                     Data = tuple(Data)
                     Vector = list(Data)
@@ -400,7 +399,7 @@ class NexusDesktopCSV(VIP):
         tot = 0
         for CSVname in CSVnames :
             tot += len( list( Results[CSVname].keys() ) )
-        verbose( self.speak , 2 , ' ' + str(tot) + ' matches found for ' + CLASS + ':' + MEMBER + ':' + VARIABLE + '.')
+        _verbose( self.speak , 2 , ' ' + str(tot) + ' matches found for ' + CLASS + ':' + MEMBER + ':' + VARIABLE + '.')
         return Results
                 
     def CSVloadVector(self, key , VIPkey='' , keyType='' , keyName='' , CSVname=None ):
@@ -439,12 +438,12 @@ class NexusDesktopCSV(VIP):
             elif key[0] == 'W' :
                 keyType = 'WELL'
 
-        Variable , Class , Member = fromECLtoCSV( key )
+        Variable , Class , Member = _fromECLtoCSV( key )
         
-        if key in UniversalKeys or VIPkey in UniversalKeys :
+        if key in _UniversalKeys or VIPkey in _UniversalKeys :
             keyType = 'MISCELLANEOUS'
             keyName = ''
-            if key in UniversalKeys :
+            if key in _UniversalKeys :
                 keyword = key
             else : 
                 keyword = VIPkey
@@ -458,17 +457,17 @@ class NexusDesktopCSV(VIP):
         FOUNDflag = False
         for CSVname in CSVnames :
             numHeaders = len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] )
-            verbose( self.speak , 1 , ' looking for vector for key: ' + str(key) + ' where variable=' + Variable + ', class=' + Class + ' or ' + keyType + ' and member=' + Member + ' or ' + keyName )
+            _verbose( self.speak , 1 , ' looking for vector for key: ' + str(key) + ' where variable=' + Variable + ', class=' + Class + ' or ' + keyType + ' and member=' + Member + ' or ' + keyName )
             for col in range( numHeaders ) :
                 if ( self.CSV[CSVname]['[HEADERS]']['CLASS'][col] == keyType or self.CSV[CSVname]['[HEADERS]']['CLASS'][col] == Class ) and \
                    ( self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] == keyName or self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] == Member ) and \
                    ( self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] == Variable or self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] == keyword ) :
-                    verbose( self.speak , 1 , ' found vector for key: ' + str(key) + ' where variable=' + self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] + ', class=' + self.CSV[CSVname]['[HEADERS]']['CLASS'][col] + ' and member=' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] + '.' )
+                    _verbose( self.speak , 1 , ' found vector for key: ' + str(key) + ' where variable=' + self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] + ', class=' + self.CSV[CSVname]['[HEADERS]']['CLASS'][col] + ' and member=' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] + '.' )
                     if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] ) > 0 :
                         CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][col]
                     else :
                         CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col]
-                    ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][col] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] , speak=self.speak )
+                    ECLkey = _fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] , CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][col] , MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] , speak=self.speak )
                     Vector = self.CSV[CSVname]['[DATA]'][col::numHeaders]
                     while len(Vector) > 0 and Vector[-1] == '' :
                         Vector = Vector[:-1]
@@ -501,14 +500,14 @@ class NexusDesktopCSV(VIP):
                         else :
                             Vector = np.array(Vector)
                         Unit = self.CSV[CSVname]['[HEADERS]']['UNITS'][col]
-                        verbose( self.speak , 1 , ' Setting vector for CSV key ' + CSVkey )
+                        _verbose( self.speak , 1 , ' Setting vector for CSV key ' + CSVkey )
                         self.set_Vector( Key=CSVkey , VectorData=Vector , Units=Unit , DataType='auto' , overwrite=True) 
                         if ECLkey != None and len(ECLkey) > 0 :
-                            verbose( self.speak , 1 , ' Setting vector for ECL key ' + ECLkey )
+                            _verbose( self.speak , 1 , ' Setting vector for ECL key ' + ECLkey )
                             self.set_Vector( Key=ECLkey , VectorData=Vector , Units=Unit , DataType='auto' , overwrite=True) 
                         FOUNDflag = True
                         if type(DATEflag) == str  :
-                            verbose( self.speak , 1 , ' Creating date vector for CSV key ' + DATEflag )
+                            _verbose( self.speak , 1 , ' Creating date vector for CSV key ' + DATEflag )
                             start = np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ) , 's' )
                             TIME = self.vectors['TIME']
                             DATE = np.empty(len(TIME), dtype='datetime64[s]')
@@ -519,7 +518,7 @@ class NexusDesktopCSV(VIP):
                         break
         
         if FOUNDflag == False :
-            verbose( self.speak , 2 , 'vector corresponding to key ' + key + ' not found in CSV data.')
+            _verbose( self.speak , 2 , 'vector corresponding to key ' + key + ' not found in CSV data.')
         else :
             if type(DATEflag) == str :
                 return DATE
@@ -533,18 +532,18 @@ class NexusDesktopCSV(VIP):
             numRows = int( len( self.CSV[CSVname]['[DATA]'] ) / numHeaders )
 
             # generate the diccionaries for every CLASS:
-            verbose( self.speak , 3 , ' generating raw data dictionary from CSV table,\n  > preparing results dictionary\n    ... please wait ...')
+            _verbose( self.speak , 3 , ' generating raw data dictionary from CSV table,\n  > preparing results dictionary\n    ... please wait ...')
             for sss in list( set( self.CSV[CSVname]['[HEADERS]']['CLASS'] ) ) :
                 if sss not in self.results.keys() :
-                    self.results[ str(sss) + '@' + extension(self.path)[1]+extension(self.path)[0] ] = ( str(sss) , { 'Data':{} , 'Units':{} } ) 
+                    self.results[ str(sss) + '@' + _extension(self.path)[1]+_extension(self.path)[0] ] = ( str(sss) , { 'Data':{} , 'Units':{} } ) 
             
             # generate Units dictionary
-            verbose( self.speak , 3 , '  > loading units\n    ... please wait ...')
+            _verbose( self.speak , 3 , '  > loading units\n    ... please wait ...')
             for i in range( numHeaders ) :
-                self.results[ self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + '@' + extension(self.path)[1]+extension(self.path)[0] ][1]['Units'][ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] ] = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
+                self.results[ self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + '@' + _extension(self.path)[1]+_extension(self.path)[0] ][1]['Units'][ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] ] = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
             
             # load the series from [DATA] into results dictionary
-            verbose( self.speak , 3 , '  > transforming and loading data series\n    ... please wait ...')
+            _verbose( self.speak , 3 , '  > transforming and loading data series\n    ... please wait ...')
             for i in range( numHeaders ) :
                 Vector = self.CSV[CSVname]['[DATA]'][i::numHeaders]
                 while len( Vector ) > 0 and Vector[-1] == '' :
@@ -555,26 +554,26 @@ class NexusDesktopCSV(VIP):
                     Name = self.CSV[CSVname]['[HEADERS]']['MEMBER'][i]
                 else :
                     Name = 'ROOT'
-                self.results[ self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + '@' + extension(self.path)[1]+extension(self.path)[0] ][1]['Data'][ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]+':'+Name ] = Vector
-            verbose( self.speak , 3 , '  > DONE! results dictionary generated.')
+                self.results[ self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + '@' + _extension(self.path)[1]+_extension(self.path)[0] ][1]['Data'][ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]+':'+Name ] = Vector
+            _verbose( self.speak , 3 , '  > DONE! results dictionary generated.')
         
-        verbose( self.speak , 3 , '  > checking the transformed data\n    ... please wait ...')
+        _verbose( self.speak , 3 , '  > checking the transformed data\n    ... please wait ...')
         OK = True
         for CSV in list( self.results.keys() ) :
             KEYsLenght = []
             for KEY in list( self.results[CSV][1]['Data'].keys() ) :
                 KEYsLenght.append( len( self.results[CSV][1]['Data'][KEY] ) )
             if max(KEYsLenght) == min(KEYsLenght) :
-                verbose( self.speak , 3 , '  > ' + str(CSV) + ' properly created with ' + str( numHeaders ) + ' columns and ' + str( max(KEYsLenght) ) + ' rows.')
+                _verbose( self.speak , 3 , '  > ' + str(CSV) + ' properly created with ' + str( numHeaders ) + ' columns and ' + str( max(KEYsLenght) ) + ' rows.')
             else :
                 print( max(KEYsLenght) , min(KEYsLenght) , numRows)
-                verbose( self.speak , -1 , '  > ' + str(CSV) + ' issue: ' + str( numHeaders ) + ' columns and ' + str( max(KEYsLenght) ) + ' rows.')
+                _verbose( self.speak , -1 , '  > ' + str(CSV) + ' issue: ' + str( numHeaders ) + ' columns and ' + str( max(KEYsLenght) ) + ' rows.')
                 OK = False
         
         if OK :
-            verbose( self.speak , 3 , '  > DONE! results dictionary generated.')
+            _verbose( self.speak , 3 , '  > DONE! results dictionary generated.')
         else :
-            verbose( self.speak , -1 , '  > results dictionary generated with issues.')
+            _verbose( self.speak , -1 , '  > results dictionary generated with issues.')
         
     def reload(self) :
         # if self.CSV == False :
@@ -596,7 +595,7 @@ class NexusDesktopCSV(VIP):
     #     SSSfiles = []
     #     expectedParts = [ ( '_field.sss' , '_area.sss' , '_flow.sss' , '_gather.sss' , '_region.sss' , '_well.sss' ) ,
     #                       ( '_FIELD.SSS' , '_AREA.SSS' , '_FLOW.SSS' , '_GATHER.SSS' , '_REGION.SSS' , '_WELL.SSS' ) ]
-    #     if extension(SSSFilePath)[0].upper() == '.SSS' :
+    #     if _extension(SSSFilePath)[0].upper() == '.SSS' :
     #         for Case in expectedParts :
     #             for part in Case :
     #                 if part in SSSFilePath and SSSFilePath[SSSFilePath.index(part):] == part:
@@ -612,8 +611,8 @@ class NexusDesktopCSV(VIP):
     #         else :
     #             raise FileNotFoundError('No such file or related VIP files found for: ' + str(SSSFilePath) )
         
-    #     else : # if extension(SSSFilePath)[0] != '.SSS' : 
-    #         SSSroot = extension(SSSFilePath)[2] + extension(SSSFilePath)[1]
+    #     else : # if _extension(SSSFilePath)[0] != '.SSS' : 
+    #         SSSroot = _extension(SSSFilePath)[2] + _extension(SSSFilePath)[1]
     #         for Case in expectedParts :
     #             for part in Case :
     #                 if os.path.isfile(SSSroot + part) :
@@ -625,14 +624,14 @@ class NexusDesktopCSV(VIP):
     #         raise FileNotFoundError('No such file or related VIP files found for: ' + str(SSSFilePath) )
     
     # def SSSread(self,sssPath) :
-    #     verbose( self.speak , 1 , '\nREADING ' + str(sssPath) )
+    #     _verbose( self.speak , 1 , '\nREADING ' + str(sssPath) )
     #     sssfile = open(sssPath,'r')
     #     sss = sssfile.read()
     #     sssfile.close()
     #     sss = sss.split('\n')
         
     #     sssType = sss[0].split()[0]
-    #     verbose( self.speak , 1 , 'Type of data in this input file: ' + str(sssType) )
+    #     _verbose( self.speak , 1 , 'Type of data in this input file: ' + str(sssType) )
         
     #     sssColumns = sss[1].split('\t')
     #     for i in range(len(sssColumns)):
@@ -658,9 +657,9 @@ class NexusDesktopCSV(VIP):
     #         sssDict['Units'][sssColumns[i]] = sssUnits[i]
         
     #     if self.speak !=0 :
-    #         verbose( self.speak , 1 ,' data found in the ' + str(sssType) + ' summary file:')
+    #         _verbose( self.speak , 1 ,' data found in the ' + str(sssType) + ' summary file:')
     #         for each in sssDict['Data'] :
-    #             verbose( self.speak , 1 ,'  > ' + str(each) + str( ' ' * (16-len(str(each))) ) + ' with ' + str(len(sssDict['Data'][each])) + ' rows with units: ' + str( sssDict['Units'][each] ) )
+    #             _verbose( self.speak , 1 ,'  > ' + str(each) + str( ' ' * (16-len(str(each))) ) + ' with ' + str(len(sssDict['Data'][each])) + ' rows with units: ' + str( sssDict['Units'][each] ) )
         
     #     return ( sssType , sssDict )
 
@@ -683,7 +682,7 @@ class NexusDesktopCSV(VIP):
                 if key in wellVIPkeys :
                     keyName = list(self.get_Wells())
                     SSStype = ['WELL']
-                elif VIPkey in UniversalKeys :
+                elif VIPkey in _UniversalKeys :
                     keyName = 'ROOT'
                     SSStype = ['FIELD']
                 else :
@@ -692,12 +691,12 @@ class NexusDesktopCSV(VIP):
                 if keyName == 'ROOT' :
                     keyType = 'FIELD'
                 else :
-                    verbose( self.speak, 2 , 'none or more than one type summary were selected,  ')
+                    _verbose( self.speak, 2 , 'none or more than one type summary were selected,  ')
                     keyType = SSStype
             else :
                 keyType = SSStype[0]
             
-            verbose( self.speak , 1 ,'identified VIP key ' + VIPkey + ' for ' + str(keyType) + ' summary for the item ' + keyName )
+            _verbose( self.speak , 1 ,'identified VIP key ' + VIPkey + ' for ' + str(keyType) + ' summary for the item ' + keyName )
             return VIPkey , keyType , keyName
             
       ####################### end of auxiliar functions #######################
@@ -711,11 +710,11 @@ class NexusDesktopCSV(VIP):
         
         key = str(key).strip().upper()
         if forceVIP :
-            verbose( self.speak , 1 , 'forced to use inputs as VIP keywords')
+            _verbose( self.speak , 1 , 'forced to use inputs as VIP keywords')
         if self.ECLstyle == True and forceVIP == False:
             # if key in self.keysECL :
             try :
-                VIPkey , keyType , keyName = fromECLtoVIP( key , self.speak )
+                VIPkey , keyType , keyName = _fromECLtoVIP( key , self.speak )
             except :
                 try :
                     VIPkey , keyType , keyName = alreadyVIP(key,SSStype)
@@ -727,7 +726,7 @@ class NexusDesktopCSV(VIP):
                 VIPkey , keyType , keyName = alreadyVIP(key,SSStype)
             except :
                 try :
-                    VIPkey , keyType , keyName = fromECLtoVIP( key , self.speak )
+                    VIPkey , keyType , keyName = _fromECLtoVIP( key , self.speak )
                 except :
                     pass
         
@@ -750,16 +749,16 @@ class NexusDesktopCSV(VIP):
     #                     if self.results[sss][0] == keyType :
     #                         if VIPkey in self.results[sss][1]['Data'].keys() :
     #                             RawCol = np.array( self.results[sss][1]['Data'][ VIPkey ] )
-    #                             verbose( self.speak , 1 ,'extracted ' + VIPkey + ' from ' + keyType + ' with lenght ' + str(len(RawCol)) )
+    #                             _verbose( self.speak , 1 ,'extracted ' + VIPkey + ' from ' + keyType + ' with lenght ' + str(len(RawCol)) )
     #                             try :
     #                                 RawCol = RawCol.astype(int)
-    #                                 verbose( self.speak , 1 , 'the values were converted to integer type')
+    #                                 _verbose( self.speak , 1 , 'the values were converted to integer type')
     #                             except :
     #                                 try :
     #                                     RawCol = RawCol.astype(float)
-    #                                     verbose( self.speak , 1 ,'the values were converted to floating point type')
+    #                                     _verbose( self.speak , 1 ,'the values were converted to floating point type')
     #                                 except :
-    #                                     verbose( self.speak , 1 , 'the values are treated as string type')
+    #                                     _verbose( self.speak , 1 , 'the values are treated as string type')
     #                             return RawCol
     #             else :
     #                 for sss in list(self.results.keys()) :
@@ -768,33 +767,33 @@ class NexusDesktopCSV(VIP):
     #                             RawCol = np.array( self.results[sss][1]['Data'][ VIPkey ] ) 
     #                             NameCol = np.array( self.results[sss][1]['Data'][ 'NAME' ] )
     #                             TimeCol = np.array( self.results[sss][1]['Data'][ 'TIME' ] )
-    #                             verbose( self.speak , 1 ,'extracted ' + VIPkey + ' from ' + keyType + ' with lenght ' + str(len(RawCol)) )
-    #                             verbose( self.speak , 0 ,'extracted ' + 'NAME' + ' from ' + keyType + ' with lenght ' + str(len(NameCol)) )
-    #                             verbose( self.speak , 0 ,'extracted ' + 'TIME' + ' from ' + keyType + ' with lenght ' + str(len(NameCol)) )
+    #                             _verbose( self.speak , 1 ,'extracted ' + VIPkey + ' from ' + keyType + ' with lenght ' + str(len(RawCol)) )
+    #                             _verbose( self.speak , 0 ,'extracted ' + 'NAME' + ' from ' + keyType + ' with lenght ' + str(len(NameCol)) )
+    #                             _verbose( self.speak , 0 ,'extracted ' + 'TIME' + ' from ' + keyType + ' with lenght ' + str(len(NameCol)) )
     #                             try :
     #                                 RawCol = RawCol.astype(int)
-    #                                 verbose( self.speak , 1 , 'the values were converted to integer type')
+    #                                 _verbose( self.speak , 1 , 'the values were converted to integer type')
     #                             except :
     #                                 try :
     #                                     RawCol = RawCol.astype(float)
-    #                                     verbose( self.speak , 1 ,'the values were converted to floating point type')
+    #                                     _verbose( self.speak , 1 ,'the values were converted to floating point type')
     #                                 except :
-    #                                     verbose( self.speak , 1 , 'the values are treated as string type')
+    #                                     _verbose( self.speak , 1 , 'the values are treated as string type')
                                 
     #                             if type(keyName) == str :
-    #                                 verbose( self.speak , 1 ,'filtering data for item: ' + keyName)    
+    #                                 _verbose( self.speak , 1 ,'filtering data for item: ' + keyName)    
     #                                 CleanCol = np.extract( np.char.equal( NameCol , keyName ) , RawCol )
     #                                 CleanTime = np.extract( np.char.equal( NameCol , keyName ) , TimeCol )
-    #                                 verbose( self.speak , 1 , 'extracting ' + VIPkey + ' with lenght ' + str(len(CleanCol))  + ' for item ' + keyName + '.')
+    #                                 _verbose( self.speak , 1 , 'extracting ' + VIPkey + ' with lenght ' + str(len(CleanCol))  + ' for item ' + keyName + '.')
     #                             elif len(keyName) == 1 :
     #                                 keyName = keyName[0]
-    #                                 verbose( self.speak , 2 ,'the item name was not especified by only one options ( ' + keyName + ' ) has been found for the key : ' + key ) 
-    #                                 verbose( self.speak , 1 ,'filtering data for item: ' + keyName )    
+    #                                 _verbose( self.speak , 2 ,'the item name was not especified by only one options ( ' + keyName + ' ) has been found for the key : ' + key ) 
+    #                                 _verbose( self.speak , 1 ,'filtering data for item: ' + keyName )    
     #                                 CleanCol = np.extract( np.char.equal( NameCol , keyName ) , RawCol )
     #                                 CleanTime = np.extract( np.char.equal( NameCol , keyName ) , TimeCol )
-    #                                 verbose( self.speak , 1 , 'cleaned ' + VIPkey + ' with lenght ' + str(len(CleanCol)) + ' for item ' + keyName + '.' )
+    #                                 _verbose( self.speak , 1 , 'cleaned ' + VIPkey + ' with lenght ' + str(len(CleanCol)) + ' for item ' + keyName + '.' )
     #                             else :
-    #                                 verbose( self.speak , 2 ,'multiple ( ' + str(len(keyName)) + ' ) item options found for the key : ' + key + ':\n' + str(keyName) ) 
+    #                                 _verbose( self.speak , 2 ,'multiple ( ' + str(len(keyName)) + ' ) item options found for the key : ' + key + ':\n' + str(keyName) ) 
     #                                 CleanCol = np.array([],dtype='float')
     #                                 CleanTime = np.array([],dtype='float')
                                 
@@ -816,9 +815,9 @@ class NexusDesktopCSV(VIP):
     
     # def get_Dates(self) :
     #     try :
-    #         DateVector = strDate( list( self.loadVector('DATE','FIELD',True) ) , speak=(self.speak==1))
+    #         DateVector = _strDate( list( self.loadVector('DATE','FIELD',True) ) , speak=(self.speak==1))
     #     except :
-    #         DateVector = strDate( list( self.loadVector('DATE','FIELD',True) ) , formatIN='DD-MM-YYYY' , speak=(self.speak==1))
+    #         DateVector = _strDate( list( self.loadVector('DATE','FIELD',True) ) , formatIN='DD-MM-YYYY' , speak=(self.speak==1))
     #     self.set_Vector( 'DATES' , np.array( pd.to_datetime( DateVector ) , dtype='datetime64[s]') , self.get_Unit('DATE') , DataType='datetime64' , overwrite=True )
     #     #self.set_Vector( 'DATES' , np.array( pd.to_datetime( self.get_Vector('DATE')['DATE'] ) , dtype='datetime64[s]') , self.get_Unit('DATE') , DataType='datetime64' , overwrite=True )
     #     self.set_Vector( 'DATE' , self.get_Vector('DATES')['DATES'] , self.get_Unit('DATES') , overwrite=True )
@@ -914,13 +913,13 @@ class NexusDesktopCSV(VIP):
     #     if type(SSStype) is str :
     #         SSS = None
     #         for SSS in self.SSSfiles :
-    #             if extension(SSS)[1].upper().endswith( SSStype.upper() ) :
+    #             if _extension(SSS)[1].upper().endswith( SSStype.upper() ) :
     #                 break
     #         if SSS is None :
     #             print('SSS type ' + SSStype + ' not found')
     #             return None
         
-    #     SSS = extension(SSS)[1] + extension(SSS)[0]
+    #     SSS = _extension(SSS)[1] + _extension(SSS)[0]
     #     Key = Key.strip()
     #     if type(Key) is str :
     #         if Key in self.results[SSS][1]['Data'] :
@@ -938,31 +937,31 @@ class NexusDesktopCSV(VIP):
     #         SSStype = SSStype.strip()
     #         SSS = None
     #         for Sfile in self.SSSfiles :
-    #             if extension(Sfile)[1].upper().endswith( SSStype.upper() ) :
+    #             if _extension(Sfile)[1].upper().endswith( SSStype.upper() ) :
     #                 SSS = Sfile
     #                 break
     #         if SSS is None :
     #             print('SSS type ' + SSStype + ' not found')
     #             return {}
     #         else :
-    #             SSS = [ extension(SSS)[1] + extension(SSS)[0] ]
+    #             SSS = [ _extension(SSS)[1] + _extension(SSS)[0] ]
     #     elif SSStype is None :
     #         SSS = []
     #         for Sfile in self.SSSfiles :
-    #             SSS += [ extension(Sfile)[1] + extension(Sfile)[0] ]
+    #             SSS += [ _extension(Sfile)[1] + _extension(Sfile)[0] ]
     #     elif type(SSStype) is list or type(SSStype) is tuple :
     #         SSS = []
     #         for Stype in SSStype :
     #             for Sfile in self.SSSfiles :
-    #                 if extension(Sfile)[1].upper().endswith( Stype.upper() ) :
-    #                     SSS += [ extension(Sfile)[1] + extension(Sfile)[0] ]
+    #                 if _extension(Sfile)[1].upper().endswith( Stype.upper() ) :
+    #                     SSS += [ _extension(Sfile)[1] + _extension(Sfile)[0] ]
     #         if SSS == [] :
     #             print('SSS type ' + SSStype + ' not found')
     #             return {}
         
     #     output = {}
     #     for each in SSS :
-    #         output[ extension(each)[1].split('_')[-1].upper() ] = list( self.results[each][1]['Data'].keys() )
+    #         output[ _extension(each)[1].split('_')[-1].upper() ] = list( self.results[each][1]['Data'].keys() )
     #     return output         
 
     # def SSSkeys_asECL(self) :
@@ -987,7 +986,7 @@ class NexusDesktopCSV(VIP):
     #     if len(Names) != len(Numbers) :
     #         print("lenght doesn't match!")
     #     for i in range(len(Names)) :
-    #         regNum[Names[i].strip()] = getnumber(Numbers[i])
+    #         regNum[Names[i].strip()] = _getnumber(Numbers[i])
     #     return regNum
 
     # def buldSalinityVectors(self) :
@@ -1024,7 +1023,7 @@ class NexusDesktopCSV(VIP):
     #         if self.ECLstyle :
     #             self.keys = tuple( set( list(self.get_Keys()) + [Key] ) )
     #             self.keysECL = tuple( set( list(self.get_Keys()) + [Key] ) )
-    #             VIPkey , keyType , keyName = fromECLtoVIP( Key , self.speak )
+    #             VIPkey , keyType , keyName = _fromECLtoVIP( Key , self.speak )
     #             self.keysVIP = tuple( set( list(self.get_Keys()) + [ VIPkey +':'+ keyName ] ) )
     #         else :
     #             self.keys = tuple( set( list(self.get_Keys()) [Key] ) )
@@ -1085,7 +1084,7 @@ class NexusDesktopCSV(VIP):
     #             for att in atts :
     #                 attECL = fromVIPtoECL( att , self.results[sss][0] , self.speak )
     #                 if attECL is None :
-    #                     SimResult.VIPnotECL.append( self.results[sss][0] + ' : ' + att )
+    #                     _SimResult.VIPnotECL.append( self.results[sss][0] + ' : ' + att )
     #                     attECL = ''
     #                 for name in names :
     #                     keysListVIP.append( att + ':' + name )
@@ -1094,8 +1093,8 @@ class NexusDesktopCSV(VIP):
     #                     elif self.results[sss][0] in VIP2ECLtype and attECL != '' :
     #                         keysListECL.append( attECL + ':' + name )
         
-    #     if len(SimResult.VIPnotECL) > 0 :
-    #         verbose( self.speak , -1 , '\nsome VIP attributes was not recognized as ECL style attributes,\nto get a report of these attributes use the method:\n  .report_VIP_AttributesNotTo_ECL() \n')                
+    #     if len(_SimResult.VIPnotECL) > 0 :
+    #         _verbose( self.speak , -1 , '\nsome VIP attributes was not recognized as ECL style attributes,\nto get a report of these attributes use the method:\n  .report_VIP_AttributesNotTo_ECL() \n')                
     #     keysListVIP = list( set( keysListVIP ) )
     #     keysListVIP.sort()
     #     self.keysVIP = tuple( keysListVIP ) 
@@ -1249,7 +1248,7 @@ class NexusDesktopCSV(VIP):
     #         if Key in self.units :
     #             return self.units[Key]
     #         elif Key in ECL2VIPkey and ECL2VIPkey[Key] in self.units :
-    #             return self.units[ fromECLtoVIP( Key , self.speak ) ]
+    #             return self.units[ _fromECLtoVIP( Key , self.speak ) ]
     #     if self.VIPstyle == True :
     #         if Key.strip() in self.units :
     #             return self.units[Key]
@@ -1264,27 +1263,27 @@ class NexusDesktopCSV(VIP):
     #                 if self.units[key] is None :
     #                     self.units[key] = self.extract_Unit(key[:key.index(':')])
     #                     if self.units[key] is None :
-    #                         VIPkey = fromECLtoVIP( key , self.speak )
+    #                         VIPkey = _fromECLtoVIP( key , self.speak )
     #                         for sss in self.results :
     #                             self.units[key] = self.results[ VIPkey[1] ][1]['Units'][ VIPkey[0] ].strip('( )').strip("'").strip('"')
     #                             if self.units[key] is None :
     #                                 break
     #                 if self.units[key] is None :
-    #                     verbose( self.speak , 3 , 'impossible to found unit system for key ' + key )
+    #                     _verbose( self.speak , 3 , 'impossible to found unit system for key ' + key )
     #                 else :
-    #                     verbose( self.speak , 1 , 'found unit system ' + self.units[key] + ' for key ' + key )
+    #                     _verbose( self.speak , 1 , 'found unit system ' + self.units[key] + ' for key ' + key )
     #             else :
     #                 self.units[key] = self.extract_Unit(key)
     #                 if self.units[key] is None :
-    #                     VIPkey = fromECLtoVIP( key , self.speak )
+    #                     VIPkey = _fromECLtoVIP( key , self.speak )
     #                     for sss in self.results :
     #                         self.units[key] = self.results[ VIPkey[1] ][1]['Units'][ VIPkey[0] ].strip('( )').strip("'").strip('"')
     #                         if self.units[key] is None :
     #                                 break
     #                 if self.units[key] is None :
-    #                     verbose( self.speak , 3 , 'impossible to found unit system for key ' + key )
+    #                     _verbose( self.speak , 3 , 'impossible to found unit system for key ' + key )
     #                 else :
-    #                     verbose( self.speak , 1 , 'found unit system ' + self.units[key] + ' for key ' + key )
+    #                     _verbose( self.speak , 1 , 'found unit system ' + self.units[key] + ' for key ' + key )
     
     # def OUTPAVG(self,KeyArguments=None,ECLkey=None) :
     #     if ECLkey is not None :
@@ -1300,9 +1299,9 @@ class NexusDesktopCSV(VIP):
     #                         if self.is_Key( 'WBP:'+ECLkey.split(':')[1] ) :
     #                             self.set_Vector( Key=ECLkey , VectorData=self('WBP:'+ECLkey.split(':')[1]) , Units=self.get_Unit('WBP:'+ECLkey.split(':')[1]) , DataType='float' , overwrite=True ) 
     #                         else :
-    #                             verbose( self.speak , -1 , " the corresponding well for the key '" + mainKey(ECLkey) + "' does not have WBP here.")
+    #                             _verbose( self.speak , -1 , " the corresponding well for the key '" + mainKey(ECLkey) + "' does not have WBP here.")
     #                     else :
-    #                         verbose( self.speak , -1 , " the well name can not be found in the key '" + ECLkey + "'\n use .set_Vector() method to set an especific key")
+    #                         _verbose( self.speak , -1 , " the well name can not be found in the key '" + ECLkey + "'\n use .set_Vector() method to set an especific key")
     #             elif self.is_Att(ECLkey) :
     #                 print(" WARNING: the attribute '" + ECLkey + "' already exists here, do you want to overwrite this attribute for all the wells?" )
     #                 user = ''
@@ -1319,59 +1318,59 @@ class NexusDesktopCSV(VIP):
     #             KeyArguments = KeyArguments.strip()
     #             if len(KeyArguments).split() == 1 :
     #                 if KeyArguments.upper() != 'WELL' and KeyArguments[0] == 'W' :
-    #                     verbose( self.speak , 2 , " the KeyArguments '" + KeyArguments + "' seems to be a ECL style keyword...")
+    #                     _verbose( self.speak , 2 , " the KeyArguments '" + KeyArguments + "' seems to be a ECL style keyword...")
     #                     self.OUTPAVG(ECLkey=KeyArguments)
     #             else :
     #                 KeyArguments = KeyArguments.split()
     #                 WPAVE = ['WPAVE','1st','2nd','3rd','4th']
                     
     #                 if KeyArguments[0].upper() == 'OUTPAVG' :
-    #                     verbose( self.speak , 1 , " VIP CARD '" + KeyArguments.pop(0) + "' found")
+    #                     _verbose( self.speak , 1 , " VIP CARD '" + KeyArguments.pop(0) + "' found")
                         
     #                 if KeyArguments[0].upper() == 'STD' :
     #                     # Alpha label indicating that the mobility-weighted datum pressure average is to be computed. This is the default.
-    #                     verbose( self.speak , 3 , " IMPORTANT: in VIP the mobility-weighted datum pressure average was computed, the most similar behaviour in eclipse could be to set " + WPAVE[2] + " item of keyword '" + WPAVE[0] + "' to 1.0 (purely connection factor weighted).")
+    #                     _verbose( self.speak , 3 , " IMPORTANT: in VIP the mobility-weighted datum pressure average was computed, the most similar behaviour in eclipse could be to set " + WPAVE[2] + " item of keyword '" + WPAVE[0] + "' to 1.0 (purely connection factor weighted).")
     #                 elif KeyArguments[0].upper() == 'WELL' :
     #                     # Alpha label indicating that a pattern is being assigned to each well in the well list.
     #                     WellList = KeyArguments[-2]
     #                     WPAVE = ['WWPAVE','2nd','3rd','4th','5th']
-    #                     verbose( self.speak , 3 , " IMPORTANT: notice that 'WWPAVE' should be used in eclipse, not 'WPAVE', in order to be compilant with the well list: " + WellList )
+    #                     _verbose( self.speak , 3 , " IMPORTANT: notice that 'WWPAVE' should be used in eclipse, not 'WPAVE', in order to be compilant with the well list: " + WellList )
     #                 elif KeyArguments[0].upper() == 'PATTERN' :
     #                     # Alpha label indicating one of the possible patterns is to be used to compute the well average pressure.
     #                     if KeyArguments[-1].isdecimal() :
     #                         if int(KeyArguments[-1]) == 1 :
     #                             # Square pattern of size 1 gridblock by 1 gridblock
     #                             WBPkey = 'WBP'
-    #                             verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[1] + " item of keyword '" + WPAVE[0] + "' is set to a negative value, like '-1', in your eclipse simulation.")
+    #                             _verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[1] + " item of keyword '" + WPAVE[0] + "' is set to a negative value, like '-1', in your eclipse simulation.")
     #                         elif int(KeyArguments[-1]) == 2 :
     #                             # 5-spot pattern
     #                             WBPkey = 'WBP5'
-    #                             verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[1] + " item of keyword '" + WPAVE[0] + "' is set to a negative value, like '-1', in your eclipse simulation.")
+    #                             _verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[1] + " item of keyword '" + WPAVE[0] + "' is set to a negative value, like '-1', in your eclipse simulation.")
     #                         elif int(KeyArguments[-1]) == 3 :
     #                             # Square pattern of size 3 gridblocks by 3 gridblocks
     #                             WBPkey = 'WBP9'
-    #                             verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[1] + " item of keyword '" + WPAVE[0] + "' is set to a negative value, like '-1', in your eclipse simulation.")
+    #                             _verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[1] + " item of keyword '" + WPAVE[0] + "' is set to a negative value, like '-1', in your eclipse simulation.")
     #                         elif int(KeyArguments[-1]) in [ 5 , 7 , 9 ] :
     #                             # Square pattern of size N gridblocks by N gridblocks
     #                             WBPkey = 'WBP'+ KeyArguments[-1] + 'x' + KeyArguments[-1]
-    #                             verbose(self.speak, -1 , " there is not eclipse keyword that matched this VIP configuration,\n this VIP average pressure will be loaded as '" + WBPkey + "'")
+    #                             _verbose(self.speak, -1 , " there is not eclipse keyword that matched this VIP configuration,\n this VIP average pressure will be loaded as '" + WBPkey + "'")
     #                         elif int(KeyArguments[-1]) == 0 :
     #                             # Exclude this layer from the calculation.
     #                             WBPkey = 'WBP0'
-    #                             verbose( self.speak , 3 , " IMPORTANT: this layer has been excluded from the average pressure calculation")
+    #                             _verbose( self.speak , 3 , " IMPORTANT: this layer has been excluded from the average pressure calculation")
 
     #                 elif KeyArguments[0].upper() == 'ACTIVE' :
     #                     # Alpha label indicating that only active perforations are used in the calculation. This is the default.
-    #                     verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[4] + " item of keyword '" + WPAVE[0] + "' is set to 'OPEN' in your eclipse simulation.")
+    #                     _verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[4] + " item of keyword '" + WPAVE[0] + "' is set to 'OPEN' in your eclipse simulation.")
     #                 elif KeyArguments[0].upper() == 'ALL' :
     #                     # Alpha label indicating that all perforations, including inactive or shut-in perforations, are used in the calculation.
-    #                     verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[4] + " item of keyword '" + WPAVE[0] + "' is set to 'ALL' in your eclipse simulation.")
+    #                     _verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[4] + " item of keyword '" + WPAVE[0] + "' is set to 'ALL' in your eclipse simulation.")
     #                 elif KeyArguments[0].upper() == 'DATUM' :
     #                     # Alpha label indicating that the well average datum pressure is to be computed. This is the default for a pattern calculation.
-    #                     verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[3] + " item of keyword '" + WPAVE[0] + "' is set to 'WELL' in your eclipse simulation.")
+    #                     _verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[3] + " item of keyword '" + WPAVE[0] + "' is set to 'WELL' in your eclipse simulation.")
     #                 elif KeyArguments[0].upper() == 'GRIDBLOCK' :
     #                     # Alpha label indicating that the well average gridblock pressure is to be computed.
-    #                     verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[3] + " item of keyword '" + WPAVE[0] + "' is set to 'NONE' in your eclipse simulation.")
+    #                     _verbose( self.speak , 3 , " IMPORTANT: be sure that the " + WPAVE[3] + " item of keyword '" + WPAVE[0] + "' is set to 'NONE' in your eclipse simulation.")
                     
     #     if WPAVE == "WPAVE" :
     #         return self.OUTPAVG(ECLkey=WBPkey)
@@ -1393,7 +1392,7 @@ class NexusDesktopCSV(VIP):
                 
     #             key = 'FV'+IP+TR
     #             if len(rv) > 0 :
-    #                 verbose( self.speak , 1 , 'adding up reservoir volumes for ' + key )
+    #                 _verbose( self.speak , 1 , 'adding up reservoir volumes for ' + key )
                     
     #             if len(rv) == 1 :
     #                 self[key] = self(rv[0]) , self.get_Units(rv[0])
@@ -1412,7 +1411,7 @@ class NexusDesktopCSV(VIP):
                     
     #                 key = T+'V'+IP+TR
     #                 if len(rv) > 0 :
-    #                     verbose( self.speak , 1 , 'adding up reservoir volumes for ' + key )
+    #                     _verbose( self.speak , 1 , 'adding up reservoir volumes for ' + key )
                         
     #                 if len(rv) == 1 :
     #                     df = self[[rv[0]]]

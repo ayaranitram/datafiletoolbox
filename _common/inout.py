@@ -5,9 +5,10 @@ Created on Wed May 29 16:22:25 2019
 @author: MCARAYA
 """
 
-__version__ = '1.0.20-08-30'
+__version__ = '1.0.20-10-17'
+__all__ = ['_extension','_verbose']
 
-def verbose(userLevel=0 , programLevel=0 , StringToPrint='') :
+def _verbose(userLevel=0 , programLevel=0 , StringToPrint='') :
     """
     According to the user desired level of verbosity ( userLevel ) and the 
     defined program level ( programLevel ) of the message ( StringToPrint )
@@ -50,8 +51,7 @@ def verbose(userLevel=0 , programLevel=0 , StringToPrint='') :
         pass
 
 
-
-def extension(filepath , NullValue='' , backSlashToSlash=True , backCompatibility=False):
+def _extension(filepath , NullValue='' , backSlashToSlash=True , backCompatibility=False):
     """
     receives a string indicating a FileName.Extension or 
     Path/FileName.Extension and return a tupple containing 
@@ -86,40 +86,3 @@ def extension(filepath , NullValue='' , backSlashToSlash=True , backCompatibilit
         return ( filename , extension , path , path+filename+extension )
 
     return ( extension , filename , path , path+filename+extension )
-
-
-
-def openFile(path, mode='r') :
-    """
-    openFile receives a string indicating the path to a file,
-    checks the file exists and return the file object opened.
-    
-    By default the file will be opened in read only mode, 
-    other modes can be espefied as string in the second argument.
-    
-    Accepted open modes are:
-        'r'   read only, default mode
-        'w'   write, if file exists overwrite
-        'x'   new file. Fails if already exists
-        'a'   append mode
-        't'   text mode, default
-        'b'   binary mode
-        '+'   updating, reading and writing
-    """
-    filePathIN = path
-    fileFlag = False
-    while fileFlag == False :
-        try :
-            if len(filePathIN) == 0 :
-                filePathIN = input('enter path to file be read: ')
-        except :
-            filePathIN = input('enter path to file be read: ')
-
-        try : 
-            fileIN = open(filePathIN , mode)
-            fileFlag = True
-            print('  opening input file\n' + filePathIN)
-        except :
-            print(' file not found, check filename and try again.')
-            filePathIN = None
-    return fileIN
