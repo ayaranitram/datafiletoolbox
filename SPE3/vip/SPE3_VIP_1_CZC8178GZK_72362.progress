@@ -1,0 +1,132 @@
+
+   Running:   C:/Landmark/Nexus-VIP5000.4.10.1/nexusscript/runVipSim.sh  
+              -rc 72362
+              -v 5000_4_10_1
+              -vdb spe.vdb
+              -case SPE3
+              -rstin SPE3i.rst
+              -idat SPE3i.dat
+              -rdat SPE3r.dat
+              -d X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip 
+   Progress:  X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3_VIP_1_CZC8178GZK_72362.progress
+
+
+                            Setting up VIP Job SPE3
+    =======================================================================
+
+      Removing stale files for SPE3
+      -----------------------------
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.tts
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.out
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3.status
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.out
+      -----------------------------
+
+      Deleting Case Information
+      -------------------------
+      VDB:       X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/spe.vdb
+      CASE:      SPE3
+      INFO:      sim
+      -------------------------
+
+      Writing VIP CORE File Path List to X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3.corefil
+      ------------------------------------------------------------------------------------.-------
+      ------------------------------------------------------------------------------------.-------
+
+      Writing VIP EXEC File Path List to X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3.execfil
+      ------------------------------------------------------------------------------------.-------
+      ------------------------------------------------------------------------------------.-------
+
+
+
+                            Executing VIP Job SPE3
+    =======================================================================
+
+      Running VIP Initialization
+      --------------------------
+      LICENSE:   2013@srv00050
+      VERSION:   5000_4_10_1
+      EXE:       C:/Landmark/Nexus-VIP5000.4.10.1/nexussimulators/Windows64/coreEM64_5000_4_10_1.exe
+      DATA:      X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.dat
+      RST OUT:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.rst
+      VDB:       X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/spe.vdb
+      CASE:      SPE3
+      PWD:       X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip
+      TIME:      Fri Sep 11 15:48:39 RDT 2020
+      CMD:       C:/Landmark/Nexus-VIP5000.4.10.1/nexussimulators/Windows64/coreEM64_5000_4_10_1.exe
+                  spe.vdb
+                 -case SPE3
+      OUTPUT:    X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.out
+ 
+ 
+VIP Initialization Complete
+      --------------------------
+
+      Running VIP Simulation
+      ----------------------
+      LICENSE:   2013@srv00050
+      VERSION:   5000_4_10_1
+      EXE:       C:/Landmark/Nexus-VIP5000.4.10.1/nexussimulators/Windows64/execEM64_5000_4_10_1.exe
+      DATA:      X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.dat
+      RST IN:    X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.rst
+      RST OUT:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.rst
+      VDB:       X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/spe.vdb
+      CASE:      SPE3
+      PWD:       X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip
+      TIME:      Fri Sep 11 15:49:02 RDT 2020
+      CMD:       C:/Landmark/Nexus-VIP5000.4.10.1/nexussimulators/Windows64/execEM64_5000_4_10_1.exe
+                  spe.vdb
+                 -case SPE3
+      OUTPUT:    X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.out
+ 
+ 
+VIP Serial Simulation Complete
+      ----------------------
+
+
+
+                          Cleaning up VIP Job SPE3
+    =======================================================================
+
+      Removing empty Corefil files for SPE3
+      -------------------------------------
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.pep
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.cpft
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.coef
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.pseudo
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.flxdbg
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.morfl
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.morfp
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.stat
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.eiroil
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.eirgas
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.eisoil
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.eisgas
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.eipvt
+      -------------------------------------
+
+      Removing empty Execfil files for SPE3
+      -------------------------------------
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.pep
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.well
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.targ
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.tckrep
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.rft
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.pout
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.frac
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.bprep
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.bpdbg
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.pgp
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.track
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.trace
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.wpi
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.flxdbg
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.facut
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.flux2
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.expert
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r.wfile
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r_area.sss
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r_flow.sss
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r_gather.sss
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3r_region.sss
+      Erasing:   X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3.cgf78

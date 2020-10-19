@@ -1,0 +1,1598 @@
+ 
+ ***********************************************
+ ****                                         **
+ **** THIS IS A SINGLE PROCESSOR (SERIAL) RUN **
+ ****                                         **
+ ***********************************************
+1
+ ---------------------
+ DATA READ FROM FILE : X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3.corefil
+ ---------------------
+
+ assign "SPE3i.dat" 5 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.rst" 2 binary
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.map" 9 binary
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.pep" 10 binary
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.plt" 11 binary
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.cpft" 12 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.coef" 13 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.tts" 15 format
+ assign "C:/Landmark/Nexus-VIP5000.4.10.1/nexusscript/data/asciistm.dat" 16 format
+ assign "C:/Landmark/Nexus-VIP5000.4.10.1/nexusscript/data/asciiwat.dat" 17 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3.status" 25 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3_ci.plt" 26 binary
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i_lgr.map" 27 binary
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.pseudo" 28 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.flxdbg" 55 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.morfl" 69 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.morfp" 70 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.stat" 72 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.eiroil" 73 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.eirgas" 74 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.eisoil" 75 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.eisgas" 76 format
+ assign "X:/ARGELIA/RKF_HM_review2020-04/SPE3/SP3/vip/SPE3i.eipvt" 77 format
+1************************************************************************************************************************************
+ **                                                                                                                                **
+ **                                                       MODULES DEFINED:                                                         **
+ **                                                                                                                                **
+ **                                                           COMP                                                                 **
+ **                                                           TRACE                                                                **
+ **                                                           LGR                                                                  **
+ **                                                           SURFACE NETWORK                                                      **
+ **                                                                                                                                **
+ ************************************************************************************************************************************
+
+
+                                                VIP-EXEC EXPIRATION DATE:       INFINITE
+                                                CURRENT DATE:                   11-SEP-2020
+1
+ ************************************************************************************************************************************
+ ************************************************************************************************************************************
+ **                                                                                                                                **
+ **                                                                                                                                **
+ **                                 VV    VV   IIII   PPPPPP             CCCCC    OOOOO   RRRRRR   EEEEEEE                         **
+ **                                  V    V     II    PP   PP           CC   CC  OO   OO  RR   RR  EE                              **
+ **                                  VV  VV     II    PP   PP           CC       OO   OO  RR   RR  EE                              **
+ **                                   V  V      II    PPPPPP   -------  CC       OO   OO  RRRRRR   EEEEE                           **
+ **                                   VVVV      II    PP                CC       OO   OO  RR RR    EE                              **
+ **                                    VV       II    PP                CC   CC  OO   OO  RR  RR   EE                              **
+ **                                    VV      IIII   PP                 CCCCC    OOOOO   RR   RR  EEEEEEE                         **
+ **                                                                                                                                **
+ **                                                                                                                                **
+ **                                                  VECTORIZED IMPLICIT PROGRAM                                                   **
+ **                                                                                                                                **
+ **                                                                                                                                **
+ **                                                                                                                                **
+ **                                                 COPYRIGHT,  1984 - PRESENT ,                                                   **
+ **                                                 LANDMARK GRAPHICS CORPORATION                                                  **
+ **                                                      ALL RIGHTS RESERVED                                                       **
+ **                                                                                                                                **
+ **                                                                                                                                **
+ **                                                  VERSION 5000.4.10.0 (5K4.10  )                     CREATED 01/22/15           **
+ **                                                                                                                                **
+ **                    NAME OF LAST CHANGE SET: cset00                                                                             **
+ **                    REVISION NUMBER        :    0                                                                               **
+ **                                                                                                                                **
+ **                                                                                                                                **
+ **               LL        AAAAA   N    NN  DDDDDD   M      M  AAAAA   RRRRRR   KK   KK                                           **
+ **               LL       AA   AA  NN   NN  DD   DD  MM    MM AA   AA  RR   RR  KK  KK                                            **
+ **               LL       AA   AA  NNN  NN  DD   DD  M M  M M AA   AA  RR   RR  KK KK                                             **
+ **               LL       AAAAAAA  NN N NN  DD   DD  M  MM  M AAAAAAA  RRRRRR   KKKK                                              **
+ **               LL       AA   AA  NN  NNN  DD   DD  M      M AA   AA  RR RR    KK KK                                             **
+ **               LL       AA   AA  NN   NN  DD   DD  M      M AA   AA  RR  RR   KK  KK                                            **
+ **               LLLLLLL  AA   AA  NN    N  DDDDDD   M      M AA   AA  RR   RR  KK   KK                                           **
+ **                                                                                                                                **
+ **                                                                                                                                **
+ **                                           GGGGG   RRRRRR    AAAAA   PPPPPP   HH   HH    IIII    CCCCC    SSSSS                 **
+ **                                          GG   GG  RR   RR  AA   AA  PP   PP  HH   HH     II    CC   CC  SS   SS                **
+ **                                          GG       RR   RR  AA   AA  PP   PP  HH   HH     II    CC       SS                     **
+ **                                          GG       RRRRRR   AAAAAAA  PPPPPP   HHHHHHH     II    CC        SSSSS                 **
+ **                                          GG  GGG  RR RR    AA   AA  PP       HH   HH     II    CC            SS                **
+ **                                          GG   GG  RR  RR   AA   AA  PP       HH   HH     II    CC   CC  SS   SS                **
+ **                                           GGGGG   RR   RR  AA   AA  PP       HH   HH    IIII    CCCCC    SSSSS                 **
+ **                                                                                                                                **
+ **                                                                                                                                **
+ ************************************************************************************************************************************
+ ************************************************************************************************************************************
+1
+                       **************************************************************************************
+                       *                                                                                    *
+                       *                                  V I P - C O R E                                   *
+                       *                                                                                    *
+                       *                            VECTORIZED IMPLICIT PROGRAM                             *
+                       *                                  VERSION 5K4.10                                    *
+                       *                                                                                    *
+                       *                                         BY                                         *
+                       *                                                                                    *
+                       *                           LANDMARK GRAPHICS CORPORATION                            *
+                       *                                                                                    *
+                       *                             COPYRIGHT  1984 - PRESENT                              *
+                       *                                ALL RIGHTS RESERVED                                 *
+                       *                                                                                    *
+                       **************************************************************************************
+
+
+
+
+
+                                                        DEFAULT  DIMENSIONS
+                                                        -------------------
+
+
+
+                       NBMAX    MAXIMUM NUMBER OF GRID BLOCKS ...........................................   2202
+                       NCMPMX   MAXIMUM NUMBER OF COMPONENTS ............................................      8
+                       NREGMX   MAXIMUM NUMBER OF OUTPUT REGIONS (IREGION) ..............................     40
+                       NEQLMX   MAXIMUM NUMBER OF EQUILIBRIUM REGIONS (IEQUIL) ..........................     15
+                       NSATMX   MAXIMUM NUMBER OF UNIQUE SATURATION REGIONS (ISAT) ......................      1
+                       NSATNT   MAXIMUM NO OF ENTRIES IN EACH INPUT SATURATION TABLE ....................     30
+                       NSWDIM   NUMBER OF SW ENTRIES IN A SINGLE RECONSTRUCTED WATER SATURATION TABLE ...     51
+                       NSGDIM   NUMBER OF SG ENTRIES IN A SINGLE RECONSTRUCTED GAS SATURATION TABLE .....     51
+                       NPMAX    NUMBER OF PRESSURE ENTRIES IN A SINGLE RECONSTRUCTED PVT TABLE ..........     50
+                       NXMAX    NUMBER OF COMPOSITION ENTRIES IN A SINGLE RECONSTRUCTED PVT TABLE .......     40
+                       NNTMAX   MAXIMUM NUMBER OF TOTAL FAULT CONNECTIONS ...............................   5000
+                       NFNAME   MAXIMUM NUMBER OF NAMED FACE SETS .......................................    100
+                       NLKFLT   MAXIMUM NUMBER OF LEAKY FAULTS ..........................................      0
+                       NLKMAX   MAXIMUM NUMBER OF GRID BLOCKS ADJACENT TO A LEAKY FAULT .................    200
+                       NBATMX   MAXIMUM NUMBER OF USER-DEFINED SEPARATOR BATTERIES ......................     10
+                       NSTGMX   MAXIMUM NUMBER OF STAGES PER BATTERY ....................................      5
+                       NPCMP    MAXIMUM NUMBER OF INTERPOLATION VALUES IN GAS PLANT SEPARATOR DATA ......     20
+                       NTAB     MAXIMUM NUMBER OF UNIQUE PVT REGIONS (IPVT) .............................      4
+                       NPSATM   MAX NO OF SAT. PRESSURES IN THE UNDERSATURATED PART OF THE PVT TABLES ...      6
+                       NPINCM   MAX NO OF SETS OF VOLUME FACTORS FOR EACH SATURATION PRESSURE VALUE .....     10
+                       NTABW    MAXIMUM NUMBER OF UNIQUE WATER PVT REGIONS (IPVTW) ......................      1
+                       NSALMX   MAXIMUM NUMBER OF SALINITIES IN ANY WATER PVT TABLE .....................     30
+                       NTABCM   MAXIMUM NUMBER OF COMPACTION REGIONS (ICMT) .............................      3
+                       NPMXCT   NUMBER OF PRESSURE ENTRIES IN A SINGLE RECONSTRUCTED COMPACTION TABLE ...     50
+                       NCDPMX   MAXIMUM NUMBER OF DEPTH VALUES IN THE TABLES ............................     15
+                       NFLMAX   MAXIMUM NUMBER OF TRACKED HYDROCARBON TYPES .............................     10
+                       NFWMAX   MAXIMUM NUMBER OF TRACKED WATER TYPES ...................................      6
+                       NINFMX   MAXIMUM NUMBER OF DISTINCT INFLUX REGIONS ...............................      5
+                       NINFBL   MAXIMUM NUMBER OF TOTAL INFLUX BLOCKS ...................................    600
+                       NINFTD   MAXIMUM NUMBER OF ENTRIES IN EACH CARTER-TRACY  TD PD  INFLUX TABLE .....    100
+                       NFXREG   MAXIMUM NUMBER OF DISTINCT BOUNDARY FLUX REGIONS ........................      2
+                       NCBLKS   MAXIMUM NUMBER OF COARSE GRID BLOCK FACES ...............................    100
+                       NFBLKS   MAXIMUM NUMBER OF FINE GRID BLOCK FACES .................................    200
+                       FLOATING POINT PRECISION ...................................................     1.11E-16
+1
+                       **************************************************************************************
+                       *                                                                                    *
+                       *                            CARD  IMAGES  OF  THE  DATA                             *
+                       *                                                                                    *
+                       **************************************************************************************
+ 
+ C ------------------------------
+ C LANDMARK GRAPHICS CORPORATION
+ C
+ C VIP EXAMPLE DATA SET
+ C
+ C 01/16/2008
+ C ------------------------------
+ 
+ INIT
+ NCOL 80
+ TITLE1
+        SPE COMPARISON PROBLEM #3
+ TITLE2
+ 
+ TITLE3
+ 
+ C
+ DATE 01 01 66
+ C
+ MAP
+ PRINT INIT P PSAT SO SW SG VISO VISG DENO DENG
+ C
+ C ----------------------------------------------------------
+ C MODEL DIMENSIONS
+ C ----------------------------------------------------------
+ NX NY NZ NCOMP
+  9  9  4   7
+ C -----------------------------------------------------------
+ C CONSTANT RESERVOIR FLUID PROPERTIES
+ C -----------------------------------------------------------
+      DWB      BWI   VW     CW     CR  TRES   TS    PS
+    1.000  1.0091 .78   3.0E-6 4.0E-6 200.  60.0  14.7
+ C -----------------------------------------------------------
+ C EQUILIBRIUM INITIALIZATION DATA
+ C -----------------------------------------------------------
+ IEQUIL PINIT DEPTH PCWOC   WOC PCGOC   GOC    PSAT
+      1  3550  7500   0.0  7500  0.00   7500   3400
+ C
+ C ----------------------------------------------------------
+ C WATER-OIL TABLES
+ C -----------------------------------------------------------
+ SWT 1
+     SW   KRW  KROW  PCWO
+ C    CONNATE WATER SATURATION = .16
+  .16     0.0     .8       50.
+  .2       .002   .65      32.
+  .24      .01    .513     21.
+  .28      .02    .4       15.5
+  .32      .033   .315     12.0
+  .36      .049   .25       9.2
+  .4       .066   .196      7.0
+  .44      .09    .15       5.3
+  .48      .119   .112      4.2
+  .52      .15    .082      3.4
+  .56      .186   .06       2.7
+  .60      .227   .04       2.1
+  .64      .277   .024      1.7
+  .68      .33    .012      1.3
+  .72      .39    .005      1.0
+  .76      .462   0.0        .7
+  .8       .54    0.0        .5
+  .84      .62    0.0        .4
+  .88      .71    0.0        .3
+  .92      .8     0.0        .2
+  .96      .9     0.0        .1
+ 1.00     1.0     0.0       0.0
+ C ---------------------------------------------------------------------
+ C GAS-OIL TABLES
+ C ---------------------------------------------------------------------
+ SGT 1
+     SG   KRG   KROG   PCGO
+   0.0   0.0     .8    0.0
+    .04   .005   .65
+    .08   .013   .513
+    .12   .026   .4
+    .16   .04    .315
+    .2    .058   .25
+    .24   .078   .196
+    .28   .10    .150
+    .32   .126   .112
+    .36   .156   .082
+    .4    .187   .060
+    .44   .222   .04
+    .48   .26    .024
+    .52   .3     .012
+    .56   .348   .005
+    .6    .4     0.0
+    .64   .45    0.0
+    .68   .505   0.0
+    .72   .562   0.0
+    .76   .62    0.0
+    .8    .68    0.0
+    .84   .74    0.0    0.0
+ C -------------------------------------------------------------------
+ C FLUID PVT PROPERTIES
+ C -------------------------------------------------------------------
+ C   INTEGRATED TECHNOLOGIES EOS PARAMETERS GENERATED BY EOSPAK
+ C
+ C   INITIALIZE TO PSEUDOIZED SYSTEM
+ C
+ EOS PR
+ COMPONENTS
+ P1 P2 P3 P4 P5 P6 P7
+ PROPERTIES
+ COMP        MW        TC        PC      ZC    ACENTRIC    OMEGAA      OMEGAB
+ P1         16.38   -120.01    662.81  0.28741  0.01330  0.42312848  0.08046461
+ P2         31.77     89.83    752.19  0.28860  0.11304  0.45192604  0.07926051
+ P3         50.64    245.87    581.03  0.28126  0.17244  0.45984739  0.07843675
+ P4         76.92    410.94    481.06  0.25534  0.23561  0.45811880  0.07791799
+ P5        120.13    600.51    385.00  0.26069  0.34585  0.39778691  0.07510754
+ P6        210.87    823.88    253.07  0.23087  0.55335  0.39778691  0.07510754
+ P7        347.56   1060.94    174.67  0.20769  0.84182  0.39778691  0.07510754
+ DJK P1
+ P2        0.000986
+ P3        0.007843
+ P4        0.023942
+ P5        0.037841
+ P6        0.047445
+ P7        0.26562214
+ DJK P2
+ P3        0.003695
+ P4        0.010541
+ P5        0.010541
+ P6        0.010541
+ P7        0.010541
+ DJK P3
+ P4        0.002281
+ P5        0.002281
+ P6        0.002281
+ P7        0.002281
+ DJK P4
+ P5        0.000000
+ P6        0.000000
+ P7        0.000000
+ DJK P5
+ P6        0.000000
+ P7        0.000000
+ DJK P6
+ P7        0.000000
+ ENDEOS
+ C
+ GASMF
+ 0.679300 0.099000 0.110800 0.045000 0.052966 0.011941 0.000993
+ OILMF
+   X  X  X  X  X  X  X
+ C ------------------------------------------------------------------
+ C RESERVOIR  DESCRIPTION
+ C ------------------------------------------------------------------
+ ARRAYS
+ C
+ DX CON
+ 293.3
+ DY CON
+ 293.3
+ DZ ZVAR
+ 30  30  50  50
+ DEPTH LAYER
+   81*7315
+ C
+ POR CON
+ 0.13
+ C
+ KX ZVAR
+  130  40 20 150
+ KY ZVAR
+  130  40 20 150
+ KZ MULT
+ 0.1 KX
+ C
+ END
+
+
+ *** WARNING : NCOL SET TO   80
+               FROM HERE ON, DATA PAST COLUMN   80 WILL BE IGNORED
+
+ LINE : 10              
+ FILE : X:\ARGELIA\RKF_HM_review2020-04\SPE3\SP3\vip\SPE3i.dat                                                                  
+1
+                       **************************************************************************************
+                       *                                                                                    *
+                       *                                  V I P - C O R E                                   *
+                       *                                                                                    *
+                       *                            VECTORIZED IMPLICIT PROGRAM                             *
+                       *                                  VERSION 5K4.10                                    *
+                       *                                                                                    *
+                       *                                         BY                                         *
+                       *                                                                                    *
+                       *                           LANDMARK GRAPHICS CORPORATION                            *
+                       *                                                                                    *
+                       *                             COPYRIGHT  1984 - PRESENT                              *
+                       *                                ALL RIGHTS RESERVED                                 *
+                       *                                                                                    *
+                       **************************************************************************************
+
+
+
+
+
+                                                         USER  DIMENSIONS
+                                                         ----------------
+
+
+
+                       MAXGRID  MAXIMUM NUMBER OF LOCAL GRID REFINEMENTS ................................      1
+                       MAXSSTK  MAXIMUM INTEGER STATE STACK SIZE FOR READING LGR DATA ...................      1
+                       MAXINT   MAXIMUM INTEGER STACK SIZE FOR READING LGR DATA .........................   2000
+                       MAXFLOAT MAXIMUM FLOAT STACK SIZE FOR READING LGR DATA ...........................    100
+                       NBGMAX   MAXIMUM DIMENSION OF ARRAY DATA (ALL GRIDS) .............................    324
+                       NC       NUMBER OF COMPONENTS ....................................................      7
+                       NREGMX   MAXIMUM NUMBER OF OUTPUT REGIONS (IREGION) ..............................     40
+                       NEQLMX   MAXIMUM NUMBER OF EQUILIBRIUM REGIONS (IEQUIL) ..........................     15
+                       NSATMX   MAXIMUM NUMBER OF UNIQUE SATURATION REGIONS (ISAT) ......................      1
+                       NSATNT   MAXIMUM NO OF ENTRIES IN EACH INPUT SATURATION TABLE ....................     30
+                       NSWDIM   NUMBER OF SW ENTRIES IN A SINGLE RECONSTRUCTED WATER SATURATION TABLE ...     51
+                       NSGDIM   NUMBER OF SG ENTRIES IN A SINGLE RECONSTRUCTED GAS SATURATION TABLE .....     51
+                       NPMAX    NUMBER OF PRESSURE ENTRIES IN A SINGLE RECONSTRUCTED PVT TABLE ..........     50
+                       NXMAX    NUMBER OF COMPOSITION ENTRIES IN A SINGLE RECONSTRUCTED PVT TABLE .......     40
+                       NNTMAX   MAXIMUM NUMBER OF TOTAL FAULT CONNECTIONS ...............................   5000
+                       NFNAME   MAXIMUM NUMBER OF NAMED FACE SETS .......................................    100
+                       NLKFLT   MAXIMUM NUMBER OF LEAKY FAULTS ..........................................      0
+                       NLKMAX   MAXIMUM NUMBER OF GRID BLOCKS ADJACENT TO A LEAKY FAULT .................    200
+                       NBATMX   MAXIMUM NUMBER OF USER-DEFINED SEPARATOR BATTERIES ......................     10
+                       NSTGMX   MAXIMUM NUMBER OF STAGES PER BATTERY ....................................      5
+                       NPCMP    MAXIMUM NUMBER OF INTERPOLATION VALUES IN GAS PLANT SEPARATOR DATA ......     20
+                       NTAB     MAXIMUM NUMBER OF UNIQUE PVT REGIONS (IPVT) .............................      4
+                       NPSATM   MAX NO OF SAT. PRESSURES IN THE UNDERSATURATED PART OF THE PVT TABLES ...      6
+                       NPINCM   MAX NO OF SETS OF VOLUME FACTORS FOR EACH SATURATION PRESSURE VALUE .....     10
+                       NTABW    MAXIMUM NUMBER OF UNIQUE WATER PVT REGIONS (IPVTW) ......................      1
+                       NSALMX   MAXIMUM NUMBER OF SALINITIES IN ANY WATER PVT TABLE .....................     30
+                       NTABCM   MAXIMUM NUMBER OF COMPACTION REGIONS (ICMT) .............................      3
+                       NPMXCT   NUMBER OF PRESSURE ENTRIES IN A SINGLE RECONSTRUCTED COMPACTION TABLE ...     50
+                       NCDPMX   MAXIMUM NUMBER OF DEPTH VALUES IN THE TABLES ............................     15
+                       NFLMAX   MAXIMUM NUMBER OF TRACKED HYDROCARBON TYPES .............................     10
+                       NFWMAX   MAXIMUM NUMBER OF TRACKED WATER TYPES ...................................      6
+                       NINFMX   MAXIMUM NUMBER OF DISTINCT INFLUX REGIONS ...............................      5
+                       NINFBL   MAXIMUM NUMBER OF TOTAL INFLUX BLOCKS ...................................    600
+                       NINFTD   MAXIMUM NUMBER OF ENTRIES IN EACH CARTER-TRACY  TD PD  INFLUX TABLE .....    100
+                       NFXREG   MAXIMUM NUMBER OF DISTINCT BOUNDARY FLUX REGIONS ........................      2
+                       NCBLKS   MAXIMUM NUMBER OF COARSE GRID BLOCK FACES ...............................    100
+                       NFBLKS   MAXIMUM NUMBER OF FINE GRID BLOCK FACES .................................    200
+                       FLOATING POINT PRECISION ...................................................     1.11E-16
+
+
+
+                   *************************************************
+                         S T O R A G E     A L L O C A T I O N
+                   *************************************************
+
+                     DYNAMICALLY ALLOCATED MEMORY --- BLANK COMMON
+
+                   (8-BYTE WORDS)   MEGABYTES  PROCESS NODE
+                   --------------   ---------  ------- -------------
+                           316623       2.533      1   CZC8178GZK
+
+                   *************************************************
+
+
+
+
+ *** WARNING : NCOL SET TO   80
+               FROM HERE ON, DATA PAST COLUMN   80 WILL BE IGNORED
+
+ LINE : 10              
+ FILE : X:\ARGELIA\RKF_HM_review2020-04\SPE3\SP3\vip\SPE3i.dat                                                                  
+1                      **************************************************************************************
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                       CONSTANT VALUES  AND  PROGRAM OPTIONS                        *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+
+
+                                     THE SYSTEM IS BEING DESCRIBED USING A RECTANGULAR GRID.
+
+                                     NX      NUMBER OF GRID BLOCKS, X DIRECTION .......        9
+                                     NY      NUMBER OF GRID BLOCKS, Y DIRECTION .......        9
+                                     NZ      NUMBER OF GRID BLOCKS, Z DIRECTION .......        4
+                                     NB      NUMBER OF GRID BLOCKS ....................      324
+                                     NC      NUMBER OF COMPONENTS (EXCLUDING H2O) .....        7
+                                     DWB     STOCK TANK WATER DENSITY, GM/CC ..........    1.000
+                                     BWI     WATER VOLUME FACTOR AT PINIT, RB/STB .....    1.009
+                                     VW      WATER VISCOSITY, CP ......................    0.780
+                                     CW      WATER COMPRESSIBILITY, 1/PSI .............0.300E-05
+                                     CR      ROCK COMPRESSIBILITY, 1/PSI ..............0.400E-05
+                                                    (CR CAN BE OVERWRITTEN WITH ARRAY DATA)
+                                     TRES    RESERVOIR TEMPERATURE, DEGREES F .........   200.00
+                                     TS      STANDARD TEMPERATURE, DEGREES F ..........    60.00
+                                     PS      STANDARD PRESSURE, PSIA  .................    14.70
+                                     DATE    INITIAL DATE, DAY/MO/YR ..................01/01/1966
+                                     NLINES  MAXIMUM NUMBER OF LINES PRINTED PER PAGE .       60
+ 
+                                             PACKED GRIDBLOCK ARRAYS IN RESTART FILES .   T
+                                     METRIC  ALL DATA IS INPUT IN METRIC UNITS ........   F
+                                     LAB     ALL DATA IS INPUT IN LAB.   UNITS ........   F
+                                     CROSS   A CROSS-SECTIONAL STUDY IS BEING PERFORMED   F
+                                     PATTERN PATTERN ELEMENT OPTION ...................   F
+                                     GBC     GRID-BLOCK-CENTER INITIALIZATION .........   T
+                                     INIT2P  TWO-POINT SCALING OF PC FOR INIT. SAT. ...   F
+                                     END2P   TWO-POINT SCALING OF SATURATION TABLES ...   F
+                                     VEWO    WATER-OIL VERTICAL EQUILIBRIUM ...........   F
+                                     VEGO    GAS-OIL VERTICAL EQUILIBRIUM .............   F
+                                     JFUNC   J-FUNCTION MODIFICATION ..................   F
+                                     DRELPM  DIRECTIONAL RELATIVE PERMEABILITY ........   F
+                                     STONE   THREE-PHASE RELATIVE PERMEABILITY OPTION .   2
+                                     SDFUNC  SATURATION-DEPENDENT FUNCTIONS OPTION ....   F
+                                     HYSTO   OIL RELATIVE PERMEABILITY HYSTERESIS .....   F
+                                     HYSTG   GAS RELATIVE PERMEABILITY HYSTERESIS .....   F
+                                     HYSWO   WATER/OIL RELATIVE PERM HYSTERESIS .......   F
+                                     HYSTW   WATER RELATIVE PERMEABILITY HYSTERESIS ...   F
+                                     MOBILE  MOBILE FLUID CORRECTION ..................   F
+                                     NONEQ   NON-EQUILIBRIUM INITIALIZATION ...........   F
+                                     TDEP    TEMPERATURE DEPENDENCY IN RESERVOIR ......   F
+                                     TRACK   COMPONENT TRACKING .......................   F
+                                     TRACKW  WATER TRACKING ...........................   F
+                                     TRACER  TRACER OPTION ............................   F
+                                     DUAL    DUAL POROSITY ............................   F
+                                     DUAL    DUAL POROSITY WITH MATRIX FLOW (SWAPMF) ..   F
+                                     DUAL    DUAL PERMEABILITY ........................   F
+                                     PSEUDO  MATRIX PSEUDO CAPILLARY PRESSURE .........   F
+                                     PSEUDO  COATS' METHOD FOR GAS-OIL MAT-FRAC EXCH. .   F
+                                     THERM   THERMAL OPTION ...........................   F
+                                     FRACINT SIMTECH'S TARFRAC INTERFACE OPTION .......   F
+                                     PORDEF  POROSITY DEFORMATION OPTION ..............   F
+                                     COMPAC  ROCK MATRIX COMPACTION OPTION ............   F
+                                     FLOW360 FULL 360-DEGREE RADIAL FLOW OPTION .......   F
+                                     WBSIM   WELLBORE SIMULATION OPTION ...............   F
+                                     NINEPT  NINE-POINT FINITE DIFFERENCE OPERATOR ....   F
+                                     CORNER  CORNER POINT GRID DATA OPTION ............   F
+                                     LINE    DEPTH LINE CORNER POINT OPTION ...........   F
+                                     NEWTRAN INTERBLOCK TRANSMISSIBILITY ..............   F
+                                     NOCHK   SATN. TABLE CONSISTENCY CHECK SKIPPED ....   F
+                                     POLYMER POLYMER OPTION ...........................   F
+                                     ERP     WRITE EFFECTIVE RELATIVE PERM DATA FILE ..   F
+                                     MAP     WRITE MAP ARRAYS TO A DATABASE FILE ......   T
+                                             PACKED GRIDBLOCK ARRAYS IN DATABASE FILE .   T
+                                     MAPOLD  WRITE SIMOUT MAP ARRAYS TO A FILE ........   F
+                                     FLOWS   ENABLE FLOW RATE ARRAY MAP/OUTPUT ........   F
+                                     DIFFUS  DIFFUSION OPTION .........................   F
+                                     COARSEN GRID COARSENING ..........................   F
+
+ *** WARNING - NO SEPARATOR DATA HAS BEEN ENTERED.
+1
+
+ READING ARRAY DATA ......
+
+                                            ARRAY DATA SUMMARY FOR GRID : ROOT    
+                     ------------------------------------------------------------------------------------
+                     ARRAY         MIN          I     J     K       MAX          I     J     K   COMMENTS
+                     -----       -------       ---   ---   ---    -------       ---   ---   ---  --------
+                     DX          293.300         1     1     1    293.300         1     1     1  CONSTANT
+                     DY          293.300         1     1     1    293.300         1     1     1  CONSTANT
+                     DZ          30.0000         1     1     1    50.0000         1     1     3
+                     DEPTH       7315.00         1     1     1    7425.00         1     1     4
+                     POR        0.130000         1     1     1   0.130000         1     1     1  CONSTANT
+                     KX          20.0000         1     1     3    150.000         1     1     4
+                     KY          20.0000         1     1     3    150.000         1     1     4
+                     KZ          2.00000         1     1     3    15.0000         1     1     4
+
+ FINISHED READING ARRAY DATA (WITH NO ERRORS!).
+1
+
+                       **************************************************************************************
+                       *                                                                                    *
+                       *                               ACTIVE BLOCKS BY PLANE                               *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+
+
+                     GRID : ROOT    
+
+
+                                      I-PLANE                       J-PLANE                       K-PLANE
+                     PLANE       VALUE   CUMULATIVE            VALUE   CUMULATIVE            VALUE   CUMULATIVE
+                     -----     --------- ----------          --------- ----------          --------- ----------
+                         1            36         36                 36         36                 81         81 <1/4
+                         2            36         72                 36         72                 81        162 <2/4
+                         3            36        108 <1/4            36        108 <1/4            81        243 <3/4
+                         4            36        144                 36        144                 81        324 <4/4
+                         5            36        180 <2/4            36        180 <2/4
+                         6            36        216                 36        216
+                         7            36        252 <3/4            36        252 <3/4
+                         8            36        288                 36        288
+                         9            36        324 <4/4            36        324 <4/4
+
+
+
+                   *************************************************
+                         S T O R A G E     A L L O C A T I O N
+                   *************************************************
+
+                     DYNAMICALLY ALLOCATED MEMORY -- LGRRST COMMON
+
+                   (4-BYTE WORDS)   MEGABYTES  PROCESS NODE
+                   --------------   ---------  ------- -------------
+                              672       0.003      1   CZC8178GZK
+
+                   *************************************************
+
+
+
+ *** RESERVOIR DESCRIPTION ARRAYS WRITTEN TO MAP FILE ***
+1                      **************************************************************************************
+                       *                                                                                    *
+                       *                               INITIAL PRESSURE, PSIA                               *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                P                      TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+
+
+                                                               K =  1
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1     3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6
+      2     3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6
+      3     3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6
+      4     3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6
+      5     3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6
+      6     3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6
+      7     3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6
+      8     3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6
+      9     3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6      3526.6
+
+
+
+
+                                                               K =  2
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1     3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7
+      2     3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7
+      3     3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7
+      4     3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7
+      5     3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7
+      6     3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7
+      7     3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7
+      8     3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7
+      9     3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7      3530.7
+
+
+
+
+                                                               K =  3
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1     3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2
+      2     3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2
+      3     3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2
+      4     3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2
+1
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                P                      TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+                                                               K =  3
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      5     3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2
+      6     3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2
+      7     3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2
+      8     3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2
+      9     3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2      3536.2
+
+
+
+
+                                                               K =  4
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1     3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1
+      2     3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1
+      3     3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1
+      4     3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1
+      5     3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1
+      6     3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1
+      7     3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1
+      8     3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1
+      9     3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1      3543.1
+1                      **************************************************************************************
+                       *                                                                                    *
+                       *                          INITIAL SATURATION PRESSURE, PSIA                         *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                PSAT                   TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+
+
+                                                               K =  1
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      2     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      3     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      4     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      5     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      6     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      7     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      8     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      9     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+
+
+
+
+                                                               K =  2
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      2     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      3     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      4     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      5     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      6     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      7     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      8     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      9     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+
+
+
+
+                                                               K =  3
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      2     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      3     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      4     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+1
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                PSAT                   TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+                                                               K =  3
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      5     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      6     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      7     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      8     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      9     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+
+
+
+
+                                                               K =  4
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      2     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      3     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      4     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      5     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      6     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      7     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      8     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+      9     3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8      3443.8
+1                      **************************************************************************************
+                       *                                                                                    *
+                       *                          INITIAL OIL SATURATION, FRACTION                          *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                SO                     TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+
+
+                                                               K =  1
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      2    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      3    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      4    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      5    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      6    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      7    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      8    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      9    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+
+
+
+
+                                                               K =  2
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      2    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      3    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      4    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      5    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      6    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      7    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      8    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      9    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+
+
+
+
+                                                               K =  3
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      2    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      3    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      4    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+1
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                SO                     TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+                                                               K =  3
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      5    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      6    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      7    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      8    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      9    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+
+
+
+
+                                                               K =  4
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      2    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      3    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      4    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      5    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      6    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      7    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      8    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+      9    0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000      0.0000
+1                      **************************************************************************************
+                       *                                                                                    *
+                       *                         INITIAL WATER SATURATION, FRACTION                         *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                SW                     TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+
+
+                                                               K =  1
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608
+      2    0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608
+      3    0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608
+      4    0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608
+      5    0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608
+      6    0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608
+      7    0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608
+      8    0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608
+      9    0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608      0.1608
+
+
+
+
+                                                               K =  2
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803
+      2    0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803
+      3    0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803
+      4    0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803
+      5    0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803
+      6    0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803
+      7    0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803
+      8    0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803
+      9    0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803      0.1803
+
+
+
+
+                                                               K =  3
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102
+      2    0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102
+      3    0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102
+      4    0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102
+1
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                SW                     TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+                                                               K =  3
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      5    0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102
+      6    0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102
+      7    0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102
+      8    0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102
+      9    0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102      0.2102
+
+
+
+
+                                                               K =  4
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904
+      2    0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904
+      3    0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904
+      4    0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904
+      5    0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904
+      6    0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904
+      7    0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904
+      8    0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904
+      9    0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904      0.2904
+1                      **************************************************************************************
+                       *                                                                                    *
+                       *                          INITIAL GAS SATURATION, FRACTION                          *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                SG                     TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+
+
+                                                               K =  1
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392
+      2    0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392
+      3    0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392
+      4    0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392
+      5    0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392
+      6    0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392
+      7    0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392
+      8    0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392
+      9    0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392      0.8392
+
+
+
+
+                                                               K =  2
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197
+      2    0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197
+      3    0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197
+      4    0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197
+      5    0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197
+      6    0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197
+      7    0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197
+      8    0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197
+      9    0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197      0.8197
+
+
+
+
+                                                               K =  3
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898
+      2    0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898
+      3    0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898
+      4    0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898
+1
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                SG                     TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+                                                               K =  3
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      5    0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898
+      6    0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898
+      7    0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898
+      8    0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898
+      9    0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898      0.7898
+
+
+
+
+                                                               K =  4
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096
+      2    0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096
+      3    0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096
+      4    0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096
+      5    0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096
+      6    0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096
+      7    0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096
+      8    0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096
+      9    0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096      0.7096
+1                      **************************************************************************************
+                       *                                                                                    *
+                       *                             INITIAL OIL VISCOSITY,  CP                             *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                VISO                   TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+
+
+                                                               K =  1
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      2    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      3    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      4    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      5    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      6    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      7    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      8    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      9    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+
+
+
+
+                                                               K =  2
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      2    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      3    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      4    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      5    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      6    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      7    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      8    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+      9    0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667      0.0667
+
+
+
+
+                                                               K =  3
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668
+      2    0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668
+      3    0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668
+      4    0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668
+1
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                VISO                   TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+                                                               K =  3
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      5    0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668
+      6    0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668
+      7    0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668
+      8    0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668
+      9    0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668      0.0668
+
+
+
+
+                                                               K =  4
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669
+      2    0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669
+      3    0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669
+      4    0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669
+      5    0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669
+      6    0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669
+      7    0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669
+      8    0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669
+      9    0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669      0.0669
+1                      **************************************************************************************
+                       *                                                                                    *
+                       *                             INITIAL GAS VISCOSITY,  CP                             *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                VISG                   TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+
+
+                                                               K =  1
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374
+      2    0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374
+      3    0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374
+      4    0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374
+      5    0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374
+      6    0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374
+      7    0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374
+      8    0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374
+      9    0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374      0.0374
+
+
+
+
+                                                               K =  2
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      2    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      3    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      4    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      5    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      6    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      7    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      8    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      9    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+
+
+
+
+                                                               K =  3
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      2    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      3    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      4    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+1
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                VISG                   TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+                                                               K =  3
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      5    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      6    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      7    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      8    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+      9    0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375      0.0375
+
+
+
+
+                                                               K =  4
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376
+      2    0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376
+      3    0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376
+      4    0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376
+      5    0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376
+      6    0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376
+      7    0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376
+      8    0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376
+      9    0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376      0.0376
+1                      **************************************************************************************
+                       *                                                                                    *
+                       *                             INITIAL OIL DENSITY,  GM/CC                            *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                DENO                   TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+
+
+                                                               K =  1
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625
+      2    0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625
+      3    0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625
+      4    0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625
+      5    0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625
+      6    0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625
+      7    0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625
+      8    0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625
+      9    0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625      0.4625
+
+
+
+
+                                                               K =  2
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627
+      2    0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627
+      3    0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627
+      4    0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627
+      5    0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627
+      6    0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627
+      7    0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627
+      8    0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627
+      9    0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627      0.4627
+
+
+
+
+                                                               K =  3
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629
+      2    0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629
+      3    0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629
+      4    0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629
+1
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                DENO                   TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+                                                               K =  3
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      5    0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629
+      6    0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629
+      7    0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629
+      8    0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629
+      9    0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629      0.4629
+
+
+
+
+                                                               K =  4
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631
+      2    0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631
+      3    0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631
+      4    0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631
+      5    0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631
+      6    0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631
+      7    0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631
+      8    0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631
+      9    0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631      0.4631
+1                      **************************************************************************************
+                       *                                                                                    *
+                       *                             INITIAL GAS DENSITY,  GM/CC                            *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                DENG                   TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+
+
+                                                               K =  1
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169
+      2    0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169
+      3    0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169
+      4    0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169
+      5    0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169
+      6    0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169
+      7    0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169
+      8    0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169
+      9    0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169      0.3169
+
+
+
+
+                                                               K =  2
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171
+      2    0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171
+      3    0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171
+      4    0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171
+      5    0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171
+      6    0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171
+      7    0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171
+      8    0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171
+      9    0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171      0.3171
+
+
+
+
+                                                               K =  3
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174
+      2    0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174
+      3    0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174
+      4    0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174
+1
+                       **************************************************************************************
+                       *  GRID NAME:  ROOT                                                                  *
+                       *  DAY/MO/YR:  01/01/1966                DENG                   TIME:   0.0000 DAYS  *
+                       **************************************************************************************
+
+
+                                                               K =  3
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      5    0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174
+      6    0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174
+      7    0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174
+      8    0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174
+      9    0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174      0.3174
+
+
+
+
+                                                               K =  4
+
+
+        I      1           2           3           4           5           6           7           8           9
+      J
+      1    0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177
+      2    0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177
+      3    0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177
+      4    0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177
+      5    0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177
+      6    0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177
+      7    0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177
+      8    0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177
+      9    0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177      0.3177
+
+                                       INITIALIZATION ARRAY SUMMARY FOR GRID : ROOT    
+                     ------------------------------------------------------------------------------------
+                     ARRAY         MIN          I     J     K       MAX          I     J     K   COMMENTS
+                     -----       -------       ---   ---   ---    -------       ---   ---   ---  --------
+                     P           3526.60         1     1     1    3543.11         1     1     4
+                     PDAT        3550.01         1     1     1    3552.26         1     1     4
+                     PSAT        3443.80         1     1     1    3443.80         1     1     1  CONSTANT
+                     SO         0.000000E+00     1     1     1   0.000000E+00     1     1     1  CONSTANT
+                     SW         0.160817         1     1     1   0.290398         9     9     4
+                     SG         0.709602         9     9     4   0.839183         1     1     1
+                     SOM        0.000000E+00     1     1     1   0.000000E+00     1     1     1  CONSTANT
+                     SWM        0.972121E-03     1     1     1   0.155236         9     9     4
+                     SGM        0.844764         9     9     4   0.999028         1     1     1
+                     PCSW       0.000000E+00     1     1     1   0.000000E+00     1     1     1  CONSTANT
+                     PCSG       0.000000E+00     1     1     1   0.000000E+00     1     1     1  CONSTANT
+                     VF          1.00000         1     1     1    1.00000         1     1     1  CONSTANT
+                     VISO       0.666836E-01     1     1     1   0.668726E-01     1     1     4
+                     VISG       0.374447E-01     1     1     1   0.375687E-01     1     1     4
+                     DENO       0.462543         1     1     1   0.463081         1     1     4
+                     DENG       0.316916         1     1     1   0.317717         1     1     4
+                     PV          59754.7         1     1     1    99591.2         1     1     3
+                    COMPONENT : P1    
+                     XI         0.541730         1     1     1   0.541730         1     1     1  CONSTANT
+                     YI         0.679300         1     1     1   0.679300         1     1     1  CONSTANT
+                     ZI         0.679300         1     1     1   0.679300         1     1     1  CONSTANT
+                    COMPONENT : P2    
+                     XI         0.999317E-01     1     1     1   0.999317E-01     1     1     1  CONSTANT
+                     YI         0.990000E-01     1     1     1   0.990000E-01     1     1     1  CONSTANT
+                     ZI         0.990000E-01     1     1     1   0.990000E-01     1     1     1  CONSTANT
+                    COMPONENT : P3    
+                     XI         0.136152         1     1     1   0.136152         1     1     1  CONSTANT
+                     YI         0.110800         1     1     1   0.110800         1     1     1  CONSTANT
+                     ZI         0.110800         1     1     1   0.110800         1     1     1  CONSTANT
+                    COMPONENT : P4    
+                     XI         0.702569E-01     1     1     1   0.702569E-01     1     1     1  CONSTANT
+                     YI         0.450000E-01     1     1     1   0.450000E-01     1     1     1  CONSTANT
+                     ZI         0.450000E-01     1     1     1   0.450000E-01     1     1     1  CONSTANT
+                    COMPONENT : P5    
+                     XI         0.103617         1     1     1   0.103617         1     1     1  CONSTANT
+                     YI         0.529660E-01     1     1     1   0.529660E-01     1     1     1  CONSTANT
+                     ZI         0.529660E-01     1     1     1   0.529660E-01     1     1     1  CONSTANT
+                    COMPONENT : P6    
+                     XI         0.377640E-01     1     1     1   0.377640E-01     1     1     1  CONSTANT
+                     YI         0.119410E-01     1     1     1   0.119410E-01     1     1     1  CONSTANT
+                     ZI         0.119410E-01     1     1     1   0.119410E-01     1     1     1  CONSTANT
+                    COMPONENT : P7    
+                     XI         0.105492E-01     1     1     1   0.105492E-01     1     1     1  CONSTANT
+                     YI         0.993000E-03     1     1     1   0.993000E-03     1     1     1  CONSTANT
+                     ZI         0.993000E-03     1     1     1   0.993000E-03     1     1     1  CONSTANT
+                     TX          1.12700         2     1     3    8.45250         2     1     4
+                     TY          1.12700         1     2     3    8.45250         1     2     4
+                     TZ          5.96616         1     1     3    19.7702         1     1     2
+                     KH          1000.00         1     1     3    7500.00         1     1     4
+                     JFUNC       1.00000         1     1     1    1.00000         1     1     1  CONSTANT
+
+ *** INITIALIZATION ARRAYS WRITTEN TO MAP FILE ***
+1
+                       **************************************************************************************
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                            VIP-CORE   REGION   SUMMARY                             *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+                                           TOTAL
+                                           -----
+
+   AVERAGE PRESSURE, PSIA
+   ----------------------
+      WEIGHTED BY HC PV AT DATUM          3551.4
+      WEIGHTED BY TOTAL PV AT DATUM       3551.4
+      WEIGHTED BY HC PV                   3535.2
+      WEIGHTED BY TOTAL PV                3535.5
+
+   FLUIDS IN PLACE
+   ---------------
+      SURFACE VOLUMES
+      ---------------
+      TOTAL OIL           (MSTB )         2038.4
+      CONDENSATE IN F.G.  (MSTB )         2038.4
+      TOTAL GAS           (MMSCF)         24594.
+      FREE GAS            (MMSCF)         24594.
+      WATER               (MSTB )         5637.7
+      RESERVOIR VOLUMES
+      -----------------
+      TOTAL PORE VOLUME   (MRB  )         25813.
+      HC PORE VOLUME      (MRB  )         20123.
+      RESERVOIR OIL       (MRB  )       0.000000
+      RESERVOIR GAS       (MMRCF)         112.98
+      RESERVOIR WATER     (MRB  )         5689.2
+      MOBILE RES OIL      (MRB  )             0.
+      MOBILE RES GAS      (MMRCF)         112.98
+      MOBILE RES WATER    (MRB  )         1559.2
+      AVG OIL SATURATION  (FPV  )       0.000000
+      AVG GAS SATURATION  (FPV  )       0.779594
+      AVG WTR SATURATION  (FPV  )       0.220406
+
+   AVERAGE COMPOSITION
+   -------------------
+      P1                                  0.6793
+      P2                                  0.0990
+      P3                                  0.1108
+      P4                                  0.0450
+      P5                                  0.0530
+      P6                                  0.0119
+      P7                                  0.0010
+      TOTAL LB-MOLES                   68721408.
+1
+
+
+     RUN INITIALIZED
+
+
+     WRITING RESTART RECORDS FOR VIP-EXEC
+
+          COMMON RESTART FILE LENGTH            RESTART FILE NAME
+     ------------------------------------  ---------------------------
+       LGR (4-BYTE INTEGERS)          668  X:\ARGELIA\RKF_HM_review2020-04\SPE3\SP3\vip\SPE3i.rst
+     OTHER (8-BYTE WORDS)            2341  X:\ARGELIA\RKF_HM_review2020-04\SPE3\SP3\vip\SPE3i.rst
+
+       GRID         LENGTH (8-BYTE WORDS)
+     --------       ---------------------
+     ROOT                           16686  X:\ARGELIA\RKF_HM_review2020-04\SPE3\SP3\vip\SPE3i.rst0
+1
+
+                       **************************************************************************************
+                       *                                                                                    *
+                       *                                   JOB STATISTICS                                   *
+                       *                                                                                    *
+                       *         SPE COMPARISON PROBLEM #3                                                  *
+                       *                                                                                    *
+                       *                                                                                    *
+                       *                                                                          VIP-CORE  *
+                       **************************************************************************************
+
+
+
+
+
+                    COMPONENTS :     7
+                         GRIDS :     1
+ 
+                      GRID                                             ACTIVE    PARENT   ------- PARENT GRID WINDOW -------
+                      NAME       TYPE      NX    NY    NZ      NB      BLOCKS     GRID     I1    I2    J1    J2    K1    K2
+                    --------  ----------  ----  ----  ----  --------  --------  --------  ----  ----  ----  ----  ----  ----
+                    ROOT      CARTESIAN      9     9     4       324       324
+                    TOTAL-->                                     324       324
+
+
+                    CHILD TO PARENT CONNECTIONS : 0
+
+
+                              FAULT CONNECTIONS : 0
+1
+
+                 ****************************************
+                 *                                      *
+                 *           CPU TIME SUMMARY           *
+                 *                                      *
+                 ****************************************
+
+                      CPU TIME    NODE NAME
+                    ------------  ---------
+                      0:00:00.66  CZC8178GZK
+ 
+(WRAPUP)

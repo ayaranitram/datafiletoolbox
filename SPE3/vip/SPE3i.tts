@@ -1,0 +1,9 @@
+ PID       19092 CZC8178GZK
+ -------------------------------
+
+ GRIDS :     1
+
+         GRID     PARENT                                ACTIVE 
+ GRID    NAME      NAME     NX    NY    NZ      NB      BLOCKS     NEIGHBOR GRIDS
+ ----  --------  --------  ----  ----  ----  --------  --------  ------------------------------
+    1  ROOT                   9     9     4       324       324
