@@ -11,7 +11,6 @@ Created on Tue Jul  9 21:23:27 2019
 
 __version__ = '0.2.20-10-18'
 __author__ = 'Martin Araya'
-
 __all__ = ['stringformat','extension','Alternate','SimPandas']
 
 _msg = """     implementing libecl 2.9.1 from pypi, released on Aug 2020"""
@@ -31,5 +30,3 @@ from ._common import stringformat
 from ._common.stringformat import date as strDate , isDate , multisplit , isnumeric , getnumber
 
 from .SimulationResults.loader import loadSimulationResults
-
-
