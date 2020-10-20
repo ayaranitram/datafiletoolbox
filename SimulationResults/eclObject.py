@@ -29,8 +29,12 @@ except :
     eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
     os.environ['PATH'] = eclPath + ';' + os.environ['PATH']
     #from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
-    from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary import EclSum
-    print('\n using ecl from https://github.com/equinor/libecl compiled for Windows10')
+    try :
+        from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary import EclSum
+        print('\n using ecl from https://github.com/equinor/libecl compiled for Windows10')
+    except ModuleNotFoundError :
+        print("\n ERROR: missing 'cwrap', please intall it using pip command:\n           pip install libecl\n\n       or upgrade:\n\n          pip install libecl --upgrade")
+    
 
 
 class ECL(_SimResult):
