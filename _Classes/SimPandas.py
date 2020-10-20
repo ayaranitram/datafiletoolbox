@@ -21,8 +21,7 @@ import numpy as np
 import datetime as dt
 
 from bases.units import unit # to use unit.isUnit method
-from bases.units import convertUnit, unitProduct, unitDivision
-from bases.units import convertible as convertibleUnits
+from bases.units import convertUnit, unitProduct, unitDivision , convertible as convertibleUnits
 
 try :
     from datafiletoolbox import multisplit , isDate , strDate
@@ -107,16 +106,15 @@ class SimSeries(Series) :
 
     """
     
-    __all__ = ['SimSeries','SimDataFrame']
-    
-    _metadata = ["units","speak",'index.units']
+    _metadata = ["units","speak",'indexUnits','nameSeparator']
     
     def __init__(self, data=None , units=None , index=None , speak=False , *args , **kwargs) :
         Uname = None
         Udict = None
         self.units = None
         self.speak = bool(speak)
-        self.index.units = None
+        self.indexUnits = None
+        self.nameSeparator = None
         
         # validaton
         if isinstance(data,DataFrame) and len(data.columns)>1 :
@@ -152,7 +150,10 @@ class SimSeries(Series) :
                 units = data.units
         
         # remove arguments not known by Pandas
+        kwargsB = kwargs.copy()
         kwargs.pop('indexName',None)
+        kwargs.pop('indexUnits',None)
+        kwargs.pop('nameSeparator',None)
         # convert to pure Pandas
         if type(data) in [ SimDataFrame , SimSeries ] :
             data = data.to_Pandas()
@@ -162,8 +163,8 @@ class SimSeries(Series) :
         if ( self.index.name is None or ( type(self.index.name) is str and len(self.index.name)==0 ) ) and ( type(indexInput) is str and len(indexInput)>0 ) :
             self.index.name = indexInput
         # overwrite the index.name with input from the argument indexName
-        if 'indexName' in kwargs and type(kwargs['indexName']) is str and len(kwargs['indexName'].strip())>0 :
-            self.set_indexName(kwargs['indexName'])
+        if 'indexName' in kwargsB and type(kwargsB['indexName']) is str and len(kwargsB['indexName'].strip())>0 :
+            self.set_indexName(kwargsB['indexName'])
         
         # set the units
         if self.name is None and Uname is not None :
@@ -186,11 +187,16 @@ class SimSeries(Series) :
         if Udict is not None and self.index.name is not None and self.index.name in Udict :
             self.indexUnits = Udict[self.index.name]
         # overwrite the indexUnits with input from the argument indexName
-        if 'indexUnits' in kwargs and type(kwargs['indexUnits']) is str and len(kwargs['indexUnits'].strip())>0 :
-            self.index.units = kwargs['indexUnits']
-        elif 'indexUnits' in kwargs and type(kwargs['indexUnits']) is dict and len(kwargs['indexUnits'])>0 :
-            self.index.units = kwargs['indexUnits'].copy()
-        
+        if 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is str and len(kwargsB['indexUnits'].strip())>0 :
+            self.index.units = kwargsB['indexUnits']
+        elif 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is dict and len(kwargsB['indexUnits'])>0 :
+            self.index.units = kwargsB['indexUnits'].copy()
+    
+        # get separator for the column names, 'partA'+'separator'+'partB'
+        if 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
+            self.set_NameSeparator(kwargsB['nameSeparator'])
+        if self.nameSeparator is None and ':' in self.name :
+            self.nameSeparator = ':'
     
     @property
     def _constructor(self):
@@ -205,13 +211,17 @@ class SimSeries(Series) :
 
     def set_indexName(self,name) :
         if type(name) is str and len(name.strip())>0 :
-            self.index.name = name
+            self.index.name = name.strip()
     
     def set_indexUnits(self,units) :
         if type(units) is str and len(units.strip())>0 :
             self.index.units = units.strip()
         elif type(units) is dict and len(units)>0 :
             self.index.units = units
+            
+    def set_NameSeparator(self,separator) :
+        if type(separator) is str and len(separator) > 0 :
+            self.nameSeparator = separator
 
     def to_Pandas(self) :
         return self.as_Series()
@@ -224,6 +234,166 @@ class SimSeries(Series) :
     @property
     def S(self) :
         return self.as_Series()
+    
+    @property
+    def wells(self) :
+        objs = []
+        if type(self.name) is str :
+            if self.nameSeparator in self.name and self.name[0] == 'W' :
+                objs = [self.name.split( self.nameSeparator )[-1]]
+        elif type(self.index[-1]) is str :
+            for each in list( self.index ) :
+                if self.nameSeparator in each and each[0] == 'W' :
+                    objs += [each.split( self.nameSeparator )[-1]]
+        return tuple(set(objs))
+    def get_Wells(self,pattern=None) :
+        """       
+        Will return a tuple of all the well names in case.
+
+        If the pattern variable is different from None only wells
+        matching the pattern will be returned; the matching is based
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
+            
+        """
+        if pattern is not None and type( pattern ) is not str :
+            raise TypeError('pattern argument must be a string.')
+        if pattern is None :
+            return tuple(self.wells)
+        else:
+            return tuple( fnmatch.filter( self.wells , pattern ) )
+
+    @property
+    def groups(self) :
+        objs = []
+        if type(self.name) is str :
+            if self.nameSeparator in self.name and self.name[0] == 'G' :
+                objs = [self.name.split( self.nameSeparator )[-1]]
+        elif type(self.index[-1]) is str :
+            for each in list( self.index ) :
+                if self.nameSeparator in each and each[0] == 'G' :
+                    objs += [each.split( self.nameSeparator )[-1]]
+        return tuple(set(objs))
+    def get_Groups(self,pattern=None) :
+        """       
+        Will return a tuple of all the group names in case.
+
+        If the pattern variable is different from None only groups
+        matching the pattern will be returned; the matching is based
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
+            
+        """        
+        if pattern is not None and type( pattern ) is not str :
+            raise TypeError('pattern argument must be a string.')
+        if pattern is None :
+            return self.groups
+        else:
+            return tuple( fnmatch.filter( self.groups , pattern ) )
+        
+    @property
+    def regions(self) :
+        objs = []
+        if type(self.name) is str :
+            if self.nameSeparator in self.name and self.name[0] == 'R' :
+                objs = [self.name.split( self.nameSeparator )[-1]]
+        elif type(self.index[-1]) is str :
+            for each in list( self.index ) :
+                if self.nameSeparator in each and each[0] == 'R' :
+                    objs += [each.split( self.nameSeparator )[-1]]
+        return tuple(set(objs))
+    def get_Regions(self,pattern=None):
+        """
+        Will return a tuple of all the region names in case.
+
+        If the pattern variable is different from None only regions
+        matching the pattern will be returned; the matching is based
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
+        """
+        if pattern is not None and type( pattern ) is not str :
+            raise TypeError('pattern argument must be a string.')    
+        if pattern is None :
+            return self.regions
+        else:
+            return tuple( fnmatch.filter( self.regions , pattern ) )
+        
+    @property
+    def attributes(self) :
+        atts = {}
+        for each in list( self.get_Keys() ) :
+            if self.nameSeparator in each :
+                if each.split( self.nameSeparator )[0] in atts :
+                    atts[each.split( self.nameSeparator )[0]] += [each.split( self.nameSeparator )[-1]]
+                else :
+                    atts[each.split( self.nameSeparator )[0]] = [each.split( self.nameSeparator )[-1]]
+            else :
+                if each not in atts :
+                    atts[each] = []
+        for att in atts :
+            atts[att] = list(set(atts[att]))
+        return atts
+    @property
+    def properties(self) :
+        if len(self.attributes.keys()) > 0 :
+            return tuple(self.attributes.keys())
+        else :
+            return tuple()
+    def get_Attributes(self,pattern=None) :
+        """
+        Will return a dictionary of all the attributes names in case as keys 
+        and their related items as values.
+
+        If the pattern variable is different from None only attributes
+        matching the pattern will be returned; the matching is based
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
+        """
+        if pattern is None :
+            return tuple(self.attributes.keys())
+        else :
+            return tuple( fnmatch.filter( tuple(self.attributes.keys()) , pattern ) )
+    
+    def get_Keys(self,pattern=None) :
+        """       
+        Will return a tuple of all the key names in case.
+
+        If the pattern variable is different from None only keys
+        matching the pattern will be returned; the matching is based
+        on fnmatch():
+            Pattern     Meaning
+            *           matches everything
+            ?           matches any single character
+            [seq]       matches any character in seq
+            [!seq]      matches any character not in seq
+            
+        """
+        if pattern is not None and type( pattern ) is not str :
+            raise TypeError('pattern argument must be a string.\nreceived '+str(type(pattern))+' with value '+str(pattern))
+        if type(self.name) is str :
+            keys = ( self.name , )
+        else :
+            keys = tuple( self.index )
+        if pattern is None :
+            return keys
+        else:
+            return tuple( fnmatch.filter( keys , pattern ) )
     
     def __neg__(self) :
         result = -self.as_Series()
@@ -271,7 +441,7 @@ class SimSeries(Series) :
                     return SimSeries( data=result , units=self.units , dtype=self.dtype )
                 elif convertibleUnits( self.units , other.units ) :
                     selfC = convertUnit( self , self.units , other.units , self.speak )
-                    result = other.sub(selfC)
+                    result = selfC.sub(other)
                     return SimSeries( data=result , units=other.units , dtype=other.dtype )
                 else :
                     result = self.sub(other)
@@ -331,7 +501,7 @@ class SimSeries(Series) :
                     return SimSeries( data=result , units=unitsResult , dtype=self.dtype )
                 elif convertibleUnits( self.units , other.units ) :
                     selfC = convertUnit( self , self.units , other.units , self.speak )
-                    result = other.truediv(selfC)
+                    result = selfC.truediv(other)
                     unitsResult = unitDivision(other.units,self.units)
                     return SimSeries( data=result , units=unitsResult , dtype=other.dtype )
                 else :
@@ -766,11 +936,13 @@ class SimDataFrame(DataFrame) :
     pandas.DataFrame
     
     """
-    _metadata = ["units","speak"]
+    _metadata = ["units","speak","indexUnits","nameSeparator"]
     
     def __init__(self , data=None , units=None , index=None , speak=False , *args , **kwargs) :
         self.units = None
         self.speak = bool(speak)
+        self.indexUnits = None
+        self.nameSeparator = None
         
         indexInput = None
         # catch index keyword from input parameters
@@ -799,7 +971,10 @@ class SimDataFrame(DataFrame) :
                     units = { data.name : data.units }
         
         # remove arguments not known by Pandas
+        kwargsB = kwargs.copy()
         kwargs.pop('indexName',None)
+        kwargs.pop('indexUnits',None)
+        kwargs.pop('nameSeparator',None)
         # convert to pure Pandas
         if type(data) in [ SimDataFrame , SimSeries ] :
             data = data.to_Pandas()
@@ -809,8 +984,11 @@ class SimDataFrame(DataFrame) :
         if ( self.index.name is None or ( type(self.index.name) is str and len(self.index.name)==0 ) ) and ( type(indexInput) is str and len(indexInput)>0 ) :
             self.index.name = indexInput
         # overwrite the index.name with input from the argument indexName
-        if 'indexName' in kwargs and type(kwargs['indexName']) is str and len(kwargs['indexName'].strip())>0 :
-            self.set_indexName(kwargs['indexName'])
+        if 'indexName' in kwargsB and type(kwargsB['indexName']) is str and len(kwargsB['indexName'].strip())>0 :
+            self.set_indexName(kwargsB['indexName'])
+        # set units of the index
+        if 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is str and len(kwargsB['indexUnits'].strip())>0 :
+            self.set_indexUnits(kwargsB['indexUnits'])
 
         # set the units
         if type(units) is str :
@@ -827,6 +1005,15 @@ class SimDataFrame(DataFrame) :
                     self.units[key] = units[key]
                 else :
                     self.units[key] = 'UNITLESS'
+        if self.indexUnits is None and self.index.name is not None :
+            if self.index.name in self.columns :
+                self.indexUnits = self.units[self.index.name]
+        
+        # get separator for the column names, 'partA'+'separator'+'partB'
+        if 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
+            self.set_NameSeparator(kwargsB['nameSeparator'])
+        if self.nameSeparator is None and ':' in ' '.join(list(self.columns)) :
+            self.nameSeparator = ':'
     
     # @property
     # def _constructor(self):
@@ -834,7 +1021,23 @@ class SimDataFrame(DataFrame) :
     
     def set_indexName(self,Name) :
         if type(Name) is str and len(Name.strip())>0:
-            self.index.name = Name
+            self.index.name = Name.strip()
+
+    def set_indexUnits(self,Units) :
+        if type(Units) is str and len(Units.strip())>0:
+            self.indexUnits = Units.strip()
+            
+    def set_NameSeparator(self,separator) :
+        if type(separator) is str and len(separator) > 0 :
+            if separator in ['=','-','+','&','*','/','!','%'] :
+                print(" the separator '"+separator+"' could be confused with operators.\n it is recommended to use ':' as separator.")
+            self.nameSeparator = separator
+    
+    def get_NameSeparator(self) :
+        if self.nameSeparator is None :
+            return " NameSeparator is not defined."
+        else :
+            return self.nameSeparator
     
     def set_index(self,key,drop=False,append=False,inplace=True,verify_integrity=False,**kwargs) :
         if key not in self.columns :
@@ -858,56 +1061,377 @@ class SimDataFrame(DataFrame) :
         return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
     
     def __add__(self,other) :
-        # both SimDataFra,es
+        # both are SimDataFrame
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            otherC = other.copy()
-            selfC = self.copy()
+            result = self.copy()
+            notFount = 0
             for col in self.columns :
                 if col in other.columns :
-                    if self.get_Units(col)[col] == other.get_Units(col)[col] :
-                        pass # OK
-                    elif convertibleUnits( other.get_Units(col)[col] , self.get_Units(col)[col] ) :
-                        otherC[col] = convertUnit( other[col] , other.get_Units(col)[col] , self.get_Units(col)[col] , self.speak )
-                    elif convertibleUnits( self.get_Units(col)[col] , other.get_Units(col)[col] ) :
-                        selfC[col] = convertUnit( self[col] , self.get_Units(col)[col] , other.get_Units(col)[col] , self.speak )
-                    else :
-                        selfC.units[col] = self.get_Units(col)[col]+'+'+other.get_Units(col)[col]
+                    result[col] = self[col] + other[col]
                 else :
-                    selfC.units[col] = other.get_Units(col)[col]
-            result = selfC.add(otherC)
-            return SimDataFrame( data=result , units=selfC.units , indexName=self.index.name )
+                    notFount += 1
+                    result[col] = other[col]
+                    result.units[col] = other.get_Units(col)[col]
+                    
+            if notFount == len(other.columns) :
+                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
+                    if len(self.left) == 1 and len(other.left) == 1 :
+                        otherC = other.copy()
+                        otherC.renameRight()
+                        selfC = self.copy()
+                        selfC.renameRight()
+                        result = selfC + otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = self.left[0] + self.nameSeparator + c
+                        result.rename(columns=newNames,inplace=True)
+                    elif len(self.right) == 1 and len(other.right) == 1 :
+                        otherC = other.copy()
+                        otherC.renameLeft()
+                        selfC = self.copy()
+                        selfC.renameLeft()
+                        result = selfC + otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = c + self.nameSeparator + self.right[0]
+                        result.rename(columns=newNames,inplace=True)
+                        
+            return result
+        
+        # other is SimSeries
+        elif isinstance(other, SimSeries) :
+            result = self.copy()
+            if other.name in self.columns :
+                result[other.name] = self[other.name] + other
+            else :
+                result[other.name] = other
+            return result
         
         # let's Pandas deal with other types, maintain units and dtype
-        result = self.as_DataFrame() + other
-        return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
+        else :
+            result = self.as_DataFrame() + other
+            return SimDataFrame( data=result , units=self.units , indexName=self.index.name )       
     
     def __sub__(self,other) :
-        # both SimDataFra,es
+        # both are SimDataFrame
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            otherC = other.copy()
-            selfC = self.copy()
+            result = self.copy()
+            notFount = 0
             for col in self.columns :
                 if col in other.columns :
-                    if self.get_Units(col)[col] == other.get_Units(col)[col] :
-                        pass # OK
-                    elif convertibleUnits( other.get_Units(col)[col] , self.get_Units(col)[col] ) :
-                        otherC[col] = convertUnit( other[col] , other.get_Units(col)[col] , self.get_Units(col)[col] , self.speak )
-                    elif convertibleUnits( self.get_Units(col)[col] , other.get_Units(col)[col] ) :
-                        selfC[col] = convertUnit( self[col] , self.get_Units(col)[col] , other.get_Units(col)[col] , self.speak )
-                    else :
-                        selfC.units[col] = self.get_Units(col)[col]+'+'+other.get_Units(col)[col]
+                    result[col] = self[col] - other[col]
                 else :
-                    selfC.units[col] = other.get_Units(col)[col]
-            result = selfC.sub(otherC)
-            return SimDataFrame( data=result , units=selfC.units , indexName=self.index.name )
+                    notFount += 1
+                    result[col] = -other[col]
+                    result.units[col] = other.get_Units(col)[col]
+            
+            if notFount == len(other.columns) :
+                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
+                    if len(self.left) == 1 and len(other.left) == 1 :
+                        otherC = other.copy()
+                        otherC.renameRight()
+                        selfC = self.copy()
+                        selfC.renameRight()
+                        result = selfC - otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = self.left[0] + self.nameSeparator + c
+                        result.rename(columns=newNames,inplace=True)
+                    elif len(self.right) == 1 and len(other.right) == 1 :
+                        otherC = other.copy()
+                        otherC.renameLeft()
+                        selfC = self.copy()
+                        selfC.renameLeft()
+                        result = selfC - otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = c + self.nameSeparator + self.right[0]
+                        result.rename(columns=newNames,inplace=True)
+            
+            return result
+        
+        # other is SimSeries
+        elif isinstance(other, SimSeries) :
+            result = self.copy()
+            if other.name in self.columns :
+                result[other.name] = self[other.name] - other
+            else :
+                result[other.name] = -other
+            return result
         
         # let's Pandas deal with other types, maintain units and dtype
-        result = self.as_DataFrame() - other
-        return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
+        else :
+            result = self.as_DataFrame() - other
+            return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
+    
+    def __mul__(self,other) :
+        # both are SimDataFrame
+        if isinstance(other, SimDataFrame) :
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
+            result = self.copy()
+            notFount = 0
+            for col in self.columns :
+                if col in other.columns :
+                    result[col] = self[col] * other[col]
+                else :
+                    notFount += 1
+                
+            if notFount == len(other.columns) :
+                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
+                    if len(self.left) == 1 and len(other.left) == 1 :
+                        otherC = other.copy()
+                        otherC.renameRight()
+                        selfC = self.copy()
+                        selfC.renameRight()
+                        result = selfC * otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = self.left[0] + self.nameSeparator + c
+                        result.rename(columns=newNames,inplace=True)
+                    elif len(self.right) == 1 and len(other.right) == 1 :
+                        otherC = other.copy()
+                        otherC.renameLeft()
+                        selfC = self.copy()
+                        selfC.renameLeft()
+                        result = selfC * otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = c + self.nameSeparator + self.right[0]
+                        result.rename(columns=newNames,inplace=True)
+                        
+            return result
+        
+        # other is SimSeries
+        elif isinstance(other, SimSeries) :
+            result = self.copy()
+            if other.name in self.columns :
+                result[other.name] = self[other.name] * other
+            else :
+                for col in self.columns :
+                    result[col] = self[col] * other
+            return result
+        
+        # let's Pandas deal with other types, maintain units and dtype
+        else :
+            result = self.as_DataFrame() * other
+            return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
+
+    def __truediv__(self,other) :
+        # both are SimDataFrame
+        if isinstance(other, SimDataFrame) :
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
+            result = self.copy()
+            notFount = 0
+            for col in self.columns :
+                if col in other.columns :
+                    result[col] = self[col] / other[col]
+                else :
+                    notFount += 1
+                    
+            if notFount == len(other.columns) :
+                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
+                    if len(self.left) == 1 and len(other.left) == 1 :
+                        otherC = other.copy()
+                        otherC.renameRight()
+                        selfC = self.copy()
+                        selfC.renameRight()
+                        result = selfC / otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = self.left[0] + self.nameSeparator + c
+                        result.rename(columns=newNames,inplace=True)
+                    elif len(self.right) == 1 and len(other.right) == 1 :
+                        otherC = other.copy()
+                        otherC.renameLeft()
+                        selfC = self.copy()
+                        selfC.renameLeft()
+                        result = selfC / otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = c + self.nameSeparator + self.right[0]
+                        result.rename(columns=newNames,inplace=True)
+                        
+            return result
+        
+        # other is SimSeries
+        elif isinstance(other, SimSeries) :
+            result = self.copy()
+            if other.name in self.columns :
+                result[other.name] = self[other.name] / other
+            else :
+                for col in self.columns :
+                    result[col] = self[col] / other
+            return result
+        
+        # let's Pandas deal with other types, maintain units and dtype
+        else :
+            result = self.as_DataFrame() / other
+            return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
+
+    def __floordiv__(self,other) :
+        # both are SimDataFrame
+        if isinstance(other, SimDataFrame) :
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
+            result = self.copy()
+            notFount = 0
+            for col in self.columns :
+                if col in other.columns :
+                    result[col] = self[col] // other[col]
+                else :
+                    notFount += 1
+                    
+            if notFount == len(other.columns) :
+                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
+                    if len(self.left) == 1 and len(other.left) == 1 :
+                        otherC = other.copy()
+                        otherC.renameRight()
+                        selfC = self.copy()
+                        selfC.renameRight()
+                        result = selfC // otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = self.left[0] + self.nameSeparator + c
+                        result.rename(columns=newNames,inplace=True)
+                    elif len(self.right) == 1 and len(other.right) == 1 :
+                        otherC = other.copy()
+                        otherC.renameLeft()
+                        selfC = self.copy()
+                        selfC.renameLeft()
+                        result = selfC // otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = c + self.nameSeparator + self.right[0]
+                        result.rename(columns=newNames,inplace=True)
+                        
+            return result
+        
+        # other is SimSeries
+        elif isinstance(other, SimSeries) :
+            result = self.copy()
+            if other.name in self.columns :
+                result[other.name] = self[other.name] // other
+            else :
+                for col in self.columns :
+                    result[col] = self[col] // other
+            return result
+        
+        # let's Pandas deal with other types, maintain units and dtype
+        else :
+            result = self.as_DataFrame() // other
+            return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
+        
+    def __mod__(self,other) :
+        # both are SimDataFrame
+        if isinstance(other, SimDataFrame) :
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
+            result = self.copy()
+            notFount = 0
+            for col in self.columns :
+                if col in other.columns :
+                    result[col] = self[col] % other[col]
+                else :
+                    notFount += 1
+                    
+            if notFount == len(other.columns) :
+                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
+                    if len(self.left) == 1 and len(other.left) == 1 :
+                        otherC = other.copy()
+                        otherC.renameRight()
+                        selfC = self.copy()
+                        selfC.renameRight()
+                        result = selfC % otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = self.left[0] + self.nameSeparator + c
+                        result.rename(columns=newNames,inplace=True)
+                    elif len(self.right) == 1 and len(other.right) == 1 :
+                        otherC = other.copy()
+                        otherC.renameLeft()
+                        selfC = self.copy()
+                        selfC.renameLeft()
+                        result = selfC % otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = c + self.nameSeparator + self.right[0]
+                        result.rename(columns=newNames,inplace=True)
+                        
+            return result
+        
+        # other is SimSeries
+        elif isinstance(other, SimSeries) :
+            result = self.copy()
+            if other.name in self.columns :
+                result[other.name] = self[other.name] % other
+            else :
+                for col in self.columns :
+                    result[col] = self[col] % other
+            return result
+        
+        # let's Pandas deal with other types, maintain units and dtype
+        else :
+            result = self.as_DataFrame() % other
+            return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
+
+    def __pow__(self,other) :
+        # both are SimDataFrame
+        if isinstance(other, SimDataFrame) :
+            if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
+                Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
+            result = self.copy()
+            notFount = 0
+            for col in self.columns :
+                if col in other.columns :
+                    result[col] = self[col] ** other[col]
+                else :
+                    notFount += 1
+                    
+            if notFount == len(other.columns) :
+                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
+                    if len(self.left) == 1 and len(other.left) == 1 :
+                        otherC = other.copy()
+                        otherC.renameRight()
+                        selfC = self.copy()
+                        selfC.renameRight()
+                        result = selfC ** otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = self.left[0] + self.nameSeparator + c
+                        result.rename(columns=newNames,inplace=True)
+                    elif len(self.right) == 1 and len(other.right) == 1 :
+                        otherC = other.copy()
+                        otherC.renameLeft()
+                        selfC = self.copy()
+                        selfC.renameLeft()
+                        result = selfC ** otherC
+                        newNames = {}
+                        for c in result.columns :
+                            newNames[c] = c + self.nameSeparator + self.right[0]
+                        result.rename(columns=newNames,inplace=True)
+                        
+            return result
+        
+        # other is SimSeries
+        elif isinstance(other, SimSeries) :
+            result = self.copy()
+            if other.name in self.columns :
+                result[other.name] = self[other.name] ** other
+            else :
+                for col in self.columns :
+                    result[col] = self[col] ** other
+            return result
+        
+        # let's Pandas deal with other types, maintain units and dtype
+        else :
+            result = self.as_DataFrame() ** other
+            return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
     
     def copy(self) :
         return SimDataFrame( data=self.as_DataFrame().copy(True) , units=self.units.copy() , indexName=self.index.name )
@@ -1282,11 +1806,49 @@ class SimDataFrame(DataFrame) :
         return result
 
     @property
+    def right(self) :
+        objs = []
+        for each in list( self.columns ) :
+            if self.nameSeparator in each :
+                objs += [each.split( self.nameSeparator )[-1]]
+            else :
+                objs += [each]
+        return tuple(set(objs))
+    
+    @property
+    def left(self) :
+        objs = []
+        for each in list( self.columns ) :
+            if self.nameSeparator in each :
+                objs += [each.split( self.nameSeparator )[0]]
+            else :
+                objs += [each]
+        return tuple(set(objs))
+    
+    def renameRight(self) :
+        objs = {}
+        for each in list( self.columns ) :
+            if self.nameSeparator in each :
+                objs += [each.split( self.nameSeparator )[-1]]
+            else :
+                objs += [each]
+        self.rename(columns=objs,inplace=True)
+    
+    def renameLeft(self) :
+        objs = {}
+        for each in list( self.columns ) :
+            if self.nameSeparator in each :
+                objs += [each.split( self.nameSeparator )[0]]
+            else :
+                objs += [each]
+        self.rename(columns=objs,inplace=True)
+
+    @property
     def wells(self) :
         objs = []
         for each in list( self.columns ) :
-            if ':' in each and each[0] == 'W' :
-                objs += [each.split(':')[-1]]
+            if self.nameSeparator in each and each[0] == 'W' :
+                objs += [each.split( self.nameSeparator )[-1]]
         return tuple(set(objs))
     def get_Wells(self,pattern=None) :
         """       
@@ -1313,8 +1875,8 @@ class SimDataFrame(DataFrame) :
     def groups(self) :
         objs = []
         for each in list( self.columns ) :
-            if ':' in each and each[0] == 'G' :
-                objs += [each.split(':')[-1]]
+            if self.nameSeparator in each and each[0] == 'G' :
+                objs += [each.split( self.nameSeparator )[-1]]
         return tuple(set(objs))
     def get_Groups(self,pattern=None) :
         """       
@@ -1341,8 +1903,8 @@ class SimDataFrame(DataFrame) :
     def regions(self) :
         objs = []
         for each in list( self.columns ) :
-            if ':' in each and each[0] == 'R' :
-                objs += [each.split(':')[-1]]
+            if self.nameSeparator in each and each[0] == 'R' :
+                objs += [each.split( self.nameSeparator )[-1]]
         return tuple(set(objs))
     def get_Regions(self,pattern=None):
         """
@@ -1368,20 +1930,27 @@ class SimDataFrame(DataFrame) :
     def attributes(self) :
         atts = {}
         for each in list( self.columns ) :
-            if ':' in each :
-                if each.split(':')[0] in atts :
-                    atts[each.split(':')[0]] += [each.split(':')[-1]]
+            if self.nameSeparator in each :
+                if each.split( self.nameSeparator )[0] in atts :
+                    atts[each.split( self.nameSeparator )[0]] += [each.split( self.nameSeparator )[-1]]
                 else :
-                    atts[each.split(':')[0]] = [each.split(':')[-1]]
+                    atts[each.split( self.nameSeparator )[0]] = [each.split( self.nameSeparator )[-1]]
             else :
                 if each not in atts :
                     atts[each] = []
         for att in atts :
             atts[att] = list(set(atts[att]))
         return atts
+    @property
+    def properties(self) :
+        if len(self.attributes.keys()) > 0 :
+            return tuple(self.attributes.keys())
+        else :
+            return tuple()
     def get_Attributes(self,pattern=None) :
         """
-        Will return a tuple of all the attributes names in case.
+        Will return a dictionary of all the attributes names in case as keys 
+        and their related items as values.
 
         If the pattern variable is different from None only attributes
         matching the pattern will be returned; the matching is based
@@ -1457,7 +2026,7 @@ class SimDataFrame(DataFrame) :
         for key in criteria :
             if type(key) is str and key not in self.columns :
                 if key in self.wells or key in self.groups or key in self.regions :
-                    keys += list(self.get_Keys('*:'+key))
+                    keys += list(self.get_Keys('*'+self.nameSeparator+key))
                 elif key in self.attributes :
                     keys += list( self.keyGen( key , self.attributes[key] ) )
                 else :
@@ -1480,7 +2049,7 @@ class SimDataFrame(DataFrame) :
             if each in self.units :
                 uDic[each] = self.units[each]
             elif each in self.wells or each in self.groups or each in self.regions :
-                for Key in self.get_Keys('*:'+each) :
+                for Key in self.get_Keys('*'+self.nameSeparator+each) :
                     uDic[each] = self.units[each]
             elif each in self.attributes :
                 for att in self.keyGen( each , self.attributes[each] ) :
@@ -1538,19 +2107,19 @@ class SimDataFrame(DataFrame) :
             mainKeys = [mainKeys]
         ListOfKeys = []
         for k in mainKeys :
-            k.strip(' :')
+            k.strip(self.nameSeparator)
             if self.is_Key(k) :
                 ListOfKeys.append(k)
             for i in itemKeys :
-                i = i.strip(' :')
-                if self.is_Key(k+':'+i) :
-                    ListOfKeys.append( k+':'+i )
+                i = i.strip(self.nameSeparator)
+                if self.is_Key(k+self.nameSeparator+i) :
+                    ListOfKeys.append( k+self.nameSeparator+i )
                 elif k[0].upper() == 'W' :
                     wells = self.get_Wells(i)
                     if len(wells) > 0 :
                         for w in wells :
-                            if self.is_Key(k+':'+w) :
-                                ListOfKeys.append( k+':'+w )
+                            if self.is_Key(k+self.nameSeparator+w) :
+                                ListOfKeys.append( k+self.nameSeparator+w )
                 elif k[0].upper() == 'R' :
                     pass
                 elif k[0].upper() == 'G' :
@@ -1806,12 +2375,16 @@ class SimDataFrame(DataFrame) :
         # open parenthesis for aggregation, if needed
         if not AndOrNot and bool(PandasAgg) :
             filterStr = '( ' + filterStr
-        
+                
         retTuple = []
         print(last)
         if returnString :
             retTuple += [ filterStr ]
-        filterArray = eval( filterStr )
+        if returnFilter or returnFrame :
+            try :
+                filterArray = eval( filterStr )
+            except :
+                return str( filterStr )
         if returnFilter :
             retTuple += [ filterArray ]
         if returnFrame :
