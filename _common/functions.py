@@ -119,6 +119,28 @@ def _wellFromAttribute( listOfAttributes ) :
         newNames[each] = each.split(':')[-1]
     return newNames
 
+def _AttributeFromKeys( listOfKeys ) :
+    """
+    receives a list of attributes, like:
+        [ 'WOPR:W1' , 'WOPR:W2' , 'WOPR:W3' , ... ]  
+    and return a dictionary of the attribute names only:
+        { 'WOPR:W1':'WOPR' , 'WWPR:W1':'WWPR' , 'WGPR:W1':'WGPR' , ... }  
+
+    """
+    if type( listOfKeys ) is str :
+        listOfKeys = listOfKeys.split()
+    if type( listOfKeys ) is tuple or type( listOfKeys ) is set :
+        listOfKeys = list( listOfKeys )
+    if type( listOfKeys ) is pandas.core.indexes.base.Index :
+        listOfKeys = list( listOfKeys )
+    if type( listOfKeys ) is not list :
+        return {}
+
+    newNames = {}
+    for each in listOfKeys :
+        newNames[each] = each.split(':')[0]
+    return newNames
+
 def tamiz( ListOrTuple ) :
     """
     receives a list or tuple of strings and other types mixed
