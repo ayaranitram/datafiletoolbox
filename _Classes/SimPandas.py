@@ -106,7 +106,7 @@ class SimSeries(Series) :
 
     """
     
-    _metadata = ["units","speak",'indexUnits','nameSeparator']
+    _metadata = ["units","speak",'indexUnits','nameSeparator','intersectionCharacter']
     
     def __init__(self, data=None , units=None , index=None , speak=False , *args , **kwargs) :
         Uname = None
@@ -115,6 +115,7 @@ class SimSeries(Series) :
         self.speak = bool(speak)
         self.indexUnits = None
         self.nameSeparator = None
+        self.intersectionCharacter = '∩'
         
         # validaton
         if isinstance(data,DataFrame) and len(data.columns)>1 :
@@ -936,13 +937,14 @@ class SimDataFrame(DataFrame) :
     pandas.DataFrame
     
     """
-    _metadata = ["units","speak","indexUnits","nameSeparator"]
+    _metadata = ["units","speak","indexUnits","nameSeparator",'intersectionCharacter']
     
     def __init__(self , data=None , units=None , index=None , speak=False , *args , **kwargs) :
         self.units = None
         self.speak = bool(speak)
         self.indexUnits = None
         self.nameSeparator = None
+        self.intersectionCharacter = '∩'
         
         indexInput = None
         # catch index keyword from input parameters
@@ -975,6 +977,8 @@ class SimDataFrame(DataFrame) :
         kwargs.pop('indexName',None)
         kwargs.pop('indexUnits',None)
         kwargs.pop('nameSeparator',None)
+        kwargs.pop('units',None)
+        kwargs.pop('speak',None)
         # convert to pure Pandas
         if type(data) in [ SimDataFrame , SimSeries ] :
             data = data.to_Pandas()
@@ -1055,6 +1059,69 @@ class SimDataFrame(DataFrame) :
     @property
     def DF(self) :
         return self.as_DataFrame()
+
+    def rename(self,**kwargs) :
+        cBefore = list(self.columns)
+        if 'inplace' in kwargs and kwargs['inplace'] :
+            super().rename(**kwargs)
+            cAfter = list(self.columns)
+        else :
+            catch = super().rename(**kwargs)
+            cAfter = list(catch.columns)
+        newUnits = {}
+        for i in range(len(cBefore)) :
+            newUnits[cAfter[i]] = self.units[cBefore[i]]
+        if 'inplace' in kwargs and kwargs['inplace'] :
+            self.units = newUnits
+        else :
+            catch.units = newUnits
+            return catch
+    
+    def _CommonRename(self,SimDataFrame1,SimDataFrame2=None) : 
+        SDF1 , SDF2 = SimDataFrame1 , SimDataFrame2
+        
+        cha = self.intersectionCharacter
+
+        if SDF2 is None :
+            SDF1 , SDF2 = self , SDF1
+        
+        if type(SDF1) is not SimDataFrame or type(SDF2) is not SimDataFrame :
+            raise TypeError("both dataframes to be compared must be SimDataFrames.")
+        
+        if SDF1.nameSeparator is None or SDF2.nameSeparator is None :
+            raise ValueError("the 'nameSeparator' must not be empty in both SimDataFrames.")
+
+        if len(SDF1.left) == 1 and len(SDF2.left) == 1 :
+            SDF2C = SDF2.copy()
+            SDF2C.renameRight()
+            SDF1C = SDF1.copy()
+            SDF1C.renameRight()
+            commonNames = {}
+            for c in SDF1C.columns :
+                if c in SDF2C.columns :
+                    commonNames[c] = SDF1.left[0] + cha + SDF2.left[0] + SDF1.nameSeparator + c
+                else :
+                    commonNames[c] = SDF1.left[0] + SDF1.nameSeparator + c
+            for c in SDF2C.columns :
+                if c not in SDF1C.columns :
+                    commonNames[c] = SDF2.left[0] + SDF1.nameSeparator + c
+
+        elif len(SDF1.right) == 1 and len(SDF2.right) == 1 :
+            SDF2C = SDF2.copy()
+            SDF2C.renameLeft()
+            SDF1C = SDF1.copy()
+            SDF1C.renameLeft()
+            commonNames = {}
+            for c in SDF1C.columns :
+                if c in SDF2C.columns :
+                    commonNames[c] = c + SDF1.nameSeparator + SDF1.right[0] + cha + SDF2.right[0]
+                else :
+                    commonNames[c] = c + SDF1.nameSeparator + SDF1.right[0]
+            for c in SDF2C.columns :
+                if c not in SDF1C.columns :
+                    commonNames[c] = c + SDF1.nameSeparator + SDF2.right[0]
+
+        return SDF1C , SDF2C , commonNames
     
     def __neg__(self) :
         result = -self.as_DataFrame()
@@ -1067,37 +1134,21 @@ class SimDataFrame(DataFrame) :
                 Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             result = self.copy()
             notFount = 0
-            for col in self.columns :
-                if col in other.columns :
+            for col in other.columns :
+                if col in self.columns :
                     result[col] = self[col] + other[col]
                 else :
                     notFount += 1
                     result[col] = other[col]
-                    result.units[col] = other.get_Units(col)[col]
                     
             if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
-                    if len(self.left) == 1 and len(other.left) == 1 :
-                        otherC = other.copy()
-                        otherC.renameRight()
-                        selfC = self.copy()
-                        selfC.renameRight()
-                        result = selfC + otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = self.left[0] + self.nameSeparator + c
-                        result.rename(columns=newNames,inplace=True)
-                    elif len(self.right) == 1 and len(other.right) == 1 :
-                        otherC = other.copy()
-                        otherC.renameLeft()
-                        selfC = self.copy()
-                        selfC.renameLeft()
-                        result = selfC + otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = c + self.nameSeparator + self.right[0]
-                        result.rename(columns=newNames,inplace=True)
-                        
+                if self.nameSeparator is not None and other.nameSeparator is not None :
+                    selfC , otherC , newNames = self._CommonRename(other)
+                    resultX = selfC + otherC
+                    resultX.rename(columns=newNames,inplace=True)
+                    for col in newNames.values() :
+                        result[col] = resultX[col]
+                    
             return result
         
         # other is SimSeries
@@ -1121,36 +1172,20 @@ class SimDataFrame(DataFrame) :
                 Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             result = self.copy()
             notFount = 0
-            for col in self.columns :
-                if col in other.columns :
+            for col in other.columns :
+                if col in self.columns :
                     result[col] = self[col] - other[col]
                 else :
                     notFount += 1
-                    result[col] = -other[col]
-                    result.units[col] = other.get_Units(col)[col]
+                    result[col] = other[col] if self.intersectionCharacter in col else -other[col]
             
             if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
-                    if len(self.left) == 1 and len(other.left) == 1 :
-                        otherC = other.copy()
-                        otherC.renameRight()
-                        selfC = self.copy()
-                        selfC.renameRight()
-                        result = selfC - otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = self.left[0] + self.nameSeparator + c
-                        result.rename(columns=newNames,inplace=True)
-                    elif len(self.right) == 1 and len(other.right) == 1 :
-                        otherC = other.copy()
-                        otherC.renameLeft()
-                        selfC = self.copy()
-                        selfC.renameLeft()
-                        result = selfC - otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = c + self.nameSeparator + self.right[0]
-                        result.rename(columns=newNames,inplace=True)
+                if self.nameSeparator is not None and other.nameSeparator is not None :
+                    selfC , otherC , newNames = self._CommonRename(other)
+                    resultX = selfC - otherC
+                    resultX.rename(columns=newNames,inplace=True)
+                    for col in newNames.values() :
+                        result[col] = resultX[col]
             
             return result
         
@@ -1175,34 +1210,20 @@ class SimDataFrame(DataFrame) :
                 Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             result = self.copy()
             notFount = 0
-            for col in self.columns :
-                if col in other.columns :
+            for col in other.columns :
+                if col in self.columns :
                     result[col] = self[col] * other[col]
                 else :
                     notFount += 1
                 
             if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
-                    if len(self.left) == 1 and len(other.left) == 1 :
-                        otherC = other.copy()
-                        otherC.renameRight()
-                        selfC = self.copy()
-                        selfC.renameRight()
-                        result = selfC * otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = self.left[0] + self.nameSeparator + c
-                        result.rename(columns=newNames,inplace=True)
-                    elif len(self.right) == 1 and len(other.right) == 1 :
-                        otherC = other.copy()
-                        otherC.renameLeft()
-                        selfC = self.copy()
-                        selfC.renameLeft()
-                        result = selfC * otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = c + self.nameSeparator + self.right[0]
-                        result.rename(columns=newNames,inplace=True)
+                if self.nameSeparator is not None and other.nameSeparator is not None :
+                    selfC , otherC , newNames = self._CommonRename(other)
+                    resultX = selfC * otherC
+                    resultX.rename(columns=newNames,inplace=True)
+                    for col in newNames.values() :
+                        if '∩' in col :
+                            result[col] = resultX[col]
                         
             return result
         
@@ -1228,34 +1249,20 @@ class SimDataFrame(DataFrame) :
                 Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             result = self.copy()
             notFount = 0
-            for col in self.columns :
-                if col in other.columns :
+            for col in other.columns :
+                if col in self.columns :
                     result[col] = self[col] / other[col]
                 else :
                     notFount += 1
                     
             if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
-                    if len(self.left) == 1 and len(other.left) == 1 :
-                        otherC = other.copy()
-                        otherC.renameRight()
-                        selfC = self.copy()
-                        selfC.renameRight()
-                        result = selfC / otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = self.left[0] + self.nameSeparator + c
-                        result.rename(columns=newNames,inplace=True)
-                    elif len(self.right) == 1 and len(other.right) == 1 :
-                        otherC = other.copy()
-                        otherC.renameLeft()
-                        selfC = self.copy()
-                        selfC.renameLeft()
-                        result = selfC / otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = c + self.nameSeparator + self.right[0]
-                        result.rename(columns=newNames,inplace=True)
+                if self.nameSeparator is not None and other.nameSeparator is not None :
+                    selfC , otherC , newNames = self._CommonRename(other)
+                    resultX = selfC / otherC
+                    resultX.rename(columns=newNames,inplace=True)
+                    for col in newNames.values() :
+                        if '∩' in col :
+                            result[col] = resultX[col]
                         
             return result
         
@@ -1281,34 +1288,20 @@ class SimDataFrame(DataFrame) :
                 Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             result = self.copy()
             notFount = 0
-            for col in self.columns :
-                if col in other.columns :
+            for col in other.columns :
+                if col in self.columns :
                     result[col] = self[col] // other[col]
                 else :
                     notFount += 1
                     
             if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
-                    if len(self.left) == 1 and len(other.left) == 1 :
-                        otherC = other.copy()
-                        otherC.renameRight()
-                        selfC = self.copy()
-                        selfC.renameRight()
-                        result = selfC // otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = self.left[0] + self.nameSeparator + c
-                        result.rename(columns=newNames,inplace=True)
-                    elif len(self.right) == 1 and len(other.right) == 1 :
-                        otherC = other.copy()
-                        otherC.renameLeft()
-                        selfC = self.copy()
-                        selfC.renameLeft()
-                        result = selfC // otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = c + self.nameSeparator + self.right[0]
-                        result.rename(columns=newNames,inplace=True)
+                if self.nameSeparator is not None and other.nameSeparator is not None :
+                    selfC , otherC , newNames = self._CommonRename(other)
+                    resultX = selfC // otherC
+                    resultX.rename(columns=newNames,inplace=True)
+                    for col in newNames.values() :
+                        if '∩' in col :
+                            result[col] = resultX[col]
                         
             return result
         
@@ -1334,34 +1327,20 @@ class SimDataFrame(DataFrame) :
                 Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             result = self.copy()
             notFount = 0
-            for col in self.columns :
-                if col in other.columns :
+            for col in other.columns :
+                if col in self.columns :
                     result[col] = self[col] % other[col]
                 else :
                     notFount += 1
                     
             if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
-                    if len(self.left) == 1 and len(other.left) == 1 :
-                        otherC = other.copy()
-                        otherC.renameRight()
-                        selfC = self.copy()
-                        selfC.renameRight()
-                        result = selfC % otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = self.left[0] + self.nameSeparator + c
-                        result.rename(columns=newNames,inplace=True)
-                    elif len(self.right) == 1 and len(other.right) == 1 :
-                        otherC = other.copy()
-                        otherC.renameLeft()
-                        selfC = self.copy()
-                        selfC.renameLeft()
-                        result = selfC % otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = c + self.nameSeparator + self.right[0]
-                        result.rename(columns=newNames,inplace=True)
+                if self.nameSeparator is not None and other.nameSeparator is not None :
+                    selfC , otherC , newNames = self._CommonRename(other)
+                    resultX = selfC % otherC
+                    resultX.rename(columns=newNames,inplace=True)
+                    for col in newNames.values() :
+                        if '∩' in col :
+                            result[col] = resultX[col]
                         
             return result
         
@@ -1387,34 +1366,20 @@ class SimDataFrame(DataFrame) :
                 Warning( "indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             result = self.copy()
             notFount = 0
-            for col in self.columns :
-                if col in other.columns :
+            for col in other.columns :
+                if col in self.columns :
                     result[col] = self[col] ** other[col]
                 else :
                     notFount += 1
                     
             if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None and len(self.columns) == len(other.columns) :
-                    if len(self.left) == 1 and len(other.left) == 1 :
-                        otherC = other.copy()
-                        otherC.renameRight()
-                        selfC = self.copy()
-                        selfC.renameRight()
-                        result = selfC ** otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = self.left[0] + self.nameSeparator + c
-                        result.rename(columns=newNames,inplace=True)
-                    elif len(self.right) == 1 and len(other.right) == 1 :
-                        otherC = other.copy()
-                        otherC.renameLeft()
-                        selfC = self.copy()
-                        selfC.renameLeft()
-                        result = selfC ** otherC
-                        newNames = {}
-                        for c in result.columns :
-                            newNames[c] = c + self.nameSeparator + self.right[0]
-                        result.rename(columns=newNames,inplace=True)
+                if self.nameSeparator is not None and other.nameSeparator is not None :
+                    selfC , otherC , newNames = self._CommonRename(other)
+                    resultX = selfC ** otherC
+                    resultX.rename(columns=newNames,inplace=True)
+                    for col in newNames.values() :
+                        if '∩' in col :
+                            result[col] = resultX[col]
                         
             return result
         
@@ -1723,7 +1688,7 @@ class SimDataFrame(DataFrame) :
                 for raw in rawLine :
                     if len(raw.strip(' -')) > 0 :
                         thisLine.append( raw )
-                print('\ndebug:\n   keys:',keys,'\n   line:',line,'len(thisColumn):',len(thisColumn),'\n   keyN:',keyN,'len(thisLine):',len(thisLine),'\n   rawLine:"',rawLine,'"\n')
+                # print('\ndebug:\n   keys:',keys,'\n   line:',line,'len(thisColumn):',len(thisColumn),'\n   keyN:',keyN,'len(thisLine):',len(thisLine),'\n   rawLine:"',rawLine,'"\n')
                 thisColumn[line] = len(thisLine[keyN])
             return max( thisColumn ) 
         
@@ -1829,18 +1794,22 @@ class SimDataFrame(DataFrame) :
         objs = {}
         for each in list( self.columns ) :
             if self.nameSeparator in each :
-                objs += [each.split( self.nameSeparator )[-1]]
+                objs[each] = each.split( self.nameSeparator )[-1]
+                # self.units[ each.split( self.nameSeparator )[-1] ] = self.units[ each ]
+                # del(self.units[each])
             else :
-                objs += [each]
+                objs[each] = each
         self.rename(columns=objs,inplace=True)
     
     def renameLeft(self) :
         objs = {}
         for each in list( self.columns ) :
             if self.nameSeparator in each :
-                objs += [each.split( self.nameSeparator )[0]]
+                objs[each] = each.split( self.nameSeparator )[0]
+                # self.units[ each.split( self.nameSeparator )[0] ] = self.units[ each ]
+                # del(self.units[each])
             else :
-                objs += [each]
+                objs[each] = each
         self.rename(columns=objs,inplace=True)
 
     @property
@@ -2085,7 +2054,8 @@ class SimDataFrame(DataFrame) :
         if key not in self.units :
             self.units[key] = units
         else :
-            print( "overwritting existing units for key '" + key + "': " + self.units[key] + ' -> ' + units )
+            if units != self.units[key] :
+                print( "overwritting existing units for key '" + key + "': " + self.units[key] + ' -> ' + units )
             self.units[key] = units
     
     def is_Key(self,Key) :
