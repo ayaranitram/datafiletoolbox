@@ -1688,7 +1688,7 @@ class SimDataFrame(DataFrame) :
                 for raw in rawLine :
                     if len(raw.strip(' -')) > 0 :
                         thisLine.append( raw )
-                # print('\ndebug:\n   keys:',keys,'\n   line:',line,'len(thisColumn):',len(thisColumn),'\n   keyN:',keyN,'len(thisLine):',len(thisLine),'\n   rawLine:"',rawLine,'"\n')
+                print('\ndebug:\n   keys:',keys,'\n   line:',line,'len(thisColumn):',len(thisColumn),'\n   keyN:',keyN,'len(thisLine):',len(thisLine),'\n   rawLine:"',rawLine,'"\n')
                 thisColumn[line] = len(thisLine[keyN])
             return max( thisColumn ) 
         
