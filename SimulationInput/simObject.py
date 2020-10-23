@@ -16,6 +16,8 @@ from datafiletoolbox import expandKeyword
 from datafiletoolbox import numpy as np
 from datafiletoolbox import pandas as pd
 
+from .keywords import *
+
 class Simulation(object) :
     """
     object containing every aspect of a simulation
@@ -191,116 +193,6 @@ class Model(Simulation) :
     Objects = {}
     Count = {}
     List = {}
-
-    ZeroArgumentsKeywords = (
-        'AIM','AITS','ALKALINE','API',
-        'BIGMODEL','BLACKOIL','BPARA','BRINE',
-        'CART','COAL','COMPOFF',
-        'DATE','DEADOIL','DIFFDP','DIFFUSE','DISGAS','DSPDEINT','DUALPERM','DPGRID',
-        'DUALPORO','DUMPFLUX','DTLOGIC',
-        'ECHO','ECLMC','EDIT','END','ENDACTIO','ENDBOX','ENDDYN','ENDFIN','ENDSKIP',
-        'EPSCHECK','EXCEL',                 
-        'FASTTRAC','FIELD','FILLEPS','FIPOWG','FMTHMD','FMTIN','FMTOUT','FMTSAVE',
-        'FOAM','FREEZEPC','FULLIMP','FWELLS',
-        'GAS','GASBEGIN','GASEND','GASWAT','GETGLOB','GIMODEL','GRAVDR','GRAVDRB','GRID',            
-        'HALFTRAN','HWELLS','HYMOBGDR','HYST','HYSTCHCK','HYSTJ',
-        'IMPES','IMPLICIT','IMPSAT','INIT','INSPEC','ISGAS',
-        'KVALUES',
-        'LAB','LGRCOPY','LIVEOIL','LOWSALT','LTRACE',
-        'MEMSAVE','METRIC','MIXWPERM','MONITOR','MULTIN','MULTOUT','MULTOUTS',
-        'NARROW','NEWTON','NINEPOIN','NINEXZ','NINEYZ','NOCASC','NODPCDT',
-        'NODPCO','NODPPM','NOECHO','NOFREEZE','NOGGF','NOHYKR','NOHYPC','NOHYST',
-        'NOINSPEC','NOLTRACE','NOMIX','NOMONITO','NONNC','NORSSPEC','NOSIM','NOWARNEP',
-        'OFM','OIL',
-        'PINCHOUT','POLYMER','PRCORR','PROPS',
-        'RADIAL','REGIONS','RKTRMDIR','RPTISOL','RTPONLY','RTPONLYO','RPTRUNSP',
-        'RSM','RSSPEC','RUNCTRL','RUNSPEC','RUNSUM',
-        'SAVE','SAVEEND','SCHEDULE','SEPARATE','SIMULATE','SKIP','SKIP100','SKIP300',
-        'SKIPTNAV','SKIPREST','SKIPTAB','SOLID','SOLUTION','SOLVENT','SMARTMB','STONE',
-        'STONE1','STONE2','SUMMARY','SURFACT','SURFACTW',
-        'TEMP','TEMPTVD','THANALV','THERMAL','TRACTVD','TRNHD',
-        'UNCODHMD','UNIFIN','UNIFOUT','UNIFOUTS','UNIFSAVE',
-        'VAPOIL','VISAGE','VISCD',
-        'WARN','WATER','WAVAILIM','WDRILRES',
-        )
-
-    TableFormatKeywords = ( 
-        'ACTIONX','ADD','ADDREG','ADDZCORN','AMALGAM','AQANTRC','AQUCON','AQUCT',
-        'AQUALIST','AQUANCON','AQUANCONL','AQUCHGAS','AQUCHWAT','AQUFETP','AQUFLUX',
-        'AQUNUM','AQSTREAM','AQSTREAW','AUTOCOAR',
-        'BRANPROP',
-        'CECON','CECONT','COARSEN','COMPAGH','COMPAGHL','COMPDAT','COMPDATL','COMPDATMD',
-        'COMPFLSH','COMPIMB','COMPINJK','COMPKRI','COMPLMPL','COMPLUMP','COMPMBIL',
-        'COMPMOBI','COMPORD','COMPRIV','COMPRP','COMPRPL','COMPVE','COMPVEL','COPY',
-        'COPYBOX','COPYREG','COMPSEGL','COMPSEGS','CPIFACT','CPIFACTL','CSKIN',
-        'DATES','DATUMRX','DYNAMICR',
-        'EDITNNC','EDITNNCR','EPSDBGS','EQLDKVCR','EQUALS','EQUALREG',
-        'FAULTS','FIELDSEP','FIPSEP',
-        'GADVANCE','GASFCOMP','GCALECON','GCONCAL','GCONENG','GCONINJE','GCONPRI',
-        'GCONPROD','GCONSALE','GCONSUMP','GCUTBACK','GCUTBACKT','GDCQ','GDCQECON',
-        'GDRILPOT','GECON','GECONT','GEFAC','GINJGAS','GLIFTLIM','GLIFTOPT','GNETDP',
-        'GNETINJE','GNETPUMP','GPMAINT','GPMAINT3','GQUALITY','GRDREACH','GRUPFUEL',
-        'GRUPGR','GRUPINJE','GRUPMAST','GRUPNET','GRUPPROD','GRUPRIG','GRUPSALE',
-        'GRUPSLAV','GRUPTARG','GRUPTREE','GSATCOMP','GSATINGE','GSATPROD','GSEPCOND',
-        'GSEPREPT','GSWINGF','GTADD','GTMULT','GWRTWCV',
-        'HEATER','HEATERL','HMAQUFET','HMFAULTS','HMMLAQUN','HMMLCTAQ','HMMLFTAQ',
-        'HMMLTWCN','HMMMREGT','HMMROCK','HMMULRGT','HMMULRGT','HMMULTFT','HMMULTX',
-        'HMMULTY','HMMULTZ','HMMLTXY','HMMULTPV','HMMLTPX','HMMLTPY','HMMLTPZ','HMMLTPXY',
-        'HMMULTR','HMMULTTH','HMMULTZ','HMMULTPV','HMWELCON',
-        'IHOST',
-        'KVAN','KVCR','KVCRWAT',
-        'LGRFREE','LGRLOCK','LICENSES','LUMPING',
-        'MULTFLT','MULTIREG','MULTREGD','MULTREGH','MULTREGP','MULTREGT','MULTIPLY',
-        'NCONSUMP','NEFAC','NETCOMPA','NGASREM','NODEPROP','NWATREM',
-        'OILVISC','OPERATE','OPERATER',
-        'PATHS','PRORDER',
-        'REACHES','RIVERSYS','RIVRPROP','RIVSALT','RIVTRACE','ROCKCON','ROCKCONL',
-        'ROCKPROP','RPTHMG','RPTHMW',
-        'SCDETAB','SCONINJE','SCONPROD','SEPCOND','SEPVALS','SLAVES','STEST',
-        'THPRESFT','THPRES','TRACER',
-        'UDQ',
-        'WADVANCE','WALKALIN','WALQCALC','WAPI','WBHGLR','WBOREVOL','WCALVAL','WCONHIST',
-        'WCONINJE','WCONINJH','WCONINJP','WCONPROD','WCUTBACK','WCUTBACT','WCYCLE',
-        'WDFAC','WDFACCOR','WDRILPRI','WDRILTIM','WECON','WECONCMF','WECONINJ','WECONT',
-        'WEFAC','WELCNTL','WELSPECS','WELDRAW','WELLCOMP','WELLGR','WELLINJE','WELLKBHP',
-        'WELLOPEN','WELLPROD','WELLSHUT','WELLSPEC','WELLSTRE','WELLSTRW','WELLWAG',
-        'WELLMOVEL','WELMOVEL','WELOPEN','WELOPENL','WELPI','WELPRI','WELSEGS','WELSPECL',
-        'WELSPECS','WELTARG','WFOAM','WFRICTN','WFRICTNL','WINJGAS','WGASPROD','WGORPEN',
-        'WGRUPCON','WHEDREFD','WHTEMP','WINJGAS','WINJMIX','WINJMULT','WINJOIL','WINJORD',
-        'WINJTEMP','WINJW','WLIFT','WLIFTOPT','WLIST','WLISTARG','WLISTDYN','WLISTNAM',
-        'WNETCTRL','WNETDP','WORKTHP','WPAVEDEP','WPI','WPICOND','WPIMULT','WPIMULTL',
-        'WPLUG','WPOLYMER','WPOLYRED','WREGROUP','WRFT','WRFTPLT','WSALT','WSCCLEAN',
-        'WSCCLENL','WSCTAB','WSEGAICD','WSEGEXSS','WSEGFLIM','WSEGFMOD','WSEGHEAT',
-        'WSEGINIT','WSEGLABY','WSEGLINK','WSEGMULT','WSEGPROP','WSEGPULL','WSEGSEP',
-        'WSEGSICD','WSEGTABL','WSEGVALV','WSEGWELL','WSEPCOND','WSOLVENT','WSURFACT',
-        'WTADD','WTEMP','WTEMPQ','WTEST','WTHPMAX','WTMULT','WTRACER','WVFPDP','WVFPEXP',
-        'WWPAVE',
-            )
-
-    UndefinedNumberOfTables = ( 'PSPLITX' , 'PSPLITY' )
-
-    TableInTableKeywords = ( 'PVTO','PVTG' )
-
-    SpecialKeywords = ('TITLE','DIMENS','START','PATHS',
-                       'EQLDIMS','TABDIMS','WELLDIMS','GPTDIMS',
-                       'ROCKCOMP','MISCIBLE',
-                       'INCLUDE',) #'SUMMARY','SCHEDULE','INCLUDE',)
-
-    NoSlashKeywords = ('TITLE')
-    
-    KnownTables = {'SGFN' : ['Sg','Krg','Pcog'],
-                   'SOF2' : ['So','Krow'],
-                   'SOF3' : ['So','Krow','Krog'],
-                   'SSFN' : ['PhaseFraction','KrgMultiplier','KrSolventMultiplier'],
-                   'SWFN' : ['Sw','Krw','Pcwo'],
-                   'PMISC' : ['OilPhasePressure','Miscibility'],
-                   'PVDG' : ['Press','Bg','Ug'],
-                   'PVDO' : ['Press','Bo','Uo'],
-                   'PVZG' : ['Press','Z','Visc'],
-                   
-                   
-                   #'STOW' : [['ReferencePressure'],['Pressure','SurfaceTension']],
-                   }
 
     def __init__( self , DataFilePath = '' , speak = None , parent = None ) :
         if speak == None :

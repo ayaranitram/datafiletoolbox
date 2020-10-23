@@ -12,7 +12,7 @@ routines:
 
 __version__ = '0.0.20-05-16'
 
-from datafiletoolbox._common.inout import verbose
+from .._common.inout import _verbose
 
 def expandKeyword( keywordValues , speak=0 , expandDefaults=True) :
     """
@@ -42,14 +42,14 @@ def expandKeyword( keywordValues , speak=0 , expandDefaults=True) :
         inputValues = inputValues.replace('\n',' ')
         inputValues = inputValues.replace('/',' /')
     else :
-        verbose(speak,-1,'ERROR: keyword values to be expanded should be provided as LIST or STRING')
+        _verbose(speak,-1,'ERROR: keyword values to be expanded should be provided as LIST or STRING')
         raise Exception('keyword values to be expanded should be provided as LIST or STRING')
     outputValues = ''
     ini = 0
     end = len(inputValues)
     starFlag = '*' in inputValues[ini:]
     prog = 100*ini//end
-    verbose(speak,2,'expanding 0%')
+    _verbose(speak,2,'expanding 0%')
 
     while starFlag :
 
@@ -84,12 +84,12 @@ def expandKeyword( keywordValues , speak=0 , expandDefaults=True) :
         starFlag = '*' in inputValues[ini:]
         if prog < 100*ini//end :
             prog = 100*ini//end
-            verbose(speak,1,'expanding ' + str(prog) + '%')
+            _verbose(speak,1,'expanding ' + str(prog) + '%')
 
     outputValues = outputValues + ' ' + inputValues[ini:]
     if prog < 100 :
-        verbose(speak,1,'expanding 100%')
-    verbose(speak,2,'property expanded')
+        _verbose(speak,1,'expanding 100%')
+    _verbose(speak,2,'property expanded')
 
     outputValues = outputValues.split()
     if outformat == 'str' :
@@ -152,14 +152,14 @@ def compressKeyword(keywordValues , speak=0):
 
         if prog < 100*i//totaldimen :
             prog = 100*i//totaldimen
-            verbose(speak , 1 , 'compressing ' + str(prog) + '%')
+            _verbose(speak , 1 , 'compressing ' + str(prog) + '%')
 
     if reptFlag == True:
         Compressed = Compressed + [str(irept) + '*' + str(reptStr)]
     if uniqueFlag == True:
         Compressed = Compressed + keywordValues[uniqueStart:]
 
-    verbose(speak , 2 , 'compressed finished')
+    _verbose(speak , 2 , 'compressed finished')
     if inFormat == 'str' :
         Compressed = ' '.join(Compressed)
     return Compressed
@@ -183,12 +183,12 @@ def shiftProperty( ValuesArray , DIMENS=[] , newValues=0 , skipI=-1 , shiftI=0 ,
         outformat = 'str'
         ValuesArray = list(' ' + ValuesArray + ' ')
 
-    verbose( speak , 1 , 'shifting from layer ' + str(skipK + 1) + ' by ' + str(shiftK) + ' layers' )
+    _verbose( speak , 1 , 'shifting from layer ' + str(skipK + 1) + ' by ' + str(shiftK) + ' layers' )
 
     Kskip = DIMENS[0] * DIMENS[1] * skipK
     NewArray = ValuesArray[:Kskip] + [str(DIMENS[0]*DIMENS[1]) + '*' + str(newValues)] + ValuesArray[Kskip:]
 
-    verbose( speak , 2 , 'property shifted')
+    _verbose( speak , 2 , 'property shifted')
 
     if compressed == True :
         NewArray = compressKeyword( NewArray , speak )
