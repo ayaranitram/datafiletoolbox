@@ -8,7 +8,7 @@ Created on Thu Oct 22 12:24:58 2020
 from .propertyManipulation import expandKeyword
 import pandas as pd
 import numpy as np
-from scipy.interpolate import interpn
+from scipy.interpolate import interpn,RegularGridInterpolator
 
 class VFP(object) :
     """
@@ -115,7 +115,6 @@ class VFP(object) :
                         for m in self.ALQvalues :
                             self.VFPvalues[i][j][k][l][m] = []
 
-        
         self.dataframe ={}
         self.array = np.zeros((len(self.FLOvalues),len(self.THPvalues),len(self.WFRvalues),len(self.GFRvalues),len(self.ALQvalues)))
         
@@ -145,9 +144,30 @@ class VFP(object) :
         serie = list(self.dataframe.values())
         multindex = pd.MultiIndex.from_tuples(multindex, names=['RATE','THP','WFR','GFR','ALQ'])
         self.dataframe = pd.DataFrame(data={'BHP':serie}, index=multindex)        
-        
-                           
+
+
+    def inRange(self,RATE=None,THP=None,WFR=None,GFR=None,ALQ=None) :
+        return self.inrange(RATE=RATE,THP=THP,WFR=WFR,GFR=GFR,ALQ=ALQ)
+    def inrange(self,RATE=None,THP=None,WFR=None,GFR=None,ALQ=None) :
+        if type(RATE) is tuple and len(RATE)==5 and THP is None and WFR is None and GFR is None and ALQ is None:
+            RATE, THP, WFR, GFR, ALQ = RATE[0], RATE[1], RATE[2], RATE[3], RATE[4]
+        result = []
+        values = [self.FLOvalues,self.THPvalues,self.WFRvalues,self.GFRvalues,self.ALQvalues]
+        inputs = ['RATE','THP','WFR','GFR','ALQ']
+        for i in range(5) :
+            if eval(inputs[i]) is not None :
+                if eval(inputs[i]) < min(values[i]) or eval(inputs[i]) > max(values[i]) :
+                    result += [inputs[i]]
+                    print( inputs[i],'value out of range:\n   ',eval(inputs[i]),'not in [ '+str(min(values[i]))+' : '+str(max(values[i]))+' ]')
+        return ( not bool(result) , ''+'; '.join(result) )
+                    
+
     def __call__(self,RATE=None,THP=None,WFR=None,GFR=None,ALQ=None,**kwargs) :
+        """
+        given RATE, THP, WFR, GFR and ALQ calculates the corresponding BHP using 
+        the loaded VFP table.
+        All input and output values in the table unit system.
+        """
         
         if type(RATE) is tuple and len(RATE)==5 and THP is None and WFR is None and GFR is None and ALQ is None:
             RATE, THP, WFR, GFR, ALQ = RATE[0], RATE[1], RATE[2], RATE[3], RATE[4]
@@ -172,7 +192,7 @@ class VFP(object) :
         if corrected :
             for k in ['RATE','THP','WFR','GFR','ALQ'] :
                 kwargs.pop(k,None)
-                kwargs['multipleCount'] = multipleCount
+            kwargs['multipleCount'] = multipleCount
             return self.__call__(lookfor[0],lookfor[1],lookfor[2],lookfor[3],lookfor[4],**kwargs)
 
         if tuple(lookfor) in self.dataframe.index :
@@ -185,13 +205,40 @@ class VFP(object) :
                 sqeezedlookfor.append(lookfor[i])
         sqeezedlookfor = tuple(sqeezedlookfor)
         
-        for k in ['RATE','THP','WFR','GFR','ALQ','multipleCount'] :
+        if 'allowExtrapolation' in kwargs :
+            kwargs['bounds_error'] = kwargs['allowExtrapolation']
+        for k in ['RATE','THP','WFR','GFR','ALQ','multipleCount','allowExtrapolation'] :
             kwargs.pop(k,None)
         if 'method' not in kwargs :
             kwargs['method'] = 'linear'
+        if 'bounds_error' not in kwargs :
+            kwargs['bounds_error'] = False
+
         
         if multipleCount <= 1 :
             result = interpn(self.VFPGridAxes,self.VFPGridValues,sqeezedlookfor,**kwargs)
+            if len(result)==1 and ( not result[0]>=0 and not result[0]<0 ) :
+                outrange = self.inrange(RATE=RATE,THP=THP,WFR=WFR,GFR=GFR,ALQ=ALQ)[1]
+                limits = {}
+                values = {'RATE':self.FLOvalues,'THP':self.THPvalues,'WFR':self.WFRvalues,'GFR':self.GFRvalues,'ALQ':self.ALQvalues}
+                for each in outrange.split()  :
+                    if eval(each) < min(values[each]) :
+                        limits[each] = ( values[each][0] , values[each][1] ) if len(values[each])>1 else ( values[each][0] ,)
+                    elif eval(each) > max(values[each]) :
+                        limits[each] = ( values[each][-2] , values[each][-1] ) if len(values[each])>1 else ( values[each][-1] ,)
+                tointerpolate = {}
+                result = {}
+                for each in limits :
+                    tointerpolate[each] = []
+                    result[each] = []
+                    for i in range(len(limits[each])) :
+                        tup = []
+                        for var in ['RATE','THP','WFR','GFR','ALQ'] :
+                            tup += [ limits[each][i] if var in limits else eval(var) ]
+                        tointerpolate[each] += [ self( tuple(tup) ) ]
+                    result[each] += np.interp([eval(each)], np.array(limits[each]), np.array(tointerpolate[each]))
+                if len(result)==1 :
+                    result = result[list(result.keys())[0]][0]
             if len(result)==1:
                 return float(result)
             else :
