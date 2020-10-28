@@ -8,7 +8,7 @@ Created on Thu Oct 22 12:24:58 2020
 from .propertyManipulation import expandKeyword
 import pandas as pd
 import numpy as np
-from scipy.interpolate import interpn,RegularGridInterpolator
+from scipy.interpolate import interpn,interp1d
 
 class VFP(object) :
     """
@@ -56,6 +56,7 @@ class VFP(object) :
         self.dataframe = None
         self.VFPGridValues = None
         self.VFPGridAxes = None
+        self.extrapolate=True
         self._readData()
 
         
@@ -159,7 +160,7 @@ class VFP(object) :
                 if eval(inputs[i]) < min(values[i]) or eval(inputs[i]) > max(values[i]) :
                     result += [inputs[i]]
                     print( inputs[i],'value out of range:\n   ',eval(inputs[i]),'not in [ '+str(min(values[i]))+' : '+str(max(values[i]))+' ]')
-        return ( not bool(result) , ''+'; '.join(result) )
+        return ( not bool(result) , ''+' '.join(result) )
                     
 
     def __call__(self,RATE=None,THP=None,WFR=None,GFR=None,ALQ=None,**kwargs) :
@@ -167,7 +168,10 @@ class VFP(object) :
         given RATE, THP, WFR, GFR and ALQ calculates the corresponding BHP using 
         the loaded VFP table.
         All input and output values in the table unit system.
+        
+        allowExtrapolation=True by default
         """
+        extrapolate=self.extrapolate
         
         if type(RATE) is tuple and len(RATE)==5 and THP is None and WFR is None and GFR is None and ALQ is None:
             RATE, THP, WFR, GFR, ALQ = RATE[0], RATE[1], RATE[2], RATE[3], RATE[4]
@@ -207,6 +211,7 @@ class VFP(object) :
         
         if 'allowExtrapolation' in kwargs :
             kwargs['bounds_error'] = kwargs['allowExtrapolation']
+            extrapolate = bool(kwargs['allowExtrapolation'])
         for k in ['RATE','THP','WFR','GFR','ALQ','multipleCount','allowExtrapolation'] :
             kwargs.pop(k,None)
         if 'method' not in kwargs :
@@ -217,7 +222,7 @@ class VFP(object) :
         
         if multipleCount <= 1 :
             result = interpn(self.VFPGridAxes,self.VFPGridValues,sqeezedlookfor,**kwargs)
-            if len(result)==1 and ( not result[0]>=0 and not result[0]<0 ) :
+            if extrapolate is True and len(result)==1 and ( not result[0]>=0 and not result[0]<0 ) :
                 outrange = self.inrange(RATE=RATE,THP=THP,WFR=WFR,GFR=GFR,ALQ=ALQ)[1]
                 limits = {}
                 values = {'RATE':self.FLOvalues,'THP':self.THPvalues,'WFR':self.WFRvalues,'GFR':self.GFRvalues,'ALQ':self.ALQvalues}
@@ -236,9 +241,38 @@ class VFP(object) :
                         for var in ['RATE','THP','WFR','GFR','ALQ'] :
                             tup += [ limits[each][i] if var in limits else eval(var) ]
                         tointerpolate[each] += [ self( tuple(tup) ) ]
-                    result[each] += np.interp([eval(each)], np.array(limits[each]), np.array(tointerpolate[each]))
+                    result[each] += [ float( interp1d( np.array(limits[each]), np.array(tointerpolate[each]) ,bounds_error=False,fill_value="extrapolate" )(eval(each)) ) , {'lookfor':eval(each),'x':np.array(limits[each]),'y':np.array(tointerpolate[each])} ]
                 if len(result)==1 :
-                    result = result[list(result.keys())[0]][0]
+                    result = np.array([result[list(result.keys())[0]][0]])
+                elif len(result)==2 :
+                    x2D = result[list(result.keys())[1]][1]['x']
+                    look2D = result[list(result.keys())[0]][1]['lookfor']
+                    lookFinal = result[list(result.keys())[1]][1]['lookfor']
+                    y2D = []
+                    for i in range(len(x2D)) :
+                        lookY = []
+                        for var in ['RATE','THP','WFR','GFR','ALQ'] :
+                            lookY.append( look2D if var == list(result.keys())[0] else x2D[i] if var == list(result.keys())[1] else eval(var) )
+                        y2D.append( self.__call__( tuple(lookY) ,**kwargs) )
+                    cath = float( interp1d( np.array(x2D), np.array(y2D) ,bounds_error=False,fill_value="extrapolate" )( lookFinal ) )
+                    result = np.array([cath])
+                elif len(result)>2 :
+                    pass
+                    # finalresult = {}
+                    # finalresult[list(result.keys())[0]] = result[list(result.keys())[0]].copy()
+                    # for r in range(1,len(result)) :
+                    #     x2D = result[list(result.keys())[r]][1]['x']
+                    #     look2D = finalresult[1]['lookfor']
+                    #     lookFinal = result[list(result.keys())[1]][1]['lookfor']
+                    #     y2D = []
+                    #     for i in range(len(x2D)) :
+                    #         lookY = []
+                    #         for var in ['RATE','THP','WFR','GFR','ALQ'] :
+                    #             lookY.append( look2D if var == list(result.keys())[0] else x2D[i] if var == list(result.keys())[1] else eval(var) )
+                    #         y2D.append( self.__call__( tuple(lookY) ,**kwargs) )
+                    #     cath = float( interp1d( np.array(x2D), np.array(y2D) ,bounds_error=False,fill_value="extrapolate" )( lookFinal ) )
+                    #     result['result'] = np.array([cath])
+                    
             if len(result)==1:
                 return float(result)
             else :
