@@ -86,6 +86,9 @@ def getnumber(string) :
             return float(string)           
 
 def isDate(dateStr , formatIN='' , speak=False , returnFormat=False ):
+    """
+    returns True if the string 'dateStr' is a valid date, otherwise returns False.
+    """	
     if formatIN != '' :
         try :
             date(dateStr , formatIN=formatIN , speak=speak , returnFormat=returnFormat )
@@ -174,21 +177,11 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
                           'OCT' : 10 ,
                           'NOV' : 11 ,
                           'DEC' : 12 }
-    MonthNumber2String = { 1 : 'JAN' ,
-                           2 : 'FEB' ,
-                           3 : 'MAR' ,
-                           4 : 'APR' ,
-                           5 : 'MAY' ,
-                           6 : 'JUN' ,
-                           7 : 'JUL' ,
-                           8 : 'AUG' ,
-                           9 : 'SEP' ,
-                          10 : 'OCT' ,
-                          11 : 'NOV' ,
-                          12 : 'DEC'  }
+    MonthNumber2String = dict(zip( MonthString2Number.values() , MonthString2Number.keys()  ))
     
     separator = '' # initialize
-    
+    formatIN = formatIN.upper().strip()
+    formatOUT = formatOUT.upper().strip()
     # define if input is a list/tuple of dates or a single date
     sample = str(date)
     
@@ -242,12 +235,55 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
                 break
 
     # separate the 1st, 2nd and 3rd components of the DATEs in three lists
-    if separator == '' :
-        datelist = list(map(splitDMMMY,date))
-    else :
+    if separator != '' :
+        # separate the 1st, 2nd and 3rd components of the DATEs in three lists
         datelist = separator.join(date).split(separator)
         datelist = [ datelist[0::3] , datelist[1::3] , datelist[2::3] ]
     
+    else :
+        l = 0
+        if max(map(len,date)) == min(map(len,date)) :
+            l = max(map(len,date))
+        
+        if formatIN != '' :
+            x,y = 0,0
+            for i in range(1,len(formatIN)) :
+                if formatIN[i] != formatIN[i-1] :
+                    if x == 0 :
+                        x = i
+                    else :
+                        y = i
+                        break
+            datelist = [ [d[:x],d[x:y],d[y:]] for d in date ]
+            datelist = [ [ datelist[i][0] for i in range(len(datelist)) ] , [ datelist[i][1] for i in range(len(datelist)) ] , [ datelist[i][2] for i in range(len(datelist)) ] ]
+            
+        elif l == 6 :
+            datelist = [ [d[0:2],d[2:4],d[4:6]] for d in date ]
+            datelist = [ [ datelist[i][0] for i in range(len(datelist)) ] , [ datelist[i][1] for i in range(len(datelist)) ] , [ datelist[i][2] for i in range(len(datelist)) ] ]
+        elif l == 8 :
+            datelist = [ [d[0:2],d[2:4],d[4:8]] for d in date ]
+            datelist = [ [ datelist[i][0] for i in range(len(datelist)) ] , [ datelist[i][1] for i in range(len(datelist)) ] , [ datelist[i][2] for i in range(len(datelist)) ] ]        
+            if int(max(datelist[0])) <= 31 and int(min(datelist[2])) >= 1900 and int(max(datelist[2])) <= 2050 and int(max(datelist[1]))<=12 :
+                pass # DDMMYYYY
+            else :
+                datelist = [ [d[0:4],d[4:6],d[6:8]] for d in date ]
+                datelist = [ [ datelist[i][0] for i in range(len(datelist)) ] , [ datelist[i][1] for i in range(len(datelist)) ] , [ datelist[i][2] for i in range(len(datelist)) ] ]        
+                if int(max(datelist[2])) <= 31 and int(min(datelist[0])) >= 1900 and int(max(datelist[0])) <= 2050 and int(max(datelist[1]))<=12 :
+                    pass # YYYYMMDD
+                else :
+                    raise UndefinedDateFormat('unable to idenfy date format, please provide with keyword formatIN')
+        elif l == 9 :
+            x,y = 0,0
+            for i in range(9) :
+                if not date[0][i].isdigit() and x == 0 :
+                    x = i
+                elif date[0][i].isdigit() and x > 0 :
+                    y = i
+                    break
+            datelist = [ [d[:x],d[x:y],d[y:]] for d in date ]
+            datelist = [ [ datelist[i][0] for i in range(len(datelist)) ] , [ datelist[i][1] for i in range(len(datelist)) ] , [ datelist[i][2] for i in range(len(datelist)) ] ]
+        else :
+            raise UndefinedDateFormat('unable to idenfy date format, please provide with keyword formatIN')
 
 
     # if formatIN is not defined try to guess what it is
