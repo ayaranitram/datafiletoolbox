@@ -222,6 +222,11 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
         if formatIN == '' :
             formatIN = 'YYYY-MM-DD'
     
+    if type(date) is dt.datetime :
+        date = str( date ).split()[0]
+        if formatIN == '' :
+            formatIN = 'YYYY-MM-DD'
+    
     if type(date) is str :
         sample = date.strip(' "\'')
         date = [ date ]
