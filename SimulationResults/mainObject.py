@@ -2880,7 +2880,7 @@ class SimResult(object):
     def fill_FieldBasics(self) :
         np.seterr(divide='ignore', invalid='ignore')
         
-        if type(self.get_Vector('FOPR')['FOPR']) == np.ndarray and type(self.get_Vector('FWPR')['FWPR']) == np.ndarray :
+        if self.is_Key('FOPR') is True and type(self.get_Vector('FOPR')['FOPR']) is np.ndarray and self.is_Key('FWPR') is True and type(self.get_Vector('FWPR')['FWPR']) is np.ndarray :
             # calculated FLPR if not available:
             if self.is_Key('FLPR') is False or len( self.get_Vector('FLPR')['FLPR'] ) < len( self.get_Vector('FWPR')['FWPR'] ) or type(self.get_Vector('FLPR')['FLPR']) != np.ndarray :
                 try :
@@ -2913,8 +2913,8 @@ class SimResult(object):
                 except :
                     _verbose( self.speak , 2 , 'failed to create missing vector FOWR.')
                     
-        # calculated FGOR if not available:
-        if type(self.get_Vector('FOPR')['FOPR']) == np.ndarray and type(self.get_Vector('FGPR')['FGPR']) == np.ndarray :
+        if self.is_Key('FOPR') is True and type(self.get_Vector('FOPR')['FOPR']) is np.ndarray and self.is_Key('FGPR') is True and type(self.get_Vector('FGPR')['FGPR']) is np.ndarray :
+            # calculated FGOR if not available:
             if self.is_Key('FGOR') is False or len( self.get_Vector('FGOR')['FGOR'] ) < len( self.get_Vector('FOPR')['FOPR'] ) or type(self.get_Vector('FGOR')['FGOR']) != np.ndarray :
                 try :
                     Vector = np.array( np.divide( np.array( self.get_Vector('FGPR')['FGPR'] , dtype='float' ) , np.array( self.get_Vector('FOPR')['FOPR'] , dtype='float' ) ) ,dtype='float')
@@ -2923,8 +2923,7 @@ class SimResult(object):
                 except :
                     _verbose( self.speak , 2 , 'failed to create missing vector FGOR.')
         
-        # calculated FOGR if not available:
-        if type(self.get_Vector('FOPR')['FOPR']) == np.ndarray and type(self.get_Vector('FGPR')['FGPR']) == np.ndarray :
+            # calculated FOGR if not available:
             if self.is_Key('FOGR') is False or len( self.get_Vector('FOGR')['FOGR'] ) < len( self.get_Vector('FOPR')['FOPR'] ) or type(self.get_Vector('FOGR')['FOGR']) != np.ndarray :
                 try :
                     Vector = np.array( np.divide( np.array( self.get_Vector('FOPR')['FOPR'] , dtype='float' ) , np.array( self.get_Vector('FGPR')['FGPR'] , dtype='float' ) ) ,dtype='float')
@@ -2933,7 +2932,7 @@ class SimResult(object):
                 except :
                     _verbose( self.speak , 2 , 'failed to create missing vector FOGR.')
     
-        if type(self.get_Vector('FOPT')['FOPT']) == np.ndarray and type(self.get_Vector('FWPT')['FWPT']) == np.ndarray :
+        if self.is_Key('FOPT') is True and type(self.get_Vector('FOPT')['FOPT']) is np.ndarray and self.is_Key('FWPT') is True and type(self.get_Vector('FWPT')['FWPT']) is np.ndarray :
             # calculated FLPR if not available:
             if self.is_Key('FLPT') is False or len( self.get_Vector('FLPT')['FLPT'] ) < len( self.get_Vector('FWPT')['FWPT'] ) or type(self.get_Vector('FLPT')['FLPT']) != np.ndarray :
                 try :
@@ -2946,13 +2945,13 @@ class SimResult(object):
                     except :
                         _verbose( self.speak , 2 , 'failed to create missing vector FLPT.')
         
-        if type(self.get_Vector('TIME')['TIME']) == np.ndarray :
+        if self.is_Key('TIME') is True and type(self.get_Vector('TIME')['TIME']) is np.ndarray :
             if self.is_Key('DATE') is False or len( self.get_Vector('DATE')['DATE'] ) < len( self.get_Vector('TIME')['TIME'] ) or type(self.get_Vector('DATE')['DATE']) != np.ndarray :
                 self.createDATES()
             if self.is_Key('DATES') is False or len( self.get_Vector('DATES')['DATES'] ) < len( self.get_Vector('TIME')['TIME'] ) or type(self.get_Vector('DATES')['DATES']) != np.ndarray :
                 self.createDATES()
         
-        if type(self.get_Vector('DATE')['DATE']) == np.ndarray :
+        if self.is_Key('DATE') is True and type(self.get_Vector('DATE')['DATE']) is np.ndarray :
             for T in ['YEAR','MONTH','DAY'] :
                 if self.is_Key(T) is False or len( self.get_Vector(T)[T] ) < len( self.get_Vector('DATE')['DATE'] ) or type(self.get_Vector(T)[T]) != np.ndarray :
                     if T == 'YEAR' :
@@ -2962,7 +2961,7 @@ class SimResult(object):
                     elif T == 'DAY' :
                         self.createDAY()
             
-    
+            
         np.seterr(divide=None, invalid=None)
 
 
@@ -2973,7 +2972,7 @@ class SimResult(object):
             if type(well) is str and len(well.strip()) > 0 :
                 well = well.strip()
                 _verbose( self.speak , 2 , ' calculating basic ratios for the well ' + well )
-                if type(self.get_Vector('WOPR:'+well)['WOPR:'+well]) == np.ndarray and type(self.get_Vector('WWPR:'+well)['WWPR:'+well]) == np.ndarray :
+                if self.is_Key('WOPR:'+well) is True and type(self.get_Vector('WOPR:'+well)['WOPR:'+well]) is np.ndarray and self.is_Key('WWPR:'+well) is True and type(self.get_Vector('WWPR:'+well)['WWPR:'+well]) is np.ndarray :
                     # calculated WLPR if not available:
                     if self.is_Key('WLPR:'+well) is False or len( self.get_Vector('WLPR:'+well)['WLPR:'+well] ) < len( self.get_Vector('WWPR:'+well)['WWPR:'+well] ) or type(self.get_Vector('WLPR:'+well)['WLPR:'+well]) != np.ndarray :
                         try :
@@ -3006,7 +3005,7 @@ class SimResult(object):
                             _verbose( self.speak , 2 , 'failed to create missing vector WOWR:'+well)
                             
                 # calculated WGOR if not available:
-                if type(self.get_Vector('WOPR:'+well)['WOPR:'+well]) == np.ndarray and type(self.get_Vector('WGPR:'+well)['WGPR:'+well]) == np.ndarray :
+                if self.is_Key('WOPR:'+well) is True and type(self.get_Vector('WOPR:'+well)['WOPR:'+well]) is np.ndarray and self.is_Key('WGPR:'+well) is True and type(self.get_Vector('WGPR:'+well)['WGPR:'+well]) is np.ndarray :
                     if self.is_Key('WGOR:'+well) is False or len( self.get_Vector('WGOR:'+well)['WGOR:'+well] ) < len( self.get_Vector('WOPR:'+well)['WOPR:'+well] ) or type(self.get_Vector('WGOR:'+well)['WGOR:'+well]) != np.ndarray :
                         try :
                             Vector = np.array( np.divide( np.array( self.get_Vector('WGPR:'+well)['WGPR:'+well] , dtype='float' ) , np.array( self.get_Vector('WOPR:'+well)['WOPR:'+well] , dtype='float' ) ) ,dtype='float')
@@ -3024,7 +3023,7 @@ class SimResult(object):
                         except :
                             _verbose( self.speak , 2 , 'failed to create missing vector WOGR:'+well)
             
-                if type(self.get_Vector('WOPT:'+well)['WOPT:'+well]) == np.ndarray and type(self.get_Vector('WWPT:'+well)['WWPT:'+well]) == np.ndarray :
+                if self.is_Key('WOPT:'+well) is True and type(self.get_Vector('WOPT:'+well)['WOPT:'+well]) is np.ndarray and self.is_Key('WWPT:'+well) is True and type(self.get_Vector('WWPT:'+well)['WWPT:'+well]) is np.ndarray :
                     # calculated WLPR if not available:
                     if self.is_Key('WLPT:'+well) is False or len( self.get_Vector('WLPT:'+well)['WLPT:'+well] ) < len( self.get_Vector('WWPT:'+well)['WWPT:'+well] ) or type(self.get_Vector('WLPT:'+well)['WLPT:'+well]) != np.ndarray :
                         try :
@@ -3036,6 +3035,7 @@ class SimResult(object):
                                 _verbose( self.speak , 2 , 'vector WLPT:' + well + ' integrated from WLPR:' + well + '.')
                             except :
                                 _verbose( self.speak , 2 , 'failed to create missing vector WLPT:'+well)
+    
     
         np.seterr(divide=None, invalid=None)
 
@@ -3087,7 +3087,7 @@ class SimResult(object):
             if type(item) is str and len(item.strip()) > 0 :
                 item = item.strip()
                 _verbose( self.speak , 2 , ' calculating basic ratios for the item ' + item )
-                if type(self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item]) == np.ndarray and type(self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item]) == np.ndarray :
+                if self.is_Key(KT+'OPR'+item) is True and type(self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item]) is np.ndarray and self.is_Key(KT+'WPR'+item) is True and type(self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item]) is np.ndarray :
                     # calculated WLPR if not available:
                     if self.is_Key(KT+'LPR'+item) is False or len( self.get_Vector(KT+'LPR'+item)[KT+'LPR'+item] ) < len( self.get_Vector(KT+'WPR'+item)[KT+'WPR'+item] ) or type(self.get_Vector(KT+'LPR'+item)[KT+'LPR'+item]) != np.ndarray :
                         try :
@@ -3120,7 +3120,7 @@ class SimResult(object):
                             _verbose( self.speak , 2 , 'failed to create missing vector '+KT+'OWR'+item)
                             
                 # calculated WGOR if not available:
-                if type(self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item]) == np.ndarray and type(self.get_Vector(KT+'GPR'+item)[KT+'GPR'+item]) == np.ndarray :
+                if self.is_Key(KT+'OPR'+item) is True and type(self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item]) is np.ndarray and self.is_Key(KT+'GPR'+item) is True and type(self.get_Vector(KT+'GPR'+item)[KT+'GPR'+item]) is np.ndarray :
                     if self.is_Key(KT+'GOR'+item) is False or len( self.get_Vector(KT+'GOR'+item)[KT+'GOR'+item] ) < len( self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item] ) or type(self.get_Vector(KT+'GOR'+item)[KT+'GOR'+item]) != np.ndarray :
                         try :
                             Vector = np.array( np.divide( np.array( self.get_Vector(KT+'GPR'+item)[KT+'GPR'+item] , dtype='float' ) , np.array( self.get_Vector(KT+'OPR'+item)[KT+'OPR'+item] , dtype='float' ) ) ,dtype='float')
@@ -3138,7 +3138,7 @@ class SimResult(object):
                         except :
                             _verbose( self.speak , 2 , 'failed to create missing vector '+KT+'OGR'+item)
             
-                if type(self.get_Vector(KT+'OPT'+item)[KT+'OPT'+item]) == np.ndarray and type(self.get_Vector(KT+'WPT'+item)[KT+'WPT'+item]) == np.ndarray :
+                if self.is_Key(KT+'OPT'+item) is True and type(self.get_Vector(KT+'OPT'+item)[KT+'OPT'+item]) is np.ndarray and self.is_Key(KT+'WPT'+item) is True and type(self.get_Vector(KT+'WPT'+item)[KT+'WPT'+item]) is np.ndarray :
                     # calculated WLPR if not available:
                     if self.is_Key(KT+'LPT'+item) is False or len( self.get_Vector(KT+'LPT'+item)[KT+'LPT'+item] ) < len( self.get_Vector(KT+'WPT'+item)[KT+'WPT'+item] ) or type(self.get_Vector(KT+'LPT'+item)[KT+'LPT'+item]) != np.ndarray :
                         try :
@@ -3150,7 +3150,8 @@ class SimResult(object):
                                 _verbose( self.speak , 2 , 'vector ' + KT +'LPT' + item + ' integrated from ' + KT + 'LPR' + item + '.')
                             except :
                                 _verbose( self.speak , 2 , 'failed to create missing vector '+KT+'LPT'+item)
-    
+
+
         np.seterr(divide=None, invalid=None)
 
 
