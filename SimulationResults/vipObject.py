@@ -42,7 +42,8 @@ class VIP(_SimResult):
         self.LPGcorrected = False
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             self.selectLoader(inputFile)
-        self.initialize()
+        if self.results != {} :
+            self.initialize()
     
     def keys(self) :
         if self.ECLstyle :
