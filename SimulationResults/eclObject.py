@@ -46,7 +46,8 @@ class ECL(_SimResult):
         self.kind = ECL
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             self.loadSummary(inputFile)
-        self.initialize()
+        if self.results is not None :
+            self.initialize()
 
     def loadSummary(self,SummaryFilePath):
         if type(SummaryFilePath) == str :
@@ -80,7 +81,8 @@ class ECL(_SimResult):
                 self.fill_FieldBasics()
                 
             else :
-                print("the file doesn't exists:\n  -> " + SummaryFilePath)
+                # print("\n ERROR the file doesn't exists:\n  -> " + SummaryFilePath)
+                raise FileNotFoundError( "the file doesn't exists:\n  -> " + SummaryFilePath )
         else :
             print("SummaryFilePath must be a string")
         
