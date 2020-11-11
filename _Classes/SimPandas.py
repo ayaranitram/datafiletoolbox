@@ -236,6 +236,23 @@ class SimSeries(Series) :
     def S(self) :
         return self.as_Series()
     
+    def to(self,units) :
+        """
+        returns the series converted to the requested units if possible, 
+        else returns None
+        """
+        return self.convert(units)
+    def convert(self,units) :
+        """
+        returns the series converted to the requested units if possible, 
+        else returns None
+        """
+        if type(units) is str and type(self.units) is str :
+            if convertibleUnits(self.units,units) :
+                return SimSeries( data=convertUnit( self.S , self.units , units , self.speak ) , units=units , dtype=self.dtype ) 
+        if type(units) is str and len(set(self.units.values())) == 1 :
+            return SimSeries( data=convertUnit( self.S , list(set(self.units.values()))[0] , units , self.speak ) , units=units , dtype=self.dtype ) 
+    
     @property
     def wells(self) :
         objs = []
@@ -1059,6 +1076,46 @@ class SimDataFrame(DataFrame) :
     @property
     def DF(self) :
         return self.as_DataFrame()
+
+    def to(self,units) :
+        """
+        returns the series converted to the requested units if possible, 
+        else returns None
+        """
+        return self.convert(units)
+    def convert(self,units) :
+        """
+        returns the series converted to the requested units if possible, 
+        else returns None
+        """
+        if type(units) is str and len(set( self.units.values() )) == 1 :
+            if convertibleUnits(list(set( self.units.values() ))[0],units) :
+                return SimDataFrame( data=convertUnit( self.DF , list(set( self.units.values() ))[0] , units , self.speak ) , units=units ) 
+
+    def dropna(self,**kwargs) :
+        if 'axis' not in kwargs :
+            kwargs['axis'] = 'index'
+        if 'how' not in kwargs :
+            kwargs['how'] = 'all'
+        return SimDataFrame( data=self.DF.dropna(**kwargs) , units=self.units , indexName=self.index.name )
+    
+    def drop(self,**kwargs) :
+        return SimDataFrame( data=self.DF.drop(**kwargs) , units=self.units , indexName=self.index.name )
+
+    def drop_duplicates(self,**kwargs) :
+        return SimDataFrame( data=self.DF.drop_duplicates(**kwargs) , units=self.units , indexName=self.index.name )
+    
+    def fillna(self,**kwargs) :
+        if 'axis' not in kwargs :
+            kwargs['axis'] = 'index'
+        return SimDataFrame( data=self.DF.fillna(**kwargs) , units=self.units , indexName=self.index.name )
+        
+    def interpolate(self,**kwargs) :
+        if 'axis' not in kwargs :
+            kwargs['axis'] = 'index'
+        if 'method' not in kwargs :
+            kwargs['method'] = 'slinear'
+        return SimDataFrame( data=self.DF.interpolate(**kwargs) , units=self.units , indexName=self.index.name )
 
     def rename(self,**kwargs) :
         cBefore = list(self.columns)
