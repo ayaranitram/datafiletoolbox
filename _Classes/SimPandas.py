@@ -1074,7 +1074,7 @@ class SimDataFrame(DataFrame) :
             raise ValueError( "The key '"+str(key)+"' is not a column name of this DataFrame.")
         super().set_index(key,drop=drop,append=append,inplace=inplace,verify_integrity=verify_integrity,**kwargs)
     
-    def to_excel(self,excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None, header=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None) :
+    def to_excel(self,excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None, header=True, units=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None) :
         """
         Wrapper of .to_excel method from Pandas. 
         On top of Pandas method this method is able to split the data into different 
@@ -1117,6 +1117,8 @@ class SimDataFrame(DataFrame) :
         header : bool or list of str, default True
             Write out the column names. If a list of string is given it is
             assumed to be aliases for the column names.
+        units : bool, default True
+            Write the units of the column under the header name.
         index : bool, default True
             Write row names (index).
         index_label : str or sequence, optional
@@ -1146,10 +1148,9 @@ class SimDataFrame(DataFrame) :
             is to be frozen.
         """
         # if header is not requiered and sheet_name is str, directly pass it to Pandas
-        if not header and type(sheet_name) is str :
+        if ( not header and type(sheet_name) is str ) or ( not units and type(sheet_name) is str ) :
             self.DF.to_excel(excel_writer, sheet_name=sheet_name, na_rep=na_rep, float_format=float_format, columns=columns, header=False, index=index, index_label=index_label, startrow=startrow, startcol=startcol, engine=engine, merge_cells=merge_cells, encoding=encoding, inf_rep=inf_rep, verbose=verbose, freeze_panes=freeze_panes)
 
-        
         # helper function
         firstChar = lambda s : s[0]
         
@@ -1160,6 +1161,15 @@ class SimDataFrame(DataFrame) :
             cols = list(self.columns)
         else :
             cols = columns.copy()
+        
+        # validate split_by parameter
+        if type(split_by) is not str and split_by is not None :
+            raise ValueError(" `split_by´ parameter must be 'left', 'right', 'first' or None.")
+        
+        if type(split_by) is str :
+            split_by = split_by.strip().lower()
+        if len(split_by) == 0 or split_by == 'none' :
+            split_by = None
         
         # define the split and sheet(s) name(s)
         if split_by is None : # no split_by, use a single sheet
@@ -1178,6 +1188,8 @@ class SimDataFrame(DataFrame) :
                         names = ('GROUPS',)
                     elif names == 'R' :
                         names = ('REGIONS',)
+                    elif names == 'C' :
+                        names = ('CONNECTIONS',)
                     else :
                         names = ('Sheet1',)
                 else :
@@ -1195,18 +1207,42 @@ class SimDataFrame(DataFrame) :
             names = self[cols].right
         elif split_by == 'first' :
             names = tuple(set(map(firstChar,cols)))
+        else :
+            raise ValueError(" `split_by´ parameter must be 'left', 'right', 'first' or None.")
         
-        # initialize an instance of ExcelWriter
+        # initialize an instance of ExcelWriter or use the instance provided
         from pandas import ExcelWriter
-        SDFwriter = ExcelWriter("SimDataFrame_header_with_units.xlsx", engine='xlsxwriter')
+        if isinstance(excel_writer , ExcelWriter) :
+            SDFwriter = excel_writer
+        elif type(excel_writer) is str :
+            if excel_writer.strip().lower().endswith('.xlsx') :
+                pass # ok
+            elif excel_writer.strip().lower().endswith('.xls') :
+                if verbose :
+                    print(" the file")
+            SDFwriter = ExcelWriter(excel_writer, engine='xlsxwriter')
+        else :
+            raise ValueError(" `excel_writer´ parameter must be a string path to an .xlsx file or an ExcelWriter instance.")
         
         headerRows = 2 if header is True else 0
         if freeze_panes is None :
-                    freeze_panes = (headerRows,0)
+            freeze_panes = (headerRows,0)
                     
         # if single name, simpy write the output using .to_excel method from Pandas
-        if len(names) == 1 :
-            self.DF.to_excel(SDFwriter, sheet_name=names[0], na_rep=na_rep, float_format=float_format, columns=cols, header=False, index=index, index_label=index_label, startrow=startrow+headerRows, startcol=startcol, engine=engine, merge_cells=merge_cells, encoding=encoding, inf_rep=inf_rep, verbose=verbose, freeze_panes=freeze_panes)
+        for i in range(len(names)) :
+            
+            # get the columns for this sheet
+            if split_by is None :
+                colselect = cols
+            elif split_by == 'left' :
+                colselect = fnmatch.filter( cols , names[i]+'*' )
+            elif split_by == 'right' :
+                colselect = fnmatch.filter( cols , '*'+names[i] )
+            elif split_by == 'first' :
+                colselect = fnmatch.filter( cols , names[i][0]+'*' )
+            
+            # write the sheet to the ExcelWriter
+            self.DF.to_excel(SDFwriter, sheet_name=names[i], na_rep=na_rep, float_format=float_format, columns=colselect, header=False, index=index, index_label=index_label, startrow=startrow+headerRows, startcol=startcol, engine=engine, merge_cells=merge_cells, encoding=encoding, inf_rep=inf_rep, verbose=verbose, freeze_panes=freeze_panes)
             
             # Get the xlsxwriter workbook and worksheet objects.
             SDFworkbook  = SDFwriter.book
@@ -1222,6 +1258,11 @@ class SimDataFrame(DataFrame) :
                         colUnit = self.units[cols[c]]
                     SDFworksheet.write(startrow, startcol, cols[c], header_format)
                     SDFworksheet.write(startrow+1, startcol, colUnit, units_format)
+        
+        if isinstance(excel_writer , ExcelWriter) :
+            return SDFwriter
+        elif type(excel_writer) is str :
+            SDFwriter.save()
         
     
     def to_Pandas(self) :
