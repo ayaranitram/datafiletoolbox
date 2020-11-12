@@ -253,6 +253,15 @@ class SimSeries(Series) :
         if type(units) is str and len(set(self.units.values())) == 1 :
             return SimSeries( data=convertUnit( self.S , list(set(self.units.values()))[0] , units , self.speak ) , units=units , dtype=self.dtype ) 
     
+    def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
+        return SimSeries( data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset) , units=self.units , dtype=self.dtype )
+    
+    def dropna(self, axis=0, inplace=False, how=None) :
+        return SimSeries( data=self.DF.dropna(axis=axis, inplace=inplace, how=how) , units=self.units , dtype=self.dtype )
+
+    def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise') :
+        return SimSeries( data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors='errors') , units=self.units , dtype=self.dtype )    
+    
     @property
     def wells(self) :
         objs = []
@@ -1092,30 +1101,32 @@ class SimDataFrame(DataFrame) :
             if convertibleUnits(list(set( self.units.values() ))[0],units) :
                 return SimDataFrame( data=convertUnit( self.DF , list(set( self.units.values() ))[0] , units , self.speak ) , units=units ) 
 
-    def dropna(self,**kwargs) :
-        if 'axis' not in kwargs :
-            kwargs['axis'] = 'index'
-        if 'how' not in kwargs :
-            kwargs['how'] = 'all'
-        return SimDataFrame( data=self.DF.dropna(**kwargs) , units=self.units , indexName=self.index.name )
+    def dropna(self,axis='index', how='all', thresh=None, subset=None, inplace=False) :
+        return SimDataFrame( data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace) , units=self.units , indexName=self.index.name )
     
-    def drop(self,**kwargs) :
-        return SimDataFrame( data=self.DF.drop(**kwargs) , units=self.units , indexName=self.index.name )
+    def drop(self,labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise') :
+        return SimDataFrame( data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors) , units=self.units , indexName=self.index.name )
 
-    def drop_duplicates(self,**kwargs) :
-        return SimDataFrame( data=self.DF.drop_duplicates(**kwargs) , units=self.units , indexName=self.index.name )
+    def drop_duplicates(self,subset=None, keep='first', inplace=False, ignore_index=False) :
+        return SimDataFrame( data=self.DF.drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index) , units=self.units , indexName=self.index.name )
     
-    def fillna(self,**kwargs) :
-        if 'axis' not in kwargs :
-            kwargs['axis'] = 'index'
-        return SimDataFrame( data=self.DF.fillna(**kwargs) , units=self.units , indexName=self.index.name )
+    def fillna(self,value=None, method=None, axis='index', inplace=False, limit=None, downcast=None) :
+        return SimDataFrame( data=self.DF.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast) , units=self.units , indexName=self.index.name )
         
-    def interpolate(self,**kwargs) :
-        if 'axis' not in kwargs :
-            kwargs['axis'] = 'index'
-        if 'method' not in kwargs :
-            kwargs['method'] = 'slinear'
-        return SimDataFrame( data=self.DF.interpolate(**kwargs) , units=self.units , indexName=self.index.name )
+    def interpolate(self,method='slinear', axis='index', limit=None, inplace=False, limit_direction=None, limit_area=None, downcast=None, **kwargs) :
+        return SimDataFrame( data=self.DF.interpolate(method=method, axis=axis, limit=limit, inplace=inplace, limit_direction=limit_direction, limit_area=limit_area, downcast=downcast, **kwargs) , units=self.units , indexName=self.index.name )
+
+    def replace(self,to_replace=None, value=None, inplace=False, limit=None, regex=False, method='pad') :
+        return SimDataFrame( data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method) , units=self.units , indexName=self.index.name )
+
+    def groupby(self,by=None, axis=0, level=None, as_index=True, sort=True, group_keys=True, squeeze=False, observed=False, dropna=True) :
+        return SimDataFrame( data=self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna) , units=self.units , indexName=self.index.name ) 
+    
+    def aggregate(self,func=None, axis=0, *args, **kwargs) :
+        return SimDataFrame( data=self.DF.aggregate(func=func, axis=axis, *args, **kwargs) , units=self.units , indexName=self.index.name ) 
+    
+    def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
+        return SimDataFrame( data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset) , units=self.units , indexName=self.index.name ) 
 
     def rename(self,**kwargs) :
         cBefore = list(self.columns)
