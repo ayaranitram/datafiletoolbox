@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.colors import is_color_like
-
+from math import log
 
 from .._common.functions import _is_SimulationResult
 from .._common.inout import _verbose
@@ -27,7 +27,7 @@ def savePlot(figure,FileName='') :
     figure.savefig(FileName)
 
 
-def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] ,  graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={} , linewidth=[] , DoNotRepeatColors=True , ColorBySimulation=None , ColorBySeries=None) :
+def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] , graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={} , linewidth=[], linestyle=[] , markers=[] , DoNotRepeatColors=True , ColorBySimulation=None , ColorBySeries=None , minlinewidth=0.1) :
     """
     uses matplot lib to create graphs of the selected vectors 
     for the selected SimResult objects.
@@ -221,18 +221,81 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
             Xlabel = X_Key[0].split(':')[0] + ' [ ' + str(X_Units[0]) + ' ]'
         else :
             Xlabel = ', '.join(X_Key) +  ' [ ' + ', '.join(list(set(X_Units))) + ' ]'
-            
+    
+    
+    # check markers parameter
+    if type( markers ) in [int,str,tuple] :
+        markers = [markers]
+    assert type(markers) is list 
+    if len( markers ) == 0 :
+        if len(SimResultObjects) > 1 :
+            markers = ['None'] * len(SimResultObjects) 
+        elif len(Y_Keys) > 1 :
+            markers = ['None'] * len(Y_Keys) 
+    # overwrite the default marker 
+    # by model first
+    if len( SimResultObjects ) > 0 :
+        for m in range( len( SimResultObjects ) ) :
+            if SimResultObjects[m].get_Marker() is not None : 
+                markers[m] = SimResultObjects[m].get_Marker()
+    # by specific keys if single 
+    elif len(Y_Keys) > 0 :
+        for m in range( len( Y_Keys ) ) :
+            if SimResultObjects[0].get_Marker(Y_Keys[m]) is not None : 
+                markers[m] = SimResultObjects[0].get_Marker(Y_Keys[m])
+    
+    
+    # check linestyle parameter
+    if type( linestyle ) in [str] :
+        linestyle = [linestyle]
+    assert type(linestyle) is list 
+    if len( linestyle ) == 0 :
+        if len(SimResultObjects) > 1 :
+            linestyle = ['None'] * len(SimResultObjects)
+        elif len(Y_Keys) > 1 :
+            linestyle = ['None'] * len(Y_Keys)
+    # overwrite the default marker 
+    # by model first
+    if len( SimResultObjects ) > 0 :
+        for s in range( len( SimResultObjects ) ) :
+            if SimResultObjects[s].get_Style() is not None : 
+                linestyle[s] = SimResultObjects[s].get_Style()
+    # by specific keys if single 
+    elif len(Y_Keys) > 0 :
+        for s in range( len( Y_Keys ) ) :
+            if SimResultObjects[0].get_Style(Y_Keys[s]) is not None : 
+                linestyle[s] = SimResultObjects[0].get_Style(Y_Keys[s])   
+    
     
     # check linewith parameter
-    if type(linewidth) is int or type(linewidth) is float :
-        linewidth = [linewidth] * len(Y_Keys)
+    if type( linewidth ) is int or type( linewidth ) is float :
+        linewidth = [linewidth]
     assert type(linewidth) is list 
-    if len(linewidth) == 0 :
-        linewidth = 2.0 / len( SimResultObjects )
-        if linewidth < 0.25 :
-            linewidth = 0.25
-        linewidth = [linewidth] * len(Y_Keys)
-        
+    if len( linewidth ) == 0 :
+        if len(SimResultObjects) > 1 :
+            linewidth = 2.0 / round((log(len( SimResultObjects )) +1),2)
+            if linewidth < minlinewidth :
+                linewidth = minlinewidth
+            linewidth = [linewidth] * len(SimResultObjects) 
+        elif len(Y_Keys) > 1 :
+            linewidth = 2.0 / round((log(len( Y_Keys )) +1),2)
+            if linewidth < minlinewidth :
+                linewidth = minlinewidth
+            linewidth = [linewidth] * len(Y_Keys) 
+    # overwrite the default linewidth 
+    # by model first
+    if len( SimResultObjects ) > 0 :
+        linewidth = linewidth * len(SimResultObjects)
+        for w in range( len( SimResultObjects ) ) :
+            if SimResultObjects[w].get_Width() is not None : 
+                linewidth[w] = SimResultObjects[w].get_Width()
+    # by specific keys if single 
+    elif len(Y_Keys) > 0 :
+        linewidth = linewidth * len(Y_Keys)
+        for w in range( len( Y_Keys ) ) :
+            if SimResultObjects[0].get_Width(Y_Keys[w]) is not None : 
+                linewidth[w] = SimResultObjects[0].get_Width(Y_Keys[w])
+            
     
     # set line colors and style:
     if len( SimResultObjects ) == 1 : # only one simulation object to plot
@@ -270,12 +333,18 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
             else :
                 SeriesColors[c] = ( random.random() , random.random() , random.random() )
             # time.sleep(timeout)
-        
+            
+        # plot history keywords as dots
+        if SimResultObjects[0].historyAsDots :
+            for y in range( len( Y_Keys ) ) :
+                if _mainKey( Y_Keys[y] ).endswith('H') :
+                    markers[y] = 'o'
+                    linestyle[y] = 'None'
+                    
         if DoNotRepeatColors : # repeated colors not-allowrd
             for c in range ( NColors , len( SeriesColors ) ) :
                 while SeriesColors.count(SeriesColors[c]) > 1 :
                     SeriesColors[c] = ( random.random() , random.random() , random.random() )
-
         else : # repeated colors allowed
             Clean = list(set(SeriesColors))
             CleanCount = []
@@ -358,6 +427,13 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
                     SeriesColors[c] = ( 0 , (3,5,1,5))
                 else :
                     SeriesColors[c] = '--'
+            
+            # plot history keywords as dots
+            if SimResultObjects[0].historyAsDots :
+                for y in range( len( Y_Keys ) ) :
+                    if _mainKey( Y_Keys[y] ).endswith('H') :
+                        markers[y] = 'o'
+                        linestyle[y] = 'None'
             
             if DoNotRepeatColors : # repeated colors not-allowrd
                 if len( set( SeriesColors )) == 1 :
@@ -500,7 +576,8 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
                     else : 
                         Yax = Y_Axis[ y ]
                         Lw = linewidth[y]
-                        Ls = 'solid'
+                        Ls = linestyle[y]
+                        Mk = markers[y]
                         if len( SimResultObjects ) == 1 :
                             Lc = SeriesColors[y]
                         else :
@@ -510,13 +587,7 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
                         if len( SimResultObjects ) > 1 and len( Y_Keys ) > 1 :
                             Ls = SeriesColors[s]
                         
-                        plotLines += Axis[ Yax  ].plot( X ,Y , linestyle=Ls , linewidth=Lw , color=Lc , label=ThisLabel) 
-                        # if len( SimResultObjects ) == 1 :
-                        #     plotLines += Axis[ Yax  ].plot( X ,Y , linestyle=Ls , linewidth=Lw , color=Lc , label=ThisLabel) 
-                        # elif len( Y_Keys ) == 1 :
-                        #     plotLines += Axis[ 0 ].plot( X ,Y , linestyle=Ls , linewidth=Lw , color=Lc , label=ThisLabel) 
-                        # else :
-                        #     plotLines += Axis[ Yax  ].plot( X ,Y , linestyle=Ls , linewidth=Lw , color=Lc , label=ThisLabel) 
+                        plotLines += Axis[ Yax  ].plot( X ,Y , linestyle=Ls , linewidth=Lw , color=Lc , marker=Mk , label=ThisLabel) 
             
                         if Xdate :
                             # round to nearest years.

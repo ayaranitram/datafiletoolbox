@@ -296,6 +296,15 @@ class SimResult(object):
         self.plotUnits = {}
         self.color = ( random.random() , random.random() , random.random() )
         self.keyColors = {}
+        self.width = None
+        self.keyWidths = {}
+        self.marker = None
+        self.keyMarkers = {}
+        self.style = '-'
+        self.keyStyles = {}
+        self.alpha = 1.0
+        self.keyAlphas = {}
+        self.historyAsDots = True
         self.colorGrouping = 6
         self.DTindex = 'TIME'
         self.restarts = []
@@ -1678,6 +1687,14 @@ class SimResult(object):
             return string
     
     def set_Color(self,MatplotlibColor=None,Key=None):
+        """
+        Defines the color to use in graphs created from .plot() method, 
+        must be a valid matplotlib.
+        
+        The provided color applies to all the values ploted from this instance,
+        optional parameter `Key´ could be used to assing the property to a 
+        particular Key.
+        """
         if MatplotlibColor is None :
             MatplotlibColor = ( random.random() , random.random() , random.random() )
         elif not is_color_like(MatplotlibColor) :
@@ -1704,6 +1721,148 @@ class SimResult(object):
                 return None
         elif Key in self.attributes :
             return self.keyColors[Key]
+    
+    def set_Width(self,linewidth=None,Key=None):
+        """
+        Defines the line width to use in graphs created from .plot() method, 
+        must be a positive float.
+        
+        The provided line width applies to all the values ploted from this instance,
+        optional parameter `Key´ could be used to assing the property to a 
+        particular Key.
+        """
+        if linewidth is None :
+            linewidth = 2.0
+        elif type(linewidth) not in [float,int,bool] :
+            _verbose(self.speak,3,'the `linewidth´ value must be int or float' )
+        if type(linewidth) in [int,bool] :
+           linewidth = float( linewidth )
+        if Key is None :
+            self.width = linewidth
+        else :
+            if self.is_Key(Key) :
+                self.keyWidths[Key] = linewidth
+            elif Key in self.attributes :
+                self.keyWidths[Key] = linewidth
+                    
+    def get_Width(self,Key=None):
+        if Key is None :
+            return self.width
+        elif self.is_Key(Key) :
+            if Key in self.keyWidths :
+                return self.keyWidths[Key]
+            elif _mainKey(Key) in self.keyWidths :
+                return self.keyWidths[_mainKey(Key)]
+            else :
+                return None
+        elif Key in self.attributes :
+            return self.keyWidths[Key]
+    
+    def set_Style(self,linestyle='-',Key=None):
+        """
+        Defines the line style to use in graphs created from .plot() method, 
+        must be a valid matplotlib linestyle:
+            '-' or 'solid' 	      solid line
+            '--' or 'dashed'      dashed line
+            '-.' or 'dashdot'     dash-dotted line
+            ':' or 'dotted'	      dotted line
+            'None' or ' ' or ''   draw nothing
+        
+        The provided line style applies to all the values ploted from this instance,
+        optional parameter `Key´ could be used to assing the property to a 
+        particular Key.
+        """
+        if linestyle is None :
+            linestyle = 'None'
+        if linestyle is False :
+            if not linestyle.startswith('None') :
+                if self.get_Style(Key) in ['None',' ',''] :
+                    linestyle = 'None'
+                else :
+                    linestyle = 'None#'+self.get_Style(Key).strip()
+        elif linestyle is True :
+            if self.get_Style(Key) in ['None',' ',''] :
+                linestyle = '-'
+            elif self.get_Style(Key).startswith('None#') :
+                linestyle = self.get_Style(Key)[5:].strip()
+        if type(linestyle) is not str:
+            _verbose(self.speak,3,'the `linestyle´ value must be a string valid as matplotlib linestyle' )
+        elif linestyle not in ['-','solid','--','dashed','-.','dashdot',':','dotted','None',' ',''] :
+            _verbose(self.speak,3,'the `linestyle´ value must be a string valid as matplotlib linestyle:\n  '+"'-' or 'solid' 	      solid line\n  '--' or 'dashed'      dashed line\n  '-.' or 'dashdot'     dash-dotted line\n  ':' or 'dotted'	      dotted line\n  'None' or ' ' or ''   draw nothing\n" )
+       
+        if Key is None :
+            self.style = linestyle
+        else :
+            if self.is_Key(Key) :
+                self.keyStyles[Key] = linestyle
+            elif Key in self.attributes :
+                self.keyStyles[Key] = linestyle
+                    
+    def get_Style(self,Key=None):
+        if Key is None :
+            return 'None' if self.style.startswith('None#') else self.style
+        elif self.is_Key(Key) :
+            if Key in self.keyStyles :
+                return 'None' if self.keyStyles[Key].startswith('None#') else self.keyStyles[Key]
+            elif _mainKey(Key) in self.keyStyles :
+                return 'None' if self.keyStyles[_mainKey(Key)].startswith('None#') else self.keyStyles[_mainKey(Key)]
+            else :
+                return None
+        elif Key in self.attributes :
+            return 'None' if self.keyStyles[Key].startswith('None#') else self.keyStyles[Key]
+        
+    def set_Marker(self,marker=None,Key=None):
+        """
+        Defines the marker style to use in graphs created from .plot() method, 
+        must be a valir matplotlib marker.
+        
+        The provided marker applies to all the values ploted from this instance,
+        optional parameter `Key´ could be used to assing the property to a 
+        particular Key.
+        """
+        if marker is None :
+            marker = 2.0
+        if type(marker) is str :
+           if marker.strip() in [".",",","o","v","^","<",">","1","2","3","4","8","s","p","P","*","h","H","+","x","X","D","d","|","_","None"," ",""] :
+               marker = marker.strip()
+           elif len(marker.strip()) > 2 and marker.strip()[0] == marker.strip()[-1] :
+               marker = marker.strip()
+           else :
+               _verbose(self.speak,3,'the provided marker is not a valid string code for matplotlib' )
+        elif type(marker) in [int,float] :
+            if int(marker) >= 0 and int(marker) <= 11 :
+                market = int(marker)
+            else :
+               _verbose(self.speak,3,'the provided marker is not a valid integer for matplotlib' ) 
+        elif type(marker) is tuple :
+            if len(marker) == 3 :
+                if type(marker[0]) is int and marker[0] > 0 and type(marker[1]) is int and marker[1] in [0,1,2,3] and type(marker[2]) in [float,int] :
+                    pass # ok
+                else :
+                    _verbose(self.speak,3,'the provided marker is not a valid tuple - (numsides, style, angle) - for matplotlib' ) 
+        else :
+            _verbose(self.speak,3,'the provided marker could not be validated, will be stored as received' ) 
+            
+        if Key is None :
+            self.marker = marker
+        else :
+            if self.is_Key(Key) :
+                self.keyMarkers[Key] = marker
+            elif Key in self.attributes :
+                self.keyMarkers[Key] = marker
+                    
+    def get_Marker(self,Key=None):
+        if Key is None :
+            return 'None' if self.marker.startswith('None#') else self.marker
+        elif self.is_Key(Key) :
+            if Key in self.keyMarkers :
+                return 'None' if self.keyMarkers[Key].startswith('None#') else self.keyMarkers[Key]
+            elif _mainKey(Key) in self.keyMarkers :
+                return 'None' if self.keyMarkers[_mainKey(Key)].startswith('None#') else self.keyMarkers[_mainKey(Key)]
+            else :
+                return None
+        elif Key in self.attributes :
+            return 'None' if self.keyMarkers[Key].startswith('None#') else self.keyMarkers[Key]
 
 
     def set_Verbosity(self,verbosity_level):
