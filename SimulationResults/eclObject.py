@@ -82,8 +82,8 @@ class ECL(_SimResult):
                     
             if os.path.isfile(SummaryFilePath) :
                 _verbose( self.speak , 1 , ' > loading summary file:\n  ' + SummaryFilePath)
-                EclSum = loadEclSum()
-                self.results = EclSum(SummaryFilePath) # ecl.summary.EclSum(SummaryFilePath)
+                EclSummary = loadEclSum()
+                self.results = EclSummary(SummaryFilePath) # ecl.summary.EclSum(SummaryFilePath)
                 self.name = _extension(SummaryFilePath)[1]
                 self.set_FieldTime()
                 self.get_Wells(reload=True)
