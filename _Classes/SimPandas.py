@@ -189,9 +189,9 @@ class SimSeries(Series) :
             self.indexUnits = Udict[self.index.name]
         # overwrite the indexUnits with input from the argument indexName
         if 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is str and len(kwargsB['indexUnits'].strip())>0 :
-            self.index.units = kwargsB['indexUnits']
+            self.indexUnits = kwargsB['indexUnits']
         elif 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is dict and len(kwargsB['indexUnits'])>0 :
-            self.index.units = kwargsB['indexUnits'].copy()
+            self.indexUnits = kwargsB['indexUnits'].copy()
     
         # get separator for the column names, 'partA'+'separator'+'partB'
         if 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
