@@ -338,8 +338,8 @@ class SimResult(object):
                 if self.useSimPandas :
                     data=self.get_DataFrame(Key,Index)
                     units=self.get_Units(Key)
-                    indexUnits=self.get_Units(Index)
-                    return SimDataFrame( data=data , units=units , indexName=Index , indexUnits=indexUnits , nameSeparator=':' )
+                    unitsIndex=self.get_Units(Index)
+                    return SimDataFrame( data=data , units=units , indexName=Index , indexUnits=unitsIndex , nameSeparator=':' )
                 else :
                     return self.get_DataFrame(Key,Index)
             elif type(Key) is str and len(Key) > 0 :
