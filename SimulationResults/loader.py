@@ -20,13 +20,24 @@ try :
 except ImportError :
     print ( 'failed import ECL, usually due to fail to import libecl')
 
-def loadSimulationResults(FullPath=None,Simulator=None,Verbosity=2) :
+def loadSimulationResults(FullPath,/,Simulator=None,Verbosity=None,**kwargs) :
     """
     Loads the results of reservoir simulation into and SimuResult object.
     This library can read:
         .SSS files from VIP simulator
         .SMSPEC files from Eclipse, Intersect or tNavigator
     """
+    if 'speak' in kwargs and type(kwargs['speak']) in [bool,int,float] :
+        if Verbosity is None :
+            Verbosity = kwargs['speak']
+    
+    if Verbosity is None :
+        Verbosity = 2
+    elif type(Verbosity) in [bool,float] :
+        Verbosity = int(Verbosity)
+    else :
+        Verbosity = 2
+            
     if FullPath is None :
         print( 'Please provide the path to the simulation results as string.')
         return None
