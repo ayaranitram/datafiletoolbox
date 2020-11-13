@@ -1039,6 +1039,9 @@ class SimDataFrame(DataFrame) :
             if self.index.name in self.columns :
                 self.indexUnits = self.units[self.index.name]
         
+        if self.index.name not in self.units :
+            self.units[self.index.name] = '' if self.indexUnits is None else self.indexUnits
+        
         # get separator for the column names, 'partA'+'separator'+'partB'
         if 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
             self.set_NameSeparator(kwargsB['nameSeparator'])
@@ -1202,11 +1205,11 @@ class SimDataFrame(DataFrame) :
                 sheet_name = (sheet_name[:32],)
         
         elif split_by == 'left' :
-            names = self[cols].left
+            names = tuple(sorted(self[cols].left))
         elif split_by == 'right' :
-            names = self[cols].right
+            names = tuple(sorted(self[cols].right))
         elif split_by == 'first' :
-            names = tuple(set(map(firstChar,cols)))
+            names = tuple(sorted(set(map(firstChar,cols))))
         else :
             raise ValueError(" `split_by´ parameter must be 'left', 'right', 'first' or None.")
         
@@ -1225,39 +1228,49 @@ class SimDataFrame(DataFrame) :
             raise ValueError(" `excel_writer´ parameter must be a string path to an .xlsx file or an ExcelWriter instance.")
         
         headerRows = 2 if header is True else 0
+        
+        if index :
+            indexName = '' if self.index.name is None else self.index.name
+            indexUnit = '' if self.indexUnits is None else self.indexUnits
+            
         if freeze_panes is None :
-            freeze_panes = (headerRows,0)
+            freeze_panes = (startrow+headerRows,startcol+(1 if index else 0))
                     
         # if single name, simpy write the output using .to_excel method from Pandas
         for i in range(len(names)) :
             
             # get the columns for this sheet
             if split_by is None :
-                colselect = cols
+                colselect = tuple(sorted(cols))
             elif split_by == 'left' :
-                colselect = fnmatch.filter( cols , names[i]+'*' )
+                colselect = tuple(sorted(fnmatch.filter( cols , names[i]+'*' )))
             elif split_by == 'right' :
-                colselect = fnmatch.filter( cols , '*'+names[i] )
+                colselect = tuple(sorted(fnmatch.filter( cols , '*'+names[i] )))
             elif split_by == 'first' :
-                colselect = fnmatch.filter( cols , names[i][0]+'*' )
+                colselect = tuple(sorted(fnmatch.filter( cols , names[i][0]+'*' )))
             
             # write the sheet to the ExcelWriter
             self.DF.to_excel(SDFwriter, sheet_name=names[i], na_rep=na_rep, float_format=float_format, columns=colselect, header=False, index=index, index_label=index_label, startrow=startrow+headerRows, startcol=startcol, engine=engine, merge_cells=merge_cells, encoding=encoding, inf_rep=inf_rep, verbose=verbose, freeze_panes=freeze_panes)
             
             # Get the xlsxwriter workbook and worksheet objects.
             SDFworkbook  = SDFwriter.book
-            SDFworksheet = SDFwriter.sheets[names[0]]
+            SDFworksheet = SDFwriter.sheets[names[i]]
             
             if header :
                 header_format = SDFworkbook.add_format({'bold': True,'font_size':11})
                 units_format = SDFworkbook.add_format({'italic': True})
+                
+                # add the index name and units to the header
+                if index :
+                    colselect = (indexName,)+colselect
+                
                 # write the column header, name and units
-                for c in range(len(cols)) :
+                for c in range(len(colselect)) :
                     colUnit = ''
-                    if cols[c] in self.units :
-                        colUnit = self.units[cols[c]]
-                    SDFworksheet.write(startrow, startcol, cols[c], header_format)
-                    SDFworksheet.write(startrow+1, startcol, colUnit, units_format)
+                    if colselect[c] in self.units :
+                        colUnit = self.units[colselect[c]]
+                    SDFworksheet.write(startrow, startcol+c, colselect[c], header_format)
+                    SDFworksheet.write(startrow+1, startcol+c, colUnit, units_format)
         
         if isinstance(excel_writer , ExcelWriter) :
             return SDFwriter
@@ -1288,9 +1301,21 @@ class SimDataFrame(DataFrame) :
         returns the series converted to the requested units if possible, 
         else returns None
         """
-        if type(units) is str and len(set( self.units.values() )) == 1 :
-            if convertibleUnits(list(set( self.units.values() ))[0],units) :
-                return SimDataFrame( data=convertUnit( self.DF , list(set( self.units.values() ))[0] , units , self.speak ) , units=units ) 
+        if type(units) is str and len(set( self.get_Units(self.columns).values() )) == 1 :
+            if convertibleUnits(list(set( self.get_Units(self.columns).values() ))[0],units) :
+                return SimDataFrame( data=convertUnit( self.DF , list(set( self.get_Units(self.columns).values() ))[0] , units , self.speak ) , units=units ) 
+        if type(units) is dict :
+            unitsDict = {}
+            for k,v in units.items() :
+                keys = self.find_Keys(k)
+                if len(keys) > 0 :
+                    for each in keys :
+                        unitsDict[each] = v
+            result = self.copy()
+            for col in self.columns :
+                if col in unitsDict :
+                    result[col] = self[col].to(unitsDict[col]) # convertUnit( self[col].S , self.get_Units(col)[col] , unitsDict[col] , self.speak ) , unitsDict[col] 
+            return result
 
     def dropna(self,axis='index', how='all', thresh=None, subset=None, inplace=False) :
         return SimDataFrame( data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace) , units=self.units , indexName=self.index.name )
@@ -1674,8 +1699,11 @@ class SimDataFrame(DataFrame) :
         if type(key) is str :
             key = key.strip()
         
+        if type(value) is tuple and len(value) == 2 and type(value[0]) in [SimSeries,Series,list,tuple,np.array] and units is None :
+            value , units = value[0] , value[1]
+        
         if units is None :
-            if isinstance(value,SimSeries) :
+            if type(value) is SimSeries :
                 if type(value.units) is str :
                     uDic = { str(key) : value.units }
                 elif type(value.units) is dict :
@@ -2313,7 +2341,7 @@ class SimDataFrame(DataFrame) :
         if key not in self.units :
             self.units[key] = units
         else :
-            if units != self.units[key] :
+            if units != self.units[key] and self.speak :
                 print( "overwritting existing units for key '" + key + "': " + self.units[key] + ' -> ' + units )
             self.units[key] = units
     
