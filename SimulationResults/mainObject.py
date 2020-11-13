@@ -1460,9 +1460,11 @@ class SimResult(object):
         for i in range(len(self.restarts)-1) :
             thisFilter = self.restarts[i].get_RawVector('TIME')['TIME'] < self.restarts[i+1].get_RawVector('TIME')['TIME'][0]
             self.restartFilters[ self.restarts[i] ] = thisFilter
-        # claculate restartFilters for the last restart
-        thisFilter = self.restarts[-1].get_RawVector('TIME')['TIME'] < self.get_RawVector('TIME')['TIME'][0]
-        self.restartFilters[ self.restarts[-1] ] = thisFilter
+        
+        if len(self.restarts) > 0 :
+            # claculate restartFilters for the last restart
+            thisFilter = self.restarts[-1].get_RawVector('TIME')['TIME'] < self.get_RawVector('TIME')['TIME'][0]
+            self.restartFilters[ self.restarts[-1] ] = thisFilter
     
         # recreate filter for this simulation (self), now considering the restarts
         self.redo_Filter()
