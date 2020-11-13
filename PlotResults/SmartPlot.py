@@ -90,13 +90,16 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
         raise TypeError('<Plot> X_Units must be a string, or a list of strings.')
     # if is an empty list, take the units from the X of the first object
     elif len(X_Units) == 0 :
-        X_Units = [ SimResultObjects[0].get_plotUnit(X_Key[0]) ]    
+        if len(X_Key) == 1 :
+            X_Units = [ SimResultObjects[0].get_plotUnit(X_Key[0]) ]    
+        else :
+            X_Units = [ SimResultObjects[0].get_plotUnit(X_Key[i]) for i in range(len(X_Key)) ]    
     # if more than 1 X Units are in the list
     elif len(X_Units) > 1 :
         if len(X_Units) == len(X_Key) :
             pass # it is OK, one unit per key
         else :
-            X_Units = X_Units[:1] # keep only the first one
+            X_Units = X_Units[:1] * len(X_Key) # keep only the first one repeated as many times as len(X_Key)
     
     # put Y Units in a list, if not already
     if type(Y_Units) is str :
@@ -232,17 +235,19 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
             markers = ['None'] * len(SimResultObjects) 
         elif len(Y_Keys) > 1 :
             markers = ['None'] * len(Y_Keys) 
+        else :
+            markers = ['None']
     # overwrite the default marker 
     # by model first
-    if len( SimResultObjects ) > 0 :
-        for m in range( len( SimResultObjects ) ) :
-            if SimResultObjects[m].get_Marker() is not None : 
-                markers[m] = SimResultObjects[m].get_Marker()
+    if len( SimResultObjects ) > 1 :
+        for i in range( len( SimResultObjects ) ) :
+            if SimResultObjects[i].get_Marker() is not None : 
+                markers[i] = SimResultObjects[i].get_Marker()
     # by specific keys if single 
     elif len(Y_Keys) > 0 :
-        for m in range( len( Y_Keys ) ) :
-            if SimResultObjects[0].get_Marker(Y_Keys[m]) is not None : 
-                markers[m] = SimResultObjects[0].get_Marker(Y_Keys[m])
+        for i in range( len( Y_Keys ) ) :
+            if SimResultObjects[0].get_Marker(Y_Keys[i]) is not None : 
+                markers[i] = SimResultObjects[0].get_Marker(Y_Keys[i])
     
     
     # check linestyle parameter
@@ -251,20 +256,22 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
     assert type(linestyle) is list 
     if len( linestyle ) == 0 :
         if len(SimResultObjects) > 1 :
-            linestyle = ['None'] * len(SimResultObjects)
+            linestyle = ['-'] * len(SimResultObjects)
         elif len(Y_Keys) > 1 :
-            linestyle = ['None'] * len(Y_Keys)
+            linestyle = ['-'] * len(Y_Keys)
+        else :
+            linestyle = ['-']
     # overwrite the default marker 
     # by model first
-    if len( SimResultObjects ) > 0 :
-        for s in range( len( SimResultObjects ) ) :
-            if SimResultObjects[s].get_Style() is not None : 
-                linestyle[s] = SimResultObjects[s].get_Style()
+    if len( SimResultObjects ) > 1 :
+        for i in range( len( SimResultObjects ) ) :
+            if SimResultObjects[i].get_Style() is not None : 
+                linestyle[i] = SimResultObjects[i].get_Style()
     # by specific keys if single 
     elif len(Y_Keys) > 0 :
-        for s in range( len( Y_Keys ) ) :
-            if SimResultObjects[0].get_Style(Y_Keys[s]) is not None : 
-                linestyle[s] = SimResultObjects[0].get_Style(Y_Keys[s])   
+        for i in range( len( Y_Keys ) ) :
+            if SimResultObjects[0].get_Style(Y_Keys[i]) is not None : 
+                linestyle[i] = SimResultObjects[0].get_Style(Y_Keys[i])   
     
     
     # check linewith parameter
@@ -282,19 +289,21 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
             if linewidth < minlinewidth :
                 linewidth = minlinewidth
             linewidth = [linewidth] * len(Y_Keys) 
+        else :
+            linewidth = [2.0]
     # overwrite the default linewidth 
     # by model first
-    if len( SimResultObjects ) > 0 :
+    if len( SimResultObjects ) > 1 :
         linewidth = linewidth * len(SimResultObjects)
-        for w in range( len( SimResultObjects ) ) :
-            if SimResultObjects[w].get_Width() is not None : 
-                linewidth[w] = SimResultObjects[w].get_Width()
+        for i in range( len( SimResultObjects ) ) :
+            if SimResultObjects[i].get_Width() is not None : 
+                linewidth[i] = SimResultObjects[i].get_Width()
     # by specific keys if single 
     elif len(Y_Keys) > 0 :
         linewidth = linewidth * len(Y_Keys)
-        for w in range( len( Y_Keys ) ) :
-            if SimResultObjects[0].get_Width(Y_Keys[w]) is not None : 
-                linewidth[w] = SimResultObjects[0].get_Width(Y_Keys[w])
+        for i in range( len( Y_Keys ) ) :
+            if SimResultObjects[0].get_Width(Y_Keys[i]) is not None : 
+                linewidth[i] = SimResultObjects[0].get_Width(Y_Keys[i])
             
     
     # set line colors and style:
@@ -364,16 +373,6 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
                         SortedColors[NY] = color
                         NY += 1
             
-            # for CC in CleanCount[::-1] :
-            #     for SC in range(len(SeriesColors)) :
-            #         if CleanSorted[SeriesColors[SC]] == CC :
-            #             New_Y_Colors[NY] = SeriesColors[SC]
-            #             New_Y_Keys[NY] = Y_Keys[SC]
-            #             NY += 1
-            # SeriesColors = New_Y_Colors[:]
-            # Y_Keys = New_Y_Keys[:]
-            # New_Y_Colors = None
-            # New_Y_Keys = None
             NY = 0
             for color in SortedColors :
                 for SC in range(len(SeriesColors)) :
@@ -503,6 +502,7 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
 
     plotLines = []
     for s in range(len(SimResultObjects)) :
+
         FromU = SimResultObjects[s].get_Unit(X_Key[0])
         ToU = X_Units[0]
         X0 = SimResultObjects[s].get_Vector(X_Key[0])[X_Key[0]]
@@ -523,6 +523,23 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
             time.sleep(timeout)
             # check if the key exists in the object:
             Y0 = SimResultObjects[s].get_Vector( Y_Keys[y] )[ Y_Keys[y] ]
+
+            if len(Y_Keys) == len(X_Key) :
+                FromU = SimResultObjects[s].get_Unit(X_Key[y])
+                ToU = X_Units[y]
+                X0 = SimResultObjects[s].get_Vector(X_Key[y])[X_Key[y]]
+                time.sleep(timeout)
+                X = convertUnit( X0 , FromU , ToU , PrintConversionPath=(SimResultObjects[s].get_Verbosity()==1) )
+                time.sleep(timeout*5)
+                
+                if Xdate == False and type(X) != np.ndarray :
+                    if type(X) == list or type(X) == tuple :
+                        try :
+                            X = np.array(X,dtype='float')
+                        except :
+                            print('<Plot> the X key ' + X_Key[y] + ' from simulation ' + SimResultObjects[s].get_Name() + ' is not numpy array ')
+                elif Xdate :
+                    X = X.astype('datetime64[D]').astype('O') # X = X.astype('O')
 
             if Y0 is None :
                 pass
@@ -575,13 +592,16 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
                         print('<Plot> the Y vector ' + str( Y_Keys[y]) + ' from the model ' + str( SimResultObjects[s] ) + ' contains less than tha its X vector ' + str( X_Key[0] ) + '\n       len(Y):' + str(len(Y)) + ' != len(X):' + str(len(X))) 
                     else : 
                         Yax = Y_Axis[ y ]
-                        Lw = linewidth[y]
-                        Ls = linestyle[y]
-                        Mk = markers[y]
                         if len( SimResultObjects ) == 1 :
                             Lc = SeriesColors[y]
+                            Lw = linewidth[y]
+                            Ls = linestyle[y]
+                            Mk = markers[y]
                         else :
                             Lc = ObjectsColors[s]
+                            Lw = linewidth[s]
+                            Ls = linestyle[s]
+                            Mk = markers[s]
                         if len( Y_Keys ) == 1 :
                             Yax = 0
                         if len( SimResultObjects ) > 1 and len( Y_Keys ) > 1 :

@@ -298,7 +298,7 @@ class SimResult(object):
         self.keyColors = {}
         self.width = None
         self.keyWidths = {}
-        self.marker = None
+        self.marker = 'None'
         self.keyMarkers = {}
         self.style = '-'
         self.keyStyles = {}
@@ -1100,33 +1100,33 @@ class SimResult(object):
                 #elif 'SimulationResults.' in str(type(Index)) :
                 elif _is_SimulationResult(Index[0]) :
                     if otherSims is None :
-                        otherSims, Index = Index , 'TIME'
+                        otherSims, Index = Index , self.get_Index()
                     elif _is_SimulationResult(otherSims) :
-                        otherSims, Index = list(set([ Index , otherSims ])) , 'TIME'
-                    elif type(otherSims) is str :
+                        otherSims, Index = list(set([ Index , otherSims ])) , self.get_Index()
+                    elif type(otherSims) is str and self.is_Key(otherSims) :
                         otherSims, Index = Index , otherSims.stip().upper()
                     elif type(otherSims) is list or type(otherSims) is tuple :
                         if _is_SimulationResult(otherSims[0]) :
-                            otherSims, Index = list(set([Index] + otherSims)) , 'TIME'
-                        elif type(otherSims[0]) is str :
+                            otherSims, Index = list(set([Index] + otherSims)) , self.get_Index()
+                        elif type(otherSims[0]) is str and self.is_Key(otherSims[0]) :
                             _verbose( 1 , self.speak , 'only a single index can be used to plot, the item 0 will used.')
                             otherSims, Index = Index , otherSims[0]
                     
             else :
-                Index='TIME'
+                Index=self.get_Index()
         elif type(Index) is str :
             Index = Index.strip().upper()
         elif _is_SimulationResult(Index) :
             if otherSims is None :
-                otherSims, Index = Index , 'TIME'
+                otherSims, Index = Index , self.get_Index()
             elif _is_SimulationResult(otherSims) :
-                otherSims, Index = list(set([ Index , otherSims ])) , 'TIME'
-            elif type(otherSims) is str :
+                otherSims, Index = list(set([ Index , otherSims ])) , self.get_Index()
+            elif type(otherSims) is str and self.is_Key(otherSims) :
                 otherSims, Index = Index , otherSims.stip().upper()
             elif type(otherSims) is list or type(otherSims) is tuple :
                 if _is_SimulationResult(otherSims[0]) :
-                    otherSims, Index = list(set([Index] + otherSims)) , 'TIME'
-                elif type(otherSims[0]) is str :
+                    otherSims, Index = list(set([Index] + otherSims)) , self.get_Index()
+                elif type(otherSims[0]) is str and self.is_Key(otherSims[0]) :
                     otherSims, Index = Index , otherSims
          
         for K in range(len(Keys)) :
@@ -1214,7 +1214,7 @@ class SimResult(object):
                             items[X] = I+':'+Regions[X]
                 IndexList += items
             
-
+        warnings = ' WARNING:\n'
         if len(IndexList) == len(PlotKeys) :
             # check consistency:
             OKflag = True
@@ -1224,7 +1224,7 @@ class SimResult(object):
                     if IndexList[i].split(':')[1] == PlotKeys[i].split(':')[1] :
                         pass # it is OK
                     else :
-                        _verbose( self.speak , 3 ," the pair '" + PlotKeys[i] + "' vs '" + IndexList[i] + "' might not be correct." )
+                        warnings += " the pair '" + PlotKeys[i] + "' vs '" + IndexList[i] + "' might not be correct.\n" 
                         OKflag = False
                         ReviewFlag = True
             
@@ -1241,13 +1241,13 @@ class SimResult(object):
                             if IndexList[i].split(':')[1] == PlotKeys[i].split(':')[1] :
                                 pass # it is OK
                             else :
-                                _verbose( self.speak , 3 ," the pair '" + PlotKeys[i] + "' vs '" + IndexList[i] + "' might not be correct." )
+                                warnings += " the pair '" + PlotKeys[i] + "' vs '" + IndexList[i] + "' might not be correct.\n" 
                                 OKflag = False
             if ReviewFlag :
                 if OKflag :
-                    _verbose( self.speak , 3, ' the pairs consistency WAS corrected with sorting.')
+                    _verbose( self.speak , 2, '\n the pairs consistency WAS corrected with sorting.')
                 else :
-                    _verbose( self.speak , 3, ' the pairs consistency was NOT corrected with sorting.')
+                    _verbose( self.speak , 3, warnings+' the pairs consistency was NOT corrected with sorting.')
             
         if IndexList == [] :
             if len(Index) == 1 :
@@ -1708,7 +1708,16 @@ class SimResult(object):
                 self.keyColors[Key] = MatplotlibColor
             elif Key in self.attributes :
                 self.keyColors[Key] = MatplotlibColor
-                    
+    
+    def set_RandomColorPerWell(self) :
+        """
+        ramdomly defines a color for each well.
+        """
+        for Well in self.wells :
+            wellColor = ( random.random() , random.random() , random.random() )
+            for wellKey in self.find_Keys('*:'+Well) :
+                self.set_Color(wellColor,wellKey)
+    
     def get_Color(self,Key=None):
         if Key is None :
             return self.color
