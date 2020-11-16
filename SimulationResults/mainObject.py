@@ -299,7 +299,9 @@ class SimResult(object):
         self.width = None
         self.keyWidths = {}
         self.marker = 'None'
+        self.markersize = 1.0
         self.keyMarkers = {}
+        self.keyMarkersSize = {}
         self.style = '-'
         self.keyStyles = {}
         self.alpha = 1.0
@@ -1823,7 +1825,7 @@ class SimResult(object):
     def set_Marker(self,marker=None,Key=None):
         """
         Defines the marker style to use in graphs created from .plot() method, 
-        must be a valir matplotlib marker.
+        must be a valid matplotlib marker.
         
         The provided marker applies to all the values ploted from this instance,
         optional parameter `Key´ could be used to assing the property to a 
@@ -1873,6 +1875,48 @@ class SimResult(object):
         elif Key in self.attributes :
             return 'None' if self.keyMarkers[Key].startswith('None#') else self.keyMarkers[Key]
 
+    def set_MarkerSize(self,markersize=1.0,Key=None):
+        """
+        Defines the marker size to use in graphs created from .plot() method, 
+        must be a positive float or integer.
+        
+        The provided marker size applies to all the values ploted from this 
+        instance, optional parameter `Key´ could be used to assing the property
+        to a particular Key.
+        """
+        if markersize is None :
+            markersize = 1.0
+        if type(markersize) is str :
+            markersize = 1.0
+            _verbose(self.speak,3,'the provided markersize is not a float or integer' )
+        elif type(markersize) in [int,float] :
+            if markersize >= 0 :
+                markersize = float(markersize)
+            else :
+               _verbose(self.speak,3,'the provided markersize must be positive' ) 
+        else :
+            _verbose(self.speak,3,'the provided markersize is not valid' ) 
+            
+        if Key is None :
+            self.markersize = markersize
+        else :
+            if self.is_Key(Key) :
+                self.keyMarkersSize[Key] = markersize
+            elif Key in self.attributes :
+                self.keyMarkersSize[Key] = markersize
+                    
+    def get_MarkerSize(self,Key=None):
+        if Key is None :
+            return self.markersize
+        elif self.is_Key(Key) :
+            if Key in self.keyMarkersSize :
+                return self.keyMarkersSize[Key]
+            elif _mainKey(Key) in self.keyMarkersSize :
+                return self.keyMarkersSize[_mainKey(Key)]
+            else :
+                return None
+        elif Key in self.attributes :
+            return self.keyMarkersSize[Key]
 
     def set_Verbosity(self,verbosity_level):
         try :

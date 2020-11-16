@@ -27,7 +27,7 @@ def savePlot(figure,FileName='') :
     figure.savefig(FileName)
 
 
-def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] , graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={} , linewidth=[], linestyle=[] , markers=[] , DoNotRepeatColors=True , ColorBySimulation=None , ColorBySeries=None , minlinewidth=0.1) :
+def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] , graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={} , linewidth=[], linestyle=[] , markers=[] , markersize=[] , DoNotRepeatColors=True , ColorBySimulation=None , ColorBySeries=None , minlinewidth=0.1 , minmarkersize=0.5) :
     """
     uses matplot lib to create graphs of the selected vectors 
     for the selected SimResult objects.
@@ -248,7 +248,38 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
         for i in range( len( Y_Keys ) ) :
             if SimResultObjects[0].get_Marker(Y_Keys[i]) is not None : 
                 markers[i] = SimResultObjects[0].get_Marker(Y_Keys[i])
-    
+
+    # check markersize parameter
+    if type( markersize ) is int or type( markersize ) is float :
+        markersize = [markersize]
+    assert type(markersize) is list 
+    if len( markersize ) == 0 :
+        if len(SimResultObjects) > 1 :
+            markersize = 2.0 / round((log(len( SimResultObjects )) +1),2)
+            if markersize < minmarkersize :
+                markersize = minmarkersize
+            markersize = [markersize] * len(SimResultObjects) 
+        elif len(Y_Keys) > 1 :
+            markersize = 2.0 / round((log(len( Y_Keys )) +1),2)
+            if markersize < minmarkersize :
+                markersize = minmarkersize
+            markersize = [markersize] * len(Y_Keys) 
+        else :
+            markersize = [2.0]
+    # overwrite the default markersize 
+    # by model first
+    if len( SimResultObjects ) > 1 :
+        markersize = markersize * len(SimResultObjects)
+        for i in range( len( SimResultObjects ) ) :
+            if SimResultObjects[i].get_MarkerSize() is not None : 
+                markersize[i] = SimResultObjects[i].get_MarkerSize()
+    # by specific keys if single 
+    elif len(Y_Keys) > 0 :
+        markersize = markersize * len(Y_Keys)
+        for i in range( len( Y_Keys ) ) :
+            if SimResultObjects[0].get_MarkerSize(Y_Keys[i]) is not None : 
+                markersize[i] = SimResultObjects[0].get_MarkerSize(Y_Keys[i])
+                
     
     # check linestyle parameter
     if type( linestyle ) in [str] :
@@ -303,8 +334,8 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
         linewidth = linewidth * len(Y_Keys)
         for i in range( len( Y_Keys ) ) :
             if SimResultObjects[0].get_Width(Y_Keys[i]) is not None : 
-                linewidth[i] = SimResultObjects[0].get_Width(Y_Keys[i])
-            
+                linewidth[i] = SimResultObjects[0].get_Width(Y_Keys[i])    
+    
     
     # set line colors and style:
     if len( SimResultObjects ) == 1 : # only one simulation object to plot
@@ -348,6 +379,7 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
             for y in range( len( Y_Keys ) ) :
                 if _mainKey( Y_Keys[y] ).endswith('H') :
                     markers[y] = 'o'
+                    markersize[y] = 1.0
                     linestyle[y] = 'None'
                     
         if DoNotRepeatColors : # repeated colors not-allowrd
@@ -597,13 +629,13 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
                             Lw = linewidth[y]
                             Ls = linestyle[y]
                             Mk = markers[y]
-                            Ms = 1.0
+                            Ms = markersize[y]
                         else :
                             Lc = ObjectsColors[s]
                             Lw = linewidth[s]
                             Ls = linestyle[s]
                             Mk = markers[s]
-                            Ms = 1.0
+                            Ms = markersize[y]
                         if len( Y_Keys ) == 1 :
                             Yax = 0
                         if len( SimResultObjects ) > 1 and len( Y_Keys ) > 1 :
