@@ -378,8 +378,14 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
         if SimResultObjects[0].historyAsDots :
             for y in range( len( Y_Keys ) ) :
                 if _mainKey( Y_Keys[y] ).endswith('H') :
-                    markers[y] = 'o'
-                    markersize[y] = 1.0
+                    if type(SimResultObjects[0].get_Marker(Y_Keys[y])) is not None : 
+                        markers[y] = SimResultObjects[0].get_Marker(Y_Keys[y])
+                    else :
+                        markers[y] = 'o'
+                    if type(SimResultObjects[0].get_MarkerSize(Y_Keys[y])) is float : 
+                        markersize[y] = SimResultObjects[0].get_MarkerSize(Y_Keys[y])
+                    else :
+                        markersize[y] = 1.0                    
                     linestyle[y] = 'None'
                     
         if DoNotRepeatColors : # repeated colors not-allowrd
@@ -463,7 +469,14 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
             if SimResultObjects[0].historyAsDots :
                 for y in range( len( Y_Keys ) ) :
                     if _mainKey( Y_Keys[y] ).endswith('H') :
-                        markers[y] = 'o'
+                        if type(SimResultObjects[0].get_Marker(Y_Keys[y])) is not None : 
+                            markers[y] = SimResultObjects[0].get_Marker(Y_Keys[y])
+                        else :
+                            markers[y] = 'o'
+                        if type(SimResultObjects[0].get_MarkerSize(Y_Keys[y])) is float : 
+                            markersize[y] = SimResultObjects[0].get_MarkerSize(Y_Keys[y])
+                        else :
+                            markersize[y] = 1.0                    
                         linestyle[y] = 'None'
             
             if DoNotRepeatColors : # repeated colors not-allowrd
