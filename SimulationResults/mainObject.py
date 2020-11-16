@@ -4264,11 +4264,9 @@ class SimResult(object):
     #     with open(RestorePath + 'json/units.sro', 'r') as file:
     #         self.units = json.load( file )
             
-    def to_RSM(self, Keys='--all' , RSMpath=None , RSMleng=12 , RSMcols=10 , includeDATE=True , ECLkeywordsOnly=True , RegionNames=False) :
+    def to_RSM(self, Keys='--all' , filepath=None , RSMleng=12 , RSMcols=10 , includeDATE=True , ECLkeywordsOnly=True , RegionNames=False) :
         """
         writes the selected vectors, or all the vectors by default, to an RSM format file.
-        
-        
         """
         from decimal import Decimal
         def RSMunits(string) :
@@ -4311,46 +4309,46 @@ class SimResult(object):
         if type(RSMcols) is not int :
             raise TypeError("RSMcols must be an integer")  
 
-        if type(Keys) is str and len(self.get_Keys(Keys)) == 0 and RSMpath is None :
+        if type(Keys) is str and len(self.get_Keys(Keys)) == 0 and filepath is None :
             Keys = Keys.strip()
             if os.path.isfile(_extension(Keys)[3]) :
-                RSMpath = Keys
+                filepath = Keys
                 Keys = '--all'
             elif os.path.isdir(_extension(Keys)[3]) :
-                RSMpath = _extension(self.path)[1]
+                filepath = _extension(self.path)[1]
                 for end in [ '_field' , '_well' , '_area' , '_flow' , '_gather' , '_region' ]:
-                    if RSMpath.endswith(end) :
-                        RSMpath = RSMpath[:-len(end)]
+                    if filepath.endswith(end) :
+                        filepath = filepath[:-len(end)]
                         break 
                 if _extension(Keys[-1])[3] == '/' :
-                    RSMpath = _extension(Keys[-1])[3] + RSMpath + '.RSM'
+                    filepath = _extension(Keys[-1])[3] + filepath + '.RSM'
                 else :
-                    RSMpath = _extension(Keys[-1])[3] + '/' + RSMpath + '.RSM'
+                    filepath = _extension(Keys[-1])[3] + '/' + filepath + '.RSM'
                 Keys = '--all'
             elif os.path.isdir(_extension(Keys)[2]) :
-                RSMpath = _extension(Keys)[2] + _extension(Keys)[1] + '.RSM'
+                filepath = _extension(Keys)[2] + _extension(Keys)[1] + '.RSM'
                 Keys = '--all'
 
-        if RSMpath is None :
-            RSMpath = _extension(self.path)[1]
+        if filepath is None :
+            filepath = _extension(self.path)[1]
             for end in [ '_field' , '_well' , '_area' , '_flow' , '_gather' , '_region' ]:
-                if RSMpath.endswith(end) :
-                    RSMpath = RSMpath[:-len(end)]
+                if filepath.endswith(end) :
+                    filepath = filepath[:-len(end)]
                     break 
-            RSMpath = _extension(self.path)[2] + RSMpath + '.RSM'
-        elif type(RSMpath) is str :
-            if _extension(RSMpath)[0].upper() != '.RSM' :
-                RSMpath = _extension(RSMpath)[2] + _extension(RSMpath)[1] + '.RSM'
-            if _extension(RSMpath)[2] == '' :
-               RSMpath = _extension(self.path)[2] + RSMpath
-        RSMpath = _extension(RSMpath)[3]
+            filepath = _extension(self.path)[2] + filepath + '.RSM'
+        elif type(filepath) is str :
+            if _extension(filepath)[0].upper() != '.RSM' :
+                filepath = _extension(filepath)[2] + _extension(filepath)[1] + '.RSM'
+            if _extension(filepath)[2] == '' :
+               filepath = _extension(self.path)[2] + filepath
+        filepath = _extension(filepath)[3]
 
         try :
-            RSMfile = open(RSMpath, 'w' )
-            print('\n...working on it: preparing the data for the RSM file...\n      '+RSMpath)
+            RSMfile = open(filepath, 'w' )
+            print('\n...working on it: preparing the data for the RSM file...\n      '+filepath)
             RSMfile.close()
         except :
-            print('\n...failed to create the output RSM file...\n      '+RSMpath)
+            print('\n...failed to create the output RSM file...\n      '+filepath)
             return False 
         
         rsmOutput = self.name
@@ -4434,9 +4432,7 @@ class SimResult(object):
                     CleanColumns = ['DATE'] + CleanColumns
                 else :
                     _verbose( self.speak , 3 , "WARNING: DATE key is not available." )
-                    
-                    
-        
+
         if 'DATE' in CleanColumns and 'DATES' in CleanColumns :
             if (self('DATE') == self('DATES')).all() :
                 CleanColumns.pop( CleanColumns.index('DATES') )
@@ -4491,7 +4487,7 @@ class SimResult(object):
                     _verbose( self.speak , 3 , "WARNING: neither DATE or TIME keys are available,\nthe         the key '" + K + "' will be used as index to create the RSM." )
                     break
         
-        RSMfile = open(RSMpath, 'w' )
+        RSMfile = open(filepath, 'w' )
         
         cc = 0
         while cc < len(CleanColumns) :
@@ -4600,10 +4596,152 @@ class SimResult(object):
             cc += RSMcols - 1
         
         RSMfile.close()
-        print( "the RMS file is completed, feel free to open it:\n\n '" + RSMpath + "'\n" ) #"\nPlease wait for the report of the conversion to be finished." )
+        print( "the RMS file is completed, feel free to open it:\n\n '" + filepath + "'\n" ) #"\nPlease wait for the report of the conversion to be finished." )
         try :
             RSMfile.close()
         except :
             pass
         return None
+
+
+    def to_excel(self, Keys='--all' , filepath=None , includeDATE=True , ECLkeywordsOnly=True , split_by='left' , writeUnits=True ) : 
+        """
+        writes the selected vectors, or all the vectors by default, to an Excel format file.
+        """
+        if split_by is None or type(split_by) is str and split_by.upper == 'NONE' :
+            if writeUnits is False :
+                writeUnits = True
+                _verbose( self.speak , 3 , "\n `split_by´ must be used together with writeUnits=True.")
+
+        if type(Keys) is str and len(self.get_Keys(Keys)) == 0 and filepath is None :
+            Keys = Keys.strip()
+            if os.path.isfile(_extension(Keys)[3]) :
+                filepath = Keys
+                Keys = '--all'
+            elif os.path.isdir(_extension(Keys)[3]) :
+                filepath = _extension(self.path)[1]
+                for end in [ '_field' , '_well' , '_area' , '_flow' , '_gather' , '_region' ]:
+                    if filepath.endswith(end) :
+                        filepath = filepath[:-len(end)]
+                        break 
+                if _extension(Keys[-1])[3] == '/' :
+                    filepath = _extension(Keys[-1])[3] + filepath + '.xlsx'
+                else :
+                    filepath = _extension(Keys[-1])[3] + '/' + filepath + '.xlsx'
+                Keys = '--all'
+            elif os.path.isdir(_extension(Keys)[2]) :
+                filepath = _extension(Keys)[2] + _extension(Keys)[1] + '.xlsx'
+                Keys = '--all'
+
+        if filepath is None :
+            filepath = _extension(self.path)[1]
+            for end in [ '_field' , '_well' , '_area' , '_flow' , '_gather' , '_region' ]:
+                if filepath.endswith(end) :
+                    filepath = filepath[:-len(end)]
+                    break 
+            filepath = _extension(self.path)[2] + filepath + '.xlsx'
+        elif type(filepath) is str :
+            if _extension(filepath)[0].lower() != '.xlsx' :
+                filepath = _extension(filepath)[2] + _extension(filepath)[1] + '.xlsx'
+            if _extension(filepath)[2] == '' :
+               filepath = _extension(self.path)[2] + filepath
+        filepath = _extension(filepath)[3]
         
+        if filepath.lower().endswith('.xls.xlsx') :
+            filepath = filepath[:-9]+'.xlsx'
+
+        if Keys == '--all' :
+            if ECLkeywordsOnly :
+                CleanColumns = []
+                for Key in self.keys :
+                    if _isECLkey(Key , maxLen=16) :
+                        CleanColumns.append(Key)
+            else :
+                CleanColumns = self.keys
+
+        else :
+            CleanColumns = []
+            if type(Keys) is str :
+                Keys = [ Keys ]
+            for K in Keys :
+                if len( self.get_KeysFromAttribute( K ) ) > 0 :
+                    CleanColumns += self.get_KeysFromAttribute( K )
+                elif len( self.get_Keys( K ) ) > 0 :
+                    CleanColumns += list( self.get_KeysFromAttribute( K ) )
+                    _verbose( self.speak , 3 , "\nMESSAGE: " + str( len( self.get_Keys( K ) ) ) + " keys found for the pattern '" + K + "':\n" + str( self.get_Keys( K ) ).strip('()') )
+                else :
+                    _verbose( self.speak , 3 , "\nWARNING: the key '" + K + "' is not valid.")
+        
+        if len(CleanColumns) == 0 :
+            _verbose( self.speak , 3 , "\nERROR: no valid keys found to export to the EXCEL file.")
+            return False
+        
+        # check vectors are numeric
+        NotValueVector = []
+        # cc = 0
+        for each in CleanColumns :
+            # progressbar( cc/len(CleanColumns) )
+            if _mainKey(each) in [ 'DATE' , 'DATES' , 'WNAME' ] :
+                NotValueVector.append( each )
+            elif _itemKey(each) in [ 'DATE' , 'DATES' ] :
+                NotValueVector.append( each )
+            elif len(self(each)) == 0 :
+                NotValueVector.append( each )
+            elif not _isnumeric( str(self(each)[0]) ) :
+                NotValueVector.append( each )
+            # cc += 1
+        for each in NotValueVector :
+            CleanColumns.pop( CleanColumns.index(each) ) 
+        
+        # move the following keys to the front
+        for each in ['YEARS', 'YEAR', 'DAY', 'MONTH', 'TIME', 'DATES', 'DATE'] :
+            if each in CleanColumns :
+                CleanColumns.pop( CleanColumns.index(each) )
+                CleanColumns = [each] + CleanColumns
+        
+        # create DATE key if required
+        if 'DATE' in CleanColumns or 'DATES' in CleanColumns or includeDATE :
+            if not self.is_Key('DATE') :
+                if self.is_Key('DATES') :
+                    self['DATE'] = 'DATES'
+                else :
+                    try:
+                        self.createDATES()
+                        _verbose( self.speak , 3 , "MESSAGE: DATE key created" )
+                    except :
+                        pass
+        
+        if includeDATE :
+            if self.is_Key('DATE') :
+                if 'DATE' not in CleanColumns :
+                    _verbose( self.speak , 3 , "MESSAGE: added 'DATE'")
+                    CleanColumns = ['DATE'] + CleanColumns
+            else :
+                if self.createDATES() is None :
+                    _verbose( self.speak , 3 , "MESSAGE: DATE created and added to the EXCEL" )
+                    CleanColumns = ['DATE'] + CleanColumns
+                else :
+                    _verbose( self.speak , 3 , "WARNING: DATE key is not available." )
+        
+        if 'DATE' in CleanColumns and 'DATES' in CleanColumns :
+            if (self('DATE') == self('DATES')).all() :
+                CleanColumns.pop( CleanColumns.index('DATES') )
+                _verbose( self.speak , 2 , "MESSAGE: removed duplicated key DATES")
+
+        print('\n...working on it: preparing the data for the RSM file...\n      '+filepath)
+        
+        if writeUnits is True and self.useSimPandas is False :
+            self.useSimPandas = True
+            ExcelDF = self[CleanColumns]        
+            ExcelDF.to_excel(filepath,split_by=split_by)
+            self.useSimPandas = False
+        elif writeUnits is False and self.useSimPandas is True :
+            self.useSimPandas = False
+            ExcelDF = self[CleanColumns]        
+            ExcelDF.to_excel(filepath)
+            self.useSimPandas = False
+        else :
+            ExcelDF = self[CleanColumns]        
+            ExcelDF.to_excel(filepath)
+
+        return None
