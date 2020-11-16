@@ -597,17 +597,19 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
                             Lw = linewidth[y]
                             Ls = linestyle[y]
                             Mk = markers[y]
+                            Ms = 1.0
                         else :
                             Lc = ObjectsColors[s]
                             Lw = linewidth[s]
                             Ls = linestyle[s]
                             Mk = markers[s]
+                            Ms = 1.0
                         if len( Y_Keys ) == 1 :
                             Yax = 0
                         if len( SimResultObjects ) > 1 and len( Y_Keys ) > 1 :
                             Ls = SeriesColors[s]
                         
-                        plotLines += Axis[ Yax  ].plot( X ,Y , linestyle=Ls , linewidth=Lw , color=Lc , marker=Mk , label=ThisLabel) 
+                        plotLines += Axis[ Yax  ].plot( X ,Y , linestyle=Ls , linewidth=Lw , color=Lc , marker=Mk , markersize=Ms , label=ThisLabel) 
             
                         if Xdate :
                             # round to nearest years.
