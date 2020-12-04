@@ -1948,6 +1948,8 @@ class SimResult(object):
         """
         return self.start
     
+    def isKey(self,Key) :
+        return self.is_Key(Key)
     def is_Key(self,Key) :
         if type(Key) != str or len(Key)==0 :
             return False
@@ -1956,9 +1958,12 @@ class SimResult(object):
         else :
             return False
 
+    def isAtt(self,Key) :
+        return self.is_Attribute(Key)
     def is_Att(self,Key) :
         return self.is_Attribute(Key) 
-    
+    def is_Attribute(self,Key) :
+        return self.is_Attribute(Key) 
     def is_Attribute(self,Key) :
         if type(Key) != str :
             return False
@@ -2197,7 +2202,7 @@ class SimResult(object):
                 if key in self.wells or key in self.groups or key in self.regions :
                     keys += list(self.get_Keys('*:'+key))
                 elif key in self.attributes :
-                    keys += list( self.keyGen( key , self.attributes[key] ) )
+                    keys += list(self.attributes[key]) # list( self.keyGen( key , self.attributes[key] ) )
                 else :
                     keys += list(self.get_Keys(key))
             elif type(key) is str and key in self.keys :
@@ -2317,14 +2322,14 @@ class SimResult(object):
                 if Left in ['>=','<=','==','!=','>','<'] :
                     if _isnumeric(Mid) :
                         applyCondition( Key , Left , Mid )
-                    elif self.isKey(Mid):
+                    elif self.is_Key(Mid):
                         applyCondition( Key , Left , Mid )
                     else :
                         raise TypeError(" the Condition is not correct: '" + Key+Left+Mid + "'")
                 if Mid in ['>=','<=','==','!=','>','<'] :
                     if _isnumeric(Left) :
                         applyCondition( Left , Mid , Key )
-                    elif self.isKey(Left):
+                    elif self.is_Key(Left):
                         applyCondition( Left , Mid , Key )
                     else :
                         raise TypeError(" the Condition is not correct: '" + Left+Mid+Key + "'")
@@ -2474,7 +2479,7 @@ class SimResult(object):
             
                 
             if Min is not None : # apply Min parameter
-                if type(Min) is int or type(Min) is float :
+                if type(Min) in [ int , float ] :
                     # Min is a number
                     
                     # check consistency with Max parameter
@@ -3926,7 +3931,7 @@ class SimResult(object):
             ConvertedDict[Key[each]] = convertUnit(self.get_Vector(Key[each])[Key[each].strip()], self.get_Unit(Key[each]), OtherObject_or_NewUnits[each] , PrintConversionPath=(self.speak==1))
         return ConvertedDict
     
-    def integrate(self,InputKey,OutputKey=None,ConstantRate=False,Numpy=True):
+    def integrate(self,InputKey,OutputKey=None,ConstantRate=False,Numpy=True,overwrite=False,saveOthers=True):
         """"
         calculate the integral, or cumulative, of the input vector and saves 
         it to the output vector.
@@ -3936,7 +3941,7 @@ class SimResult(object):
         if ConstantRate = False :
             cumulative[i] = cumulative[i-1] + Time[i] * ( min( InputKey[i] , InputKey[i+1] ) + Time[i] * ( max( InputKey[i] , InputKey[i+1] ) - min( InputKey[i] , InputKey[i+1] ) ) 
             
-        Set Numpy=False to not use Numpy, the calculation will be done witha for loop
+        Set Numpy=False to not use Numpy, the calculation will be done using a for loop
         """
         if type(InputKey) != str or ( type(OutputKey) != None and type(OutputKey) != str ) :
             raise TypeError(' InputKey and OutputKey must be strings.')
@@ -4031,7 +4036,28 @@ class SimResult(object):
             Cumulative = np.cumsum( Cumulative )
         
         try :
-            self.set_Vector(OutputKey, np.array( Cumulative ) , OutUnits , overwrite=False )
+            if len(self.restarts) == 0 and len(self.continuations) == 0 :
+                self.set_Vector(OutputKey, np.array( Cumulative ) , OutUnits , overwrite=overwrite )
+            elif len(self.restarts) > 0 and len(self.continuations) == 0 :
+                self.set_Vector(OutputKey, np.array( Cumulative[-len(self.get_RawVector(InputKey)[InputKey]):] ) , OutUnits , overwrite=overwrite ) 
+                if saveOthers :
+                    for other in self.restarts :
+                        if other.is_Key(InputKey) :
+                            other.integrate(InputKey,OutputKey=OutputKey,ConstantRate=ConstantRate,Numpy=Numpy,overwrite=overwrite,saveOthers=False)
+            elif len(self.restarts) == 0 and len(self.continuations) > 0 :
+                self.set_Vector(OutputKey, np.array( Cumulative[-len(self.get_RawVector(InputKey)[InputKey]):] ) , OutUnits , overwrite=overwrite ) 
+                if saveOthers :
+                    i = -1
+                    for other in self.continuations :
+                        i += 1
+                        if other.is_Key(InputKey) :
+                            otherRestarts = other.restarts
+                            other.restarts = [self] + self.continuations[:i] # not sure will work if continuation point is not the last point
+                            other.integrate(InputKey,OutputKey=OutputKey,ConstantRate=ConstantRate,Numpy=Numpy,overwrite=overwrite,saveOthers=False)
+                            other.restarts = otherRestarts
+            elif len(self.restarts) > 0 and len(self.continuations) > 0 :
+                _verbose( self.speak , 2 , 'not able to save vector because the case has both restarts and continuations.')
+                # self.set_Vector(OutputKey, np.array( Cumulative[-len(self.get_RawVector(InputKey)[InputKey]):] ) , OutUnits , overwrite=overwrite ) 
         except OverwrittingError :
             _verbose( self.speak , 2 , 'not able to save vector because the Key already exists.')
         return ( OutputKey , np.array( Cumulative ) , OutUnits )
