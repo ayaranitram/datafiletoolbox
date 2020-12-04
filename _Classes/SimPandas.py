@@ -19,6 +19,7 @@ import warnings
 from pandas import Series , DataFrame , DatetimeIndex , Timestamp
 import numpy as np
 import datetime as dt
+from warnings import warn
 
 from bases.units import unit # to use unit.isUnit method
 from bases.units import convertUnit, unitProduct, unitDivision , convertible as convertibleUnits
@@ -157,6 +158,7 @@ class SimSeries(Series) :
         kwargs.pop('nameSeparator',None)
         # convert to pure Pandas
         if type(data) in [ SimDataFrame , SimSeries ] :
+            self.nameSeparator = data.nameSeparator
             data = data.to_Pandas()
         super().__init__(data=data, index=index, *args, **kwargs)
         
@@ -196,7 +198,11 @@ class SimSeries(Series) :
         # get separator for the column names, 'partA'+'separator'+'partB'
         if 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
             self.set_NameSeparator(kwargsB['nameSeparator'])
-        if self.nameSeparator is None and ':' in self.name :
+        if self.nameSeparator in [None,'',False] and ':' in self.name :
+            self.nameSeparator = ':'
+        if self.nameSeparator in [None,'',False] :
+            self.nameSeparator = ''
+        if self.nameSeparator is True :
             self.nameSeparator = ':'
     
     @property
@@ -223,6 +229,12 @@ class SimSeries(Series) :
     def set_NameSeparator(self,separator) :
         if type(separator) is str and len(separator) > 0 :
             self.nameSeparator = separator
+
+    def get_NameSeparator(self) :
+        if self.nameSeparator in [None,'',False] :
+            warn(" NameSeparator is not defined.")
+        else :
+            return self.nameSeparator
 
     def to_Pandas(self) :
         return self.as_Series()
@@ -296,6 +308,8 @@ class SimSeries(Series) :
 
     @property
     def groups(self) :
+        if self.nameSeparator in [None,'',False] :
+            return []
         objs = []
         if type(self.name) is str :
             if self.nameSeparator in self.name and self.name[0] == 'G' :
@@ -328,6 +342,8 @@ class SimSeries(Series) :
         
     @property
     def regions(self) :
+        if self.nameSeparator in [None,'',False] :
+            return []
         objs = []
         if type(self.name) is str :
             if self.nameSeparator in self.name and self.name[0] == 'R' :
@@ -359,6 +375,8 @@ class SimSeries(Series) :
         
     @property
     def attributes(self) :
+        if self.nameSeparator in [None,'',False] :
+            return tuple( self.columns )
         atts = {}
         for each in list( self.get_Keys() ) :
             if self.nameSeparator in each :
@@ -1007,6 +1025,7 @@ class SimDataFrame(DataFrame) :
         kwargs.pop('speak',None)
         # convert to pure Pandas
         if type(data) in [ SimDataFrame , SimSeries ] :
+            self.nameSeparator = data.nameSeparator
             data = data.to_Pandas()
         super().__init__(data=data,index=index,*args, **kwargs)
 
@@ -1045,7 +1064,11 @@ class SimDataFrame(DataFrame) :
         # get separator for the column names, 'partA'+'separator'+'partB'
         if 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
             self.set_NameSeparator(kwargsB['nameSeparator'])
-        if self.nameSeparator is None and ':' in ' '.join(list(self.columns)) :
+        if self.nameSeparator in [None,'',False] and ':' in ' '.join(list(self.columns)) :
+            self.nameSeparator = ':'
+        if self.nameSeparator in [None,'',False] :
+            self.nameSeparator = ''
+        if self.nameSeparator is True :
             self.nameSeparator = ':'
     
     # @property
@@ -1067,8 +1090,8 @@ class SimDataFrame(DataFrame) :
             self.nameSeparator = separator
     
     def get_NameSeparator(self) :
-        if self.nameSeparator is None :
-            return " NameSeparator is not defined."
+        if self.nameSeparator in [None,'',False] :
+            warn(" NameSeparator is not defined.")
         else :
             return self.nameSeparator
     
@@ -1171,7 +1194,7 @@ class SimDataFrame(DataFrame) :
         
         if type(split_by) is str :
             split_by = split_by.strip().lower()
-        if len(split_by) == 0 or split_by == 'none' :
+        if split_by is not None and ( len(split_by) == 0 or split_by == 'none' ) :
             split_by = None
         
         # define the split and sheet(s) name(s)
@@ -1202,7 +1225,7 @@ class SimDataFrame(DataFrame) :
                     raise TypeError( "'sheet_name' must be a string.")
                 if len(sheet_name) > 32 and verbose :
                     print(" the sheet_name '"+sheet_name+"' is longer than 32 characters,\n will be but to the first 32 characters: '"+sheet_name[:32]+"'")
-                sheet_name = (sheet_name[:32],)
+                names = (sheet_name[:32],)
         
         elif split_by == 'left' :
             names = tuple(sorted(self[cols].left))
@@ -1317,6 +1340,25 @@ class SimDataFrame(DataFrame) :
                     result[col] = self[col].to(unitsDict[col]) # convertUnit( self[col].S , self.get_Units(col)[col] , unitsDict[col] , self.speak ) , unitsDict[col] 
             return result
 
+    def drop_zeros(self,axis='both') :
+        """
+        drop the axis (rows or columns) where all the values are zeross.
+        
+        axis parameter can be:
+            'columns' or 1 : removes all the columns fill with zeroes
+            'index' or 'rows' 0 : removes all the rows fill with zeroes
+            'both' or 2 : removes all the rows and columns fill with zeroes
+        """
+        if axis in ['both',2] :
+            return self.replace(0,np.nan).dropna(axis='columns',how='all').dropna(axis='index',how='all').dropna(axis='columns',how='all').replace(np.nan,0)
+        elif axis in ['rows','row','index',0] :
+            return self.replace(0,np.nan).dropna(axis='index',how='all').replace(np.nan,0)
+        elif axis in ['columns','column','col','cols',1] :
+            return self.replace(0,np.nan).dropna(axis='columns',how='all').replace(np.nan,0)
+        else :
+            raise ValueError(" valid `axis´ argument are 'index' , 'columns' or 'both'.")
+        
+
     def dropna(self,axis='index', how='all', thresh=None, subset=None, inplace=False) :
         return SimDataFrame( data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace) , units=self.units , indexName=self.index.name )
     
@@ -1343,6 +1385,9 @@ class SimDataFrame(DataFrame) :
     
     def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
         return SimDataFrame( data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset) , units=self.units , indexName=self.index.name ) 
+
+    def reindex(self,**kwargs) :
+        return SimDataFrame( data=self.DF.reindex(kwargs) , units=self.units, speak=self.speak,indexUnits=self.indexUnits,nameSeparator=self.nameSeparator,intersectionCharacter=self.intersectionCharacter )
 
     def rename(self,**kwargs) :
         cBefore = list(self.columns)
@@ -1682,7 +1727,7 @@ class SimDataFrame(DataFrame) :
             result = self.as_DataFrame() ** other
             return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
     
-    def copy(self) :
+    def copy(self,**kwargs) :
         return SimDataFrame( data=self.as_DataFrame().copy(True) , units=self.units.copy() , indexName=self.index.name )
     
     def __call__(self,key=None) :
@@ -1976,7 +2021,7 @@ class SimDataFrame(DataFrame) :
                     if len(raw.strip(' -')) > 0 :
                         thisLine.append( raw )
                 print('\ndebug:\n   keys:',keys,'\n   line:',line,'len(thisColumn):',len(thisColumn),'\n   keyN:',keyN,'len(thisLine):',len(thisLine),'\n   rawLine:"',rawLine,'"\n')
-                thisColumn[line] = len(thisLine[keyN])
+                thisColumn[line] = len(thisLine[keyN]) if keyN < len(thisLine) else 0
             return max( thisColumn ) 
         
         buf = StringIO("")
@@ -2056,9 +2101,11 @@ class SimDataFrame(DataFrame) :
         UnitsLine = UnitsLabel + UnitsLine
         result = '\n' + result[0] + '\n' + UnitsLine + '\n' + '\n'.join(result[1:])
         return result
-
+    
     @property
     def right(self) :
+        if self.nameSeparator in [None,'',False] :
+            return tuple( self.columns )
         objs = []
         for each in list( self.columns ) :
             if self.nameSeparator in each :
@@ -2069,6 +2116,8 @@ class SimDataFrame(DataFrame) :
     
     @property
     def left(self) :
+        if self.nameSeparator in [None,'',False] :
+            return tuple( self.columns )
         objs = []
         for each in list( self.columns ) :
             if self.nameSeparator in each :
@@ -2078,6 +2127,8 @@ class SimDataFrame(DataFrame) :
         return tuple(set(objs))
     
     def renameRight(self) :
+        if self.nameSeparator in [None,'',False] :
+            raise ValueError("name separator must not be None")
         objs = {}
         for each in list( self.columns ) :
             if self.nameSeparator in each :
@@ -2089,6 +2140,8 @@ class SimDataFrame(DataFrame) :
         self.rename(columns=objs,inplace=True)
     
     def renameLeft(self) :
+        if self.nameSeparator in [None,'',False] :
+            raise ValueError("name separator must not be None")
         objs = {}
         for each in list( self.columns ) :
             if self.nameSeparator in each :
@@ -2101,6 +2154,8 @@ class SimDataFrame(DataFrame) :
 
     @property
     def wells(self) :
+        if self.nameSeparator in [None,'',False] :
+            return []
         objs = []
         for each in list( self.columns ) :
             if self.nameSeparator in each and each[0] == 'W' :
@@ -2129,6 +2184,8 @@ class SimDataFrame(DataFrame) :
 
     @property
     def groups(self) :
+        if self.nameSeparator in [None,'',False] :
+            return []
         objs = []
         for each in list( self.columns ) :
             if self.nameSeparator in each and each[0] == 'G' :
@@ -2157,6 +2214,8 @@ class SimDataFrame(DataFrame) :
         
     @property
     def regions(self) :
+        if self.nameSeparator in [None,'',False] :
+            return []
         objs = []
         for each in list( self.columns ) :
             if self.nameSeparator in each and each[0] == 'R' :
@@ -2184,6 +2243,8 @@ class SimDataFrame(DataFrame) :
         
     @property
     def attributes(self) :
+        if self.nameSeparator in [None,'',False] :
+            return tuple( self.columns )
         atts = {}
         for each in list( self.columns ) :
             if self.nameSeparator in each :
@@ -2634,14 +2695,14 @@ class SimDataFrame(DataFrame) :
             filterStr = '( ' + filterStr
                 
         retTuple = []
-        print(last)
+        # print(last)
         if returnString :
             retTuple += [ filterStr ]
         if returnFilter or returnFrame :
             try :
                 filterArray = eval( filterStr )
             except :
-                return str( filterStr )
+                return None
         if returnFilter :
             retTuple += [ filterArray ]
         if returnFrame :
@@ -2652,3 +2713,16 @@ class SimDataFrame(DataFrame) :
         else :
             return tuple( retTuple )
         
+    def integrate(self) :
+        """
+        Calculates numerical integration, using trapezoidal method, 
+        of the columns values over the index values.
+        To calculate the trapezoidal method integration uses scipy.integrate
+        
+        Returns a new SimDataFrame
+        """
+        from scipy import integrate
+        result = self.copy()
+        for col in result.columns : 
+            
+            result[col] = result[col][1:] - result[col][:-1]
