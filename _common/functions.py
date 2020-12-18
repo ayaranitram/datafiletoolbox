@@ -17,7 +17,7 @@ def _is_SimulationResult(obj) :
     return 'SimulationResults.' in str(type(obj)) 
 
 
-def _mainKey(Key) :
+def _mainKey(Key,clean=True) :
     """
     returns the main part (before the name of the item) in the keyword, MAIN:ITEM
     """
@@ -30,9 +30,12 @@ def _mainKey(Key) :
         results = []
         for K in Key :
             results.append( _mainKey(K) )
-        return list(set(results))
+        if clean :
+            return list(set(results))
+        else :
+            return list(results)
 
-def _itemKey(Key) :
+def _itemKey(Key,clean=True) :
     """
     returns the item part (after the name of the item) in the keyword, MAIN:ITEM
     """
@@ -46,7 +49,10 @@ def _itemKey(Key) :
         results = []
         for K in Key :
             results.append( _itemKey(K) )
-        return list(set(results))
+        if clean :
+            return list(set(results))
+        else :
+            return list(results)
 
 def _keyType(Key) :
     """
