@@ -13,6 +13,7 @@ from io import StringIO
 from shutil import get_terminal_size
 from pandas._config import get_option
 from pandas.io.formats import console
+import pandas as pd
 
 import fnmatch
 import warnings
@@ -1253,11 +1254,17 @@ class SimDataFrame(DataFrame) :
         headerRows = 2 if header is True else 0
         
         if index :
-            indexName = '' if self.index.name is None else self.index.name
+            if self.index.name is None :
+                indexName = ('',) 
+            if type(self.index) is pd.core.indexes.multi.MultiIndex :
+                indexName = tuple(self.index.names) 
+            else :
+                indexName = (self.index.name,)
             indexUnit = '' if self.indexUnits is None else self.indexUnits
+            indexCols = len(self.index.names) if type(self.index) is pd.core.indexes.multi.MultiIndex else 1
             
         if freeze_panes is None :
-            freeze_panes = (startrow+headerRows,startcol+(1 if index else 0))
+            freeze_panes = (startrow+headerRows,startcol+(indexCols if index else 0))
                     
         # if single name, simpy write the output using .to_excel method from Pandas
         for i in range(len(names)) :
@@ -1285,7 +1292,7 @@ class SimDataFrame(DataFrame) :
                 
                 # add the index name and units to the header
                 if index :
-                    colselect = (indexName,)+colselect
+                    colselect = indexName+colselect
                 
                 # write the column header, name and units
                 for c in range(len(colselect)) :
@@ -1377,19 +1384,197 @@ class SimDataFrame(DataFrame) :
     def replace(self,to_replace=None, value=None, inplace=False, limit=None, regex=False, method='pad') :
         return SimDataFrame( data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method) , units=self.units , indexName=self.index.name )
 
-    def groupby(self,by=None, axis=0, level=None, as_index=True, sort=True, group_keys=True, squeeze=False, observed=False, dropna=True) :
-        return SimDataFrame( data=self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna) , units=self.units , indexName=self.index.name ) 
+    def groupby(self, by=None, axis=0, level=None, as_index=True, sort=True, group_keys=True, squeeze=False, observed=False, dropna=True) :
+        selfGrouped = self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna)
+        return SimDataFrame( data=selfGrouped , units=self.units , indexName=self.index.name , nameSeparator=self.nameSeparator ) 
+
+    def dayly(self,outBy='first') :
+        """
+        return a dataframe with a single row per year.
+        index must be a date type.
+        
+        available gropuing calculations are:
+            first : keeps the fisrt row
+            last : keeps the last row
+            max : returns the maximum value per year
+            min : returns the minimum value per year
+            mean or avg : returns the average value per year
+            std : returns the standard deviation per year
+            sum : returns the summation of all the values per year
+        """
+        try :
+            result = self.DF.groupby([self.index.year,self.index.month,self.index.day])
+        except:
+            raise TypeError( 'index must be of date type.')
+        if outBy == 'first' :
+            result = result.first()
+        elif outBy == 'last' :
+            result = result.last()
+        elif outBy == 'max' :
+            result = result.max()
+        elif outBy == 'min' :
+            result = result.min()
+        elif outBy in ['mean','avg'] :
+            result = result.mean()
+        elif outBy == 'std' :
+            result = result.std()
+        elif outBy == 'sum' :
+            result = result.sum()
+            
+        output = SimDataFrame( data=result , units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+        output.index.names = ['YEAR','MONTH','DAY']
+        output.index.name = 'YEAR_MONTH_DAY'
+        return output
+
+    def monthly(self,outBy='first') :
+        """
+        return a dataframe with a single row per year.
+        index must be a date type.
+        
+        available gropuing calculations are:
+            first : keeps the fisrt row
+            last : keeps the last row
+            max : returns the maximum value per year
+            min : returns the minimum value per year
+            mean or avg : returns the average value per year
+            std : returns the standard deviation per year
+            sum : returns the summation of all the values per year
+        """
+        try :
+            result = self.DF.groupby([self.index.year,self.index.month])
+        except:
+            raise TypeError( 'index must be of date type.')
+        if outBy == 'first' :
+            result = result.first()
+        elif outBy == 'last' :
+            result = result.last()
+        elif outBy == 'max' :
+            result = result.max()
+        elif outBy == 'min' :
+            result = result.min()
+        elif outBy in ['mean','avg'] :
+            result = result.mean()
+        elif outBy == 'std' :
+            result = result.std()
+        elif outBy == 'sum' :
+            result = result.sum()
+            
+        output = SimDataFrame( data=result , units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+        output.index.names = ['YEAR','MONTH']
+        output.index.name = 'YEAR_MONTH'
+        return output
     
+    def yearly(self,outBy='first') :
+        """
+        return a dataframe with a single row per year.
+        index must be a date type.
+        
+        available gropuing calculations are:
+            first : keeps the fisrt row
+            last : keeps the last row
+            max : returns the maximum value per year
+            min : returns the minimum value per year
+            mean or avg : returns the average value per year
+            std : returns the standard deviation per year
+            sum : returns the summation of all the values per year
+        """
+        try :
+            result = self.DF.groupby(self.index.year)
+        except:
+            raise TypeError( 'index must be of date type.')
+        if outBy == 'first' :
+            result = result.first()
+        elif outBy == 'last' :
+            result = result.last()
+        elif outBy == 'max' :
+            result = result.max()
+        elif outBy == 'min' :
+            result = result.min()
+        elif outBy in ['mean','avg'] :
+            result = result.mean()
+        elif outBy == 'std' :
+            result = result.std()
+        elif outBy == 'sum' :
+            result = result.sum()
+            
+        output = SimDataFrame( data=result , units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+        output.index.names = ['YEAR']
+        output.index.name = 'YEAR'
+        return output
+        
     def aggregate(self,func=None, axis=0, *args, **kwargs) :
         return SimDataFrame( data=self.DF.aggregate(func=func, axis=axis, *args, **kwargs) , units=self.units , indexName=self.index.name ) 
     
     def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
         return SimDataFrame( data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset) , units=self.units , indexName=self.index.name ) 
 
-    def reindex(self,**kwargs) :
-        return SimDataFrame( data=self.DF.reindex(kwargs) , units=self.units, speak=self.speak,indexUnits=self.indexUnits,nameSeparator=self.nameSeparator,intersectionCharacter=self.intersectionCharacter )
+    def reindex(self,labels=None,index=None,columns=None,axis=None,**kwargs) :
+        """
+        wrapper for pandas.DataFrame.reindex
+        
+        labels : array-like, optional
+            New labels / index to conform the axis specified by ‘axis’ to.
+        index, columns : array-like, optional (should be specified using keywords)
+            New labels / index to conform to. Preferably an Index object to avoid duplicating data
+        axis : int or str, optional
+            Axis to target. Can be either the axis name (‘index’, ‘columns’) or number (0, 1).
+        """
+        if labels is None and axis is None and index is not None :
+            labels = index
+            axis = 0
+        elif labels is None and axis is None and columns is not None :
+            labels = columns
+            axis = 1
+        elif labels is not None and axis is None and columns is None and index is None :
+            if len(labels) == len(self.index) :
+                axis = 0
+            elif len(labels) == len(self.columns) :
+                axis = 1
+            else :
+                raise TypeError("labels does not match neither len(index) or len(columns).")
+        return SimDataFrame( data=self.DF.reindex(labels=labels,axis=axis,**kwargs) , units=self.units, speak=self.speak,indexUnits=self.indexUnits,nameSeparator=self.nameSeparator )
 
     def rename(self,**kwargs) :
+        """
+        wrapper of rename function from Pandas.
+        
+        Alter axes labels.
+
+        Function / dict values must be unique (1-to-1).
+        Labels not contained in a dict / Series will be left as-is. 
+        Extra labels listed don’t throw an error.
+        
+        Parameters:
+            mapper: dict-like or function
+                Dict-like or functions transformations to apply to that axis’ values. 
+                Use either mapper and axis to specify the axis to target with mapper, 
+                or index and columns.
+            
+            index: dict-like or function
+                Alternative to specifying axis (mapper, axis=0 is equivalent to index=mapper).
+            
+            columns: dict-like or function
+                Alternative to specifying axis (mapper, axis=1 is equivalent to columns=mapper).
+            
+            axis: {0 or ‘index’, 1 or ‘columns’}, default 0
+                Axis to target with mapper. Can be either the axis name (‘index’, ‘columns’) or number (0, 1). The default is ‘index’.
+            
+            copy: bool, default True
+                Also copy underlying data.
+            
+            inplace:bool, default False
+                Whether to apply the chanes directly in the dataframe. 
+                Always return a new DataFrame.
+                If True then value of copy is ignored.
+            
+            level: int or level name, default None
+                In case of a MultiIndex, only rename labels in the specified level.
+            
+            errors: {‘ignore’, ‘raise’}, default ‘ignore’
+                If ‘raise’, raise a KeyError when a dict-like mapper, index, or columns
+                contains labels that are not present in the Index being transformed. 
+                If ‘ignore’, existing keys will be renamed and extra keys will be ignored.
+        """
         cBefore = list(self.columns)
         if 'inplace' in kwargs and kwargs['inplace'] :
             super().rename(**kwargs)
@@ -1402,6 +1587,7 @@ class SimDataFrame(DataFrame) :
             newUnits[cAfter[i]] = self.units[cBefore[i]]
         if 'inplace' in kwargs and kwargs['inplace'] :
             self.units = newUnits
+            return self
         else :
             catch.units = newUnits
             return catch
@@ -2020,7 +2206,7 @@ class SimDataFrame(DataFrame) :
                 for raw in rawLine :
                     if len(raw.strip(' -')) > 0 :
                         thisLine.append( raw )
-                print('\ndebug:\n   keys:',keys,'\n   line:',line,'len(thisColumn):',len(thisColumn),'\n   keyN:',keyN,'len(thisLine):',len(thisLine),'\n   rawLine:"',rawLine,'"\n')
+                # print('\ndebug:\n   keys:',keys,'\n   line:',line,'len(thisColumn):',len(thisColumn),'\n   keyN:',keyN,'len(thisLine):',len(thisLine),'\n   rawLine:"',rawLine,'"\n')
                 thisColumn[line] = len(thisLine[keyN]) if keyN < len(thisLine) else 0
             return max( thisColumn ) 
         
