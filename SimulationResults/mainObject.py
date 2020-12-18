@@ -1074,7 +1074,145 @@ class SimResult(object):
         """
         return self.len_tSteps()
     
+    def boxplot(self,Keys=[],objects=None,otherSims=None,cleanAllZeros=True,ignoreZeros=True,hue='--auto',label='--auto',figsize=(8,6),dpi=100) :
+        """
+        creates a boxplot for the desired keys
+        
+        hue must be None, 'item', 'attribute' or 'main'
+        label must be None, 'item', 'attribute' or 'main'
+        
+        main and item refers to the ECL style kewords, like:
+            main:item   -->   WOPR:P1
+        
+        """
+        
+        if type(Keys) not in [list,tuple,set,str] :
+            raise TypeError(" Keys must be a list of keys or a string.")
+        if type(Keys) is str :
+            Keys = [Keys]
+        if _is_SimulationResult(objects) and otherSims is None :
+            objects , otherSims = None , objects
+        if objects is not None :
+            if type(objects) not in [str,list,tuple,set] :
+                raise TypeError(" objects must be list of wells, groups or regions or one of the magic words 'wells', 'groups', 'regions'.")
+            else :
+                newKeys = []
+                for K in Keys :
+                    for O in objects :
+                        newKeys.append( K.strip(': ')+':'+O.strip(': ') )
+                newKeys = list(set(newKeys))
+                Keys = []
+                for K in newKeys :
+                    if self.is_Key(K) :
+                        Keys.append(K)
+        
+        df = self[Keys]
+        if cleanAllZeros :
+            df = df.replace(0,np.nan).dropna(axis='columns',how='all').replace(np.nan,0)
+        if ignoreZeros :
+            df = df.replace(0,np.nan)
+        
+        df = df.melt(var_name='SDFvariable',value_name='value',ignore_index=False)
+        df['attribute'] = _mainKey( list(df['SDFvariable']) , False)
+        df['item'] = _itemKey( list(df['SDFvariable']) , False)
+        # df = df.drop(columns='SDFvariable')
+        
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        
+        sns.set_theme(style="ticks", palette="pastel")
+        
+        if hue == 'main' :
+            hue = 'attribute'
+        if label == 'main' :
+            label = 'attribute'
+        
+        if hue == '--auto' and label == '--auto' :
+            if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
+                hue = None
+                label = None
+            elif len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) > 1 :
+                hue = None
+                label = 'item'
+            elif len( _mainKey( list(df['SDFvariable']) ) ) > 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
+                hue = None
+                label = 'attribute'
+            elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
+                hue = 'item'
+                label = 'attribute'
+            elif len( _mainKey( list(df['SDFvariable']) ) ) < len( _itemKey( list(df['SDFvariable']) ) ) :
+                hue = 'attribute'
+                label = 'item'
+            else :
+                hue = 'attribute'
+                label = 'item'
+        else :
+            if hue == '--auto' :
+                if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
+                    hue = None
+                elif len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) > 1 :
+                    hue = None
+                elif len( _mainKey( list(df['SDFvariable']) ) ) > 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
+                    hue = None
+                elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
+                    hue = 'item' if label != 'item'else 'attribute'
+                elif len( _mainKey( list(df['SDFvariable']) ) ) < len( _itemKey( list(df['SDFvariable']) ) ) :
+                    hue = 'attribute' if label != 'attribute' else 'item'
+                else :
+                    hue = 'attribute'
+            if label == '--auto' :
+                if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
+                    label = None
+                elif len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) > 1 :
+                    label = 'item'
+                elif len( _mainKey( list(df['SDFvariable']) ) ) > 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
+                    label = 'attribute'
+                elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
+                    label = 'attribute'
+                elif len( _mainKey( list(df['SDFvariable']) ) ) < len( _itemKey( list(df['SDFvariable']) ) ) :
+                    label = 'item' if hue != 'item' else 'attribute'
+                else :
+                    label = 'item'
+
+        fig = plt.figure(figsize=figsize,dpi=dpi)
+        # Draw a nested boxplot to show bills by day and time
+        sns.boxplot(x=label, y="value",
+                    hue=hue,
+                    data=df)
+        sns.despine(offset=10, trim=True)
+        
+    
     def plot(self,Keys=[],Index=None,otherSims=None,Wells=[],Groups=[],Regions=[],DoNotRepeatColors=None) : # Index='TIME'
+        """
+        creates a line chart for the selected Keys vs the selected Index.
+        returns the a tuple with ( the plot , list of Keys in Y axes , list of Indexes in X axis )
+        
+        Optional parameters:
+            otherSims : another SimulationResults object to plot together with this object.
+            Wells : list of wells to plot for the desired Keys
+            Groups : list of groups to plot for the desired Keys
+            Regions : list of Regions to plot for the desired Keys
+            DoNotRepeatColors : True or False
+                the colors of the lines are by default asigned based on the property of the Key,
+                then for several objects plotting the same Key all the lines will have the same color.
+                To avoid that behaviour, set this parameter to True
+            
+        """
+
+        if Keys == [] :
+            for K in ['FOPR','FGPR','FWPR','FGIR','FWIR','FOIR'] :
+                if self.is_Key(K) :
+                    if min(self(K)) == max(self(K)) and sum(self(K)) == 0 :
+                        pass # skip all zeros vectors
+                    else :
+                        Keys.append(K)
+            if Index is None :
+                if self.is_Key('DATE') :
+                    Index = 'DATE'
+                elif self.is_Key('DATES') :
+                    Index = 'DATES'
+                elif self.is_Key('TIME') :
+                    Index = 'TIME'    
 
         if type(DoNotRepeatColors) is not bool :
             UserDRC = None
@@ -1281,8 +1419,9 @@ class SimResult(object):
                 trash = sim(X)
             sim.speak = prevSpeak
             
-        Plot( SimResultObjects=SimsToPlot , Y_Keys=PlotKeys ,  X_Key=IndexList , DoNotRepeatColors=DoNotRepeatColors ) #, X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] ,  graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={})
-        return( PlotKeys , IndexList )
+        figure = Plot( SimResultObjects=SimsToPlot , Y_Keys=PlotKeys ,  X_Key=IndexList , DoNotRepeatColors=DoNotRepeatColors ) #, X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] ,  graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={})
+        
+        return ( figure , PlotKeys , IndexList )
     
     def replaceNullbyNaN(self) :
         """
@@ -1446,6 +1585,8 @@ class SimResult(object):
     
     def set_Restart(self,SimResultObject):
         if type( SimResultObject ) is list :
+            self.restarts = self.restarts + SimResultObject 
+        elif type( SimResultObject ) is tuple :
             self.restarts = self.restarts + SimResultObject 
         else :
             self.restarts.append(SimResultObject)
@@ -4043,7 +4184,11 @@ class SimResult(object):
                 if saveOthers :
                     for other in self.restarts :
                         if other.is_Key(InputKey) :
+                            # previuosRestarts = other.restarts
+                            # other.clean_Restart()
+                            # other.set_Restart( self.restarts )
                             other.integrate(InputKey,OutputKey=OutputKey,ConstantRate=ConstantRate,Numpy=Numpy,overwrite=overwrite,saveOthers=False)
+                            # other.restarts = previuosRestarts
             elif len(self.restarts) == 0 and len(self.continuations) > 0 :
                 self.set_Vector(OutputKey, np.array( Cumulative[-len(self.get_RawVector(InputKey)[InputKey]):] ) , OutUnits , overwrite=overwrite ) 
                 if saveOthers :
