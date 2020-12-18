@@ -20,7 +20,7 @@ try :
 except ImportError :
     print ( 'failed import ECL, usually due to fail to import libecl')
 
-def loadSimulationResults(FullPath,/,Simulator=None,Verbosity=None,**kwargs) :
+def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
     """
     Loads the results of reservoir simulation into and SimuResult object.
     This library can read:
