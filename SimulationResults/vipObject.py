@@ -115,7 +115,7 @@ class VIP(_SimResult):
                 self.use_ECLstyle()
         self.complete_Units()
 
-    def get_Style(self) :
+    def get_KeywordStyle(self) :
         if self.VIPstyle == True and self.ECLstyle == False :
             return 'using VIP style' 
         if self.ECLstyle == True and self.VIPstyle == False :
