@@ -915,6 +915,9 @@ class SimResult(object):
                     if self.is_Key(Key) :
                         if convertibleUnits( self.get_Unit(Key) , UnitSystem_or_CustomUnitsDictionary[Key] ) :
                             self.plotUnits[Key] = UnitSystem_or_CustomUnitsDictionary[Key]
+                    elif self.is_Attribute(Key) :
+                        if convertibleUnits( self.get_Unit(Key) , UnitSystem_or_CustomUnitsDictionary[Key] ) :
+                            self.plotUnits[Key] = UnitSystem_or_CustomUnitsDictionary[Key]
                         else :
                             _verbose(self.speak , 3 , "the units for the key '" + Key + "' can't be converted from '" + self.get_Unit(Key) + "' to '" + UnitSystem_or_CustomUnitsDictionary[Key] + "'." )
                     else :
@@ -1074,6 +1077,27 @@ class SimResult(object):
         """
         return self.len_tSteps()
     
+    def convert(self,units) :
+        """
+        returns the dataframe converted to the requested units if possible, 
+        else returns None
+        """
+        if type(units) is str and len(set( self.get_Units(self.columns).values() )) == 1 :
+            if convertibleUnits(list(set( self.get_Units(self.columns).values() ))[0],units) :
+                return SimDataFrame( data=convertUnit( self.DF , list(set( self.get_Units(self.columns).values() ))[0] , units , self.speak ) , units=units ) 
+        if type(units) is dict :
+            unitsDict = {}
+            for k,v in units.items() :
+                keys = self.find_Keys(k)
+                if len(keys) > 0 :
+                    for each in keys :
+                        unitsDict[each] = v
+            result = self.copy()
+            for col in self.columns :
+                if col in unitsDict :
+                    result[col] = self[col].convert(unitsDict[col]) # convertUnit( self[col].S , self.get_Units(col)[col] , unitsDict[col] , self.speak ) , unitsDict[col] 
+            return result
+    
     def boxplot(self,Keys=[],objects=None,otherSims=None,cleanAllZeros=True,ignoreZeros=True,hue='--auto',label='--auto',figsize=(8,6),dpi=100) :
         """
         creates a boxplot for the desired keys
@@ -1096,27 +1120,46 @@ class SimResult(object):
             if type(objects) not in [str,list,tuple,set] :
                 raise TypeError(" objects must be list of wells, groups or regions or one of the magic words 'wells', 'groups', 'regions'.")
             else :
+                if type(objects) is str :
+                    objects = [objects]
                 newKeys = []
                 for K in Keys :
-                    for O in objects :
-                        newKeys.append( K.strip(': ')+':'+O.strip(': ') )
-                newKeys = list(set(newKeys))
+                    if K[0] == 'F' :
+                        newKeys.append(K)
+                    else :
+                        if ':' in K :
+                            for O in objects :
+                                newKeys.append( _mainKey(K).strip(': ')+':'+O.strip(': ') )
+                        else :
+                            for O in objects :
+                                newKeys.append( K.strip(': ')+':'+O.strip(': ') )
+                newKeys = list(set(self.find_Keys(newKeys)))
                 Keys = []
                 for K in newKeys :
                     if self.is_Key(K) :
                         Keys.append(K)
+                
         
+        # expand Keys
+        Keys = list(self.find_Keys(Keys))
+        
+        # define plot units
+        plotUnits = {}
+        for K in Keys : 
+            plotUnits[K] = self.get_plotUnits(K)
+
         df = self[Keys]
+
         if cleanAllZeros :
-            df = df.replace(0,np.nan).dropna(axis='columns',how='all').replace(np.nan,0)
+            df = df.replace(0,np.nan).dropna(axis='columns',how='all').replace(np.nan,0)  
         if ignoreZeros :
             df = df.replace(0,np.nan)
-        
+        df = df.convert(plotUnits) 
         df = df.melt(var_name='SDFvariable',value_name='value',ignore_index=False)
         df['attribute'] = _mainKey( list(df['SDFvariable']) , False)
         df['item'] = _itemKey( list(df['SDFvariable']) , False)
-        # df = df.drop(columns='SDFvariable')
         
+
         import seaborn as sns
         import matplotlib.pyplot as plt
         
@@ -1127,16 +1170,38 @@ class SimResult(object):
         if label == 'main' :
             label = 'attribute'
         
+        itemLabel = 'item'
+        values = 'value'
+        
+        if len(set( [ i[0] for i in _mainKey( list(df['SDFvariable']) ) ] )) == 1 :
+            itemLabel = list(set( _mainKey( list(df['SDFvariable']) )))[0][0].upper()
+            if itemLabel == 'W' :
+                itemLabel = 'well'
+            elif itemLabel == 'R' :
+                itemLabel = 'region'
+            elif itemLabel == 'G' :
+                itemLabel = 'group'
+            else :
+                itemLabel = 'item'
+        
         if hue == '--auto' and label == '--auto' :
             if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
                 hue = None
-                label = None
+                label = itemLabel
+                newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
+                df = df.rename(columns={'value':newLabel})
+                values = newLabel
             elif len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) > 1 :
                 hue = None
-                label = 'item'
+                label = itemLabel
+                newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
+                df = df.rename(columns={'value':newLabel})
+                values = newLabel
             elif len( _mainKey( list(df['SDFvariable']) ) ) > 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
-                hue = None
+                hue = itemLabel # None
                 label = 'attribute'
+                # values = _itemKey( list(df['SDFvariable']) )[0]
+                # df = df.rename(columns={'value':values})     
             elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
                 hue = 'item'
                 label = 'attribute'
@@ -1150,8 +1215,14 @@ class SimResult(object):
             if hue == '--auto' :
                 if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
                     hue = None
+                    # newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
+                    # df = df.rename(columns={'value':newLabel})
+                    # values = newLabel
                 elif len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) > 1 :
                     hue = None
+                    # newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
+                    # df = df.rename(columns={'value':newLabel})
+                    # values = newLabel
                 elif len( _mainKey( list(df['SDFvariable']) ) ) > 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
                     hue = None
                 elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
@@ -1163,8 +1234,14 @@ class SimResult(object):
             if label == '--auto' :
                 if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
                     label = None
+                    # newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
+                    # df = df.rename(columns={'value':newLabel})
+                    # values = newLabel
                 elif len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) > 1 :
                     label = 'item'
+                    # newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
+                    # df = df.rename(columns={'value':newLabel})
+                    # values = newLabel
                 elif len( _mainKey( list(df['SDFvariable']) ) ) > 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
                     label = 'attribute'
                 elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
@@ -1173,10 +1250,13 @@ class SimResult(object):
                     label = 'item' if hue != 'item' else 'attribute'
                 else :
                     label = 'item'
+       
+        df = df.drop(columns='SDFvariable')
+        df = df.rename(columns={'item':itemLabel})    
 
         fig = plt.figure(figsize=figsize,dpi=dpi)
         # Draw a nested boxplot to show bills by day and time
-        sns.boxplot(x=label, y="value",
+        sns.boxplot(x=label, y=values,
                     hue=hue,
                     data=df)
         sns.despine(offset=10, trim=True)
@@ -2345,7 +2425,10 @@ class SimResult(object):
                 elif key in self.attributes :
                     keys += list(self.attributes[key]) # list( self.keyGen( key , self.attributes[key] ) )
                 else :
-                    keys += list(self.get_Keys(key))
+                    if '?' in key and key[0]!='F' and ':' not in key :
+                        keys += list(self.get_Keys(key+':*'))
+                    else :
+                        keys += list(self.get_Keys(key))
             elif type(key) is str and key in self.keys :
                 keys += [ key ] 
             else :
