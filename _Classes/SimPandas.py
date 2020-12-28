@@ -1328,7 +1328,7 @@ class SimDataFrame(DataFrame) :
         return self.convert(units)
     def convert(self,units) :
         """
-        returns the series converted to the requested units if possible, 
+        returns the dataframe converted to the requested units if possible, 
         else returns None
         """
         if type(units) is str and len(set( self.get_Units(self.columns).values() )) == 1 :
@@ -1343,7 +1343,7 @@ class SimDataFrame(DataFrame) :
                         unitsDict[each] = v
             result = self.copy()
             for col in self.columns :
-                if col in unitsDict :
+                if col in unitsDict and convertibleUnits( self.get_Units(col)[col] , unitsDict[col] ) :
                     result[col] = self[col].to(unitsDict[col]) # convertUnit( self[col].S , self.get_Units(col)[col] , unitsDict[col] , self.speak ) , unitsDict[col] 
             return result
 
