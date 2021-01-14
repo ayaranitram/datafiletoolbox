@@ -2476,7 +2476,7 @@ class SimResult(object):
         if len(self.keys) == 0 or reload is True :
             self.keys = self.get_Keys(reload=reload)
         
-        if criteria is not None and ( type(criteria) is not str and type(criteria) is not list ) :
+        if criteria is not None and ( type(criteria) is not str and type(criteria) not in [list,tuple,set] ) :
             raise TypeError('criteria argument must be a string or list of strings.')
         
         if criteria is None :
