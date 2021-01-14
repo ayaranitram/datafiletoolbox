@@ -1098,7 +1098,7 @@ class SimResult(object):
                     result[col] = self[col].convert(unitsDict[col]) # convertUnit( self[col].S , self.get_Units(col)[col] , unitsDict[col] , self.speak ) , unitsDict[col] 
             return result
     
-    def boxplot(self,Keys=[],objects=None,otherSims=None,cleanAllZeros=True,ignoreZeros=True,hue='--auto',label='--auto',figsize=(8,6),dpi=100) :
+    def boxplot(self,Keys=[],objects=None,otherSims=None,cleanAllZeros=True,ignoreZeros=True,hue='--auto',label='--auto',figsize=(8,6),dpi=100,grid=False,sort='item') :
         """
         creates a boxplot for the desired keys
         
@@ -1147,14 +1147,71 @@ class SimResult(object):
         plotUnits = {}
         for K in Keys : 
             plotUnits[K] = self.get_plotUnits(K)
+            
+        # define sorting
+        quantile = 0.5 # P50 by default
+        if sort is None :
+            sort = 'none'
+        if type(sort) is not str :
+            if type(sort) is float :
+                quantile = sort
+                sort = 'quantile'
+            elif type(sort) is int :
+                quantile = sort/100
+                sort = 'quantile'
+            else :
+                sort = 'item'
+        
+        sort = sort.lower().strip()
+        if sort.replace('.','').replace(',','').isdigit() :
+            if '.' in sort :
+                quantile = float(sort)
+                sort = 'quantile'
+            elif '.' in sort :
+                quantile = float(sort.replace(',','.'))
+                sort = 'quantile'
+            else :
+                quantile = int(sort)/100
+                sort = 'quantile'
 
+        
+
+        if sort in ['name','wellname','well','groupname','group','region','regionname','alphabeticaly','alpha','abc'] :
+            sort = 'item'
+        if sort not in ['item','min','mean','median','max','sum','quantile'] :
+            if sort[0] in ['p','q'] and sort[1:].isdigit() :
+                quantile = int(sort[1:])/100
+                sort = 'quantile'
+            else :
+                sort = ''
+
+        # get the data
         df = self[Keys]
-
+        
+        # clean the data
         if cleanAllZeros :
             df = df.replace(0,np.nan).dropna(axis='columns',how='all').replace(np.nan,0)  
         if ignoreZeros :
             df = df.replace(0,np.nan)
         df = df.convert(plotUnits) 
+        
+        # sort the data
+        if sort in ['min','mean','median','max','sum','quantile'] :
+            if sort == 'min' :
+                sorted_index = list( df.min().sort_values().index )
+            elif sort == 'mean' :
+                sorted_index = list( df.mean().sort_values().index )
+            elif sort == 'median' :
+                sorted_index = list( df.median().sort_values().index )
+            elif sort == 'max' :
+                sorted_index = list( df.max().sort_values().index )
+            elif sort == 'sum' :
+                sorted_index = list( df.sum().sort_values().index )
+            elif sort == 'quantile' :
+                sorted_index = list( df.quantile(q=quantile).sort_values().index )
+            df = df[sorted_index]
+        
+        # melt the dataframe
         df = df.melt(var_name='SDFvariable',value_name='value',ignore_index=False)
         df['attribute'] = _mainKey( list(df['SDFvariable']) , False)
         df['item'] = _itemKey( list(df['SDFvariable']) , False)
@@ -1252,17 +1309,22 @@ class SimResult(object):
                     label = 'item'
        
         df = df.drop(columns='SDFvariable')
-        df = df.rename(columns={'item':itemLabel})    
+        df = df.rename(columns={'item':itemLabel})
+        
+        if sort in ['item'] :
+            df = df.sort_values(by=itemLabel,axis=0)
 
         fig = plt.figure(figsize=figsize,dpi=dpi)
         # Draw a nested boxplot to show bills by day and time
-        sns.boxplot(x=label, y=values,
+        ax = sns.boxplot(x=label, y=values,
                     hue=hue,
-                    data=df)
+                    data=df ) 
         sns.despine(offset=10, trim=True)
+        if grid :
+            ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
         
     
-    def plot(self,Keys=[],Index=None,otherSims=None,Wells=[],Groups=[],Regions=[],DoNotRepeatColors=None) : # Index='TIME'
+    def plot(self,Keys=[],Index=None,otherSims=None,Wells=[],Groups=[],Regions=[],DoNotRepeatColors=None,grid=False) : # Index='TIME'
         """
         creates a line chart for the selected Keys vs the selected Index.
         returns the a tuple with ( the plot , list of Keys in Y axes , list of Indexes in X axis )
@@ -1278,7 +1340,21 @@ class SimResult(object):
                 To avoid that behaviour, set this parameter to True
             
         """
-
+        Xgrid , Ygrid = False , False
+        if type(grid) is str :
+            if 'x' in grid.lower() :
+                Xgrid = True
+            if 'v' in grid.lower() :
+                Xgrid = True
+            if 'y' in grid.lower() :
+                Ygrid = True
+            if 'h' in grid.lower() :
+                Ygrid = True
+        else :
+            grid = bool(grid)
+            if grid :
+                Xgrid , Ygrid = True, True
+                
         if Keys == [] :
             for K in ['FOPR','FGPR','FWPR','FGIR','FWIR','FOIR'] :
                 if self.is_Key(K) :
@@ -1499,7 +1575,7 @@ class SimResult(object):
                 trash = sim(X)
             sim.speak = prevSpeak
             
-        figure = Plot( SimResultObjects=SimsToPlot , Y_Keys=PlotKeys ,  X_Key=IndexList , DoNotRepeatColors=DoNotRepeatColors ) #, X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] ,  graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={})
+        figure = Plot( SimResultObjects=SimsToPlot , Y_Keys=PlotKeys ,  X_Key=IndexList , DoNotRepeatColors=DoNotRepeatColors , Xgrid=Xgrid , Ygrid=Ygrid ) #, X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] ,  graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={})
         
         return ( figure , PlotKeys , IndexList )
     
