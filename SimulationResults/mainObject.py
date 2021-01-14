@@ -1260,14 +1260,14 @@ class SimResult(object):
                 # values = _itemKey( list(df['SDFvariable']) )[0]
                 # df = df.rename(columns={'value':values})     
             elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
-                hue = 'item'
+                hue = itemLabel # 'item'
                 label = 'attribute'
             elif len( _mainKey( list(df['SDFvariable']) ) ) < len( _itemKey( list(df['SDFvariable']) ) ) :
                 hue = 'attribute'
-                label = 'item'
+                label = itemLabel # 'item'
             else :
                 hue = 'attribute'
-                label = 'item'
+                label = itemLabel # 'item'
         else :
             if hue == '--auto' :
                 if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
@@ -1283,9 +1283,9 @@ class SimResult(object):
                 elif len( _mainKey( list(df['SDFvariable']) ) ) > 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
                     hue = None
                 elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
-                    hue = 'item' if label != 'item'else 'attribute'
+                    hue = itemLabel if label != itemLabel else 'attribute'
                 elif len( _mainKey( list(df['SDFvariable']) ) ) < len( _itemKey( list(df['SDFvariable']) ) ) :
-                    hue = 'attribute' if label != 'attribute' else 'item'
+                    hue = 'attribute' if label != 'attribute' else itemLabel
                 else :
                     hue = 'attribute'
             if label == '--auto' :
@@ -1295,7 +1295,7 @@ class SimResult(object):
                     # df = df.rename(columns={'value':newLabel})
                     # values = newLabel
                 elif len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) > 1 :
-                    label = 'item'
+                    label = itemLabel
                     # newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
                     # df = df.rename(columns={'value':newLabel})
                     # values = newLabel
@@ -1304,9 +1304,9 @@ class SimResult(object):
                 elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
                     label = 'attribute'
                 elif len( _mainKey( list(df['SDFvariable']) ) ) < len( _itemKey( list(df['SDFvariable']) ) ) :
-                    label = 'item' if hue != 'item' else 'attribute'
+                    label = itemLabel if hue != itemLabel else 'attribute'
                 else :
-                    label = 'item'
+                    label = itemLabel
        
         df = df.drop(columns='SDFvariable')
         df = df.rename(columns={'item':itemLabel})
@@ -1316,6 +1316,7 @@ class SimResult(object):
 
         fig = plt.figure(figsize=figsize,dpi=dpi)
         # Draw a nested boxplot to show bills by day and time
+        #return label , values , hue , itemLabel, df
         ax = sns.boxplot(x=label, y=values,
                     hue=hue,
                     data=df ) 
