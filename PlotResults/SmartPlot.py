@@ -27,7 +27,7 @@ def savePlot(figure,FileName='') :
     figure.savefig(FileName)
 
 
-def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] , graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={} , linewidth=[], linestyle=[] , markers=[] , markersize=[] , DoNotRepeatColors=True , ColorBySimulation=None , ColorBySeries=None , minlinewidth=0.1 , minmarkersize=0.5) :
+def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] , graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={} , linewidth=[], linestyle=[] , markers=[] , markersize=[] , DoNotRepeatColors=True , ColorBySimulation=None , ColorBySeries=None , minlinewidth=0.1 , minmarkersize=0.5 , Xgrid=False , Ygrid=True) :
     """
     uses matplot lib to create graphs of the selected vectors 
     for the selected SimResult objects.
@@ -503,7 +503,9 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
             Title = Title + ' for ' + str(SimResultObjects[0].get_Name())
         else :
             Title = str(SimResultObjects[0].get_Name())
-           
+
+    Xgrid , Ygrid = bool(Xgrid) , bool(Ygrid)            
+
     fig = plt.figure(num=graphName,figsize=(6,4),dpi=150)
     Axis = [ fig.add_subplot() ]
     
