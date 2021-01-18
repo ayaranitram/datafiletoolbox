@@ -178,13 +178,7 @@ def tamiz( ListOrTuple ) :
 def _meltDF(df,hue='--auto',label='--auto',SimObject=None) :
         """
         common procedure to melt and rename the dataframe
-        """
-        
-        if _is_SimulationResult(SimObject) :
-            unitsLabel = ' [' + SimObject.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
-        else :
-            unitsLabel = ''
-        
+        """        
         df = df.melt(var_name='SDFvariable',value_name='value',ignore_index=False)
         df['attribute'] = _mainKey( list(df['SDFvariable']) , False)
         df['item'] = _itemKey( list(df['SDFvariable']) , False)
@@ -207,7 +201,12 @@ def _meltDF(df,hue='--auto',label='--auto',SimObject=None) :
                 itemLabel = 'group'
             else :
                 itemLabel = 'item'
-                
+        
+        if _is_SimulationResult(SimObject) :
+            unitsLabel = ' [' + SimObject.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
+        else :
+            unitsLabel = ''
+        
         if hue == '--auto' and label == '--auto' :
             if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
                 hue = None
@@ -235,6 +234,7 @@ def _meltDF(df,hue='--auto',label='--auto',SimObject=None) :
             else :
                 hue = 'attribute'
                 label = itemLabel # 'item'
+                
         else :
             if hue == '--auto' :
                 if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
@@ -254,7 +254,13 @@ def _meltDF(df,hue='--auto',label='--auto',SimObject=None) :
                 elif len( _mainKey( list(df['SDFvariable']) ) ) < len( _itemKey( list(df['SDFvariable']) ) ) :
                     hue = 'attribute' if label != 'attribute' else itemLabel
                 else :
+                    hue = 'attribute' if label != 'attribute' else itemLabel
+            else :
+                if hue == 'item' :
+                    hue = itemLabel
+                elif hue == 'main' :
                     hue = 'attribute'
+                    
             if label == '--auto' :
                 if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
                     label = None
@@ -267,13 +273,18 @@ def _meltDF(df,hue='--auto',label='--auto',SimObject=None) :
                     # df = df.rename(columns={'value':newLabel})
                     # values = newLabel
                 elif len( _mainKey( list(df['SDFvariable']) ) ) > 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
-                    label = 'attribute'
+                    label = 'attribute' if hue != 'attribute' else itemLabel 
                 elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
-                    label = 'attribute'
+                    label = 'attribute' if hue != 'attribute' else itemLabel 
                 elif len( _mainKey( list(df['SDFvariable']) ) ) < len( _itemKey( list(df['SDFvariable']) ) ) :
                     label = itemLabel if hue != itemLabel else 'attribute'
                 else :
+                    label = itemLabel if hue != itemLabel else 'attribute'
+            else :
+                if label == 'item' :
                     label = itemLabel
+                elif label == 'main' :
+                    label = 'attribute'
         
         df = df.drop(columns='SDFvariable')
         df = df.rename(columns={'item':itemLabel})
