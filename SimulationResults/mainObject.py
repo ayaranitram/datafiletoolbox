@@ -1240,38 +1240,7 @@ class SimResult(object):
         import matplotlib.pyplot as plt
         sns.set_theme(style="ticks", palette="pastel")
         
-        # if type(Keys) not in [list,tuple,set,str] :
-        #     raise TypeError(" Keys must be a list of keys or a string.")
-        # if type(Keys) is str :
-        #     Keys = [Keys]
-        # if _is_SimulationResult(objects) and otherSims is None :
-        #     objects , otherSims = None , objects
-        # if objects is not None :
-        #     if type(objects) not in [str,list,tuple,set] :
-        #         raise TypeError(" objects must be list of wells, groups or regions or one of the magic words 'wells', 'groups', 'regions'.")
-        #     else :
-        #         if type(objects) is str :
-        #             objects = [objects]
-        #         newKeys = []
-        #         for K in Keys :
-        #             if K[0] == 'F' :
-        #                 newKeys.append(K)
-        #             else :
-        #                 if ':' in K :
-        #                     for O in objects :
-        #                         newKeys.append( _mainKey(K).strip(': ')+':'+O.strip(': ') )
-        #                 else :
-        #                     for O in objects :
-        #                         newKeys.append( K.strip(': ')+':'+O.strip(': ') )
-        #         newKeys = list(set(self.find_Keys(newKeys)))
-        #         Keys = []
-        #         for K in newKeys :
-        #             if self.is_Key(K) :
-        #                 Keys.append(K)
-                
-        # # expand Keys
-        # Keys = list(self.find_Keys(Keys))
-        
+        # getting and cleaning the Keys
         Keys , objects , otherSims = self._commonInputCleaning(Keys=Keys,objects=objects,otherSims=otherSims)
         
         # define plot units
@@ -1348,100 +1317,7 @@ class SimResult(object):
         
         if ignoreZeros :
             df = df.dropna(axis='index',how='any')
-        
-        # df = df.melt(var_name='SDFvariable',value_name='value',ignore_index=False)
-        # df['attribute'] = _mainKey( list(df['SDFvariable']) , False)
-        # df['item'] = _itemKey( list(df['SDFvariable']) , False)
-        
-        # if hue == 'main' :
-        #     hue = 'attribute'
-        # if label == 'main' :
-        #     label = 'attribute'
-        
-        # itemLabel = 'item'
-        # values = 'value'
-        
-        # if len(set( [ i[0] for i in _mainKey( list(df['SDFvariable']) ) ] )) == 1 :
-        #     itemLabel = list(set( _mainKey( list(df['SDFvariable']) )))[0][0].upper()
-        #     if itemLabel == 'W' :
-        #         itemLabel = 'well'
-        #     elif itemLabel == 'R' :
-        #         itemLabel = 'region'
-        #     elif itemLabel == 'G' :
-        #         itemLabel = 'group'
-        #     else :
-        #         itemLabel = 'item'
-        
-        # if hue == '--auto' and label == '--auto' :
-        #     if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
-        #         hue = None
-        #         label = itemLabel
-        #         newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
-        #         df = df.rename(columns={'value':newLabel})
-        #         values = newLabel
-        #     elif len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) > 1 :
-        #         hue = None
-        #         label = itemLabel
-        #         newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
-        #         df = df.rename(columns={'value':newLabel})
-        #         values = newLabel
-        #     elif len( _mainKey( list(df['SDFvariable']) ) ) > 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
-        #         hue = itemLabel # None
-        #         label = 'attribute'
-        #         # values = _itemKey( list(df['SDFvariable']) )[0]
-        #         # df = df.rename(columns={'value':values})     
-        #     elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
-        #         hue = itemLabel # 'item'
-        #         label = 'attribute'
-        #     elif len( _mainKey( list(df['SDFvariable']) ) ) < len( _itemKey( list(df['SDFvariable']) ) ) :
-        #         hue = 'attribute'
-        #         label = itemLabel # 'item'
-        #     else :
-        #         hue = 'attribute'
-        #         label = itemLabel # 'item'
-        # else :
-        #     if hue == '--auto' :
-        #         if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
-        #             hue = None
-        #             # newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
-        #             # df = df.rename(columns={'value':newLabel})
-        #             # values = newLabel
-        #         elif len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) > 1 :
-        #             hue = None
-        #             # newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
-        #             # df = df.rename(columns={'value':newLabel})
-        #             # values = newLabel
-        #         elif len( _mainKey( list(df['SDFvariable']) ) ) > 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
-        #             hue = None
-        #         elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
-        #             hue = itemLabel if label != itemLabel else 'attribute'
-        #         elif len( _mainKey( list(df['SDFvariable']) ) ) < len( _itemKey( list(df['SDFvariable']) ) ) :
-        #             hue = 'attribute' if label != 'attribute' else itemLabel
-        #         else :
-        #             hue = 'attribute'
-        #     if label == '--auto' :
-        #         if len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
-        #             label = None
-        #             # newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
-        #             # df = df.rename(columns={'value':newLabel})
-        #             # values = newLabel
-        #         elif len( _mainKey( list(df['SDFvariable']) ) ) == 1 and len( _itemKey( list(df['SDFvariable']) ) ) > 1 :
-        #             label = itemLabel
-        #             # newLabel = _mainKey( list(df['SDFvariable']) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df['SDFvariable']) )[0]) + ']'
-        #             # df = df.rename(columns={'value':newLabel})
-        #             # values = newLabel
-        #         elif len( _mainKey( list(df['SDFvariable']) ) ) > 1 and len( _itemKey( list(df['SDFvariable']) ) ) == 1 :
-        #             label = 'attribute'
-        #         elif len( _mainKey( list(df['SDFvariable']) ) ) > len( _itemKey( list(df['SDFvariable']) ) ) :
-        #             label = 'attribute'
-        #         elif len( _mainKey( list(df['SDFvariable']) ) ) < len( _itemKey( list(df['SDFvariable']) ) ) :
-        #             label = itemLabel if hue != itemLabel else 'attribute'
-        #         else :
-        #             label = itemLabel
-       
-        # df = df.drop(columns='SDFvariable')
-        # df = df.rename(columns={'item':itemLabel})
-        
+                
         if sort in ['item'] :
             df = df.sort_values(by=itemLabel,axis=0)
 
