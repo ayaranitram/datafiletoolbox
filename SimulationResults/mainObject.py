@@ -12,7 +12,7 @@ from .. import _dictionaries
 from .._Classes.Errors import OverwrittingError
 from .._Classes.SimPandas import SimSeries, SimDataFrame
 from .._common.stringformat import date as _strDate , multisplit as _multisplit , isnumeric as _isnumeric , getnumber as _getnumber , isDate as _isDate
-from .._common.functions import _is_SimulationResult , _mainKey , _itemKey , _wellFromAttribute , _AttributeFromKeys , _isECLkey , _keyType , tamiz as _tamiz , _meltDF as _auto_meltingDF
+from .._common.functions import _is_SimulationResult , _mainKey , _itemKey , _wellFromAttribute , _AttributeFromKeys , _isECLkey , _keyType , tamiz as _tamiz , _meltDF
 from .._common.inout import _extension , _verbose 
 from ..PlotResults.SmartPlot import Plot
 # from .._common.progressbar import progressbar
@@ -1136,16 +1136,36 @@ class SimResult(object):
         
         return Keys , objects , otherSims
     
+    def _auto_meltingDF(self,df,hue='--auto',label='--auto') :
+        return _meltDF(df,hue=hue,label=label,SimObject=self)
     
-    
-    def pairplot(self,Keys=[],objects=None,otherSims=None,cleanAllZeros=True,ignoreZeros=True,hue='--auto',label='--auto',figsize=(8,6),dpi=100,grid=False) :
+    def pairplot(self,Keys=[],objects=None,otherSims=None,cleanAllZeros=True,ignoreZeros=True,hue='--auto',label='--auto',**kwargs) :
         """
         this function uses seaborn pairplot to create the chart.
         """
         import seaborn as sns
-        import matplotlib.pyplot as plt
+        # import matplotlib.pyplot as plt
         sns.set_theme(style="ticks", palette="pastel")
-        
+
+        if hue == 'main' :
+            hue = 'attribute'
+        if label == 'main' :
+            label = 'attribute'
+            
+        if hue == '--auto' and label == '--auto' :
+            hue = 'item' 
+            label = 'attribute'
+        elif hue == '--auto' :
+            if label == 'attribute' :
+                hue = 'item'
+            elif label == 'item' :
+                hue = 'attribute'
+        elif label == '--auto' :
+            if hue == 'attribute' :
+                label = 'item'
+            elif hue == 'item' :
+                label = 'attribute'
+
         Keys , objects , otherSims = self._commonInputCleaning(Keys=Keys,objects=objects,otherSims=otherSims)
         
         # define plot units
@@ -1162,13 +1182,41 @@ class SimResult(object):
         if ignoreZeros :
             df = df.replace(0,np.nan)
         df = df.convert(plotUnits) 
-        
+
         # melt the dataframe
-        hue , label , itemLabel , values , df = self._auto_meltingDF(df,hue,label)
+        hue , label , itemLabel , values , df = self._auto_meltingDF(df,hue=hue,label=label)
+
+        if ignoreZeros :
+            df = df.dropna(axis='index',how='any')
         
-        fig = plt.figure(figsize=figsize,dpi=dpi)
+        indexName = df.index.name
+        df = df.pivot_table(columns=label,index=[df.index,df[hue]])
+        df = df.reset_index()
+        df=df.set_index(indexName)
+        newNames = []
+        for col in list(df.columns) :
+            if type(col) is tuple :
+                if col[0] == values :
+                    newNames.append(col[-1])
+                else :
+                    newNames.append(col[0])  
+        df.columns=newNames
+
+        for K in ('Keys','objects','otherSims','cleanAllZeros','ignoreZeros','hue','label'):
+            if K in kwargs :
+                del kwargs[K]
+        if 'plot_kws' in kwargs :
+            if 'alpha' not in kwargs :
+                kwargs['plot_kws']['alpha'] = 0.25
+            if 'edgecolor' not in kwargs :
+                kwargs['plot_kws']['edgecolor'] = 'none'
+            if 's' not in kwargs :
+                kwargs['plot_kws']['s'] = 7
+        else :
+            kwargs['plot_kws'] = {'alpha':0.25,'edgecolor':'none','s':7}
+        
         # Draw a nested boxplot to show bills by day and time
-        ax = sns.pairplot(data=df,hue=hue) 
+        fig = sns.pairplot(data=df,hue=hue,**kwargs,) 
         # sns.despine(offset=10, trim=True)
         # if grid :
         #     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
@@ -1297,6 +1345,9 @@ class SimResult(object):
             
         # melt the dataframe
         hue , label , itemLabel , values , df = self._auto_meltingDF(df,hue,label)
+        
+        if ignoreZeros :
+            df = df.dropna(axis='index',how='any')
         
         # df = df.melt(var_name='SDFvariable',value_name='value',ignore_index=False)
         # df['attribute'] = _mainKey( list(df['SDFvariable']) , False)
