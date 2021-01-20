@@ -1139,6 +1139,139 @@ class SimResult(object):
     def _auto_meltingDF(self,df,hue='--auto',label='--auto') :
         return _meltDF(df,hue=hue,label=label,SimObject=self)
     
+    def relplot(self,Keys=[],objects=None,otherSims=None,cleanAllZeros=True,ignoreZeros=True,hue='--auto',size='--auto',style='--auto',col='--auto',row='--auto',kind='line',col_wrap=None,**kwargs) :
+        """
+        """
+        import seaborn as sns
+        # import matplotlib.pyplot as plt
+        sns.set_theme(style="ticks", palette="pastel")
+
+        if col_wrap is not None :
+            if type(col_wrap) is not int :
+                col_wrap = None
+
+        if hue == 'main' :
+            hue = 'attribute'
+        if size == 'main' :
+            size = 'attribute'
+        if style == 'main' :
+            style = 'attribute'
+        if col == 'main' :
+            col = 'attribute'
+        if row == 'main' :
+            row = 'attribute'
+            
+        if row == '--auto' and col == '--auto' :
+            pass
+        elif row == '--auto' :
+            if col == 'attribute' :
+                row = 'item'
+            elif col == 'item' :
+                row = 'attribute'
+        elif col == '--auto' :
+            if row == 'attribute' :
+                col = 'item'
+            elif row == 'item' :
+                col = 'attribute'
+        
+        # cleaning the data
+        Keys , objects , otherSims = self._commonInputCleaning(Keys=Keys,objects=objects,otherSims=otherSims)
+
+        # define plot units
+        plotUnits = {}
+        for K in Keys : 
+            plotUnits[K] = self.get_plotUnits(K)
+        
+        # get the data
+        df = self[Keys]
+
+        # clean the data
+        if cleanAllZeros :
+            df = df.replace(0,np.nan).dropna(axis='columns',how='all').replace(np.nan,0)  
+        if ignoreZeros :
+            df = df.replace(0,np.nan)
+        df = df.convert(plotUnits) 
+
+        # melt the dataframe
+        var1 , var2 , itemLabel , values , df = self._auto_meltingDF(df)
+
+        if ignoreZeros :
+            df = df.dropna(axis='index',how='any')
+        
+        if row == '--auto' and col == '--auto' :
+            if var1 is not None and var2 is not None :
+                if set(df[var1]) >= set(df[var2]) :
+                    col , row = var1 , var2
+                else :
+                    col , row = var2 , var1
+            elif var1 is None and var2 is not None :
+                col = var2
+                row = None
+                if col_wrap is None :
+                    col_wrap = 7 # int( len(set(df[var2])) * 16/9 )
+            elif var1 is not None and var2 is None :
+                col = var1
+                row = None
+                if col_wrap is None :
+                    col_wrap = 7 # int( len(set(df[var1])) * 16/9 ) 
+            else :
+                col = None
+                row = None
+        
+        if row is None and col is None and hue == '--auto' and size == '--auto' and style == '--auto' :
+            if set(df[var1]) >= set(df[var2]) :
+                hue , style , size = var1 , var2 , None
+            else :
+                style , hue , size = var2 , var1 , None
+        
+        if hue == '--auto' :
+            hue = None
+        if size == '--auto' :
+            size = None
+        if style == '--auto' :
+            style = None
+
+
+        for K in ('Keys','objects','otherSims','cleanAllZeros','ignoreZeros','hue','size','style','row','col','kind'):
+            if K in kwargs :
+                del kwargs[K]
+        # if 'plot_kws' in kwargs :
+        #     if 'alpha' not in kwargs :
+        #         kwargs['plot_kws']['alpha'] = 0.25
+        #     if 'edgecolor' not in kwargs :
+        #         kwargs['plot_kws']['edgecolor'] = 'none'
+        #     if 's' not in kwargs :
+        #         kwargs['plot_kws']['s'] = 7
+        # else :
+        #     kwargs['plot_kws'] = {'alpha':0.25,'edgecolor':'none','s':7}
+        
+        # Draw a nested boxplot to show bills by day and time
+
+        namesBefore = list(df.columns) 
+        df = df.reset_index()
+        for n in list(df.columns) :
+            if n not in namesBefore :
+                indexName = n
+                break
+
+        if row is not None :
+            row = df[row]
+        if col is not None :
+            col = df[col]
+        if hue is not None :
+            hue = df[hue]
+        if size is not None :
+            size = df[size]
+        if style is not None :
+            style = df[style]
+            
+        fig = sns.relplot(x=df[indexName],y=df[values],row=row,col=col,hue=hue,size=size,style=style,kind=kind,col_wrap=col_wrap,**kwargs )
+        # sns.despine(offset=10, trim=True)
+        # if grid :
+        #     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+        
+        return fig
+    
     def pairplot(self,Keys=[],objects=None,otherSims=None,cleanAllZeros=True,ignoreZeros=True,hue='--auto',label='--auto',**kwargs) :
         """
         this function uses seaborn pairplot to create the chart.
@@ -1166,6 +1299,7 @@ class SimResult(object):
             elif hue == 'item' :
                 label = 'attribute'
 
+        # cleaning the data
         Keys , objects , otherSims = self._commonInputCleaning(Keys=Keys,objects=objects,otherSims=otherSims)
         
         # define plot units
