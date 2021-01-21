@@ -27,7 +27,7 @@ def savePlot(figure,FileName='') :
     figure.savefig(FileName)
 
 
-def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] , graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={} , linewidth=[], linestyle=[] , markers=[] , markersize=[] , DoNotRepeatColors=True , ColorBySimulation=None , ColorBySeries=None , minlinewidth=0.1 , minmarkersize=0.5 , Xgrid=False , Ygrid=True) :
+def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=[] , ObjectsColors=[] , SeriesColors=[] , graphName='' , Y_Axis=[], Y_Scales=[] , legendLocation='best', X_Scale=[] , Labels={} , linewidth=[], linestyle=[] , markers=[] , markersize=[] , DoNotRepeatColors=True , ColorBySimulation=None , ColorBySeries=None , minlinewidth=0.1 , minmarkersize=0.5 , Xgrid=0 , Ygrid=0) :
     """
     uses matplot lib to create graphs of the selected vectors 
     for the selected SimResult objects.
@@ -502,14 +502,35 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
         if len(Title) > 0 :
             Title = Title + ' for ' + str(SimResultObjects[0].get_Name())
         else :
-            Title = str(SimResultObjects[0].get_Name())
-
-    Xgrid , Ygrid = bool(Xgrid) , bool(Ygrid)            
+            Title = str(SimResultObjects[0].get_Name())      
 
     fig = plt.figure(num=graphName,figsize=(6,4),dpi=150)
+    
     Axis = [ fig.add_subplot() ]
     
     plt.title(Title)
+    
+    # display grid if required
+
+    if Xgrid > 0 :
+        if Xgrid == 1 :
+            plt.grid(True,'both','x',color='k',alpha=0.25,linestyle='-',linewidth=0.25)
+        elif Xgrid == 2 :
+            plt.grid(True,'major','x',color='k',alpha=0.25,linestyle='-',linewidth=0.25)
+        elif Xgrid == 3 :
+            plt.grid(True,'minor','x',color='k',alpha=0.25,linestyle='-',linewidth=0.25)
+            plt.grid(True,'major','x',color='k',alpha=0.50,linestyle='-',linewidth=0.50)
+        
+    if Ygrid > 0 :
+        if Ygrid == 1 :
+            plt.grid(True,'both','y',color='k',alpha=0.25,linestyle='-',linewidth=0.25)
+        elif Ygrid == 2 :
+            plt.grid(True,'major','y',color='k',alpha=0.25,linestyle='-',linewidth=0.25)
+        elif Ygrid == 3 :
+            plt.grid(True,'minor','y',color='k',alpha=0.25,linestyle='-',linewidth=0.25)
+            plt.grid(True,'major','y',color='k',alpha=0.50,linestyle='-',linewidth=0.50)
+        
+    
     Axis[0].set_xlabel(Xlabel)
     Axis[0].set_ylabel(Ylabel)
     
