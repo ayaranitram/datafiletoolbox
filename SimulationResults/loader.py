@@ -12,6 +12,7 @@ from .._common.inout import _extension
 #from datafiletoolbox.SimulationResults.mainObject import SimResult
 from .vipObject import VIP as _VIP
 from .CSVSimResultNexusDesktopObject import NexusDesktopCSV as _NexusDesktopCSV
+from .excelObject import XLSX as _XLSX
 
 okECL = False
 try :
@@ -50,21 +51,25 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
             Simulator = 'NEXUS'
         elif _extension(FullPath)[0].upper() in ['.CSV'] :
             Simulator = 'NexusDesktopSimResult'
+        elif _extension(FullPath)[0].upper() in ['.XLSX'] :
+            Simulator = 'SimPandasExcel'
     elif type(Simulator) is str and len(Simulator.strip()) > 0 :
         Simulator = Simulator.strip().upper()
 
     OBJ = None
     if Simulator in ['ECL','E100','E300','ECLIPSE','IX','INTERSECT','TNAV','TNAVIGATOR'] :
         if okECL is True :
-            OBJ = _ECL(FullPath,Verbosity)
+            OBJ = _ECL(FullPath,verbosity=Verbosity)
         else :
             print( 'ECL object not loaded')
     elif Simulator in ['VIP'] :
-        OBJ = _VIP(FullPath,Verbosity)
+        OBJ = _VIP(FullPath,verbosity=Verbosity)
     elif Simulator in ['NX','NEXUS'] :
-        OBJ = _VIP(FullPath,Verbosity)
+        OBJ = _VIP(FullPath,verbosity=Verbosity)
     elif Simulator in ['NexusDesktopSimResult'] :
-        OBJ = _NexusDesktopCSV(FullPath,Verbosity)
+        OBJ = _NexusDesktopCSV(FullPath,verbosity=Verbosity)
+    elif Simulator in ['SimPandasExcel'] :
+        OBJ = _XLSX(FullPath,verbosity=Verbosity,**kwargs)
     
     if OBJ is not None and Verbosity != 0 :
         print(OBJ.__repr__())

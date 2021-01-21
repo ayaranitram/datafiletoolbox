@@ -10,6 +10,7 @@ __all__ = ['loadSimulationResults']
 from .mainObject import SimResult
 from .vipObject import VIP
 from .CSVSimResultNexusDesktopObject import NexusDesktopCSV
+from .excelObject import XLSX
 
 try :
     from .eclObject import ECL
