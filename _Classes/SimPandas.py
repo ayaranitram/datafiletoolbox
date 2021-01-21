@@ -1119,14 +1119,18 @@ class SimDataFrame(DataFrame) :
         
         Parameters
         ----------
-        excel_writer : str or ExcelWriter object
+        excel_writer : str or ExcelWriter object from Pandas.
             File path or existing ExcelWriter.
-        split_by: None or str 'left', 'right' or 'first', default None
+        split_by: None, positive or negative integer or str 'left', 'right' or 'first'. Default is None
             If is string 'left' or 'right', creates a sheet grouping the columns by 
             the corresponding left:right part of the column name.
             If is string 'first', creates a sheet grouping the columns by 
             the first character of the column name.
             If None, all the columns will go into the same sheet.
+            if integer i > 0, creates a sheet grouping the columns by the 'i' firsts
+            characters of the column name indicated by the integer. 
+            if integer i < 0, creates a sheet grouping the columns by the 'i' last
+            the number characters of the column name indicated by the integer. 
         sheet_name : None or str, default None
             Name of sheet which will contain DataFrame.
             If None:
@@ -1179,7 +1183,9 @@ class SimDataFrame(DataFrame) :
             self.DF.to_excel(excel_writer, sheet_name=sheet_name, na_rep=na_rep, float_format=float_format, columns=columns, header=False, index=index, index_label=index_label, startrow=startrow, startcol=startcol, engine=engine, merge_cells=merge_cells, encoding=encoding, inf_rep=inf_rep, verbose=verbose, freeze_panes=freeze_panes)
 
         # helper function
-        firstChar = lambda s : s[0]
+        firstChar = lambda s : str(s)[0]
+        lastChar = lambda s : str(s)[-1]
+        iChar = lambda s : lambda i : str(s)[:i] if i>0 else str(s)[i:]
         
         # define the columns to be exported
         if type(columns) is str :
@@ -1227,15 +1233,22 @@ class SimDataFrame(DataFrame) :
                 if len(sheet_name) > 32 and verbose :
                     print(" the sheet_name '"+sheet_name+"' is longer than 32 characters,\n will be but to the first 32 characters: '"+sheet_name[:32]+"'")
                 names = (sheet_name[:32],)
-        
-        elif split_by == 'left' :
-            names = tuple(sorted(self[cols].left))
-        elif split_by == 'right' :
-            names = tuple(sorted(self[cols].right))
-        elif split_by == 'first' :
-            names = tuple(sorted(set(map(firstChar,cols))))
+        elif type(split_by) is str :
+            if split_by == 'left' :
+                names = tuple(sorted(self[cols].left))
+            elif split_by == 'right' :
+                names = tuple(sorted(self[cols].right))
+            elif split_by == 'first' :
+                names = tuple(sorted(set(map(firstChar,cols))))
+            elif split_by == 'last' :
+                names = tuple(sorted(set(map(lastChar,cols))))
+        elif type(split_by) is int :
+            if split_by == 0 :
+                raise ValueError(" integer `split_by´ parameter must be positive or negative, not zero.") 
+            else :
+                names = tuple(sorted(set( [iChar(c)(split_by) for c in cols] )))
         else :
-            raise ValueError(" `split_by´ parameter must be 'left', 'right', 'first' or None.")
+            raise ValueError(" `split_by´ parameter must be 'left', 'right', 'first', 'last', an integer or None.")
         
         # initialize an instance of ExcelWriter or use the instance provided
         from pandas import ExcelWriter
