@@ -1483,20 +1483,22 @@ class SimResult(object):
                 To avoid that behaviour, set this parameter to True
             
         """
-        Xgrid , Ygrid = False , False
+        Xgrid , Ygrid = 0 , 0
         if type(grid) is str :
-            if 'x' in grid.lower() :
-                Xgrid = True
-            if 'v' in grid.lower() :
-                Xgrid = True
-            if 'y' in grid.lower() :
-                Ygrid = True
-            if 'h' in grid.lower() :
-                Ygrid = True
+            grid = grid.strip()
+            if 'x' in grid :
+                Xgrid += 1
+            if 'y' in grid :
+                Ygrid += 1
+            if 'X' in grid :
+                Xgrid += 2
+            if 'Y' in grid :
+                Ygrid += 2
+            print(Xgrid,Ygrid)                
         else :
             grid = bool(grid)
             if grid :
-                Xgrid , Ygrid = True, True
+                Xgrid , Ygrid = 2, 2
                 
         if Keys == [] :
             for K in ['FOPR','FGPR','FWPR','FGIR','FWIR','FOIR'] :
