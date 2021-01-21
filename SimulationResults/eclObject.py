@@ -66,7 +66,7 @@ class ECL(_SimResult):
             self.initialize()
 
     def loadSummary(self,SummaryFilePath):
-        if type(SummaryFilePath) == str :
+        if type(SummaryFilePath) is str :
             SummaryFilePath = SummaryFilePath.strip()
             if self.path is None :
                 self.path = SummaryFilePath
