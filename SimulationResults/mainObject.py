@@ -325,6 +325,16 @@ class SimResult(object):
         """
         run intensive routines, to have the data loaded and ready
         """
+        if self.start is None and self.is_Key('DATE') :
+            self.start = min( self('DATE').astype('datetime64[s]') )
+        if self.end is None and self.is_Key('DATE') :
+            self.end = max( self('DATE').astype('datetime64[s]') )
+        if not self.is_Key('DAY') :
+            self.createYEAR() 
+        if not self.is_Key('MONTH') :
+            self.createMONTH()
+        if not self.is_Key('YEAR') :
+            self.createDAY()
         self.get_Producers()
         self.get_Injectors()
         self.use_SimPandas()
@@ -578,9 +588,9 @@ class SimResult(object):
     def __repr__(self):
         self.printMessages = 1
         
-        text = "\n" + str(self.kind).split('.')[-1][:-2] + " simulation: '" + self.name + "'"
+        text = "\n" + str(self.kind).split('.')[-1][:-2] + " source: '" + self.name + "'"
         if self.is_Key('DATE') :
-            text = text + '\n from ' + str(self('DATE')[0]) + ' to ' + str(self('DATE')[-1])
+            text = text + '\n from ' + str(self.start) + ' to ' + str(self.end) # str(self('DATE')[0]) + ' to ' + str(self('DATE')[-1])
         if self.is_Key('FOIP') :
             text = text + '\n STOIP @ first tstep: ' + str(self('FOIP')[0]) + ' ' + self.get_Units('FOIP')
         if self.is_Key('FGIP') :
