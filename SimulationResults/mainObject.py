@@ -1047,6 +1047,8 @@ class SimResult(object):
                 if self.units[k] == 'None' or overwrite is True :
                     self.units[k] = u
                     keysDict[k] = True
+                elif u == self.units[k] :
+                    pass # ignore
                 else :
                     _verbose( self.speak , 2 , "the key '" +k+ "' has '" +u+ "' already defined as units, add parameter  overwrite=True  to change this key units." )
                     keysDict[k] = False
