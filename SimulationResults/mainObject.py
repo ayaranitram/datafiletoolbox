@@ -1151,7 +1151,7 @@ class SimResult(object):
     def _auto_meltingDF(self,df,hue='--auto',label='--auto') :
         return _meltDF(df,hue=hue,label=label,SimObject=self)
     
-    def relplot(self,Keys=[],objects=None,otherSims=None,cleanAllZeros=True,ignoreZeros=True,hue='--auto',size='--auto',style='--auto',col='--auto',row='--auto',kind='line',col_wrap=None,**kwargs) :
+    def relplot(self,Keys=[],objects=None,otherSims=None,cleanAllZeros=True,ignoreZeros=True,hue='--auto',size='--auto',style='--auto',col='--auto',row='--auto',kind='line',col_wrap=None,share_Yaxis=True,share_Xaxis=True,**kwargs) :
         """
         """
         import seaborn as sns
@@ -1161,6 +1161,8 @@ class SimResult(object):
         if col_wrap is not None :
             if type(col_wrap) is not int :
                 col_wrap = None
+
+        share_Yaxis , share_Xaxis = bool(share_Yaxis) , bool(share_Xaxis)
 
         if hue == 'main' :
             hue = 'attribute'
@@ -1187,7 +1189,12 @@ class SimResult(object):
                 col = 'attribute'
         
         # cleaning the data
+        userKeys = Keys
         Keys , objects , otherSims = self._commonInputCleaning(Keys=Keys,objects=objects,otherSims=otherSims)
+
+        # relplot with other simulations not yet implemented
+        if otherSims is not None :
+            _verbose(self.speak,4,"\nI'm sorry, creating realplots with several sourcers (simulation objects) is not yet implemented.\nIf you need this feature please send me an email at martincarlos.araya@cepsa.com\nRegards,\nMartin\n")
 
         # define plot units
         plotUnits = {}
@@ -1196,6 +1203,10 @@ class SimResult(object):
         
         # get the data
         df = self[Keys]
+
+        if df is None or len(df) == 0 :
+            _verbose(self.speak,3,"no data found for the key: " + str(userKeys))
+            return None
 
         # clean the data
         if cleanAllZeros :
@@ -1243,8 +1254,9 @@ class SimResult(object):
         if style == '--auto' :
             style = None
 
+        facet_kws={'sharey': share_Yaxis, 'sharex': share_Xaxis}
 
-        for K in ('Keys','objects','otherSims','cleanAllZeros','ignoreZeros','hue','size','style','row','col','kind'):
+        for K in ('Keys','objects','otherSims','cleanAllZeros','ignoreZeros','hue','size','style','row','col','kind','share_Yaxis','share_Xaxis'):
             if K in kwargs :
                 del kwargs[K]
         # if 'plot_kws' in kwargs :
@@ -1256,6 +1268,13 @@ class SimResult(object):
         #         kwargs['plot_kws']['s'] = 7
         # else :
         #     kwargs['plot_kws'] = {'alpha':0.25,'edgecolor':'none','s':7}
+        if 'facet_kws' in kwargs :
+            if 'sharey' not in kwargs['facet_kws'] :
+                kwargs['facet_kws']['sharey']= share_Yaxis
+            if 'sharex' not in kwargs['facet_kws'] :
+                kwargs['facet_kws']['sharex']= share_Xaxis
+        else :
+            kwargs['facet_kws']={'sharey': share_Yaxis, 'sharex': share_Xaxis}
         
         # Draw a nested boxplot to show bills by day and time
 
