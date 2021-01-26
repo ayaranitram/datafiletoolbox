@@ -1646,6 +1646,8 @@ class SimResult(object):
                         for I in range(len(Regions)) :
                             items[I] = K+':'+Regions[I]
                 PlotKeys += items
+            elif len(self.find_Keys(K)) > 0 :
+                PlotKeys += list(self.find_Keys(K))
 
         if type(Index) is str :
             Index = [Index]
