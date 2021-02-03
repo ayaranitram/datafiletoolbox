@@ -13,6 +13,8 @@ __all__ = ['exportProperty']
 
 from .._common.inout import _extension , _verbose 
 from os import getcwd
+import numpy as np
+import pandas as pd
 
 def exportProperty(keywordName , KeywordValues , outputFile='' , ECHOkeyword=False , charactersPerLine = 128 , speak=0) :
     """
@@ -35,9 +37,11 @@ def exportProperty(keywordName , KeywordValues , outputFile='' , ECHOkeyword=Fal
     if len(outputFile) == 0 :
         outputFile = getcwd() + '/' + str(keywordName) +  '.inc'
 
-    if type(KeywordValues) == list :
-        KeywordValues = ' ' + ' '.join(KeywordValues) + ' '
-    elif type(KeywordValues) == str :
+    if type(KeywordValues) is np.array :
+        KeywordValues = list(KeywordValues)
+    if type(KeywordValues) is list :
+        KeywordValues = ' ' + ' '.join(map(str,KeywordValues)) + ' '
+    elif type(KeywordValues) is str :
         if KeywordValues[0] != ' ' :
             KeywordValues = ' ' + KeywordValues
         if KeywordValues[-1] != ' ' :
