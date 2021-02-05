@@ -1902,6 +1902,17 @@ class SimResult(object):
             for each in SimResult.VIPnotECL :
                 print('  ' + str(each))
     
+    def set_FieldTime(self) :
+        if len( self.get_Restart() ) > 0 :
+            FieldTime = self.checkRestarts('TIME')['TIME']
+        else :
+            FieldTime = self.loadVector('TIME') 
+        if FieldTime is None :
+            if self.get_Vector('TIME')['TIME'] is not None :
+                FieldTime = self.get_Vector('TIME')['TIME'] 
+        if FieldTime is not None :
+            self.fieldtime = ( min(FieldTime) , max(FieldTime) , FieldTime ) 
+    
     def set_Name(self,name):
         if type(name) is list or type(name) is tuple :
             if len(name) == 1 :

@@ -114,18 +114,7 @@ class ECL(_SimResult):
             if str(key).upper().strip() == "DATES" :
                 return self.results.numpy_dates
             else :    
-                return self.results.numpy_vector(str(key).upper().strip())  
-    
-    def set_FieldTime(self) :
-        if len( self.get_Restart() ) > 0 :
-            FieldTime = self.checkRestarts('TIME')['TIME']
-        else :
-            FieldTime = self.loadVector('TIME') 
-        if FieldTime is None :
-            if self.get_Vector('TIME')['TIME'] is not None :
-                FieldTime = self.get_Vector('TIME')['TIME'] 
-        if FieldTime is not None :
-            self.fieldtime = ( min(FieldTime) , max(FieldTime) , FieldTime )          
+                return self.results.numpy_vector(str(key).upper().strip())           
     
     def get_Dates(self) :
         self.start = np.datetime64(self.results.start_date , 's' )
