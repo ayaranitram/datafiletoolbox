@@ -1025,7 +1025,7 @@ class SimResult(object):
         return self.get_Unit(Key)
 
     def set_Units(self,Key,Unit=None,overwrite=False) :
-        return self.set_Unit(Key)    
+        return self.set_Unit(Key,Unit=Unit,overwrite=overwrite)    
     def set_Unit(self,Key,Unit=None,overwrite=False) :
         if type(Key) is str :
             if self.is_Key(Key) :
