@@ -4445,7 +4445,7 @@ class SimResult(object):
             ConvertedDict[Key[each]] = convertUnit(self.get_Vector(Key[each])[Key[each].strip()], self.get_Unit(Key[each]), OtherObject_or_NewUnits[each] , PrintConversionPath=(self.speak==1))
         return ConvertedDict
     
-    def integrate(self,InputKey,OutputKey=None,ConstantRate=False,Numpy=True,overwrite=False,saveOthers=True):
+    def integrate(self,InputKey,OutputKey=None,ConstantRate=False,Numpy=True,overwrite=None,saveOthers=True):
         """"
         calculate the integral, or cumulative, of the input vector and saves 
         it to the output vector.
@@ -4457,9 +4457,25 @@ class SimResult(object):
             
         Set Numpy=False to not use Numpy, the calculation will be done using a for loop
         """
-        if type(InputKey) != str or ( type(OutputKey) != None and type(OutputKey) != str ) :
+        if type(InputKey) is not str or ( type(OutputKey) is not None and type(OutputKey) is not str ) :
             raise TypeError(' InputKey and OutputKey must be strings.')
+        if not self.is_Key( InputKey ) :
+            if not self.is_Attribute( InputKey ) :
+                _verbose( self.speak , 2 , "<integrate> the requiered Key '" + InputKey + "' is not a valid Key" )
+                return None
+            else :
+                if type(OutputKey) is str :
+                    for eachKey in self.attributes[ InputKey ] :    
+                        eachOut = _mainKey(OutputKey)+':'+_itemKey(eachKey)
+                        self.integrate( eachKey , eachOut )
+                else :
+                    for eachKey in self.attributes[ InputKey ] :    
+                        self.integrate( eachKey , OutputKey )
+                return None
         Vector = self.get_Vector( InputKey )[ InputKey ]
+        if Vector is None :
+            _verbose( self.speak , 2 , "<integrate> the vector Key '" + InputKey + "' is empty" )
+            return None
         VectorUnits = self.get_Unit(InputKey)
         _verbose( self.speak , 1 , "<integrate> retrieved series '" + InputKey + "' of length " + str(len(Vector)) + ' and units ' + str(VectorUnits))
         Time = self.get_Vector( 'TIME' )[ 'TIME' ]
@@ -4468,6 +4484,10 @@ class SimResult(object):
         
         Numpy = bool(Numpy)
         ConstantRate = bool(ConstantRate)
+        # if ConstantRate :
+        #     Numpy = False
+        if overwrite is None :
+            overwrite = self.overwrite
         
         OutUnits = ''
         if '/' in VectorUnits :
@@ -4509,7 +4529,7 @@ class SimResult(object):
         
         if not Numpy :
             # integrating one row at a time, iterating with for:
-            _verbose( self.speak , 2 , "<integrate> calculating integral for key '" + InputKey + "' using for loor")
+            _verbose( self.speak , 2 , "<integrate> calculating integral for key '" + InputKey + "' using for loop")
             Cumulative = [0.0]
             if not ConstantRate :
                 for i in range(len(Vector)-1) :
