@@ -335,6 +335,10 @@ class SimResult(object):
             self.createMONTH()
         if not self.is_Key('YEAR') :
             self.createDAY()
+        if not self.is_Key('DATE') or not self.is_Key('DATES') :
+            self.createDATES()
+        if not self.is_Key('TIME') :
+            self.createTIME()
         self.get_Producers()
         self.get_Injectors()
         self.use_SimPandas()
