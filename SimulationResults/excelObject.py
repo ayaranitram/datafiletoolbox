@@ -59,14 +59,21 @@ class XLSX(_SimResult):
         self.get_Attributes(None,True)
         self.find_index()
         _SimResult.initialize(self)
-        if self.is_Key('DATES') and not self.is_Key('DATES') :
+        if self.is_Key('DATES') and not self.is_Key('DATE') :
             self['DATE'] = 'DATES'
         if not self.is_Key('DATE') :
             self.createDATES()
-        if not self.is_Key('DATES') and self.is_Key('DATES') :
+        elif self.get_Unit('DATE') is None or self.get_Unit('DATE') != 'DATE' :
+            self.set_Units('DATE','DATE',overwrite=True)
+        if not self.is_Key('DATES') and self.is_Key('DATE') :
             self['DATES'] = 'DATE'
-        if self.is_Key('TIME') and self.is_Key('DATE') :
+        if self.is_Key('DATES') and ( self.get_Unit('DATES') is None or self.get_Unit('DATES') != 'DATE' ) :
+            self.set_Unit('DATES','DATE',overwrite=True)
+        if not self.is_Key('TIME') and self.is_Key('DATE') :
             self['TIME'] = ( self('DATE').astype('datetime64[s]') - self.start ).astype('int') / (60*60*24)
+        if self.is_Key('TIME') and ( self.get_Unit('TIME') is None or self.get_Unit('TIME').upper() in ['','NONE'] ) :
+            self.set_Unit('TIME','DAYS',overwrite=True)
+        
     
     def find_index(self) :
         """
