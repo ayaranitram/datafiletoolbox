@@ -4359,7 +4359,28 @@ class SimResult(object):
     def createDAY(self) :
         Days = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).day)
         self.set_Vector( 'DAY' , Days , 'Day' , DataType='int' , overwrite=True) 
-
+    
+    def createTIME(self) :
+        if self.is_Key('DATE') :
+            date = self['DATE']
+        elif self.is_Keys('DATES') :
+            date = self['DATES']
+        else :
+            catch = self.createDATES()
+            if catch is None :
+                date = self['DATES']
+            else:
+                date = None
+        if date is None :
+            return False
+        else :
+            time = ( pd.to_timedelta(date - date[0]).astype('timedelta64[s]') /60/60/24 ).to_numpy()
+            ow = self.overwrite
+            self.overwrite = True
+            self.set_Vector('TIME', time , 'DAYS' , 'float' )
+            self.set_Unit('TIME','DAYS',overwrite=True)
+            self.set_FieldTime()
+            self.overwrite = ow
 
     def get_UnitsConverted(self,Key=None,OtherObject_or_NewUnits=None):
         """
