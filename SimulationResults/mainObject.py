@@ -4388,7 +4388,7 @@ class SimResult(object):
         Days = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).day)
         self.set_Vector( 'DAY' , Days , 'Day' , DataType='int' , overwrite=True) 
     
-    def createTIME(self) :
+    def createTIME(self,startDate=None) :
         if self.is_Key('DATE') :
             date = self['DATE']
         elif self.is_Keys('DATES') :
@@ -4402,7 +4402,25 @@ class SimResult(object):
         if date is None :
             return False
         else :
-            time = ( pd.to_timedelta(date - date[0]).astype('timedelta64[s]') /60/60/24 ).to_numpy()
+            if startDate is None :
+                startDate = date[0]
+            else :
+                import datetime as dt
+                if type(startDate) is str :
+                    try :
+                        startDate = np.datetime64(pd.to_datetime(startDate))
+                    except :
+                        raise ValueError(" string date not understood: '"+startDate+"'")
+                elif isinstance(startDate,pd._libs.tslibs.timestamps.Timestamp) :
+                    startDate = np.datetime64(startDate)
+                elif isinstance(startDate,dt.datetime) :
+                    startDate = np.datetime64(startDate)
+                elif type(startDate) is np.datetime64 :
+                    pass # ok
+                else :
+                    raise TypeError( " not recognized startDate paramenter",startDate)
+                
+            time = ( pd.to_timedelta(date - startDate).astype('timedelta64[s]') /60/60/24 ).to_numpy()
             ow = self.overwrite
             self.overwrite = True
             self.set_Vector('TIME', time , 'DAYS' , 'float' )
