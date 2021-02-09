@@ -111,7 +111,7 @@ class ECL(_SimResult):
             """ 
             internal function to load a numpy vector from the summary files
             """
-            if str(key).upper().strip() == "DATES" :
+            if str(key).upper().strip() in ["DATES","DATE"] :
                 return self.results.numpy_dates
             else :    
                 return self.results.numpy_vector(str(key).upper().strip())           
