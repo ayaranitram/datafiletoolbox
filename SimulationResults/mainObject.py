@@ -1990,7 +1990,7 @@ class SimResult(object):
             if self.continuations[i].get_RawVector('TIME')['TIME'][-1] > selfTf :
                 sortedC += [self.continuations[i]]
             else :
-                _verbose( self.speak , 3 , " the simulation '" + str(self.continuations[i]) + "' was not added as continuation because it doesn't contain data after this simulation ( '" + str(self) +"' )." )
+                _verbose( self.speak , 3 , "\n the simulation '" + str(self.continuations[i]) + "' was not added as continuation because it doesn't contain data after this simulation ( '" + str(self) +"' )." )
         self.continuations = sortedC
         
         # sort simulations by start time
@@ -2003,9 +2003,11 @@ class SimResult(object):
         for i in range(1,len(self.continuations)) :
             thisFilter = self.continuations[i].get_RawVector('TIME')['TIME'] > self.continuations[i-1].get_RawVector('TIME')['TIME'][-1]
             self.continuationFilters[ self.continuations[i] ] = thisFilter
-        # claculate continuationFilters for the last continuation
-        thisFilter = self.continuations[0].get_RawVector('TIME')['TIME'] > self.get_RawVector('TIME')['TIME'][-1]
-        self.continuationFilters[ self.continuations[0] ] = thisFilter
+        
+        if len(self.continuations) > 0 :
+            # claculate continuationFilters for the last continuation
+            thisFilter = self.continuations[0].get_RawVector('TIME')['TIME'] > self.get_RawVector('TIME')['TIME'][-1]
+            self.continuationFilters[ self.continuations[0] ] = thisFilter
     
         # recreate filter for this simulation (self), now considering the restarts
         self.redo_Filter()
@@ -2064,6 +2066,11 @@ class SimResult(object):
         if SimResultObject in self.restarts :
             print(" removed restart object '" + str(self.restarts.pop(SimResultObject)) + "'")
     
+        # recreate filter for this simulation (self), now considering the restarts
+        self.redo_Filter()
+        # recalculate the total time for this simulation (self), now considering the restarts
+        self.set_FieldTime()
+    
     def clean_Continuations(self) :
         """
         ** alias for remove_Restart() ** 
@@ -2103,6 +2110,11 @@ class SimResult(object):
                 
         if SimResultObject in self.restarts :
             print(" removed continuation object '" + str(self.restarts.pop(SimResultObject)) + "'")
+    
+        # recreate filter for this simulation (self), now considering the restarts
+        self.redo_Filter()
+        # recalculate the total time for this simulation (self), now considering the restarts
+        self.set_FieldTime()
     
     def get_Restarts(self):
         return self.get_Restart()
@@ -2759,6 +2771,18 @@ class SimResult(object):
                 _verbose( self.speak , 2 , " <redo_Filter> applying filter: " + filterStr )
                 self.set_Filter( Key=Key , Condition=Condition , Min=Min , Max=Max , IncrementalFilter=Incremental , FilterOperation=Operation  )
 
+    def clean_Filter(self) :
+        """
+        alias for .set_Filter() method without arguments, 
+        aimed to remove any previouly set filter
+        """
+        self.set_Filter()
+    def remove_Filter(self) :
+        """
+        alias for .set_Filter() method without arguments, 
+        aimed to remove any previouly set filter
+        """
+        self.set_Filter()
 
     def set_Filter(self,Key=None,Condition=None,Min=None,Max=None,Filter=None,IncrementalFilter=True,FilterOperation=None) :
         # support function to validate date string
@@ -3352,7 +3376,7 @@ class SimResult(object):
             if self.filter['key'][-1] is not None :
                 _verbose( self.speak , 1 , " filter by key '" + self.filter['key'][-1] + "'")          
             for each in returnVectors :
-                returnVectors[each] = returnVectors[each][self.filter['filter']]
+                returnVectors[each] = returnVectors[each]#[self.filter['filter']]
             return returnVectors
 
 
@@ -3395,7 +3419,7 @@ class SimResult(object):
             if self.filter['key'][-1] is not None :
                 _verbose( self.speak , 1 , " filter by key '" + self.filter['key'][-1] + "'")          
             for each in returnVectors :
-                returnVectors[each] = returnVectors[each][self.filter['filter']]
+                returnVectors[each] = returnVectors[each]#[self.filter['filter']]
             return returnVectors
 
 
