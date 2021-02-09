@@ -305,7 +305,7 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
                 linestyle[i] = SimResultObjects[0].get_Style(Y_Keys[i])   
     
     
-    # check linewith parameter
+    # check linewidth parameter
     if type( linewidth ) is int or type( linewidth ) is float :
         linewidth = [linewidth]
     assert type(linewidth) is list 

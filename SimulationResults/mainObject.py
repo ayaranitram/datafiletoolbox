@@ -2212,6 +2212,10 @@ class SimResult(object):
                 self.keyColors[Key] = MatplotlibColor
             elif Key in self.attributes :
                 self.keyColors[Key] = MatplotlibColor
+            elif len(self.find_Keys(Key)) > 0 :
+                for K in self.find_Keys(Key) :
+                    _verbose(self.speak,2,' applying width to key',K)
+                    self.set_Width(MatplotlibColor,K)
     
     def set_RandomColorPerWell(self) :
         """
@@ -2245,9 +2249,14 @@ class SimResult(object):
         particular Key.
         """
         if linewidth is None :
-            linewidth = 2.0
+            pass # linewidth = 2.0
+        elif Key is None and type(linewidth) is str :
+            if len(self.find_Keys(linewidth)) > 0 :
+                linewidth , Key = None , linewidth
+            else :
+                raise TypeError(' the `linewidth´ value must be int or float')
         elif type(linewidth) not in [float,int,bool] :
-            _verbose(self.speak,3,'the `linewidth´ value must be int or float' )
+            TypeError(' the `linewidth´ value must be int or float' )
         if type(linewidth) in [int,bool] :
            linewidth = float( linewidth )
         if Key is None :
@@ -2255,8 +2264,12 @@ class SimResult(object):
         else :
             if self.is_Key(Key) :
                 self.keyWidths[Key] = linewidth
-            elif Key in self.attributes :
+            elif self.is_Attribute(Key) :
                 self.keyWidths[Key] = linewidth
+            elif len(self.find_Keys(Key)) > 0 :
+                for K in self.find_Keys(Key) :
+                    _verbose(self.speak,2,' applying width to key',K)
+                    self.set_Width(linewidth,K)
                     
     def get_Width(self,Key=None):
         if Key is None :
@@ -2310,6 +2323,10 @@ class SimResult(object):
                 self.keyStyles[Key] = linestyle
             elif Key in self.attributes :
                 self.keyStyles[Key] = linestyle
+            elif len(self.find_Keys(Key)) > 0 :
+                for K in self.find_Keys(Key) :
+                    _verbose(self.speak,2,' applying style to key',K)
+                    self.set_Style(linestyle,K)
                     
     def get_Style(self,Key=None):
         if Key is None :
@@ -2363,6 +2380,10 @@ class SimResult(object):
                 self.keyMarkers[Key] = marker
             elif Key in self.attributes :
                 self.keyMarkers[Key] = marker
+            elif len(self.find_Keys(Key)) > 0 :
+                for K in self.find_Keys(Key) :
+                    _verbose(self.speak,2,' applying marker to key',K)
+                    self.set_Marker(marker,K)
                     
     def get_Marker(self,Key=None):
         if Key is None :
@@ -2406,6 +2427,10 @@ class SimResult(object):
                 self.keyMarkersSize[Key] = markersize
             elif Key in self.attributes :
                 self.keyMarkersSize[Key] = markersize
+            elif len(self.find_Keys(Key)) > 0 :
+                for K in self.find_Keys(Key) :
+                    _verbose(self.speak,2,' applying marker size to key',K)
+                    self.set_Marker(markersize,K)
                     
     def get_MarkerSize(self,Key=None):
         if Key is None :
