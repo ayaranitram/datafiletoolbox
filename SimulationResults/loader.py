@@ -31,6 +31,7 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
     if 'speak' in kwargs and type(kwargs['speak']) in [bool,int,float] :
         if Verbosity is None :
             Verbosity = kwargs['speak']
+            del kwargs['speak']
     
     if Verbosity is None :
         Verbosity = 2
