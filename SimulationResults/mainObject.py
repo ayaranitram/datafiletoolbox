@@ -309,11 +309,15 @@ class SimResult(object):
         self.historyAsDots = True
         self.colorGrouping = 6
         self.DTindex = 'TIME'
+        self.TimeVector = None
         self.restarts = []
         self.restartFilters = {}
         self.continuations = []
         self.continuationFilters = {}
         self.vectorsRestart = {}
+        self.vectorsContinue = {}
+        self.vectorTemplate = None
+        self.savingFilter = None
         self.pandasColumns = { 'HEADERS' : {} , 'COLUMNS' : {} , 'DATA' : {} }
         self.fieldtime = ( None , None , None ) 
         self.GORcriteria = ( 10 , 'Mscf/stb' )
@@ -329,19 +333,79 @@ class SimResult(object):
             self.start = min( self('DATE').astype('datetime64[s]') )
         if self.end is None and self.is_Key('DATE') :
             self.end = max( self('DATE').astype('datetime64[s]') )
-        if not self.is_Key('DAY') :
+        if not self.is_Key('YEAR') :
             self.createYEAR() 
         if not self.is_Key('MONTH') :
             self.createMONTH()
-        if not self.is_Key('YEAR') :
+        if not self.is_Key('DAY') :
             self.createDAY()
-        if not self.is_Key('DATE') or not self.is_Key('DATES') :
+        if not self.is_Key('DATE') :
+            self.createDATES()
+        if not self.is_Key('DATES') :
             self.createDATES()
         if not self.is_Key('TIME') :
             self.createTIME()
         self.get_Producers()
         self.get_Injectors()
         self.use_SimPandas()
+        self.set_RestartsTimeVector()
+        self.set_savingFilter()
+        self.set_vectorTemplate()
+    
+    def set_vectorTemplate(self,Restart=False,Continue=False) :
+        if self.vectorTemplate is None :
+            self.vectorTemplate = np.array([0]*len(self.get_RawVector(self.TimeVector)[self.TimeVector]))
+        if Restart :
+            self.vectorTemplate = np.array( [-1]*len(self.checkRestarts(self.TimeVector)[self.TimeVector]) + list(self.vectorTemplate[self.vectorTemplate!=-1]) )
+        if Continue :
+            self.vectorTemplate = np.array( list(self.vectorTemplate)[self.vectorTemplate!=1] + [1]*len(self.checkContinue(self.TimeVector)[self.TimeVector]) )
+    
+    def get_vectorTemplate(self) :
+        if self.vectorTemplate is None :
+            self.set_vectorTemplate()
+        if len(self.get_Vector(self.TimeVector)[self.TimeVector]) < len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector]) :
+            usedFilter = np.array([ self.get_UnfilteredVector(self.TimeVector)[self.TimeVector][i] in self.get_Vector(self.TimeVector)[self.TimeVector] for i in range(len( self.get_UnfilteredVector(self.TimeVector)[self.TimeVector] )) ])
+            return self.vectorTemplate[usedFilter]
+        elif len(self.get_Vector(self.TimeVector)) > len(self.get_UnfilteredVector(self.TimeVector)) :
+            raise ValueError('something went wrong')
+        else :
+            return self.vectorTemplate
+        
+    def set_savingFilter(self,Restart=False,Continue=False) :
+        if self.savingFilter is None :
+            if self.TimeVector is None :
+                self.set_RestartsTimeVector()
+            self.savingFilter = np.array([True]*len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector]))
+            _verbose(self.speak,2," <set_savingFilter> started savingFilter with lenght " + str(len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector])) + " using vector '"+str(self.TimeVector)+"' as reference")
+        else :
+            if Restart :
+                _verbose(self.speak,2," <set_savingFilter> updating savingFilter for Restart:\nprevious savingFilter of length " + str(len(self.get_savingFilter()))  + "\nfor new vectors of length " + str(len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector])))
+                self.savingFilter = np.array( [False]*(len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector])-len(self.get_savingFilter())) + list(self.get_savingFilter()) )
+            elif Continue :
+                _verbose(self.speak,2," <set_savingFilter> updating savingFilter for Continue:\nprevious savingFilter of length " + str(len(self.get_savingFilter())) + "\nfor new vectors of length " + str(len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector])))
+                self.savingFilter = np.array( list(self.get_savingFilter()) + [False]*(len(self.get_Vector(self.TimeVector)[self.TimeVector])-len(self.get_savingFilter())) ) 
+            else :
+                _verbose(self.speak,2," <set_savingFilter> reseting savingFilter with lenght " + str(len(self.get_Vector(self.TimeVector)[self.TimeVector])) + " using vector '"+str(self.TimeVector)+"' as reference")
+                self.savingFilter = np.array([True]*len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector]))
+    
+    def get_savingFilter(self) :
+        if self.savingFilter is None :
+            self.set_savingFilter()
+        return self.savingFilter
+    
+    def set_RestartsTimeVector(self,TimeVector=None) :
+        if TimeVector is None :
+            for Time in ['DATE','DATES','TIME','DAYS','MONTHS','YEARS'] :
+                if self.is_Key(Time) :
+                    self.TimeVector = Time
+                    break
+        elif type(TimeVector) is str :
+            if self.is_Key(TimeVector) :
+                self.TimeVector = TimeVector
+            else :
+                raise ValueError(' the provided TimeVector is not a valid key in this simulation.')
+        else :
+            raise TypeError(' TimeVector must be a string name of a valid Key.')
     
     def use_SimPandas(self,TrueOrFalse=True) :
         TrueOrFalse = bool(TrueOrFalse)
@@ -600,7 +664,7 @@ class SimResult(object):
         if self.is_Key('FGIP') :
             text = text + '\n GIP @ first tstep: ' + str(self('FGIP')[0]) + ' ' + self.get_Units('FGIP')
         
-        if len(self.get_Regions()) > 0 :
+        if len(self.get_Regions()) > 0 and (self.is_Key('FOIP') or self.is_Key('FGIP')) :
             text = text + '\n distributed in ' + str(len(self.get_Regions())) + ' reporting region' + 's'*(len(self.get_Regions())>1) 
         
         text = text + '\n\n With ' + str(len(self.get_Wells())) + ' well' + 's'*(len(self.get_Wells())>1)
@@ -1083,7 +1147,7 @@ class SimResult(object):
         """
         return the number of timesteps in the dataset
         """
-        keys = ( 'TIME' , 'DATE' , 'DATES' )
+        keys = ( 'TIME' , 'DATE' , 'DATES' , 'DAYS' , 'MONTHS' , 'YEARS' )
         for key in keys :
             if self.is_Key(key) :
                 return len(self.get_Vector(key)[key])
@@ -1924,11 +1988,11 @@ class SimResult(object):
         if type(name) is str :
             self.name = name
         else :
-            _verbose( self.speak , 2 , ' Name should be a string'  )
+            _verbose( self.speak , 2 , ' <set_Name> Name should be a string'  )
             self.name = str(name)
     def get_Name(self):
         if type( self.name ) != str :
-            _verbose( self.speak , 3 , ' the name of ' + str(self.name) + ' is not a string.' )
+            _verbose( self.speak , 3 , ' <get_Name> the name of ' + str(self.name) + ' is not a string.' )
             return str( self.name )
         return self.name
     
@@ -1941,36 +2005,53 @@ class SimResult(object):
             self.restarts.append(SimResultObject)
         self.restarts = list( set ( self.restarts ) )
         
+        for TimeVector in [ self.TimeVector,'DATE','DATES','TIME','DAYS','MONTHS','YEARS' ] :
+            flag = True
+            for R in self.restarts :
+                if self.TimeVector != R.TimeVector :
+                    flag = False
+                    break
+            if flag :
+                break
+        _verbose( self.speak , 1 , " <set_Restart> using '" + TimeVector + "' to concatenate restarts." )
+        
         sortedR = []
-        selfTi = self.get_RawVector('TIME')['TIME'][0]
+        selfTi = self.get_RawVector(TimeVector)[TimeVector][0]
         # remove simulations that starts after this one (self)
         for i in range(len(self.restarts)) :
-            if self.restarts[i].get_RawVector('TIME')['TIME'][0] < selfTi :
+            if self.restarts[i].get_RawVector(TimeVector)[TimeVector][0] < selfTi :
                 sortedR += [self.restarts[i]]
             else :
-                _verbose( self.speak , 3 , " the simulation '" + str(self.restarts[i]) + "' was not added as restart because it doesn't contain data before this simulation ( '" + str(self) +"' )." )
+                _verbose( self.speak , 3 , " <set_Restart> the simulation '" + str(self.restarts[i]) + "' was not added as restart because it doesn't contain data before this simulation ( '" + str(self) +"' )." )
         self.restarts = sortedR
         
         # sort simulations by start time
         for i in range(len(self.restarts)) :
             for j in range(0,len(self.restarts)-i-1) :
-                if self.restarts[j].get_RawVector('TIME')['TIME'][0] > self.restarts[j+1].get_RawVector('TIME')['TIME'][0] :
+                if self.restarts[j].get_RawVector(TimeVector)[TimeVector][0] > self.restarts[j+1].get_RawVector(TimeVector)[TimeVector][0] :
                     self.restarts[j] , self.restarts[j+1] = self.restarts[j+1] , self.restarts[j]
         
         # calculate restartFilters for each restart
         for i in range(len(self.restarts)-1) :
-            thisFilter = self.restarts[i].get_RawVector('TIME')['TIME'] < self.restarts[i+1].get_RawVector('TIME')['TIME'][0]
+            thisFilter = self.restarts[i].get_RawVector(TimeVector)[TimeVector] < self.restarts[i+1].get_RawVector(TimeVector)[TimeVector][0]
             self.restartFilters[ self.restarts[i] ] = thisFilter
         
         if len(self.restarts) > 0 :
             # claculate restartFilters for the last restart
-            thisFilter = self.restarts[-1].get_RawVector('TIME')['TIME'] < self.get_RawVector('TIME')['TIME'][0]
+            thisFilter = self.restarts[-1].get_RawVector(TimeVector)[TimeVector] < self.get_RawVector(TimeVector)[TimeVector][0]
             self.restartFilters[ self.restarts[-1] ] = thisFilter
-    
-        # recreate filter for this simulation (self), now considering the restarts
-        self.redo_Filter()
-        # recalculate the total time for this simulation (self), now considering the restarts
-        self.set_FieldTime()
+            # update self.vectorTemplate
+            self.set_vectorTemplate(Restart=True)        
+            # update self.savingFilter
+            self.set_savingFilter(Restart=True)
+            
+            # recreate TIME vector if TimeVector is DATE
+            if TimeVector in ['DATE','DATES'] :
+                self.createTIME()
+            # recreate filter for this simulation (self), now considering the restarts
+            self.redo_Filter()
+            # recalculate the total time for this simulation (self), now considering the restarts
+            self.set_FieldTime()
         # print the restarts
         self.print_Restart()
     
@@ -1978,16 +2059,28 @@ class SimResult(object):
         self.set_Continuation(SimResultObject)
     def set_Continuation(self,SimResultObject) :
         if type( SimResultObject ) is list :
-            self.continuations = self.continuations + SimResultObject 
+            self.continuations = self.continuations + SimResultObject
+        elif type( SimResultObject ) is tuple :
+            self.restarts = self.restarts + SimResultObject 
         else :
             self.continuations.append(SimResultObject)
         self.continuations = list( set ( self.continuations ) )
         
+        for TimeVector in [ self.TimeVector , 'DATE' , 'TIME' , 'DAYS' , 'MONTHS' , 'YEARS' ] :
+            flag = True
+            for C in self.continuations :
+                if self.TimeVector != C.TimeVector :
+                    flag = False
+                    break
+            if flag :
+                break
+        _verbose( self.speak , 1 , " using '" + TimeVector + "' to concatenate continuations." )
+        
         sortedC = []
-        selfTf = self.get_RawVector('TIME')['TIME'][-1]
+        selfTf = self.get_RawVector(TimeVector)[TimeVector][-1]
         # remove simulations that ends before this one (self)
         for i in range(len(self.continuations)) :
-            if self.continuations[i].get_RawVector('TIME')['TIME'][-1] > selfTf :
+            if self.continuations[i].get_RawVector(TimeVector)[TimeVector][-1] > selfTf :
                 sortedC += [self.continuations[i]]
             else :
                 _verbose( self.speak , 3 , "\n the simulation '" + str(self.continuations[i]) + "' was not added as continuation because it doesn't contain data after this simulation ( '" + str(self) +"' )." )
@@ -1996,23 +2089,30 @@ class SimResult(object):
         # sort simulations by start time
         for i in range(len(self.continuations)) :
             for j in range(0,len(self.continuations)-i-1) :
-                if self.continuations[j].get_RawVector('TIME')['TIME'][-1] > self.continuations[j+1].get_RawVector('TIME')['TIME'][-1] :
+                if self.continuations[j].get_RawVector(TimeVector)[TimeVector][-1] > self.continuations[j+1].get_RawVector(TimeVector)[TimeVector][-1] :
                     self.continuations[j] , self.continuations[j+1] = self.continuations[j+1] , self.continuations[j]
         
         # calculate continuationFilters for each continuation
         for i in range(1,len(self.continuations)) :
-            thisFilter = self.continuations[i].get_RawVector('TIME')['TIME'] > self.continuations[i-1].get_RawVector('TIME')['TIME'][-1]
+            thisFilter = self.continuations[i].get_RawVector(TimeVector)[TimeVector] > self.continuations[i-1].get_RawVector(TimeVector)[TimeVector][-1]
             self.continuationFilters[ self.continuations[i] ] = thisFilter
         
         if len(self.continuations) > 0 :
             # claculate continuationFilters for the last continuation
-            thisFilter = self.continuations[0].get_RawVector('TIME')['TIME'] > self.get_RawVector('TIME')['TIME'][-1]
+            thisFilter = self.continuations[0].get_RawVector(TimeVector)[TimeVector] > self.get_RawVector(TimeVector)[TimeVector][-1]
             self.continuationFilters[ self.continuations[0] ] = thisFilter
-    
-        # recreate filter for this simulation (self), now considering the restarts
-        self.redo_Filter()
-        # recalculate the total time for this simulation (self), now considering the restarts
-        self.set_FieldTime()
+            # update self.vectorTemplate
+            self.set_vectorTemplate(Restart=True)        
+            # update self.savingFilter
+            self.set_savingFilter(Continue=True)
+            
+            # recreate TIME vector if TimeVector is DATE
+            if TimeVector in ['DATE','DATES'] :
+                self.createTIME()
+            # recreate filter for this simulation (self), now considering the restarts
+            self.redo_Filter()
+            # recalculate the total time for this simulation (self), now considering the restarts
+            self.set_FieldTime()
         # print the continuation
         self.print_Continuation()
         
@@ -2066,6 +2166,11 @@ class SimResult(object):
         if SimResultObject in self.restarts :
             print(" removed restart object '" + str(self.restarts.pop(SimResultObject)) + "'")
     
+        # # update self.savingFilter
+        # self.set_savingFilter()
+        # recreate TIME vector if TimeVector is DATE
+        if self.TimeVector in ['DATE','DATES'] :
+            self.createTIME()
         # recreate filter for this simulation (self), now considering the restarts
         self.redo_Filter()
         # recalculate the total time for this simulation (self), now considering the restarts
@@ -2111,6 +2216,11 @@ class SimResult(object):
         if SimResultObject in self.restarts :
             print(" removed continuation object '" + str(self.restarts.pop(SimResultObject)) + "'")
     
+        # # update self.savingFilter
+        # self.set_savingFilter()
+        # recreate TIME vector if TimeVector is DATE
+        if self.TimeVector in ['DATE','DATES'] :
+            self.createTIME()
         # recreate filter for this simulation (self), now considering the restarts
         self.redo_Filter()
         # recalculate the total time for this simulation (self), now considering the restarts
@@ -2742,6 +2852,9 @@ class SimResult(object):
         return tuple(keys)
 
     def get_Filter(self) :
+        if self.filter['filter'] is None :
+            _verbose( self.speak,1," <get_Filter> filter is not yet defined")
+            return np.array( [True]*len(self.get_Vector(self.keys[0])[self.keys[0]]) )
         return self.filter['filter']
 
     def reset_Filter(self) :
@@ -3257,7 +3370,6 @@ class SimResult(object):
             a string with a single key or,
             a list or tuple containing the keys names as strings.
         """
-
         returnVectors = self.get_UnfilteredVector(key,reload)
         
         if self.filter['filter'] is None :
@@ -3361,38 +3473,47 @@ class SimResult(object):
 
     # support functions for get_Vector:
     def checkRestarts(self,key=None,reload=False) :
+                
         returnVectors = {}
         Rlist = self.restarts # + [ self ]
         if type(key) is str :
             key = [ key ]
             
         for K in key :
-            VectorsList = []
-            _verbose( self.speak , 1 , " preparing key '" + str(K) + "'")
-            for R in Rlist :
-                if R.is_Key(K) :
-                    # try to extract the not-filtered vector from the simulation
-                    Vector = R.get_RawVector(K)[K]
-                    #Vector = R.get_UnfilteredVector(K)[K]
-                    _verbose( self.speak , 1 , "     reading from restart " + str(R) )
-                else :
-                    # if failed to extract, create a zeros vector of the 'TIME' size
-                    Vector = np.zeros( len(R) )
-                    #Vector = np.zeros( len(R.get_UnfilteredVector(K)[K]) )
-                    _verbose( self.speak , 1 , "     filling with zeros for restart "+ str(R) )
-                
-                # apply filter
-                _verbose( self.speak , 1 , "          applying filter")
-                Vector = Vector[ self.restartFilters[R] ]
-                
-                # concatenate vectors                
-                if K in returnVectors :
-                    _verbose( self.speak , 1 , "          concatenating vectors")
-                    returnVectors[K] = np.concatenate( [ returnVectors[K] , Vector ] )
-                else :
-                    _verbose( self.speak , 1 , "          creating vector")
-                    returnVectors[K] = Vector
-            # returnVectors[K] = np.concatenate( [ returnVectors[K] , self.checkIfLoaded( K , False ) ] )
+            
+            # check vectors previously calculated over the restarts
+            if not reload and K in self.vectorsRestart :
+                _verbose( self.speak , 1 , "          recovering vector from precious calculations dictionary")
+                returnVectors[K] = self.vectorsRestart[K]
+            
+            # extract vector from restarts
+            else :
+                VectorsList = []
+                _verbose( self.speak , 1 , " preparing key '" + str(K) + "'")
+                for R in Rlist :
+                    if R.is_Key(K) :
+                        # try to extract the not-filtered vector from the simulation
+                        Vector = R.get_RawVector(K)[K]
+                        #Vector = R.get_UnfilteredVector(K)[K]
+                        _verbose( self.speak , 1 , "     reading from restart " + str(R) )
+                    else :
+                        # if failed to extract, create a zeros vector of the 'TIME' size
+                        Vector = np.zeros( len(R) )
+                        #Vector = np.zeros( len(R.get_UnfilteredVector(K)[K]) )
+                        _verbose( self.speak , 1 , "     filling with zeros for restart "+ str(R) )
+                    
+                    # apply filter
+                    _verbose( self.speak , 1 , "          applying filter")
+                    Vector = Vector[ self.restartFilters[R] ]
+                    
+                    # concatenate vectors                
+                    if K in returnVectors :
+                        _verbose( self.speak , 1 , "          concatenating vectors")
+                        returnVectors[K] = np.concatenate( [ returnVectors[K] , Vector ] )
+                    else :
+                        _verbose( self.speak , 1 , "          creating vector")
+                        returnVectors[K] = Vector
+                # returnVectors[K] = np.concatenate( [ returnVectors[K] , self.checkIfLoaded( K , False ) ] )
         
         # return returnVectors
         if self.filter['filter'] is None :
@@ -3498,10 +3619,7 @@ class SimResult(object):
         if overwrite is None :
             overwrite = self.overwrite
         elif ( type(overwrite) is int or type(overwrite) is float ) :
-            if overwrite == 1 :
-                overwrite = True
-            else :
-                overwrite = False
+            overwrite = bool(overwrite)
         elif type(overwrite) is bool :
             pass
         else :
@@ -3510,30 +3628,30 @@ class SimResult(object):
         if type(Key) is str :
             Key = Key.strip()
         else :
-            raise TypeError('Key must be a string')
+            raise TypeError(' <set_Vector> Key must be a string')
         
         if Key in self.vectors and overwrite is False :
-            raise OverwrittingError('the Key ' + Key + ' already exists in the dataset and overwrite parameter is set to False. Set overwrite=True to avoid this message and change the DataVector.')
+            raise OverwrittingError(' <set_Vector> the Key ' + Key + ' already exists in the dataset and overwrite parameter is set to False. Set overwrite=True to avoid this message and change the DataVector.')
             
         if type(VectorData) is list or type(VectorData) is tuple :
             if len(VectorData) == 0 :
-                raise TypeError('VectorData must not be empty')
+                raise TypeError(' <set_Vector> VectorData must not be empty')
             VectorData = np.array(VectorData)
         elif type(VectorData) is np.ndarray :
             if DataType == 'auto' :
                 if 'int' in str(VectorData.dtype) :
                     DataType = 'int'
-                    _verbose( self.speak , 1 , Key + ' vector detected as numpy.array of dtype ' + DataType + '.' )
+                    _verbose( self.speak , 1 , Key + ' <set_Vector> vector detected as numpy.array of dtype ' + DataType + '.' )
                 elif 'float' in str(VectorData.dtype) :
                     DataType = 'float'
-                    _verbose( self.speak , 1 , Key + ' vector detected as numpy.array of dtype ' + DataType + '.' )
+                    _verbose( self.speak , 1 , Key + ' <set_Vector> vector detected as numpy.array of dtype ' + DataType + '.' )
                 elif 'datetime' in str(VectorData.dtype) :
                     DataType = 'datetime'
-                    _verbose( self.speak , 1 , Key + ' vector detected as numpy.array of dtype ' + DataType + '.' )
+                    _verbose( self.speak , 1 , Key + ' <set_Vector> vector detected as numpy.array of dtype ' + DataType + '.' )
             if VectorData.size == 0 :
-                raise TypeError('VectorData must not be empty')
+                raise TypeError(' <set_Vector> VectorData must not be empty')
         else :
-            raise TypeError('VectorData must be a list, tuple or numpy.ndarray. Received ' + str(type(VectorData)))
+            raise TypeError(' <set_Vector> VectorData must be a list, tuple or numpy.ndarray. Received ' + str(type(VectorData)))
         
         if type(Units) is str :
             Units = Units.strip('( )')
@@ -3541,29 +3659,29 @@ class SimResult(object):
                 pass
             elif Units == 'DEGREES' and 'API' in _mainKey(Key).upper() :
                 Units = 'API'
-                _verbose( self.speak , 2 , '\nIMPORTANT: the selected Units: ' + Units + ' were chaged to "API" for the vector with key name ' + Key + '.')
+                _verbose( self.speak , 2 , ' <set_Vector>\nIMPORTANT: the selected Units: ' + Units + ' were chaged to "API" for the vector with key name ' + Key + '.')
             elif ( ' / ' in Units and unit.isUnit(Units.replace(' / ','/')) ) or ( '/ ' in Units and unit.isUnit(Units.replace('/ ','/')) ) or ( ' /' in Units and unit.isUnit(Units.replace(' /','/')) ) :
-                _verbose( self.speak , 1 , "\nMESSAGE: the selected Units: '" + Units +"' were chaged to " + Units.replace(' /','/').replace('/ ','/')  + ' for the vector with key name ' + Key + '.')
+                _verbose( self.speak , 1 , " <set_Vector>\nMESSAGE: the selected Units: '" + Units +"' were chaged to " + Units.replace(' /','/').replace('/ ','/')  + ' for the vector with key name ' + Key + '.')
                 Units = Units.replace('/ ','/').replace(' /','/')
             else :
-                _verbose( self.speak , 3 , "\nIMPORTANT: the selected Units: '" + Units +"' are not recognized by the programm and will not be able to convert this Vector " + str(Key) +' into other units.' )
+                _verbose( self.speak , 3 , " <set_Vector>\nIMPORTANT: the selected Units: '" + Units +"' are not recognized by the programm and will not be able to convert this Vector " + str(Key) +' into other units.' )
         else :
-            raise TypeError('Units must be a string')
+            raise TypeError(' <set_Vector> Units must be a string')
         
         if DataType == 'auto' :
-            _verbose( self.speak , 1 , ' guessing the data type of the VectorData ' + Key )
+            _verbose( self.speak , 1 , ' <set_Vector> guessing the data type of the VectorData ' + Key )
             done = False
             if Key.upper() == 'DATE' or Key.upper() == 'DATES' or '/' in str(VectorData) :
                 try :
                     VectorData = np.datetime64( pd.to_datetime( VectorData ) , 's' )
-                    _verbose( self.speak , 1 , Key + ' vector casted as datetime.' )
+                    _verbose( self.speak , 1 , Key + ' <set_Vector> vector casted as datetime.' )
                     done = True
                 except :
                     pass            
-            elif Key.upper() == 'TIME' or Key.upper() == 'YEARS' or Key.upper() == 'YEAR' or Key.upper() == 'DAYS' or Key.upper() == 'DAYS' or Key.upper() == 'MONTH' or Key.upper() == 'MONTHS':
+            elif Key.upper() in ['TIME','YEARS','YEAR','DAYS','DAYS','MONTH','MONTHS'] :
                 try :
                     VectorData = VectorData.astype('float')
-                    _verbose( self.speak , 1 , Key + ' vector casted as floating point.' )
+                    _verbose( self.speak , 1 , Key + ' <set_Vector> vector casted as floating point.' )
                     done = True
                 except :
                     pass  
@@ -3576,11 +3694,11 @@ class SimResult(object):
                 except :
                     try :
                         VectorData = VectorData.astype(float)
-                        _verbose( self.speak , 1 , Key + ' vector casted as floating point.' )
+                        _verbose( self.speak , 1 , Key + ' <set_Vector> vector casted as floating point.' )
                     except :
                         try :
                             VectorData = np.datetime64( pd.to_datetime(VectorData), 's' )
-                            _verbose( self.speak , 1 , Key + ' vector casted as datetime.' )
+                            _verbose( self.speak , 1 , Key + ' <set_Vector> vector casted as datetime.' )
                         except :
                             if type(VectorData) is np.ndarray :
                                 VectorType = str( VectorData.dtype )
@@ -3588,16 +3706,16 @@ class SimResult(object):
                                 VectorType = str( type(VectorData) ) + ' with ' + type(VectorData[0]) + ' inside'
                             else :
                                 VectorType = str( type(VectorData) )
-                            _verbose( self.speak , 2 , ' not able to cast the VectorData ' + Key + ', kept as received: ' + VectorType + '.' )
+                            _verbose( self.speak , 2 , ' <set_Vector> not able to cast the VectorData ' + Key + ', kept as received: ' + VectorType + '.' )
                 if Integer :
                     try :
                         VectorDataFloat = VectorData.astype(float)
                         if np.all( VectorDataFloat == VectorDataInt ) :
                             VectorData = VectorDataInt
-                            _verbose( self.speak , 1 , Key + ' vector casted as integer.' )
+                            _verbose( self.speak , 1 , Key + ' <set_Vector> vector casted as integer.' )
                         else :
                             VectorData = VectorDataFloat
-                            _verbose( self.speak , 1 , Key + ' vector casted as floating point.' )
+                            _verbose( self.speak , 1 , Key + ' <set_Vector> vector casted as floating point.' )
                     except :
                         pass
                     
@@ -3608,14 +3726,114 @@ class SimResult(object):
                 try :
                     VectorData = VectorData.astype(DataType)
                 except :
-                    _verbose( self.speak , 2 , ' not able to cast the VectorData ' + Key + ', kept as received: ' + DataType + '.' )
+                    _verbose( self.speak , 2 , ' <set_Vector> not able to cast the VectorData ' + Key + ', kept as received: ' + DataType + '.' )
         else :
             try :
                 VectorData = VectorData.astype(DataType)
             except :
-                _verbose( self.speak , 2 , ' not able to cast the VectorData ' + Key + ', kept as received: ' + DataType + '.' )
+                _verbose( self.speak , 2 , ' <set_Vector> not able to cast the VectorData ' + Key + ', kept as received: ' + DataType + '.' )
         
-        self.vectors[Key] = VectorData
+        print('\n*********\nsaving Key: ',Key,'\n > vector len:',len(VectorData),'\n > rawVector len:',len(self.get_RawVector(self.keys[0])[self.keys[0]]),'\n > savingFilter len:',len(self.get_savingFilter()),'\n > filter len:',len(self.get_Filter()))
+        if len(self.get_savingFilter()) == len(self.get_Filter()) :
+            print(' < savingFilter filtered by Filter len:',len(self.get_savingFilter()[self.get_Filter()]))
+        else :
+            print(' ! savingFilter filtered by Filter not matching')
+        if len(VectorData) == len(self.get_Filter()) :
+            print(' < Vector filtered by Filter len:',len(VectorData[self.get_Filter()]))
+        else :
+            print(' ! Vector filtered by Filter not matching')
+        if len(VectorData) == len(self.get_savingFilter()) :
+            print(' < Vector filtered by savingFilter len:',len(VectorData[self.get_savingFilter()]))
+        else :
+            print(' ! Vector filtered by savingFilter not matching')
+        if  len(self.get_savingFilter()) == len(self.get_Filter()) :
+            print(' < savingFilter filtered by Filter len:',len(self.get_savingFilter()[self.get_Filter()]))
+            if len(VectorData) == len(self.get_savingFilter()[self.get_Filter()]) :
+                mixedFilter = self.get_savingFilter()[self.get_Filter()]
+                print(' < Vector filtered by savingFilter by Filter len:',len(VectorData[mixedFilter]))
+        else :
+            print(' ! Vector filtered by savingFilter by Filter not matching')
+        print(' < templateVector -1 len:',len(self.get_vectorTemplate()[self.get_vectorTemplate()==-1]))
+        print(' < templateVector  0 len:',len(self.get_vectorTemplate()[self.get_vectorTemplate()==0]))
+        print(' < templateVector  1 len:',len(self.get_vectorTemplate()[self.get_vectorTemplate()==1]))
+        print()
+        
+        # save restart vector part
+        if len(self.get_vectorTemplate()[self.get_vectorTemplate()==-1]) > 0 :
+            if len(VectorData[self.get_vectorTemplate() == -1]) == len(self.checkRestarts(self.keys[0])[self.keys[0]]) :
+                self.vectorsRestart[Key] = VectorData[self.get_vectorTemplate() == -1]
+            elif len(VectorData[self.get_vectorTemplate() == -1]) < len(self.checkRestarts(self.keys[0])[self.keys[0]]) :
+                # a filter is applied
+                filteredTime = self.get_Vector(self.TimeVector)[(self.TimeVector)][self.get_vectorTemplate()==-1]
+                filteredDF = pd.DataFrame({'SelfTime':filteredTime,Key:VectorData[self.get_vectorTemplate()==-1]}).set_index('SelfTime')
+                rawTime = self.checkRestarts(self.TimeVector)[self.TimeVector]
+                rawDF = pd.DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
+                rawDF[Key] = filteredDF[Key]
+                rawDF = rawDF.replace(np.nan,self.null)
+                newRawVector = rawDF[Key].to_numpy()
+                self.vectorsRestart[Key] = newRawVector
+            elif len(VectorData[self.get_vectorTemplate() == -1]) > len(self.checkRestarts(self.keys[0])[self.keys[0]]) :
+                raise ValueError('something went wrong')
+
+        # save this simulation vector part
+        if len(self.get_vectorTemplate()[self.get_vectorTemplate()==0]) > 0 :
+            if len(VectorData[self.get_vectorTemplate() == 0]) == len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
+                # no filter seems to be applied
+                self.vectors[Key] = VectorData[self.get_vectorTemplate() == 0]
+            elif len(VectorData[self.get_vectorTemplate() == 0]) < len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
+                # a filter is applied
+                filteredTime = self.get_Vector(self.TimeVector)[(self.TimeVector)][self.get_vectorTemplate()==0]
+                filteredDF = pd.DataFrame({'SelfTime':filteredTime,Key:VectorData[self.get_vectorTemplate()==0]}).set_index('SelfTime')
+                rawTime = self.get_RawVector(self.TimeVector)[self.TimeVector]
+                rawDF = pd.DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
+                rawDF[Key] = filteredDF[Key]
+                rawDF = rawDF.replace(np.nan,self.null)
+                newRawVector = rawDF[Key].to_numpy()
+                self.vectors[Key] = newRawVector
+            elif len(VectorData[self.get_vectorTemplate() == 0]) > len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
+                raise ValueError('something went wrong')
+        
+        # save contuation vector part
+        if len(self.get_vectorTemplate()[self.get_vectorTemplate()==1]) > 0 :
+            if len(VectorData[self.get_vectorTemplate() == 1]) == len(self.checkContinue(self.keys[0])[self.keys[0]]) :
+                self.vectorsContinue[Key] = VectorData[self.get_vectorTemplate() == 1]
+            elif len(VectorData[self.get_vectorTemplate() == 1]) < len(self.checkContinue(self.keys[0])[self.keys[0]]) :
+                # a filter is applied
+                filteredTime = self.get_Vector(self.TimeVector)[(self.TimeVector)][self.get_vectorTemplate()==1]
+                filteredDF = pd.DataFrame({'SelfTime':filteredTime,Key:VectorData[self.get_vectorTemplate()==1]}).set_index('SelfTime')
+                rawTime = self.checkContinue(self.TimeVector)[self.TimeVector]
+                rawDF = pd.DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
+                rawDF[Key] = filteredDF[Key]
+                rawDF = rawDF.replace(np.nan,self.null)
+                newRawVector = rawDF[Key].to_numpy()
+                self.vectorsContinue[Key] = newRawVector
+            elif len(VectorData[self.get_vectorTemplate() == 1]) > len(self.checkContinue(self.keys[0])[self.keys[0]]) :
+                raise ValueError('something went wrong')
+        
+        # if len(VectorData) > len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
+        #     if len(self.get_vectorTemplate()[self.get_vectorTemplate()==-1]) > 0 :
+        #         self.vectorsRestart[Key] = VectorData[self.get_vectorTemplate() == -1]
+        #     self.vectors[Key] = VectorData[self.get_vectorTemplate() == 0]
+        #     if len(self.get_vectorTemplate()[self.get_vectorTemplate()==1]) > 0 :
+        #         self.vectorsContinue[Key] = VectorData[self.get_vectorTemplate() == 1]
+            # if len(VectorData) == len(self.get_savingFilter()[self.get_Filter()]) :
+            #     mixedFilter = self.get_savingFilter()[self.get_Filter()]
+            #     self.vectors[Key] = VectorData[mixedFilter]
+            # elif len(VectorData) == len(self.get_savingFilter()) :
+            #     self.vectors[Key] = VectorData[self.get_savingFilter()]
+            # elif len(VectorData) == len(self.get_Filter()) :
+            #     self.vectors[Key] = VectorData[self.get_Filter()]
+            # else :
+            #     raise ValueError(' <set_Vector> the size of the provided vector does not match the size of this simulation')
+        # elif len(VectorData) > len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
+        #     if len(self.get_vectorTemplate()[self.get_vectorTemplate()==-1]) > 0 :
+        #         self.vectorsRestart[Key] = VectorData[self.get_vectorTemplate() == -1]
+        #     self.vectors[Key] = VectorData[self.get_vectorTemplate() == 0]
+        #     if len(self.get_vectorTemplate()[self.get_vectorTemplate()==1]) > 0 :
+        #         self.vectorsContinue[Key] = VectorData[self.get_vectorTemplate() == 1]
+        # else :
+        #     self.vectors[Key] = VectorData#[self.get_savingFilter()]
+            
         self.units[Key] = Units
         if not self.is_Key(Key) :
             self.add_Key(Key) 
@@ -3921,8 +4139,8 @@ class SimResult(object):
         returns True if the length of the given array or Key corresponds
         with the length of the simulation Keys.
         """
-        if self.is_Key('TIME') :
-            Vlen = len(self('TIME'))
+        if self.is_Key(self.TimeVector) :
+            Vlen = len(self(self.TimeVector))
         elif len(self.keys) > 0 :
             Vlen = len( self( self.keys[0] ))
         else :
@@ -4397,6 +4615,14 @@ class SimResult(object):
             DATE = np.array(pd.to_datetime(DATE),dtype='datetime64[s]')
             self.set_Vector( 'DATES' , DATE , 'DATE' , overwrite=True )
             self.set_Vector( 'DATE' , DATE , 'DATE' , overwrite=True )
+        elif self.is_Key('DATE') :
+            if not self.is_Key('DATES') :
+                DATE = self.get_Vector('DATE')['DATE']
+                self.set_Vector( 'DATES' , DATE , 'DATE' )
+        elif self.is_Key('DATES') :
+            if not self.is_Key('DATE') :
+                DATE = self.get_Vector('DATES')['DATES']
+                self.set_Vector( 'DATE' , DATE , 'DATE' )
         else :
             _verbose( self.speak , 3 , "Not possible to create 'DATE' key, the requiered data is not available")
             return False
@@ -4448,7 +4674,7 @@ class SimResult(object):
             time = ( pd.to_timedelta(date - startDate).astype('timedelta64[s]') /60/60/24 ).to_numpy()
             ow = self.overwrite
             self.overwrite = True
-            self.set_Vector('TIME', time , 'DAYS' , 'float' )
+            self.set_Vector('TIME', time , 'DAYS' , DataType='float',overwrite=True )
             self.set_Unit('TIME','DAYS',overwrite=True)
             self.set_FieldTime()
             self.overwrite = ow
@@ -4512,7 +4738,7 @@ class SimResult(object):
             ConvertedDict[Key[each]] = convertUnit(self.get_Vector(Key[each])[Key[each].strip()], self.get_Unit(Key[each]), OtherObject_or_NewUnits[each] , PrintConversionPath=(self.speak==1))
         return ConvertedDict
     
-    def integrate(self,InputKey,OutputKey=None,ConstantRate=False,Numpy=True,overwrite=None,saveOthers=True):
+    def integrate(self,InputKey,OutputKey=None,ConstantRate=False,Numpy=True,overwrite=None,saveOthers=False,TimeVector=None):
         """"
         calculate the integral, or cumulative, of the input vector and saves 
         it to the output vector.
@@ -4539,20 +4765,30 @@ class SimResult(object):
                     for eachKey in self.attributes[ InputKey ] :    
                         self.integrate( eachKey , OutputKey )
                 return None
-        Vector = self.get_Vector( InputKey )[ InputKey ]
+        Vector = self.get_Vector(InputKey)[InputKey]
         if Vector is None :
             _verbose( self.speak , 2 , "<integrate> the vector Key '" + InputKey + "' is empty" )
             return None
         VectorUnits = self.get_Unit(InputKey)
         _verbose( self.speak , 1 , "<integrate> retrieved series '" + InputKey + "' of length " + str(len(Vector)) + ' and units ' + str(VectorUnits))
-        Time = self.get_Vector( 'TIME' )[ 'TIME' ]
-        TimeUnits = self.get_Unit('TIME')
-        _verbose( self.speak , 1 , "<integrate> retrieved series 'TIME' of length " + str(len(Time)) + ' and units ' + str(TimeUnits))
         
+        if TimeVector is not None :
+            if self.is_Key(TimeVector) :
+                _verbose(self.speak,2,"<interpolate> using vector '"+TimeVector+"' to interpolate")
+            else :
+                _verbose(self.speak,2,"<interpolate> the provided Key '"+TimeVector+"' is not present in this simulation")
+        else :
+            for TimeKey in ['TIME','DATE','DATES','DAYS','MONTHS','YEARS'] :
+                if self.is_Key(TimeKey) :
+                    break
+        Time = self.get_Vector(TimeKey)[TimeKey]
+        TimeUnits = self.get_Unit(TimeKey)
+        _verbose( self.speak , 1 , "<integrate> retrieved series '" + TimeKey + "' of length " + str(len(Time)) + ' and units ' + str(TimeUnits))
+        if TimeKey in ['DATE','DATES'] :
+            TimeUnits = 'DAYS'
+            
         Numpy = bool(Numpy)
         ConstantRate = bool(ConstantRate)
-        # if ConstantRate :
-        #     Numpy = False
         if overwrite is None :
             overwrite = self.overwrite
         
@@ -4590,7 +4826,7 @@ class SimResult(object):
             ConvFactor = 1
         
         _verbose( self.speak , 1 , "<integrate> integrated series units will be " + str(OutUnits))
-        
+
         if len(Vector) != len(Time) :
             raise TypeError( ' the Key vector ' + InputKey + ' and its TIME does not have the same length: ' + str( len(Vector) ) + ' != ' + str( len(Time) ) + '.' )
         
@@ -4600,7 +4836,10 @@ class SimResult(object):
             Cumulative = [0.0]
             if not ConstantRate :
                 for i in range(len(Vector)-1) :
-                    dt = ( Time[i+1] - Time[i] ) * ConvFactor
+                    dt = ( Time[i+1] - Time[i] ) 
+                    if TimeKey in ['DATE','DATES'] :
+                        dt = dt.astype('timedelta64[D]').astype('float64')
+                    dt = dt * ConvFactor
                     if Vector[i] <= Vector[i+1] :
                         Vmin = Vector[i]
                         Vmax = Vector[i+1]
@@ -4622,8 +4861,11 @@ class SimResult(object):
                             X = np.array(X,dtype='float')
                         except :
                             print(" the key '" + X + "' is not numpy array.")
- 
+                    
             dt = np.diff( Time ) * ConvFactor
+            
+            if TimeKey in ['DATE','DATES'] :
+                dt = dt.astype('timedelta64[D]').astype('float64')
             
             if not ConstantRate :
                 Vmin = np.minimum( Vector[:-1] , Vector[1:] )
@@ -4637,32 +4879,36 @@ class SimResult(object):
             Cumulative = np.cumsum( Cumulative )
         
         try :
-            if len(self.restarts) == 0 and len(self.continuations) == 0 :
-                self.set_Vector(OutputKey, np.array( Cumulative ) , OutUnits , overwrite=overwrite )
-            elif len(self.restarts) > 0 and len(self.continuations) == 0 :
-                self.set_Vector(OutputKey, np.array( Cumulative[-len(self.get_RawVector(InputKey)[InputKey]):] ) , OutUnits , overwrite=overwrite ) 
-                if saveOthers :
-                    for other in self.restarts :
-                        if other.is_Key(InputKey) :
-                            # previuosRestarts = other.restarts
-                            # other.clean_Restart()
-                            # other.set_Restart( self.restarts )
-                            other.integrate(InputKey,OutputKey=OutputKey,ConstantRate=ConstantRate,Numpy=Numpy,overwrite=overwrite,saveOthers=False)
-                            # other.restarts = previuosRestarts
-            elif len(self.restarts) == 0 and len(self.continuations) > 0 :
-                self.set_Vector(OutputKey, np.array( Cumulative[-len(self.get_RawVector(InputKey)[InputKey]):] ) , OutUnits , overwrite=overwrite ) 
-                if saveOthers :
-                    i = -1
-                    for other in self.continuations :
-                        i += 1
-                        if other.is_Key(InputKey) :
-                            otherRestarts = other.restarts
-                            other.restarts = [self] + self.continuations[:i] # not sure will work if continuation point is not the last point
-                            other.integrate(InputKey,OutputKey=OutputKey,ConstantRate=ConstantRate,Numpy=Numpy,overwrite=overwrite,saveOthers=False)
-                            other.restarts = otherRestarts
-            elif len(self.restarts) > 0 and len(self.continuations) > 0 :
-                _verbose( self.speak , 2 , 'not able to save vector because the case has both restarts and continuations.')
-                # self.set_Vector(OutputKey, np.array( Cumulative[-len(self.get_RawVector(InputKey)[InputKey]):] ) , OutUnits , overwrite=overwrite ) 
+            self.set_Vector(OutputKey, np.array( Cumulative ) , OutUnits , overwrite=overwrite )
+            # if len(self.restarts) == 0 and len(self.continuations) == 0 :
+            #     self.set_Vector(OutputKey, np.array( Cumulative ) , OutUnits , overwrite=overwrite )
+            # elif len(self.restarts) > 0 and len(self.continuations) == 0 :
+            #     # self.set_Vector(OutputKey, np.array( Cumulative[-len(self.get_RawVector(InputKey)[InputKey]):] ) , OutUnits , overwrite=overwrite ) 
+            #     self.set_Vector(OutputKey, np.array( Cumulative ) , OutUnits , overwrite=overwrite ) 
+            #     if saveOthers :
+            #         for other in self.restarts :
+            #             if other.is_Key(InputKey) :
+            #                 # previuosRestarts = other.restarts
+            #                 # other.clean_Restart()
+            #                 # other.set_Restart( self.restarts )
+            #                 other.integrate(InputKey,OutputKey=OutputKey,ConstantRate=ConstantRate,Numpy=Numpy,overwrite=overwrite,saveOthers=False)
+            #                 # other.restarts = previuosRestarts
+            # elif len(self.restarts) == 0 and len(self.continuations) > 0 :
+            #     # self.set_Vector(OutputKey, np.array( Cumulative[-len(self.get_RawVector(InputKey)[InputKey]):] ) , OutUnits , overwrite=overwrite ) 
+            #     self.set_Vector(OutputKey, np.array( Cumulative ) , OutUnits , overwrite=overwrite )
+            #     if saveOthers :
+            #         i = -1
+            #         for other in self.continuations :
+            #             i += 1
+            #             if other.is_Key(InputKey) :
+            #                 otherRestarts = other.restarts
+            #                 other.restarts = [self] + self.continuations[:i] # not sure will work if continuation point is not the last point
+            #                 other.integrate(InputKey,OutputKey=OutputKey,ConstantRate=ConstantRate,Numpy=Numpy,overwrite=overwrite,saveOthers=False)
+            #                 other.restarts = otherRestarts
+            # elif len(self.restarts) > 0 and len(self.continuations) > 0 :
+            #     self.set_Vector(OutputKey, np.array( Cumulative ) , OutUnits , overwrite=overwrite )
+            #     # _verbose( self.speak , 2 , 'not able to save vector because the case has both restarts and continuations.')
+
         except OverwrittingError :
             _verbose( self.speak , 2 , 'not able to save vector because the Key already exists.')
         return ( OutputKey , np.array( Cumulative ) , OutUnits )
