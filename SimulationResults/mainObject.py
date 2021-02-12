@@ -349,49 +349,51 @@ class SimResult(object):
         self.get_Injectors()
         self.use_SimPandas()
         self.set_RestartsTimeVector()
-        self.set_savingFilter()
+        # self.set_savingFilter()
         self.set_vectorTemplate()
     
     def set_vectorTemplate(self,Restart=False,Continue=False) :
         if self.vectorTemplate is None :
-            self.vectorTemplate = np.array([0]*len(self.get_RawVector(self.TimeVector)[self.TimeVector]))
+            self.vectorTemplate = np.array([0]*len(self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]))
         if Restart :
-            self.vectorTemplate = np.array( [-1]*len(self.checkRestarts(self.TimeVector)[self.TimeVector]) + list(self.vectorTemplate[self.vectorTemplate!=-1]) )
+            self.vectorTemplate = np.array( [-1]*len(self.checkRestarts(self.get_TimeVector())[self.get_TimeVector()]) + list(self.vectorTemplate[self.vectorTemplate!=-1]) )
         if Continue :
-            self.vectorTemplate = np.array( list(self.vectorTemplate)[self.vectorTemplate!=1] + [1]*len(self.checkContinue(self.TimeVector)[self.TimeVector]) )
+            self.vectorTemplate = np.array( list(self.vectorTemplate[self.vectorTemplate!=1]) + [1]*len(self.checkContinuations(self.get_TimeVector())[self.get_TimeVector()]) )
     
     def get_vectorTemplate(self) :
         if self.vectorTemplate is None :
             self.set_vectorTemplate()
-        if len(self.get_Vector(self.TimeVector)[self.TimeVector]) < len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector]) :
-            usedFilter = np.array([ self.get_UnfilteredVector(self.TimeVector)[self.TimeVector][i] in self.get_Vector(self.TimeVector)[self.TimeVector] for i in range(len( self.get_UnfilteredVector(self.TimeVector)[self.TimeVector] )) ])
+        if len(self.get_Vector(self.get_TimeVector())[self.get_TimeVector()]) < len(self.get_UnfilteredVector(self.get_TimeVector())[self.get_TimeVector()]) :
+            usedFilter = np.array([ self.get_UnfilteredVector(self.get_TimeVector())[self.get_TimeVector()][i] in self.get_Vector(self.get_TimeVector())[self.get_TimeVector()] for i in range(len( self.get_UnfilteredVector(self.get_TimeVector())[self.get_TimeVector()] )) ])
             return self.vectorTemplate[usedFilter]
-        elif len(self.get_Vector(self.TimeVector)) > len(self.get_UnfilteredVector(self.TimeVector)) :
+        elif len(self.get_Vector(self.get_TimeVector())) > len(self.get_UnfilteredVector(self.get_TimeVector())) :
             raise ValueError('something went wrong')
         else :
             return self.vectorTemplate
         
-    def set_savingFilter(self,Restart=False,Continue=False) :
-        if self.savingFilter is None :
-            if self.TimeVector is None :
-                self.set_RestartsTimeVector()
-            self.savingFilter = np.array([True]*len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector]))
-            _verbose(self.speak,2," <set_savingFilter> started savingFilter with lenght " + str(len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector])) + " using vector '"+str(self.TimeVector)+"' as reference")
-        else :
-            if Restart :
-                _verbose(self.speak,2," <set_savingFilter> updating savingFilter for Restart:\nprevious savingFilter of length " + str(len(self.get_savingFilter()))  + "\nfor new vectors of length " + str(len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector])))
-                self.savingFilter = np.array( [False]*(len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector])-len(self.get_savingFilter())) + list(self.get_savingFilter()) )
-            elif Continue :
-                _verbose(self.speak,2," <set_savingFilter> updating savingFilter for Continue:\nprevious savingFilter of length " + str(len(self.get_savingFilter())) + "\nfor new vectors of length " + str(len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector])))
-                self.savingFilter = np.array( list(self.get_savingFilter()) + [False]*(len(self.get_Vector(self.TimeVector)[self.TimeVector])-len(self.get_savingFilter())) ) 
-            else :
-                _verbose(self.speak,2," <set_savingFilter> reseting savingFilter with lenght " + str(len(self.get_Vector(self.TimeVector)[self.TimeVector])) + " using vector '"+str(self.TimeVector)+"' as reference")
-                self.savingFilter = np.array([True]*len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector]))
+    # # savingFilter is deprecrecated, from now on is easier to use vectorTemplate. get_savingFilter will be a wrapper for get_vectorTemplate
+    # def set_savingFilter(self,Restart=False,Continue=False) :
+    #     if self.savingFilter is None :
+    #         if self.TimeVector is None :
+    #             self.set_RestartsTimeVector()
+    #         self.savingFilter = np.array([True]*len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector]))
+    #         _verbose(self.speak,2," <set_savingFilter> started savingFilter with lenght " + str(len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector])) + " using vector '"+str(self.TimeVector)+"' as reference")
+    #     else :
+    #         if Restart :
+    #             _verbose(self.speak,2," <set_savingFilter> updating savingFilter for Restart:\nprevious savingFilter of length " + str(len(self.get_savingFilter()))  + "\nfor new vectors of length " + str(len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector])))
+    #             self.savingFilter = np.array( [False]*(len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector])-len(self.get_savingFilter())) + list(self.get_savingFilter()) )
+    #         elif Continue :
+    #             _verbose(self.speak,2," <set_savingFilter> updating savingFilter for Continue:\nprevious savingFilter of length " + str(len(self.get_savingFilter())) + "\nfor new vectors of length " + str(len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector])))
+    #             self.savingFilter = np.array( list(self.get_savingFilter()) + [False]*(len(self.get_Vector(self.TimeVector)[self.TimeVector])-len(self.get_savingFilter())) ) 
+    #         else :
+    #             _verbose(self.speak,2," <set_savingFilter> reseting savingFilter with lenght " + str(len(self.get_Vector(self.TimeVector)[self.TimeVector])) + " using vector '"+str(self.TimeVector)+"' as reference")
+    #             self.savingFilter = np.array([True]*len(self.get_UnfilteredVector(self.TimeVector)[self.TimeVector]))
     
+    # savingFilter is deprecrecated, from now on is easier to use vectorTemplate. get_savingFilter will be a wrapper for get_vectorTemplate
     def get_savingFilter(self) :
-        if self.savingFilter is None :
-            self.set_savingFilter()
-        return self.savingFilter
+        # if self.savingFilter is None :
+        #     self.set_savingFilter()
+        return self.get_vectorTemplate()[self.get_vectorTemplate()==0]
     
     def set_RestartsTimeVector(self,TimeVector=None) :
         if TimeVector is None :
@@ -406,6 +408,13 @@ class SimResult(object):
                 raise ValueError(' the provided TimeVector is not a valid key in this simulation.')
         else :
             raise TypeError(' TimeVector must be a string name of a valid Key.')
+    
+    def get_TimeVector(self) :
+        return self.get_RestartsTimeVector()
+    def get_RestartsTimeVector(self) :
+        if self.TimeVector is None :
+            self.set_RestartsTimeVector()
+        return self.TimeVector
     
     def use_SimPandas(self,TrueOrFalse=True) :
         TrueOrFalse = bool(TrueOrFalse)
@@ -2005,10 +2014,10 @@ class SimResult(object):
             self.restarts.append(SimResultObject)
         self.restarts = list( set ( self.restarts ) )
         
-        for TimeVector in [ self.TimeVector,'DATE','DATES','TIME','DAYS','MONTHS','YEARS' ] :
+        for TimeVector in [ self.get_TimeVector(),'DATE','DATES','TIME','DAYS','MONTHS','YEARS' ] :
             flag = True
             for R in self.restarts :
-                if self.TimeVector != R.TimeVector :
+                if self.get_TimeVector() != R.get_TimeVector() :
                     flag = False
                     break
             if flag :
@@ -2042,8 +2051,8 @@ class SimResult(object):
             self.restartFilters[ self.restarts[-1] ] = thisFilter
             # update self.vectorTemplate
             self.set_vectorTemplate(Restart=True)        
-            # update self.savingFilter
-            self.set_savingFilter(Restart=True)
+            # # update self.savingFilter
+            # self.set_savingFilter(Restart=True)
             
             # recreate TIME vector if TimeVector is DATE
             if TimeVector in ['DATE','DATES'] :
@@ -2061,15 +2070,15 @@ class SimResult(object):
         if type( SimResultObject ) is list :
             self.continuations = self.continuations + SimResultObject
         elif type( SimResultObject ) is tuple :
-            self.restarts = self.restarts + SimResultObject 
+            self.continuations = self.continuations + SimResultObject
         else :
             self.continuations.append(SimResultObject)
         self.continuations = list( set ( self.continuations ) )
         
-        for TimeVector in [ self.TimeVector , 'DATE' , 'TIME' , 'DAYS' , 'MONTHS' , 'YEARS' ] :
+        for TimeVector in [ self.get_TimeVector() , 'DATE' , 'TIME' , 'DAYS' , 'MONTHS' , 'YEARS' ] :
             flag = True
             for C in self.continuations :
-                if self.TimeVector != C.TimeVector :
+                if self.get_TimeVector() != C.get_TimeVector() :
                     flag = False
                     break
             if flag :
@@ -2102,16 +2111,16 @@ class SimResult(object):
             thisFilter = self.continuations[0].get_RawVector(TimeVector)[TimeVector] > self.get_RawVector(TimeVector)[TimeVector][-1]
             self.continuationFilters[ self.continuations[0] ] = thisFilter
             # update self.vectorTemplate
-            self.set_vectorTemplate(Restart=True)        
-            # update self.savingFilter
-            self.set_savingFilter(Continue=True)
+            self.set_vectorTemplate(Continue=True)        
+            # # update self.savingFilter
+            # self.set_savingFilter(Continue=True)
             
             # recreate TIME vector if TimeVector is DATE
             if TimeVector in ['DATE','DATES'] :
                 self.createTIME()
-            # recreate filter for this simulation (self), now considering the restarts
+            # recreate filter for this simulation (self), now considering the continuations
             self.redo_Filter()
-            # recalculate the total time for this simulation (self), now considering the restarts
+            # recalculate the total time for this simulation (self), now considering the continuations
             self.set_FieldTime()
         # print the continuation
         self.print_Continuation()
@@ -2169,7 +2178,7 @@ class SimResult(object):
         # # update self.savingFilter
         # self.set_savingFilter()
         # recreate TIME vector if TimeVector is DATE
-        if self.TimeVector in ['DATE','DATES'] :
+        if self.get_TimeVector() in ['DATE','DATES'] :
             self.createTIME()
         # recreate filter for this simulation (self), now considering the restarts
         self.redo_Filter()
@@ -2219,7 +2228,7 @@ class SimResult(object):
         # # update self.savingFilter
         # self.set_savingFilter()
         # recreate TIME vector if TimeVector is DATE
-        if self.TimeVector in ['DATE','DATES'] :
+        if self.get_TimeVector() in ['DATE','DATES'] :
             self.createTIME()
         # recreate filter for this simulation (self), now considering the restarts
         self.redo_Filter()
@@ -3764,9 +3773,9 @@ class SimResult(object):
                 self.vectorsRestart[Key] = VectorData[self.get_vectorTemplate() == -1]
             elif len(VectorData[self.get_vectorTemplate() == -1]) < len(self.checkRestarts(self.keys[0])[self.keys[0]]) :
                 # a filter is applied
-                filteredTime = self.get_Vector(self.TimeVector)[(self.TimeVector)][self.get_vectorTemplate()==-1]
+                filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate()==-1]
                 filteredDF = pd.DataFrame({'SelfTime':filteredTime,Key:VectorData[self.get_vectorTemplate()==-1]}).set_index('SelfTime')
-                rawTime = self.checkRestarts(self.TimeVector)[self.TimeVector]
+                rawTime = self.checkRestarts(self.get_TimeVector())[self.get_TimeVector()]
                 rawDF = pd.DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
                 rawDF[Key] = filteredDF[Key]
                 rawDF = rawDF.replace(np.nan,self.null)
@@ -3782,9 +3791,9 @@ class SimResult(object):
                 self.vectors[Key] = VectorData[self.get_vectorTemplate() == 0]
             elif len(VectorData[self.get_vectorTemplate() == 0]) < len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
                 # a filter is applied
-                filteredTime = self.get_Vector(self.TimeVector)[(self.TimeVector)][self.get_vectorTemplate()==0]
+                filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate()==0]
                 filteredDF = pd.DataFrame({'SelfTime':filteredTime,Key:VectorData[self.get_vectorTemplate()==0]}).set_index('SelfTime')
-                rawTime = self.get_RawVector(self.TimeVector)[self.TimeVector]
+                rawTime = self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]
                 rawDF = pd.DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
                 rawDF[Key] = filteredDF[Key]
                 rawDF = rawDF.replace(np.nan,self.null)
@@ -3795,19 +3804,19 @@ class SimResult(object):
         
         # save contuation vector part
         if len(self.get_vectorTemplate()[self.get_vectorTemplate()==1]) > 0 :
-            if len(VectorData[self.get_vectorTemplate() == 1]) == len(self.checkContinue(self.keys[0])[self.keys[0]]) :
+            if len(VectorData[self.get_vectorTemplate() == 1]) == len(self.checkContinuations(self.keys[0])[self.keys[0]]) :
                 self.vectorsContinue[Key] = VectorData[self.get_vectorTemplate() == 1]
-            elif len(VectorData[self.get_vectorTemplate() == 1]) < len(self.checkContinue(self.keys[0])[self.keys[0]]) :
+            elif len(VectorData[self.get_vectorTemplate() == 1]) < len(self.checkContinuations(self.keys[0])[self.keys[0]]) :
                 # a filter is applied
-                filteredTime = self.get_Vector(self.TimeVector)[(self.TimeVector)][self.get_vectorTemplate()==1]
+                filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate()==1]
                 filteredDF = pd.DataFrame({'SelfTime':filteredTime,Key:VectorData[self.get_vectorTemplate()==1]}).set_index('SelfTime')
-                rawTime = self.checkContinue(self.TimeVector)[self.TimeVector]
+                rawTime = self.checkContinuations(self.get_TimeVector())[self.get_TimeVector()]
                 rawDF = pd.DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
                 rawDF[Key] = filteredDF[Key]
                 rawDF = rawDF.replace(np.nan,self.null)
                 newRawVector = rawDF[Key].to_numpy()
                 self.vectorsContinue[Key] = newRawVector
-            elif len(VectorData[self.get_vectorTemplate() == 1]) > len(self.checkContinue(self.keys[0])[self.keys[0]]) :
+            elif len(VectorData[self.get_vectorTemplate() == 1]) > len(self.checkContinuations(self.keys[0])[self.keys[0]]) :
                 raise ValueError('something went wrong')
         
         # if len(VectorData) > len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
@@ -4139,8 +4148,8 @@ class SimResult(object):
         returns True if the length of the given array or Key corresponds
         with the length of the simulation Keys.
         """
-        if self.is_Key(self.TimeVector) :
-            Vlen = len(self(self.TimeVector))
+        if self.is_Key(self.get_TimeVector()) :
+            Vlen = len(self(self.get_TimeVector()))
         elif len(self.keys) > 0 :
             Vlen = len( self( self.keys[0] ))
         else :
