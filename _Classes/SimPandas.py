@@ -1321,9 +1321,10 @@ class SimDataFrame(DataFrame) :
             SDFwriter.save()
         
     
+    def as_Pandas(self) :
+        return self.as_DataFrame()
     def to_Pandas(self) :
         return self.as_DataFrame()
-    
     def as_DataFrame(self) :
         return DataFrame( self )
     @property
@@ -1401,24 +1402,25 @@ class SimDataFrame(DataFrame) :
         selfGrouped = self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna)
         return SimDataFrame( data=selfGrouped , units=self.units , indexName=self.index.name , nameSeparator=self.nameSeparator ) 
 
-    def dayly(self,outBy='first') :
+    def daily(self,outBy='mean') :
         """
-        return a dataframe with a single row per year.
+        return a dataframe with a single row per day.
         index must be a date type.
         
         available gropuing calculations are:
-            first : keeps the fisrt row
-            last : keeps the last row
+            first : keeps the fisrt row per day
+            last : keeps the last row per day
             max : returns the maximum value per year
             min : returns the minimum value per year
             mean or avg : returns the average value per year
             std : returns the standard deviation per year
             sum : returns the summation of all the values per year
+            count : returns the number of rows per year
         """
         try :
             result = self.DF.groupby([self.index.year,self.index.month,self.index.day])
         except:
-            raise TypeError( 'index must be of date type.')
+            raise TypeError( 'index must be of datetime type.')
         if outBy == 'first' :
             result = result.first()
         elif outBy == 'last' :
@@ -1433,30 +1435,47 @@ class SimDataFrame(DataFrame) :
             result = result.std()
         elif outBy == 'sum' :
             result = result.sum()
+        elif outBy == 'count' :
+            result = result.count()
+        elif outBy in ['int','integrate','integral','cum','cumulative','representative'] :
+            result = self.integrate()
+            result = result.DF.groupby([self.index.year,self.index.month,self.index.day])
+            index = DataFrame( data=self.index , index=self.index ).groupby([self.index.year,self.index.month,self.index.day])
+            index = np.append(index.first().to_numpy() , index.last().to_numpy()[-1] )
+            deltaindex = np.diff( index )
+            if isinstance(self.index,DatetimeIndex) :
+                deltaindex = deltaindex.astype('timedelta64[s]').astype('float64')/60/60/24
+            values = result.first().append( result.last().iloc[-1] )
+            deltavalues = np.diff(values.transpose())
+            result = DataFrame( data=(deltavalues/deltaindex).transpose() , index=result.first().index , columns=self.columns ) 
+        else :
+            raise ValueError(" outBy parameter is not valid.")
+
             
         output = SimDataFrame( data=result , units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         output.index.names = ['YEAR','MONTH','DAY']
         output.index.name = 'YEAR_MONTH_DAY'
         return output
 
-    def monthly(self,outBy='first') :
+    def monthly(self,outBy='mean') :
         """
-        return a dataframe with a single row per year.
+        return a dataframe with a single row per month.
         index must be a date type.
         
         available gropuing calculations are:
-            first : keeps the fisrt row
-            last : keeps the last row
-            max : returns the maximum value per year
-            min : returns the minimum value per year
-            mean or avg : returns the average value per year
-            std : returns the standard deviation per year
-            sum : returns the summation of all the values per year
+            first : keeps the fisrt row per month
+            last : keeps the last row per month
+            max : returns the maximum value per month
+            min : returns the minimum value per month
+            mean or avg : returns the average value per month
+            std : returns the standard deviation per month
+            sum : returns the summation of all the values per month
+            count : returns the number of rows per month
         """
         try :
             result = self.DF.groupby([self.index.year,self.index.month])
         except:
-            raise TypeError( 'index must be of date type.')
+            raise TypeError( 'index must be of datetime type.')
         if outBy == 'first' :
             result = result.first()
         elif outBy == 'last' :
@@ -1471,13 +1490,29 @@ class SimDataFrame(DataFrame) :
             result = result.std()
         elif outBy == 'sum' :
             result = result.sum()
+        elif outBy == 'count' :
+            result = result.count()
+        elif outBy in ['int','integrate','integral','cum','cumulative','representative'] :
+            result = self.integrate()
+            result = result.DF.groupby([self.index.year,self.index.month])
+            index = DataFrame( data=self.index , index=self.index ).groupby([self.index.year,self.index.month])
+            index = np.append(index.first().to_numpy() , index.last().to_numpy()[-1] )
+            deltaindex = np.diff( index )
+            if isinstance(self.index,DatetimeIndex) :
+                deltaindex = deltaindex.astype('timedelta64[s]').astype('float64')/60/60/24
+            values = result.first().append( result.last().iloc[-1] )
+            deltavalues = np.diff(values.transpose())
+            result = DataFrame( data=(deltavalues/deltaindex).transpose() , index=result.first().index , columns=self.columns ) 
+        else :
+            raise ValueError(" outBy parameter is not valid.")
+
             
         output = SimDataFrame( data=result , units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         output.index.names = ['YEAR','MONTH']
         output.index.name = 'YEAR_MONTH'
         return output
     
-    def yearly(self,outBy='first') :
+    def yearly(self,outBy='mean') :
         """
         return a dataframe with a single row per year.
         index must be a date type.
@@ -1490,11 +1525,12 @@ class SimDataFrame(DataFrame) :
             mean or avg : returns the average value per year
             std : returns the standard deviation per year
             sum : returns the summation of all the values per year
+            count : returns the number of rows per year
         """
         try :
             result = self.DF.groupby(self.index.year)
         except:
-            raise TypeError( 'index must be of date type.')
+            raise TypeError( 'index must be of datetime type.')
         if outBy == 'first' :
             result = result.first()
         elif outBy == 'last' :
@@ -1509,6 +1545,21 @@ class SimDataFrame(DataFrame) :
             result = result.std()
         elif outBy == 'sum' :
             result = result.sum()
+        elif outBy == 'count' :
+            result = result.count()
+        elif outBy in ['int','integrate','integral','cum','cumulative','representative'] :
+            result = self.integrate()
+            result = result.DF.groupby(self.index.year)
+            index = DataFrame( data=self.index , index=self.index ).groupby(self.index.year)
+            index = np.append(index.first().to_numpy() , index.last().to_numpy()[-1] )
+            deltaindex = np.diff( index )
+            if isinstance(self.index,DatetimeIndex) :
+                deltaindex = deltaindex.astype('timedelta64[s]').astype('float64')/60/60/24
+            values = result.first().append( result.last().iloc[-1] )
+            deltavalues = np.diff(values.transpose())
+            result = DataFrame( data=(deltavalues/deltaindex).transpose() , index=result.first().index , columns=self.columns ) 
+        else :
+            raise ValueError(" outBy parameter is not valid.")
             
         output = SimDataFrame( data=result , units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         output.index.names = ['YEAR']
