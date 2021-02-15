@@ -2912,16 +2912,40 @@ class SimDataFrame(DataFrame) :
         else :
             return tuple( retTuple )
         
-    def integrate(self) :
+    def integrate(self,method='trapz') :
         """
         Calculates numerical integration, using trapezoidal method, 
-        of the columns values over the index values.
-        To calculate the trapezoidal method integration uses scipy.integrate
+        or constant value of the columns values over the index values.
+        
+        method parameter can be: 'trapz' to use trapezoidal method
+                                 'const' to constant vale multiplied 
+                                         by delta-index
         
         Returns a new SimDataFrame
         """
-        from scipy import integrate
-        result = self.copy()
-        for col in result.columns : 
-            
-            result[col] = result[col][1:] - result[col][:-1]
+        # result = self.copy()
+        
+        method=method.lower().strip()
+        
+        dt = np.diff( self.index ) 
+        dtUnits = self.indexUnits
+        if str(dt.dtype).startswith('timedelta') :
+            dt = dt.astype('timedelta64[s]').astype('float64')/60/60/24
+            dtUnits = 'DAYS'
+        
+        if method in ['trapz','trapeziod'] :
+            Vmin = np.minimum( self.DF[:-1].set_index(self.index[1:]) , self.DF[1:] ) 
+            Vmax = np.maximum( self.DF[:-1].set_index(self.index[1:]) , self.DF[1:] ) 
+            Cumulative = ( dt * Vmin.transpose() ).transpose() + ( dt * ( Vmax - Vmin ).transpose() / 2.0 ).transpose()
+        elif method in ['const','constant'] : 
+            Cumulative = ( dt * (self.DF[:-1]).transpose() ).transpose()
+        
+        newUnits = {}
+        for C,U in self.units.items() :
+            if len(U.split('/'))==2 and ( U.split('/')[-1].upper() == dtUnits or ( U.split('/')[-1].upper() in ['DAY','DAYS'] and dtUnits == 'DAYS' ) ) :
+                newUnits[C]=U.split('/')[0]
+            else :
+                newUnits[C]=U+'*'+dtUnits
+        
+        firstRow = DataFrame( dict(zip(self.columns,[0.0]*len(self.columns))) , index=['0']).set_index( DatetimeIndex([self.index[0]]) ) 
+        return SimDataFrame( np.cumsum( firstRow.append( Cumulative ) ) , units=newUnits )
