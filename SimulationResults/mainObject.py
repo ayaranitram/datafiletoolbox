@@ -2864,6 +2864,8 @@ class SimResult(object):
         if self.filter['filter'] is None :
             _verbose( self.speak,1," <get_Filter> filter is not yet defined")
             return np.array( [True]*len(self.get_Vector(self.keys[0])[self.keys[0]]) )
+        if len(self.filter['filter']) != len(self.vectorTemplate) :
+            self.redo_Filter()
         return self.filter['filter']
 
     def reset_Filter(self) :
