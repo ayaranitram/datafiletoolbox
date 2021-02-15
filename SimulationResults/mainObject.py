@@ -2054,11 +2054,11 @@ class SimResult(object):
             # # update self.savingFilter
             # self.set_savingFilter(Restart=True)
             
+            # recreate filter for this simulation (self), now considering the restarts
+            self.redo_Filter()
             # recreate TIME vector if TimeVector is DATE
             if TimeVector in ['DATE','DATES'] :
                 self.createTIME()
-            # recreate filter for this simulation (self), now considering the restarts
-            self.redo_Filter()
             # recalculate the total time for this simulation (self), now considering the restarts
             self.set_FieldTime()
         # print the restarts
@@ -2115,11 +2115,11 @@ class SimResult(object):
             # # update self.savingFilter
             # self.set_savingFilter(Continue=True)
             
+            # recreate filter for this simulation (self), now considering the continuations
+            self.redo_Filter()
             # recreate TIME vector if TimeVector is DATE
             if TimeVector in ['DATE','DATES'] :
                 self.createTIME()
-            # recreate filter for this simulation (self), now considering the continuations
-            self.redo_Filter()
             # recalculate the total time for this simulation (self), now considering the continuations
             self.set_FieldTime()
         # print the continuation
@@ -3389,7 +3389,7 @@ class SimResult(object):
             if self.filter['key'][-1] is not None :
                 _verbose( self.speak , 1 , " filter by key '" + self.filter['key'][-1] + "'")          
             for each in returnVectors :
-                returnVectors[each] = returnVectors[each][self.filter['filter']]
+                returnVectors[each] = returnVectors[each][self.get_Filter()]
             return returnVectors
 
 
@@ -3533,7 +3533,7 @@ class SimResult(object):
             if self.filter['key'][-1] is not None :
                 _verbose( self.speak , 1 , " filter by key '" + self.filter['key'][-1] + "'")          
             for each in returnVectors :
-                returnVectors[each] = returnVectors[each]#[self.filter['filter']]
+                returnVectors[each] = returnVectors[each]#[self.get_Filter()]
             return returnVectors
 
 
@@ -3576,7 +3576,7 @@ class SimResult(object):
             if self.filter['key'][-1] is not None :
                 _verbose( self.speak , 1 , " filter by key '" + self.filter['key'][-1] + "'")          
             for each in returnVectors :
-                returnVectors[each] = returnVectors[each]#[self.filter['filter']]
+                returnVectors[each] = returnVectors[each]#[self.get_Filter()]
             return returnVectors
 
 
