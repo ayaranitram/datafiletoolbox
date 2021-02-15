@@ -4847,7 +4847,7 @@ class SimResult(object):
                 for i in range(len(Vector)-1) :
                     dt = ( Time[i+1] - Time[i] ) 
                     if TimeKey in ['DATE','DATES'] :
-                        dt = dt.astype('timedelta64[D]').astype('float64')
+                        dt = dt.astype('timedelta64[s]').astype('float64')/60/60/24
                     dt = dt * ConvFactor
                     if Vector[i] <= Vector[i+1] :
                         Vmin = Vector[i]
