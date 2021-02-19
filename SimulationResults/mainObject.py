@@ -4261,12 +4261,21 @@ class SimResult(object):
                 if Key[0] == '-' :
                     if self.find_Keys( Key[1:] ) :
                         CalcData.append( self( Key[1:] ) * -1 )
-                        CalcUnits.append( self.get_Unit( Key[1:] ) )                        
+                        CalcUnits.append( self.get_Unit( Key[1:] ) )
+            elif self.is_Key( Key ) :
+                CalcData.append( self[[Key]] )
+                CalcUnits.append( self.get_Unit( Key ) )
+            elif self.is_Attribute( Key ) :
+                CalcData.append( self[[Key]] )
+                CalcUnits.append( self.get_Unit( Key ) )
             elif len(self.find_Keys( Key )) == 1 :
-                CalcData.append( self(Key).copy )
+                CalcData.append( self[Key] )
+                CalcUnits.append( self.get_Unit( Key ) )
+            elif len(self.find_Keys( Key )) > 1 :
+                CalcData.append( self[[Key]] )
                 CalcUnits.append( self.get_Unit( Key ) )
             else : # len(self.find_Keys( Key )) > 1 :
-                CalcData.append( self(Key).copy() )
+                CalcData.append( self[[Key]] )
                 CalcUnits.append( self.get_Unit( Key ) )
         
         # supported operators:
@@ -4381,10 +4390,11 @@ class SimResult(object):
         
         
         # prepare the data
+        i=0
         while i < len( CalculationTuple ) :
             
             # a string Key, must be interpreted
-            if type( CalculationTuple[i] ) is str and CalculationTuple[i] not in operators:
+            if type( CalculationTuple[i] ) is str and CalculationTuple[i] not in operators :
                 # exception for calculations staring with negative, like ( '-' , 'KEY1' , 'KEY2' , '+' )
                 if i == 0 and CalculationTuple[i] == '-' :
                     if len( CalculationTuple ) < 2 :
