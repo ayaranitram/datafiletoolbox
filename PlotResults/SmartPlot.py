@@ -578,8 +578,8 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
         X = convertUnit( X0 , FromU , ToU , PrintConversionPath=(SimResultObjects[s].get_Verbosity()==1) )
         time.sleep(timeout*5)
         
-        if Xdate == False and type(X) != np.ndarray :
-            if type(X) == list or type(X) == tuple :
+        if Xdate is False and type(X) != np.ndarray :
+            if type(X) is list or type(X) is tuple :
                 try :
                     X = np.array(X,dtype='float')
                 except :
@@ -677,7 +677,7 @@ def Plot( SimResultObjects=[] , Y_Keys=[] ,  X_Key='TIME' , X_Units=[], Y_Units=
                         if len( SimResultObjects ) > 1 and len( Y_Keys ) > 1 :
                             Ls = SeriesColors[s]
                         
-                        plotLines += Axis[ Yax  ].plot( X ,Y , linestyle=Ls , linewidth=Lw , color=Lc , marker=Mk , markersize=Ms , label=ThisLabel) 
+                        plotLines += Axis[ Yax ].plot( X ,Y , linestyle=Ls , linewidth=Lw , color=Lc , marker=Mk , markersize=Ms , label=ThisLabel) 
             
                         if Xdate :
                             # round to nearest years.
