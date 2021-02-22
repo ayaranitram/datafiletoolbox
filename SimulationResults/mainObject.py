@@ -3854,31 +3854,6 @@ class SimResult(object):
             except :
                 _verbose( self.speak , 2 , ' <set_Vector> not able to cast the VectorData ' + Key + ', kept as received: ' + DataType + '.' )
         
-        print('\n*********\nsaving Key: ',Key,'\n > vector len:',len(VectorData),'\n > rawVector len:',len(self.get_RawVector(self.keys[0])[self.keys[0]]),'\n > savingFilter len:',len(self.get_savingFilter()),'\n > filter len:',len(self.get_Filter()))
-        if len(self.get_savingFilter()) == len(self.get_Filter()) :
-            print(' < savingFilter filtered by Filter len:',len(self.get_savingFilter()[self.get_Filter()]))
-        else :
-            print(' ! savingFilter filtered by Filter not matching')
-        if len(VectorData) == len(self.get_Filter()) :
-            print(' < Vector filtered by Filter len:',len(VectorData[self.get_Filter()]))
-        else :
-            print(' ! Vector filtered by Filter not matching')
-        if len(VectorData) == len(self.get_savingFilter()) :
-            print(' < Vector filtered by savingFilter len:',len(VectorData[self.get_savingFilter()]))
-        else :
-            print(' ! Vector filtered by savingFilter not matching')
-        if  len(self.get_savingFilter()) == len(self.get_Filter()) :
-            print(' < savingFilter filtered by Filter len:',len(self.get_savingFilter()[self.get_Filter()]))
-            if len(VectorData) == len(self.get_savingFilter()[self.get_Filter()]) :
-                mixedFilter = self.get_savingFilter()[self.get_Filter()]
-                print(' < Vector filtered by savingFilter by Filter len:',len(VectorData[mixedFilter]))
-        else :
-            print(' ! Vector filtered by savingFilter by Filter not matching')
-        print(' < templateVector -1 len:',len(self.get_vectorTemplate()[self.get_vectorTemplate()==-1]))
-        print(' < templateVector  0 len:',len(self.get_vectorTemplate()[self.get_vectorTemplate()==0]))
-        print(' < templateVector  1 len:',len(self.get_vectorTemplate()[self.get_vectorTemplate()==1]))
-        print()
-        
         # save restart vector part
         if len(self.get_vectorTemplate()[self.get_vectorTemplate()==-1]) > 0 :
             if len(VectorData[self.get_vectorTemplate() == -1]) == len(self.checkRestarts(self.keys[0])[self.keys[0]]) :
@@ -3930,31 +3905,7 @@ class SimResult(object):
                 self.vectorsContinue[Key] = newRawVector
             elif len(VectorData[self.get_vectorTemplate() == 1]) > len(self.checkContinuations(self.keys[0])[self.keys[0]]) :
                 raise ValueError('something went wrong')
-        
-        # if len(VectorData) > len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
-        #     if len(self.get_vectorTemplate()[self.get_vectorTemplate()==-1]) > 0 :
-        #         self.vectorsRestart[Key] = VectorData[self.get_vectorTemplate() == -1]
-        #     self.vectors[Key] = VectorData[self.get_vectorTemplate() == 0]
-        #     if len(self.get_vectorTemplate()[self.get_vectorTemplate()==1]) > 0 :
-        #         self.vectorsContinue[Key] = VectorData[self.get_vectorTemplate() == 1]
-            # if len(VectorData) == len(self.get_savingFilter()[self.get_Filter()]) :
-            #     mixedFilter = self.get_savingFilter()[self.get_Filter()]
-            #     self.vectors[Key] = VectorData[mixedFilter]
-            # elif len(VectorData) == len(self.get_savingFilter()) :
-            #     self.vectors[Key] = VectorData[self.get_savingFilter()]
-            # elif len(VectorData) == len(self.get_Filter()) :
-            #     self.vectors[Key] = VectorData[self.get_Filter()]
-            # else :
-            #     raise ValueError(' <set_Vector> the size of the provided vector does not match the size of this simulation')
-        # elif len(VectorData) > len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
-        #     if len(self.get_vectorTemplate()[self.get_vectorTemplate()==-1]) > 0 :
-        #         self.vectorsRestart[Key] = VectorData[self.get_vectorTemplate() == -1]
-        #     self.vectors[Key] = VectorData[self.get_vectorTemplate() == 0]
-        #     if len(self.get_vectorTemplate()[self.get_vectorTemplate()==1]) > 0 :
-        #         self.vectorsContinue[Key] = VectorData[self.get_vectorTemplate() == 1]
-        # else :
-        #     self.vectors[Key] = VectorData#[self.get_savingFilter()]
-            
+   
         self.units[Key] = Units
         if not self.is_Key(Key) :
             self.add_Key(Key) 
@@ -3966,7 +3917,6 @@ class SimResult(object):
     def get_Overwrite(self) :
         return self.overwrite
 
-
     def stripUnits(self):
         for key in self.units :
             if self.units[key] is None :
@@ -3975,7 +3925,6 @@ class SimResult(object):
                 self.units[key] = self.units[key].strip('( )').strip("'").strip('"')
                 if 'DíA' in self.units[key] :
                     self.units[key] = self.units[key].replace('DíA','DAY')
-
 
     def fill_FieldBasics(self) :
         np.seterr(divide='ignore', invalid='ignore')
