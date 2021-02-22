@@ -1031,7 +1031,7 @@ class SimDataFrame(DataFrame) :
     pandas.DataFrame
     
     """
-    _metadata = ["units","speak","indexUnits","nameSeparator",'intersectionCharacter']
+    _metadata = ["units","speak","indexUnits","nameSeparator","intersectionCharacter","autoAppend"]
     
     def __init__(self , data=None , units=None , index=None , speak=False , *args , **kwargs) :
         self.units = None
@@ -1039,6 +1039,7 @@ class SimDataFrame(DataFrame) :
         self.indexUnits = None
         self.nameSeparator = None
         self.intersectionCharacter = '∩'
+        self.autoAppend = False
         
         indexInput = None
         # catch index keyword from input parameters
@@ -1073,9 +1074,11 @@ class SimDataFrame(DataFrame) :
         kwargs.pop('nameSeparator',None)
         kwargs.pop('units',None)
         kwargs.pop('speak',None)
+        kwargs.pop('autoAppend',None)
         # convert to pure Pandas
         if type(data) in [ SimDataFrame , SimSeries ] :
             self.nameSeparator = data.nameSeparator
+            self.autoAppend = data.autoAppend
             data = data.to_Pandas()
         super().__init__(data=data,index=index,*args, **kwargs)
 
@@ -1114,12 +1117,16 @@ class SimDataFrame(DataFrame) :
         # get separator for the column names, 'partA'+'separator'+'partB'
         if 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
             self.set_NameSeparator(kwargsB['nameSeparator'])
-        if self.nameSeparator in [None,'',False] and ':' in ' '.join(list(self.columns)) :
+        if self.nameSeparator in [None,'',False] and ':' in ' '.join(list(map(str,self.columns))) :
             self.nameSeparator = ':'
         if self.nameSeparator in [None,'',False] :
             self.nameSeparator = ''
         if self.nameSeparator is True :
             self.nameSeparator = ':'
+        
+        # set autoAppend if provided as argument
+        if 'autoAppend' in kwargsB and type(kwargsB['autoAppend']) is str and len(kwargsB['autoAppend'].strip())>0 :
+            self.autoAppend = bool(kwargsB['autoAppend'])
     
     # @property
     # def _constructor(self):
@@ -1774,8 +1781,11 @@ class SimDataFrame(DataFrame) :
                     selfC , otherC , newNames = self._CommonRename(other)
                     resultX = selfC + otherC
                     resultX.rename(columns=newNames,inplace=True)
-                    for col in newNames.values() :
-                        result[col] = resultX[col]
+                    if self.autoAppend :
+                        for col in newNames.values() :
+                            result[col] = resultX[col]
+                    else :
+                        result = resultX
                     
             return result
         
@@ -1812,8 +1822,11 @@ class SimDataFrame(DataFrame) :
                     selfC , otherC , newNames = self._CommonRename(other)
                     resultX = selfC - otherC
                     resultX.rename(columns=newNames,inplace=True)
-                    for col in newNames.values() :
-                        result[col] = resultX[col]
+                    if self.autoAppend :
+                        for col in newNames.values() :
+                            result[col] = resultX[col]
+                    else :
+                        result = resultX
             
             return result
         
@@ -1849,9 +1862,12 @@ class SimDataFrame(DataFrame) :
                     selfC , otherC , newNames = self._CommonRename(other)
                     resultX = selfC * otherC
                     resultX.rename(columns=newNames,inplace=True)
-                    for col in newNames.values() :
-                        if '∩' in col :
-                            result[col] = resultX[col]
+                    if self.autoAppend :
+                        for col in newNames.values() :
+                            if '∩' in col :
+                                result[col] = resultX[col]
+                    else :
+                        result = resultX
                         
             return result
         
@@ -1888,9 +1904,12 @@ class SimDataFrame(DataFrame) :
                     selfC , otherC , newNames = self._CommonRename(other)
                     resultX = selfC / otherC
                     resultX.rename(columns=newNames,inplace=True)
-                    for col in newNames.values() :
-                        if '∩' in col :
-                            result[col] = resultX[col]
+                    if self.autoAppend :
+                        for col in newNames.values() :
+                            if '∩' in col :
+                                result[col] = resultX[col]
+                    else :
+                        result = resultX
                         
             return result
         
@@ -1927,9 +1946,12 @@ class SimDataFrame(DataFrame) :
                     selfC , otherC , newNames = self._CommonRename(other)
                     resultX = selfC // otherC
                     resultX.rename(columns=newNames,inplace=True)
-                    for col in newNames.values() :
-                        if '∩' in col :
-                            result[col] = resultX[col]
+                    if self.autoAppend :
+                        for col in newNames.values() :
+                            if '∩' in col :
+                                result[col] = resultX[col]
+                    else :
+                        result = resultX
                         
             return result
         
@@ -1966,9 +1988,12 @@ class SimDataFrame(DataFrame) :
                     selfC , otherC , newNames = self._CommonRename(other)
                     resultX = selfC % otherC
                     resultX.rename(columns=newNames,inplace=True)
-                    for col in newNames.values() :
-                        if '∩' in col :
-                            result[col] = resultX[col]
+                    if self.autoAppend :
+                        for col in newNames.values() :
+                            if '∩' in col :
+                                result[col] = resultX[col]
+                    else :
+                        result = resultX
                         
             return result
         
@@ -2005,9 +2030,12 @@ class SimDataFrame(DataFrame) :
                     selfC , otherC , newNames = self._CommonRename(other)
                     resultX = selfC ** otherC
                     resultX.rename(columns=newNames,inplace=True)
-                    for col in newNames.values() :
-                        if '∩' in col :
-                            result[col] = resultX[col]
+                    if self.autoAppend :
+                        for col in newNames.values() :
+                            if '∩' in col :
+                                result[col] = resultX[col]
+                    else :
+                        result = resultX
                         
             return result
         
