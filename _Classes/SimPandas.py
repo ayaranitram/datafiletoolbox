@@ -1758,6 +1758,14 @@ class SimDataFrame(DataFrame) :
 
         return SDF1C , SDF2C , commonNames
     
+    def __contains__(self,item) : 
+        if item in self.columns :
+            return True
+        elif item in self.index :
+            return True
+        else :
+            return False
+    
     def __neg__(self) :
         result = -self.as_DataFrame()
         return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
