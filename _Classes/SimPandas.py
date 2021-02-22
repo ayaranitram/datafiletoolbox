@@ -17,7 +17,7 @@ import pandas as pd
 
 import fnmatch
 import warnings
-from pandas import Series , DataFrame , DatetimeIndex , Timestamp
+from pandas import Series , DataFrame , DatetimeIndex , Timestamp , Index
 import numpy as np
 import datetime as dt
 from warnings import warn
@@ -469,7 +469,7 @@ class SimSeries(Series) :
     
     def __neg__(self) :
         result = -self.as_Series()
-        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+        return SimSeries( data=result , units=self.units , indexUnits=self.indexUnits , dtype=self.dtype )
     
     def __add__(self,other) :
         # both SimSeries
@@ -496,7 +496,10 @@ class SimSeries(Series) :
         
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() + other
-        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+        return SimSeries( data=result , units=self.units , indexUnits=self.indexUnits , dtype=self.dtype )
+    
+    def __radd__(self,other) :
+        return self.__add__(other)
 
     def __sub__(self,other) :
         # both SimSeries
@@ -523,7 +526,10 @@ class SimSeries(Series) :
 
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() - other
-        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+        return SimSeries( data=result , units=self.units , indexUnits=self.indexUnits , dtype=self.dtype )
+    
+    def __rsub__(self,other) :
+        return self.__neg__().__add__(other)
     
     def __mul__(self,other) :
         # both SimSeries
@@ -554,7 +560,10 @@ class SimSeries(Series) :
         
         # let's Pandas deal with other types (types with no units), maintain units and dtype
         result = self.as_Series() * other
-        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+        return SimSeries( data=result , units=self.units , indexUnits=self.indexUnits , dtype=self.dtype )
+
+    def __rmul__(self,other) :
+        return self.__mul__(other)
 
     def __truediv__(self,other) :
         # both SimSeries
@@ -585,7 +594,10 @@ class SimSeries(Series) :
         
         # let's Pandas deal with other types (types with no units), maintain units and dtype
         result = self.as_Series() / other
-        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+        return SimSeries( data=result , units=self.units , indexUnits=self.indexUnits , dtype=self.dtype )
+    
+    def __rtruediv__(self,other) :
+        return self.__pow__(-1).__mul__(other)
 
     def __floordiv__(self,other) :
         # both SimSeries
@@ -616,7 +628,10 @@ class SimSeries(Series) :
         
         # let's Pandas deal with other types (types with no units), maintain units and dtype
         result = self.as_Series() // other
-        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+        return SimSeries( data=result , units=self.units , indexUnits=self.indexUnits , dtype=self.dtype )
+    
+    def __rfloordiv__(self,other) :
+        return self.__pow__(-1).__mul__(other).__int__()
     
     def __mod__(self,other) :
         # both SimSeries
@@ -643,7 +658,7 @@ class SimSeries(Series) :
         
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() % other
-        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+        return SimSeries( data=result , units=self.units , indexUnits=self.indexUnits , dtype=self.dtype )
 
     def __pow__(self,other) :
         # both SimSeries
@@ -674,7 +689,10 @@ class SimSeries(Series) :
         
         # let's Pandas deal with other types (types with no units), maintain units and dtype
         result = self.as_Series() // other
-        return SimSeries( data=result , units=self.units , dtype=self.dtype )
+        return SimSeries( data=result , units=self.units , indexUnits=self.indexUnits , dtype=self.dtype )
+
+    def __int__(self) :
+        return SimSeries( data=self.apply(lambda x: [int(y) for y in x] ) , units=self.units , indexUnits=self.indexUnits , dtype=self.dtype )
     
     def __repr__(self) -> str :
         """
