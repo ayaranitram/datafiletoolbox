@@ -748,9 +748,9 @@ class SimSeries(Series) :
             result = '\n'.join(result)
             return '\n' + result
     
-    def get_units(self) :
+    def get_units(self,items=None) :
         return self.get_Units()
-    def get_Units(self) :
+    def get_Units(self,items=None) :
         if type(self.units) is str and type(self.name) is str :
             uDic = { str(self.name) : self.units }
         elif type(self.units) is dict :
@@ -761,6 +761,11 @@ class SimSeries(Series) :
                 else :
                     uDic[each] = 'UNITLESS'
         return uDic
+    def get_UnitsString(self,items=None) :
+        if len(self.get_Units(items)) == 1 :
+            return list(self.get_Units(items).values())[0]
+        elif len(set( self.get_Units(items).values() )) == 1 :
+            return list(set( self.get_Units(items).values() ))[0]
 
     def copy(self) :
         if type(self.units) is dict :
