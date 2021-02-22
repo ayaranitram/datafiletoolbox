@@ -2476,7 +2476,7 @@ class SimDataFrame(DataFrame) :
                 objs += [each]
         return tuple(set(objs))
     
-    def renameRight(self) :
+    def renameRight(self,inplace=True) :
         if self.nameSeparator in [None,'',False] :
             raise ValueError("name separator must not be None")
         objs = {}
@@ -2487,9 +2487,12 @@ class SimDataFrame(DataFrame) :
                 # del(self.units[each])
             else :
                 objs[each] = each
-        self.rename(columns=objs,inplace=True)
+        if inplace :
+            self.rename(columns=objs,inplace=True)
+        else :
+            return self.rename(columns=objs,inplace=False)
     
-    def renameLeft(self) :
+    def renameLeft(self,inplace=True) :
         if self.nameSeparator in [None,'',False] :
             raise ValueError("name separator must not be None")
         objs = {}
@@ -2500,7 +2503,10 @@ class SimDataFrame(DataFrame) :
                 # del(self.units[each])
             else :
                 objs[each] = each
-        self.rename(columns=objs,inplace=True)
+        if inplace :
+            self.rename(columns=objs,inplace=True)
+        else :
+            return self.rename(columns=objs,inplace=False)
 
     @property
     def wells(self) :
