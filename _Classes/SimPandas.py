@@ -2734,6 +2734,11 @@ class SimDataFrame(DataFrame) :
                 for key in self.get_Keys(each) :
                     uDic[key] = self.units[key]
         return uDic
+    def get_UnitsString(self,items=None) :
+        if len(self.get_Units(items)) == 1 :
+            return list(self.get_Units(items).values())[0]
+        elif len(set( self.get_Units(items).values() )) == 1 :
+            return list(set( self.get_Units(items).values() ))[0]
     
     def keysByUnits(self) :
         """
