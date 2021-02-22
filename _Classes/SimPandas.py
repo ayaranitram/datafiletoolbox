@@ -2077,6 +2077,236 @@ class SimDataFrame(DataFrame) :
             result = self.as_DataFrame() ** other
             return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
     
+    def __int__(self) :
+        return SimDataFrame( data=self.apply(lambda x: [int(y) for y in x] ) , units=self.units , indexName=self.index.name , autoAppend=self.autoAppend )
+    
+    def mode(self,axis=0,**kwargs) :
+        if axis is None :
+            axis = 0
+        if axis == 0 :
+            return SimDataFrame( data=self.DF.mode(axis=axis,**kwargs) , units=self.units , speak=self.speak )
+        if axis == 1 :
+            newName = '.mode'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len( set( self.columns ) ) == 1 :
+                newName = list(set( self.columns ))[0]+newName
+            elif len( set( self.renameRight(False).columns ) ) == 1 :
+                newName = list(set( self.renameRight(False).columns ))[0]+newName
+            elif len( set( self.renameLeft(False).columns ) ) == 1 :
+                newName = list(set( self.renameLeft(False).columns ))[0]+newName
+            data=self.DF.mode(axis=axis,**kwargs)
+            data.columns=[newName]
+            data.name = newName
+            return SimDataFrame( data=data , units=units , speak=self.speak )
+
+    def median(self,axis=0,**kwargs) :
+        if axis is None :
+            axis = 0
+        if axis == 0 :
+            return SimDataFrame( data=self.DF.median(axis=axis,**kwargs) , units=self.units , speak=self.speak )
+        if axis == 1 :
+            newName = '.median'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len( set( self.columns ) ) == 1 :
+                newName = list(set( self.columns ))[0]+newName
+            elif len( set( self.renameRight(False).columns ) ) == 1 :
+                newName = list(set( self.renameRight(False).columns ))[0]+newName
+            elif len( set( self.renameLeft(False).columns ) ) == 1 :
+                newName = list(set( self.renameLeft(False).columns ))[0]+newName
+            data=self.DF.median(axis=axis,**kwargs)
+            data.columns=[newName]
+            data.name = newName
+            return SimDataFrame( data=data , units=units , speak=self.speak )
+
+    def avg(self,axis=0,**kwargs) :
+        return self.mean(axis=axis,**kwargs)
+    def average(self,axis=0,**kwargs) :
+        return self.mean(axis=axis,**kwargs)
+    def mean(self,axis=0,**kwargs) :
+        if axis is None :
+            axis = 0
+        if axis == 0 :
+            return SimDataFrame( data=self.DF.mean(axis=axis,**kwargs) , units=self.units , speak=self.speak )
+        if axis == 1 :
+            newName = '.mean'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len( set( self.columns ) ) == 1 :
+                newName = list(set( self.columns ))[0]+newName
+            elif len( set( self.renameRight(False).columns ) ) == 1 :
+                newName = list(set( self.renameRight(False).columns ))[0]+newName
+            elif len( set( self.renameLeft(False).columns ) ) == 1 :
+                newName = list(set( self.renameLeft(False).columns ))[0]+newName
+            data=self.DF.mean(axis=axis,**kwargs)
+            data.columns=[newName]
+            data.name = newName
+            return SimDataFrame( data=data , units=units , speak=self.speak )
+        
+    def max(self,axis=0,**kwargs) :
+        if axis is None :
+            axis = 0
+        if axis == 0 :
+            return SimDataFrame( data=self.DF.max(axis=axis,**kwargs) , units=self.units , speak=self.speak )
+        if axis == 1 :
+            newName = '.max'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len( set( self.columns ) ) == 1 :
+                newName = list(set( self.columns ))[0]+newName
+            elif len( set( self.renameRight(False).columns ) ) == 1 :
+                newName = list(set( self.renameRight(False).columns ))[0]+newName
+            elif len( set( self.renameLeft(False).columns ) ) == 1 :
+                newName = list(set( self.renameLeft(False).columns ))[0]+newName
+            data=self.DF.max(axis=axis,**kwargs)
+            data.columns=[newName]
+            data.name = newName
+            return SimDataFrame( data=data , units=units , speak=self.speak )
+    
+    def min(self,axis=0,**kwargs) :
+        if axis is None :
+            axis = 0
+        if axis == 0 :
+            return SimDataFrame( data=self.DF.min(axis=axis,**kwargs) , units=self.units , speak=self.speak )
+        if axis == 1 :
+            newName = '.min'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len( set( self.columns ) ) == 1 :
+                newName = list(set( self.columns ))[0]+newName
+            elif len( set( self.renameRight(False).columns ) ) == 1 :
+                newName = list(set( self.renameRight(False).columns ))[0]+newName
+            elif len( set( self.renameLeft(False).columns ) ) == 1 :
+                newName = list(set( self.renameLeft(False).columns ))[0]+newName
+            data=self.DF.min(axis=axis,**kwargs)
+            data.columns=[newName]
+            data.name = newName
+            return SimDataFrame( data=data , units=units , speak=self.speak )
+    
+    def sum(self,axis=0,**kwargs) :
+        if axis is None :
+            axis = 0
+        if axis == 0 :
+            return SimDataFrame( data=self.DF.sum(axis=axis,**kwargs) , units=self.units , speak=self.speak )
+        if axis == 1 :
+            newName = '.sum'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len( set( self.columns ) ) == 1 :
+                newName = list(set( self.columns ))[0]+newName
+            elif len( set( self.renameRight(False).columns ) ) == 1 :
+                newName = list(set( self.renameRight(False).columns ))[0]+newName
+            elif len( set( self.renameLeft(False).columns ) ) == 1 :
+                newName = list(set( self.renameLeft(False).columns ))[0]+newName
+            data=self.DF.sum(axis=axis,**kwargs)
+            data.columns=[newName]
+            data.name = newName
+            return SimDataFrame( data=data , units=units , speak=self.speak )
+
+    def std(self,axis=0,**kwargs) :
+        if axis is None :
+            axis = 0
+        if axis == 0 :
+            return SimDataFrame( data=self.DF.std(axis=axis,**kwargs) , units=self.units , speak=self.speak )
+        if axis == 1 :
+            newName = '.std'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len( set( self.columns ) ) == 1 :
+                newName = list(set( self.columns ))[0]+newName
+            elif len( set( self.renameRight(False).columns ) ) == 1 :
+                newName = list(set( self.renameRight(False).columns ))[0]+newName
+            elif len( set( self.renameLeft(False).columns ) ) == 1 :
+                newName = list(set( self.renameLeft(False).columns ))[0]+newName
+            data=self.DF.std(axis=axis,**kwargs)
+            data.columns=[newName]
+            data.name = newName
+            return SimDataFrame( data=data , units=units , speak=self.speak )
+    
+    def prod(self,axis=0,**kwargs) :
+        if axis is None :
+            axis = 0
+        if axis == 0 :
+            return SimDataFrame( data=self.DF.prod(axis=axis,**kwargs) , units=self.units , speak=self.speak )
+        if axis == 1 :
+            newName = '.prod'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len( set( self.columns ) ) == 1 :
+                newName = list(set( self.columns ))[0]+newName
+            elif len( set( self.renameRight(False).columns ) ) == 1 :
+                newName = list(set( self.renameRight(False).columns ))[0]+newName
+            elif len( set( self.renameLeft(False).columns ) ) == 1 :
+                newName = list(set( self.renameLeft(False).columns ))[0]+newName
+            data=self.DF.prod(axis=axis,**kwargs)
+            data.columns=[newName]
+            data.name = newName
+            return SimDataFrame( data=data , units=units , speak=self.speak )
+    
+    def var(self,axis=0,**kwargs) :
+        if axis is None :
+            axis = 0
+        if axis == 0 :
+            return SimDataFrame( data=self.DF.var(axis=axis,**kwargs) , units=self.units , speak=self.speak )
+        if axis == 1 :
+            newName = '.var'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len( set( self.columns ) ) == 1 :
+                newName = list(set( self.columns ))[0]+newName
+            elif len( set( self.renameRight(False).columns ) ) == 1 :
+                newName = list(set( self.renameRight(False).columns ))[0]+newName
+            elif len( set( self.renameLeft(False).columns ) ) == 1 :
+                newName = list(set( self.renameLeft(False).columns ))[0]+newName
+            data=self.DF.var(axis=axis,**kwargs)
+            data.columns=[newName]
+            data.name = newName
+            return SimDataFrame( data=data , units=units , speak=self.speak )
+    
+    def quantile(self,q=0.5,axis=0,**kwargs) :
+        if axis is None :
+            axis = 0
+        if axis == 0 :
+            return SimDataFrame( data=self.DF.quatile(q=q,axis=axis,**kwargs) , units=self.units , speak=self.speak )
+        if axis == 1 :
+            newName = '.Q'+str(q*100)
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len( set( self.columns ) ) == 1 :
+                newName = list(set( self.columns ))[0]+newName
+            elif len( set( self.renameRight(False).columns ) ) == 1 :
+                newName = list(set( self.renameRight(False).columns ))[0]+newName
+            elif len( set( self.renameLeft(False).columns ) ) == 1 :
+                newName = list(set( self.renameLeft(False).columns ))[0]+newName
+            data=self.DF.quantile(q=q,axis=axis,**kwargs)
+            data.columns=[newName]
+            data.name = newName
+            return SimDataFrame( data=data , units=units , speak=self.speak )
+    
+    def round(self,decimals=0,**kwargs) :
+        return SimDataFrame( data=self.DF.round(decimals=decimals,**kwargs) , units=self.units , speak=self.speak )
+    
     def copy(self,**kwargs) :
         return SimDataFrame( data=self.as_DataFrame().copy(True) , units=self.units.copy() , indexName=self.index.name )
     
