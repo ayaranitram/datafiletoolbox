@@ -2286,7 +2286,7 @@ class SimDataFrame(DataFrame) :
         if axis is None :
             axis = 0
         if axis == 0 :
-            return SimDataFrame( data=self.DF.quatile(q=q,axis=axis,**kwargs) , units=self.units , speak=self.speak )
+            return SimDataFrame( data=self.DF.quantile(q=q,axis=axis,**kwargs) , units=self.units , speak=self.speak )
         if axis == 1 :
             newName = '.Q'+str(q*100)
             if len(set(self.get_Units(self.columns).values())) == 1 :
