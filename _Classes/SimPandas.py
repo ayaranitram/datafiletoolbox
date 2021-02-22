@@ -1801,7 +1801,10 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() + other
-            return SimDataFrame( data=result , units=self.units , indexName=self.index.name )       
+            return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
+    
+    def __radd(self,other) :
+        return self.__add__(other)
     
     def __sub__(self,other) :
         # both are SimDataFrame
@@ -1844,6 +1847,9 @@ class SimDataFrame(DataFrame) :
             result = self.as_DataFrame() - other
             return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
     
+    def __rsub__(self,other) :
+        return self.__neg__().__add__(other)
+    
     def __mul__(self,other) :
         # both are SimDataFrame
         if isinstance(other, SimDataFrame) :
@@ -1885,6 +1891,9 @@ class SimDataFrame(DataFrame) :
         else :
             result = self.as_DataFrame() * other
             return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
+    
+    def __rmul__(self,other) :
+        return self.__mul__(other)
 
     def __truediv__(self,other) :
         # both are SimDataFrame
@@ -1927,6 +1936,9 @@ class SimDataFrame(DataFrame) :
         else :
             result = self.as_DataFrame() / other
             return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
+    
+    def __rtruediv__(self,other) :
+        return self.__pow__(-1).__mul__(other)
 
     def __floordiv__(self,other) :
         # both are SimDataFrame
@@ -1969,6 +1981,9 @@ class SimDataFrame(DataFrame) :
         else :
             result = self.as_DataFrame() // other
             return SimDataFrame( data=result , units=self.units , indexName=self.index.name )
+    
+    def __rfloordiv__(self,other) :
+        return self.__pow__(-1).__mul__(other).__int__()
         
     def __mod__(self,other) :
         # both are SimDataFrame
