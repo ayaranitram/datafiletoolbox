@@ -214,6 +214,28 @@ class SimSeries(Series) :
         # from datafiletoolbox.SimPandas.simframe import SimDataFrame
         return SimDataFrame
 
+    def __getitem__(self, key=None) :
+        if key is None :
+            return self
+        if type(key) is str and key.strip() == self.name and not key.strip() in self.index :
+            return self
+        else :
+            try :
+                return self.loc[key]
+            except :
+                try :
+                    return self.iloc[key]
+                except :
+                    raise KeyError("the requested Key is not a valid index or name")
+    
+    def __contains__(self,item) : 
+        if item in self.columns :
+            return True
+        elif item in self.index :
+            return True
+        else :
+            return False
+            
     def set_index(self,name) :
         self.set_indexName( name )
 
@@ -248,6 +270,10 @@ class SimSeries(Series) :
     @property
     def S(self) :
         return self.as_Series()
+    
+    @property
+    def columns(self) :
+        return Index( [self.name] )
     
     def to(self,units) :
         """
