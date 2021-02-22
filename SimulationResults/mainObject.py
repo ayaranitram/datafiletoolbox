@@ -4350,11 +4350,14 @@ class SimResult(object):
                 that means R = -B / C + A
                 
         Special operators can be used with Attributes or DataFrames:
-            '.sum' will return the total of the all the columns
-            '.avg' or 'mean' will return the average of the all the columns
+            '.sum' will return the total of the all the columns at each tstep
+            '.avg' or 'mean' will return the average of the all the columns at each tstep
             '.min' will return the minimum value of the all the columns at each tstep
             '.max' will return the maximum value of the all the columns at each tstep
-            '.std' will return the stardard deviation the all the columns 
+            '.mode' will return the mode value of the all the columns at each tstep
+            '.prod' will return the product value of the all the columns at each tstep
+            '.var' will return the variance value of the all the columns at each tstep
+            '.std' will return the stardard deviation the all the columns at each tstep
             
         To ignore 0 in these calculation, the variant of the operator
         with a '0' sufix can be used. i.e.:
@@ -4389,7 +4392,7 @@ class SimResult(object):
                 CalcUnits.append( self.get_Unit( Key ) )
         
         # supported operators:
-        operators = [' ','**','--','+-','-+','++','*-','/-','//','=','+','-','*','/','^','.sum','.avg','.mean','.min','.max','.std','.sum0','.avg0','.mean0','.min0','.max0','.std0']
+        operators = [' ','**','--','+-','-+','++','*-','/-','//','=','+','-','*','/','^','.sum','.avg','.mean','.min','.max','.mode','.prod','.var','.std','.sum0','.avg0','.mean0','.min0','.max0','.std0','.mode0','.prod0','.var0']
         
         # convert string to calculation tuple
         if type( CalculationTuple ) is str :
@@ -4455,7 +4458,7 @@ class SimResult(object):
         _verbose ( self.speak , 1 , "calculation simplified to " + str(CalculationTuple))
         
         
-        operators = ['+','-','*','//','/','^','.sum','.avg','.mean','.min','.max','.std','.sum0','.avg0','.mean0','.min0','.max0','.std0']
+        operators = ['+','-','*','//','/','^','.sum','.avg','.mean','.min','.max','.mode','.prod','.std','.var','.sum0','.avg0','.mean0','.min0','.max0','.mode0','.prod0','.std0','.var0']
         OK = True
         Missing = []
         WrongLen = []
@@ -4567,25 +4570,32 @@ class SimResult(object):
                     Stack.append( operandA // operandB )
                 elif CalculationTuple[i] == '^' :
                     Stack.append( operandA ** operandB )
-                elif CalculationTuple[i] in ['.sum','.avg','.mean','.min','.max','.std','.sum0','.avg0','.mean0','.min0','.max0','.std0'] :
+                elif CalculationTuple[i] in ['.sum','.avg','.mean','.min','.max','.mode','.prod','.std','.var','.sum0','.avg0','.mean0','.min0','.max0','.mode0','.prod0','.std0','.var0'] :
                     if isinstance( operandB , (DataFrame,Series) ) :
                         Stack.append( operandA )
                         
-                        if CalculationTuple[i][-1] == '0' : 
+                        if CalculationTuple[i].endswith('0') : 
                             operandB.replace(0,np.nan, inplace=True) # ignore zeros in the data
                             
-                        if CalculationTuple[i] == '.sum' :
+                        if CalculationTuple[i] in ['.sum','.sum0'] :
                             Stack.append( operandB.sum(axis=1) )
-                        elif CalculationTuple[i] in ['.avg','.mean'] :
+                        elif CalculationTuple[i] in ['.avg','.mean','.avg0','.mean0'] :
                             Stack.append( operandB.mean(axis=1) )
-                        elif CalculationTuple[i] == '.min' :
+                        elif CalculationTuple[i] in ['.min','.min0'] :
                             Stack.append( operandB.min(axis=1) )
-                        elif CalculationTuple[i] == '.max' :
+                        elif CalculationTuple[i] in ['.max','.max0'] :
                             Stack.append( operandB.max(axis=1) )
-                        elif CalculationTuple[i] == '.std' :
+                        elif CalculationTuple[i] == ['.mode','.mode0'] :
+                            Stack.append( operandB.mode(axis=1) )
+                        elif CalculationTuple[i] == ['.std','.std0'] :
                             Stack.append( operandB.std(axis=1) )
+                        elif CalculationTuple[i] == ['.prod','.prod0'] :
+                            Stack.append( operandB.prod(axis=1) )
+                        elif CalculationTuple[i] == ['.var','.var0'] :
+                            Stack.append( operandB.var(axis=1) )
+                        
                             
-                        if CalculationTuple[i][-1] == '0' : 
+                        if CalculationTuple[i].endswith('0') : 
                             Stack[-1].replace(np.nan,0, inplace=True) # replace NaN by zeros in the data
                         
         Result = Stack[-1]
@@ -4620,138 +4630,6 @@ class SimResult(object):
         else :  
             return Result
         
-        
-
-            #     Units.append( self.get_Unit( CalculationTuple[i] ) )
-            #     NextUnit = Units[-1] # units 
-            #     i += 1 
-            
-            # else :
-            # # if i<len(CalculationTuple) and type( CalculationTuple[i] ) is str and CalculationTuple[i] in operators :
-            #     # appliying calculation
-            #     if CalcData[i] == '+' :
-            #         if CalcUnits[i-2] == CalcUnits[i-1] :
-            #             CalcData[i-2] = CalcData[i-2] + CalcData[i-2]
-            #         elif CalcUnits[i-2] is None :
-            #             CalcData[i-2] = CalcData[i-2] + CalcData[i-2]
-            #             CalcUnits[i-2] = CalcUnits[i-1]
-            #         elif CalcUnits[i-1] is None :
-            #             CalcData[i-2] = CalcData[i-2] + CalcData[i-2] 
-            #         elif convertibleUnits( CalcUnits[i-1] , CalcUnits[i-2] ) :
-            #             CalcData[i-2] = CalcData[i-2] + convertUnit(CalcData[i-1], CalcUnits[i-1] , CalcUnits[i-2] , PrintConversionPath=(self.speak==1))
-            #         else :
-            #             # CalcUnit = CalcUnit + '+' + NextUnit
-            #             Result = Result + Next
-    
-            #     elif CalculationTuple[i] == '-' :
-            #         if CalcUnit == NextUnit or NextUnit is None :
-            #             Result = Result - Next
-            #         elif convertibleUnits( NextUnit , CalcUnit) :
-            #             Result = Result - convertUnit(Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1))
-            #         else :
-            #             CalcUnit = CalcUnit + '-' + NextUnit
-            #             Result = Result - Next
-                        
-            #     elif CalculationTuple[i] == '*' :
-            #         if CalcUnit == NextUnit or NextUnit is None :
-            #             Result = Result * Next
-            #         elif convertibleUnits( NextUnit , CalcUnit) :
-            #             Result = Result * convertUnit(Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1))
-            #         else :
-            #             CalcUnit = CalcUnit + '*' + NextUnit
-            #             Result = Result * Next
-                    
-            #     elif CalculationTuple[i] == '/' :
-            #         if CalcUnit == NextUnit or NextUnit is None :
-            #             Result = np.divide ( Result , Next )
-            #         elif convertibleUnits( NextUnit , CalcUnit) :
-            #             Result = np.divide ( Result , convertUnit(Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1)) )
-                        
-            #         else :
-            #             CalcUnit = CalcUnit + '/' + NextUnit
-            #             Result = np.divide( Result , Next )
-            #         Result = np.nan_to_num( Result, nan=0.0 , posinf=0.0 , neginf=0.0 )
-                    
-            #     elif CalculationTuple[i] == '^' :
-            #         if CalcUnit == NextUnit or NextUnit is None :
-            #             Result = Result ** Next
-            #         elif convertibleUnits( NextUnit , CalcUnit) :
-            #             Result = Result ** convertUnit( Next, NextUnit , CalcUnit , PrintConversionPath=(self.speak==1) )
-            #         else :
-            #             CalcUnit = CalcUnit + '^' + NextUnit
-            #             Result = Result ** Next
-                
-            #     elif CalculationTuple[i] in ['sum','avg','mean','min','max','std','sum0','avg0','mean0','min0','max0','std0'] :
-            #         if type( Next ) is DataFrame :
-            #             if CalculationTuple[i][-1] == '0' : 
-            #                 Next.replace(0,np.nan, inplace=True) #ignore zeros in the data
-            #                 CalculationTuple[i] = CalculationTuple[i][:-1]
-            #             if CalculationTuple[i] == 'sum' :
-            #                 Next = Next.sum(axis=1).to_numpy()
-            #             elif CalculationTuple[i] in ['avg','mean'] :
-            #                 Next = Next.mean(axis=1).to_numpy()
-            #             elif CalculationTuple[i] == 'min' :
-            #                 Next = Next.min(axis=1).to_numpy()
-            #             elif CalculationTuple[i] == 'max' :
-            #                 Next = Next.max(axis=1).to_numpy()
-            #             elif CalculationTuple[i] == 'std' :
-            #                 Next = Next.std(axis=1).to_numpy()
-            #             if i == 1 : 
-            #                 Result = Next.copy()
-            #         else :
-            #             _verbose( self.speak , 3 , 'the operator ' + CalculationTuple[i] + ' was ignored because the previous operand is not an Attribute or a DataFrame' )
-            #     i += 1
-                
-                
-            # if i<len(CalculationTuple) and ( type( CalculationTuple[i] ) is np.ndarray or type( CalculationTuple[i] ) is int or type( CalculationTuple[i] ) is float ) :
-            #     # numbers or arrays
-            #     Next = CalculationTuple[i]
-            #     Units.append(None)
-            #     NextUnit = Units[-1] # units 
-            #     i += 1
-
-        # check resulting units
-        # SameUnits = []
-        # for each in Units :
-        #     if each != None :
-        #         SameUnits.append(each)
-        # if len( set( SameUnits ) ) == 0 :
-        #     Units = 'DIMENSIONLESS'
-        # elif len( set( SameUnits ) ) == 1 :
-        #     Units = SameUnits[0]
-        # else :
-        #     # Units = SameUnits[0]
-        #     # for i in range(1,len( SameUnits )) :
-        #     #     Units.append( CalculationTuple[2*i-1] )
-        #     #     Units.append( SameUnits[i] )
-        #     Units = str(Units)
-            
-        # if ResultUnits is None :
-        #     ResultUnits = Units
-        # elif ResultUnits == Units :
-        #     # OK
-        #     pass
-        # elif ResultUnits == CalcUnit :
-        #     # OK
-        #     Units = CalcUnit
-        # elif convertibleUnits( CalcUnit , ResultUnits ) :
-        #     # OK
-        #     Result = convertUnit( Result , CalcUnit , ResultUnits , PrintConversionPath=(self.speak==1) )
-        # else :
-        #     print( 'MESSAGE: The provided units are not equal to the calculated units:\n    ' + str(ResultUnits) + ' != ' + Units  )
-        
-        # self.set_Vector( str( CalculationTuple ) , Result , ResultUnits , 'float' , True )
-        
-        # # a name was given, link the data to the new name
-        # if ResultName != str( CalculationTuple ) :
-        #     self.vectors[ResultName] = self.vectors[ str( CalculationTuple ) ]
-        #     self.units[ResultName] = self.units[ str( CalculationTuple ) ]
-        #     if not self.is_Key(ResultName) :
-        #         self.add_Key(ResultName) 
-        #     self.get_Attributes(reload=True)
-            
-        # return { ResultName : Result }
-
 
     def createDATES(self) :
         if self.is_Key('TIME') is True and self.start is not None :
