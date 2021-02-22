@@ -28,6 +28,7 @@ from matplotlib.colors import is_color_like
 from datetime import timedelta
 
 import pandas as pd
+from pandas import Series, DataFrame
 import numpy as np
 import fnmatch
 import random
@@ -535,7 +536,7 @@ class SimResult(object):
                         Value , Units = [ Value[0] ] * len(self.fieldtime[2]) , Value[1]
                     elif type(Value[1]) is None :
                         Value , Units = [ Value[0] ] * len(self.fieldtime[2]) , 'DIMENSIONLESS'
-                elif type(Value[0]) is pd.core.frame.DataFrame :
+                elif type(Value[0]) is DataFrame :
                     if type(Value[1]) is str :
                         Value , Units = Value[0] , Value[1]
                     elif type(Value[1]) is list or type(Value[1]) is tuple :
@@ -578,14 +579,20 @@ class SimResult(object):
                     return None
                 
         elif type(Value) is list or type(Value) is tuple :
+            if self.is_Attribute(Key) and not self.is_Key(Key) :
+                raise TypeError("The key '" + Key + "' is an attribute! Value must be a DataFrame")
             Value = np.array(Value)
         
         elif type(Value) is int or type(Value) is float :
+            if self.is_Attribute(Key) and not self.is_Key(Key) :
+                raise TypeError("The key '" + Key + "' is an attribute! Value must be a DataFrame")
             Value , Units = [ Value ] * len(self.fieldtime[2]) , 'DIMENSIONLESS'
             
         if type(Value) is np.ndarray :
+            if self.is_Attribute(Key) and not self.is_Key(Key) :
+                raise TypeError("The key '" + Key + "' is an attribute! Value must be a DataFrame")
             if len(Value) != len(self.fieldtime[2]) :
-                raise TypeError(" the 'Value' array must have the exact same length of the simulation vectors: " + str(len(self.fieldtime[2])) )
+                raise ValueError(" the 'Value' array must have the exact same length of the simulation vectors: " + str(len(self.fieldtime[2])) )
             if type(Units) is str :
                 Units = Units.strip('( )')
             elif Units is None :
@@ -597,7 +604,7 @@ class SimResult(object):
             else :
                 _verbose(self.speak , 2 , " the 'Units' string is not recognized." )
         
-        if type(Value) is pd.core.frame.DataFrame :
+        elif type(Value) is DataFrame :
             if len(Value) == len(self.fieldtime[2]) :
                 for Col in Value.columns :
                     if '!' in Col :
@@ -608,7 +615,10 @@ class SimResult(object):
                         ThisUnits = 'DIMENSIONLESS'
                         
                     if ':' in Col :
-                        ThisMain , ThisItem = Col.split(':')[0].strip() , Col.split(':')[1].strip()
+                        if Key is None :
+                            ThisMain , ThisItem = Col.split(':')[0].strip() , Col.split(':')[1].strip()
+                        else :
+                            ThisMain , ThisItem = Key , Col.split(':')[1].strip()
                     else :
                         ThisMain , ThisItem = Key , Col.strip()
                     
@@ -625,7 +635,77 @@ class SimResult(object):
                     self.set_Vector( ThisKey , Value[Col].to_numpy() , ThisUnits , DataType='auto' , overwrite=True)
                 return None
             else :
-                _verbose( self.speak , 3 , "the lengh of the DataFrame must coincide with the number of steps of this simulation results.")
+                raise ValueError("the lengh of the DataFrame must coincide with the number of steps of this simulation results.")
+        
+        elif type(Value) is Series :
+            if len(Value) == len(self.fieldtime[2]) :
+                Col = Value.name
+                if '!' in Col :
+                    Col , ThisUnits = Col.split('!')[0].strip() , Col.split('!')[1].strip()
+                elif Units is not None :
+                    ThisUnits = Units
+                else :
+                    ThisUnits = 'DIMENSIONLESS'
+                    
+                if ':' in Col :
+                    ThisMain , ThisItem = Key , Col.split(':')[1].strip()
+                else :
+                    ThisMain , ThisItem = Key , Col.strip()
+                
+                if Key is None :
+                    ThisKey = Col
+                elif self.is_Key(Col) :
+                    ThisMain = Key
+                
+                if ThisItem == '' :
+                    ThisKey = Key
+                elif ThisItem == Key :
+                    ThisKey = Key
+                else :
+                    ThisKey = ThisMain + ':' + ThisItem
+
+                self.set_Vector( Key , Value.to_numpy() , ThisUnits , DataType='auto' , overwrite=True)
+                return None
+            else :
+                raise ValueError("the lengh of the Series must coincide with the number of steps of this simulation results.")
+            
+        elif type(Value) in [ SimSeries , SimDataFrame ] :
+            if len(Value) == len(self.fieldtime[2]) :
+                for Col in Value.columns :
+                    if Value.get_Units(Col) is not None :
+                        if type(Value.get_Units(Col)) is dict :
+                            ThisUnits = Value.get_Units(Col)[Col]
+                        elif type(Value.get_Units(Col)) is str :
+                            ThisUnits = Value.get_Units(Col)
+                        else :
+                            ThisUnits = str(Value.get_Units(Col))
+                    else :
+                        ThisUnits = 'DIMENSIONLESS'
+                        
+                    if ':' in Col :
+                        if Key is not None : # if Value.intersectionCharacter in Col :
+                            ThisMain , ThisItem = Key , Col.split(':')[1].strip()
+                        else :
+                            ThisMain , ThisItem = Col.split(':')[0].strip() , Col.split(':')[1].strip()                       
+                    else :
+                        ThisMain , ThisItem = Key , Col.strip()
+                    
+                    if Key is None :
+                        ThisKey = Col
+                    elif self.is_Key(Col) :
+                        ThisMain = Key
+                    
+                    if ThisItem == '' :
+                        ThisKey = Key
+                    elif ThisItem == Key :
+                        ThisKey = Key
+                    else :
+                        ThisKey = ThisMain + ':' + ThisItem
+
+                    self.set_Vector( ThisKey , Value[Col].to_numpy() , ThisUnits , DataType='auto' , overwrite=True)
+                return None
+            else :
+                raise ValueError("the lengh of the SimDataFrame or SimSeries must coincide with the number of steps of this simulation results.")
 
         self.set_Vector( Key , Value , Units , DataType='auto' , overwrite=True)
     
@@ -771,7 +851,7 @@ class SimResult(object):
         # if self.is_Attribute('WWIR') :
         #     desc['waterInjectors'] = [ len( self.get_WaterInjectors() ) , '' , '' ]
         
-        return pd.DataFrame( data=desc , index=Index)
+        return DataFrame( data=desc , index=Index)
     
     def get_WaterInjectors( self , reload=False ) :
         """
@@ -1961,8 +2041,8 @@ class SimResult(object):
         
         if force is True or min(KeyTime) > self.fieldtime[0] or max(KeyTime) < self.fieldtime[1] :
             _verbose(self.speak, 1 , ' <fillZeros> the received vectors starts on TIME=' + str( KeyTime[0] ) + ', it will be filled to start from TIME' + str(self.fieldtime[0]) +  '.')
-            OtherDT = pd.DataFrame( data= { 'vector' : np.array(KeyVector,dtype='float') } , index= np.array(KeyTime,dtype='float') )
-            FieldDT = pd.DataFrame( data= { 'vector' : np.array( [0.0]*len(self.fieldtime[2]) ) } , index= np.array(self.fieldtime[2],dtype='float') )
+            OtherDT = DataFrame( data= { 'vector' : np.array(KeyVector,dtype='float') } , index= np.array(KeyTime,dtype='float') )
+            FieldDT = DataFrame( data= { 'vector' : np.array( [0.0]*len(self.fieldtime[2]) ) } , index= np.array(self.fieldtime[2],dtype='float') )
             CompleteDT = OtherDT + FieldDT 
             CompleteDT.interpolate(axis=0,inplace=True)
             CompleteDT.fillna(value=0.0,inplace=True)
@@ -3636,6 +3716,7 @@ class SimResult(object):
         else :
             overwrite = False
         
+        # validating Key
         if type(Key) is str :
             Key = Key.strip()
         else :
@@ -3643,7 +3724,8 @@ class SimResult(object):
         
         if Key in self.vectors and overwrite is False :
             raise OverwrittingError(' <set_Vector> the Key ' + Key + ' already exists in the dataset and overwrite parameter is set to False. Set overwrite=True to avoid this message and change the DataVector.')
-            
+        
+        # validating VectorData
         if type(VectorData) is list or type(VectorData) is tuple :
             if len(VectorData) == 0 :
                 raise TypeError(' <set_Vector> VectorData must not be empty')
@@ -3661,9 +3743,28 @@ class SimResult(object):
                     _verbose( self.speak , 1 , Key + ' <set_Vector> vector detected as numpy.array of dtype ' + DataType + '.' )
             if VectorData.size == 0 :
                 raise TypeError(' <set_Vector> VectorData must not be empty')
+        elif isinstance(VectorData,(Series)) :
+            if DataType == 'auto' :
+                if 'int' in str(VectorData.dtype) :
+                    DataType = 'int'
+                    _verbose( self.speak , 1 , Key + ' <set_Vector> vector detected as pandas.series of dtype ' + DataType + '.' )
+                elif 'float' in str(VectorData.dtype) :
+                    DataType = 'float'
+                    _verbose( self.speak , 1 , Key + ' <set_Vector> vector detected as pandas.series of dtype ' + DataType + '.' )
+                elif 'datetime' in str(VectorData.dtype) :
+                    DataType = 'datetime'
+                    _verbose( self.speak , 1 , Key + ' <set_Vector> vector detected as pandas.series of dtype ' + DataType + '.' )
+            if VectorData.size == 0 :
+                raise TypeError(' <set_Vector> VectorData must not be empty')
+        elif isinstance(VectorData,(DataFrame)) :
+            if VectorData.size == 0 :
+                raise TypeError(' <set_Vector> VectorData must not be empty')
+            else :
+                return self.__setitem__( Key, VectorData , Units )
         else :
-            raise TypeError(' <set_Vector> VectorData must be a list, tuple or numpy.ndarray. Received ' + str(type(VectorData)))
+            raise TypeError(' <set_Vector> VectorData must be a list, tuple, numpy.ndarray, pandas Series or DataFrame, SimSeries or SimDataFrame. Received ' + str(type(VectorData)))
         
+        # validating Units
         if type(Units) is str :
             Units = Units.strip('( )')
             if unit.isUnit(Units) :
@@ -3676,13 +3777,22 @@ class SimResult(object):
                 Units = Units.replace('/ ','/').replace(' /','/')
             else :
                 _verbose( self.speak , 3 , " <set_Vector>\nIMPORTANT: the selected Units: '" + Units +"' are not recognized by the programm and will not be able to convert this Vector " + str(Key) +' into other units.' )
+        elif type(Units) is dict :
+            if isinstance(VectorData,(SimSeries)) :
+                Units = VectorData.get_UnitsString()
+            elif Key in Units :
+                Units = Units[Key]
+            else :
+                raise TypeError(' <set_Vector> Units must be a string')
+        elif Units is None and isinstance(VectorData,(SimSeries,SimDataFrame)) :
+            pass # units are included in the SimDataFrame or SimSeries
         else :
             raise TypeError(' <set_Vector> Units must be a string')
         
         if DataType == 'auto' :
             _verbose( self.speak , 1 , ' <set_Vector> guessing the data type of the VectorData ' + Key )
             done = False
-            if Key.upper() == 'DATE' or Key.upper() == 'DATES' or '/' in str(VectorData) :
+            if Key.upper() == 'DATE' or Key.upper() == 'DATES' :
                 try :
                     VectorData = np.datetime64( pd.to_datetime( VectorData ) , 's' )
                     _verbose( self.speak , 1 , Key + ' <set_Vector> vector casted as datetime.' )
@@ -3776,9 +3886,9 @@ class SimResult(object):
             elif len(VectorData[self.get_vectorTemplate() == -1]) < len(self.checkRestarts(self.keys[0])[self.keys[0]]) :
                 # a filter is applied
                 filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate()==-1]
-                filteredDF = pd.DataFrame({'SelfTime':filteredTime,Key:VectorData[self.get_vectorTemplate()==-1]}).set_index('SelfTime')
+                filteredDF = DataFrame({'SelfTime':filteredTime,Key:VectorData[self.get_vectorTemplate()==-1]}).set_index('SelfTime')
                 rawTime = self.checkRestarts(self.get_TimeVector())[self.get_TimeVector()]
-                rawDF = pd.DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
+                rawDF = DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
                 rawDF[Key] = filteredDF[Key]
                 rawDF = rawDF.replace(np.nan,self.null)
                 newRawVector = rawDF[Key].to_numpy()
@@ -3794,9 +3904,9 @@ class SimResult(object):
             elif len(VectorData[self.get_vectorTemplate() == 0]) < len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
                 # a filter is applied
                 filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate()==0]
-                filteredDF = pd.DataFrame({'SelfTime':filteredTime,Key:VectorData[self.get_vectorTemplate()==0]}).set_index('SelfTime')
+                filteredDF = DataFrame({'SelfTime':filteredTime,Key:VectorData[self.get_vectorTemplate()==0]}).set_index('SelfTime')
                 rawTime = self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]
-                rawDF = pd.DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
+                rawDF = DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
                 rawDF[Key] = filteredDF[Key]
                 rawDF = rawDF.replace(np.nan,self.null)
                 newRawVector = rawDF[Key].to_numpy()
@@ -3811,9 +3921,9 @@ class SimResult(object):
             elif len(VectorData[self.get_vectorTemplate() == 1]) < len(self.checkContinuations(self.keys[0])[self.keys[0]]) :
                 # a filter is applied
                 filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate()==1]
-                filteredDF = pd.DataFrame({'SelfTime':filteredTime,Key:VectorData[self.get_vectorTemplate()==1]}).set_index('SelfTime')
+                filteredDF = DataFrame({'SelfTime':filteredTime,Key:VectorData[self.get_vectorTemplate()==1]}).set_index('SelfTime')
                 rawTime = self.checkContinuations(self.get_TimeVector())[self.get_TimeVector()]
-                rawDF = pd.DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
+                rawDF = DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
                 rawDF[Key] = filteredDF[Key]
                 rawDF = rawDF.replace(np.nan,self.null)
                 newRawVector = rawDF[Key].to_numpy()
@@ -4279,7 +4389,7 @@ class SimResult(object):
                 CalcUnits.append( self.get_Unit( Key ) )
         
         # supported operators:
-        operators = [' ','**','--','+-','-+','++','*-','/-','=','+','-','*','/','^','.sum','.avg','.mean','.min','.max','.std','.sum0','.avg0','.mean0','.min0','.max0','.std0']
+        operators = [' ','**','--','+-','-+','++','*-','/-','//','=','+','-','*','/','^','.sum','.avg','.mean','.min','.max','.std','.sum0','.avg0','.mean0','.min0','.max0','.std0']
         
         # convert string to calculation tuple
         if type( CalculationTuple ) is str :
@@ -4345,13 +4455,16 @@ class SimResult(object):
         _verbose ( self.speak , 1 , "calculation simplified to " + str(CalculationTuple))
         
         
-        operators = ['+','-','*','/','^','.sum','.avg','.mean','.min','.max','.std','.sum0','.avg0','.mean0','.min0','.max0','.std0']
+        operators = ['+','-','*','//','/','^','.sum','.avg','.mean','.min','.max','.std','.sum0','.avg0','.mean0','.min0','.max0','.std0']
         OK = True
         Missing = []
         WrongLen = []
         for Req in CalculationTuple :
             if type(Req) is str :
-                if len( self.find_Keys( Req )) > 0 :
+                if Req in operators :
+                    # is an operand ... OK
+                    pass
+                elif len( self.find_Keys( Req )) > 0 :
                     # is a vector or table with values... OK
                     for R in self.find_Keys( Req ) :
                         if not self.checkVectorLength( R ) :
@@ -4365,13 +4478,10 @@ class SimResult(object):
                             if not self.checkVectorLength( R ) :
                                 WrongLen.append(R)
                                 OK = False
-                elif Req in operators :
-                    # is an operand ... OK
-                    pass
                 else :
                     OK = False
                     Missing.append(Req)
-            elif type(Req) is int or type(Req) is float :
+            elif type(Req) in [int,float] :
                 # is an int or float 
                 pass
             elif type(Req) is np.ndarray :
@@ -4395,23 +4505,17 @@ class SimResult(object):
             
             # a string Key, must be interpreted
             if type( CalculationTuple[i] ) is str and CalculationTuple[i] not in operators :
-                # exception for calculations staring with negative, like ( '-' , 'KEY1' , 'KEY2' , '+' )
-                if i == 0 and CalculationTuple[i] == '-' :
-                    if len( CalculationTuple ) < 2 :
-                        return None
-                    CalcData.append( -1 )
-                    CalcUnits.append( None )
-                    firstNeg = True
-                    i += 1
-                    continue
-                    
-                else :
-                    _getValues( CalculationTuple[i] )
+               _getValues( CalculationTuple[i] )
             
             # string operator
             elif type( CalculationTuple[i] ) is str and CalculationTuple[i] in operators:
-                CalcData.append( CalculationTuple[i]) 
-                CalcUnits.append( None )
+                if i == 0 and CalculationTuple[i] == '-' :
+                    CalcData.append( -1 )
+                    CalcUnits.append( None )
+                    firstNeg = True
+                else :
+                    CalcData.append( CalculationTuple[i]) 
+                    CalcUnits.append( None )
                 
             # something else, a number, array or table
             else :
@@ -4424,67 +4528,99 @@ class SimResult(object):
             
             i += 1
                         
-                    
-        
+
         # initialize calculation with first item
-        i = 0
-        Result = CalcData[i]
-        Units = CalcUnits[i]
-        
-        # if type( CalculationTuple[i] ) is str :
-            
-        #     if CalculationTuple[i] == '-' :
-        #         if len( CalculationTuple ) >= 2 :
-        #             i += 1
-        #             if type( CalculationTuple[i] ) is str :
-        #                 if len(self.find_Keys( CalculationTuple[i] )) == 0 :
-        #                     if CalculationTuple[i][0] == '-' :
-        #                         if self.find_Keys( CalculationTuple[i][1:] ) :
-        #                             Result = self( CalculationTuple[i][1:] ) * -1
-        #                             Units = [ self.get_Unit( CalculationTuple[i][1:] ) ]
-        #                 else :
-        #                     Result = self(CalculationTuple[i])
-        #                     Units = [ self.get_Unit( CalculationTuple[i] ) ]
-        #             else :
-        #                 Result = CalculationTuple[i]
-        #                 Units = [None]
-        #             Result = Result * -1
-                    
-        #     elif len(self.find_Keys( CalculationTuple[i] )) == 0 :
-        #         if CalculationTuple[i][0] == '-' :
-        #             if self.find_Keys( CalculationTuple[i][1:] ) :
-        #                 Result = self( CalculationTuple[i][1:] ) * -1
-        #                 Units = [ self.get_Unit( CalculationTuple[i][1:] ) ]
-        #     else :
-        #         Result = self(CalculationTuple[i])
-        #         Units = [ self.get_Unit( CalculationTuple[i] ) ]
-        # else :
-        #     Result = CalculationTuple[i]
-        #     Units = [None]
-        # CalcUnit = Units[-1] # units 
-        Next = Result.copy()
-        NextUnit = Units[-1]
-        
-        i += 1
-        while i < len( CalcData ) :
+        Stack = []
+        # StackUnits = []
+        for i in range( len( CalcData ) ) :
             # following the operations sequence
             
-            if CalcData[i] not in operators :
-                # pass
-                i += 1
+            if type(CalcData[i]) is str and CalcData[i] not in operators :
+                Stack.append( CalcData[i] )
+                # StackUnits.append( CalcUnits[i] )
                 continue
-            #     # extract the next array to apply calculations
-            #     if CalculationTuple[i][0] == '-' :
-            #         if self.is_Key( CalculationTuple[i][1:] ) :
-            #             Next = self(CalculationTuple[i][1:]) * -1
-            #         elif self.is_Attribute( CalculationTuple[i][1:] ) :
-            #             Next = self[[CalculationTuple[i][1:]]] * -1
+            elif type(CalcData[i]) is not str :
+                Stack.append( CalcData[i] )
+                # StackUnits.append( CalcUnits[i] )
+                continue
+            
+            else :
+                if len( Stack ) >= 2 :
+                    operandB = Stack.pop()
+                    operandA = Stack.pop()
+                elif len( Stack ) == 1 :
+                    operandB = Stack.pop()
+                    operandA = 0
+                else :
+                    operandB = 0
+                    operandA = 0
+
+                if CalculationTuple[i] == '-' :
+                    Stack.append( operandA - operandB )
+                elif CalculationTuple[i] == '+' :
+                    Stack.append( operandA + operandB )
+                elif CalculationTuple[i] == '*' :
+                    Stack.append( operandA * operandB )
+                elif CalculationTuple[i] == '/' :
+                    Stack.append( operandA / operandB )
+                elif CalculationTuple[i] == '//' :
+                    Stack.append( operandA // operandB )
+                elif CalculationTuple[i] == '^' :
+                    Stack.append( operandA ** operandB )
+                elif CalculationTuple[i] in ['.sum','.avg','.mean','.min','.max','.std','.sum0','.avg0','.mean0','.min0','.max0','.std0'] :
+                    if isinstance( operandB , (DataFrame,Series) ) :
+                        Stack.append( operandA )
                         
-            #     else :
-            #         if self.is_Key( CalculationTuple[i] ) :
-            #             Next = self(CalculationTuple[i])
-            #         elif self.is_Attribute( CalculationTuple[i] ) :
-            #             Next = self[[CalculationTuple[i]]]
+                        if CalculationTuple[i][-1] == '0' : 
+                            operandB.replace(0,np.nan, inplace=True) # ignore zeros in the data
+                            
+                        if CalculationTuple[i] == '.sum' :
+                            Stack.append( operandB.sum(axis=1) )
+                        elif CalculationTuple[i] in ['.avg','.mean'] :
+                            Stack.append( operandB.mean(axis=1) )
+                        elif CalculationTuple[i] == '.min' :
+                            Stack.append( operandB.min(axis=1) )
+                        elif CalculationTuple[i] == '.max' :
+                            Stack.append( operandB.max(axis=1) )
+                        elif CalculationTuple[i] == '.std' :
+                            Stack.append( operandB.std(axis=1) )
+                            
+                        if CalculationTuple[i][-1] == '0' : 
+                            Stack[-1].replace(np.nan,0, inplace=True) # replace NaN by zeros in the data
+                        
+        Result = Stack[-1]
+        
+        # save the result
+        self.set_Vector( str( CalculationTuple ) , Result , Result.get_units() , 'auto' , True )
+        
+        # if a name was given, link the data to the new name
+        if ResultName != str( CalculationTuple ) :
+            if isinstance(Result,Series) or ( isinstance(Result,DataFrame) and len(Result.columns)==1 ):
+                if str( CalculationTuple ) in self.vectors :
+                    self.vectors[ResultName] = self.vectors[ str( CalculationTuple ) ]
+                    self.units[ResultName] = self.units[ str( CalculationTuple ) ]
+                else :
+                    item = ':'+str(list(Result.columns)[0].split(':')[-1])
+                    if str( CalculationTuple )+item in self.vectors :
+                        self.vectors[ResultName] = self.vectors[ str( CalculationTuple )+item ]
+                        self.units[ResultName] = self.units[ str( CalculationTuple )+item ]
+                    else :
+                        self.set_Vector( ResultName , Result.to_numpy() , Result.get_UnitsString() , 'auto' , True )
+                if not self.is_Key(ResultName) :
+                    self.add_Key(ResultName) 
+            elif isinstance(Result,DataFrame) :
+                for each in Result.columns :
+                    item = ':'+str(each.split(':')[-1])
+                    self.vectors[ResultName+item] = self.vectors[ str( CalculationTuple )+item ]
+                    self.units[ResultName+item] = self.units[ str( CalculationTuple )+item ]
+                    if not self.is_Key(ResultName+item) :
+                        self.add_Key(ResultName+item) 
+            self.get_Attributes(reload=True)
+            return None
+        else :  
+            return Result
+        
+        
 
             #     Units.append( self.get_Unit( CalculationTuple[i] ) )
             #     NextUnit = Units[-1] # units 
@@ -4546,7 +4682,7 @@ class SimResult(object):
             #             Result = Result ** Next
                 
             #     elif CalculationTuple[i] in ['sum','avg','mean','min','max','std','sum0','avg0','mean0','min0','max0','std0'] :
-            #         if type( Next ) is pd.core.frame.DataFrame :
+            #         if type( Next ) is DataFrame :
             #             if CalculationTuple[i][-1] == '0' : 
             #                 Next.replace(0,np.nan, inplace=True) #ignore zeros in the data
             #                 CalculationTuple[i] = CalculationTuple[i][:-1]
@@ -4957,7 +5093,7 @@ class SimResult(object):
             if len(Index) > 1 :
                 _verbose( self.speak , -1 , '< get_DataFrame > more than value passed in Index argument, only the first one will be used')
             Index = Index[0]
-        return pd.DataFrame( data=self.get_Vector( Keys ) , index=self.get_Vector( Index )[ Index ] )
+        return DataFrame( data=self.get_Vector( Keys ) , index=self.get_Vector( Index )[ Index ] )
     
     def get_ConvertedDataFrame(self,Keys=None,Index='TIME', OtherObject_or_NewUnits=None) :
         """
@@ -5001,10 +5137,10 @@ class SimResult(object):
     
         if Index not in Keys:
             DF = self.get_UnitsConverted( [Index] + Keys , OtherObject_or_NewUnits )
-            DF = pd.DataFrame( data=DF , index=DF[Index] )
+            DF = DataFrame( data=DF , index=DF[Index] )
         else :
             DF = self.get_UnitsConverted( Keys , OtherObject_or_NewUnits )
-            DF = pd.DataFrame( data=DF , index=DF[Index] )
+            DF = DataFrame( data=DF , index=DF[Index] )
         return DF
 
 
@@ -5040,7 +5176,7 @@ class SimResult(object):
             
     #         resultstxt = ''
     #         for each in list( self.results.keys() ) :
-    #             DF_raw = pd.DataFrame( self.results[each][1]['Data'] )
+    #             DF_raw = DataFrame( self.results[each][1]['Data'] )
     #             if 'TIME' in DF_raw.columns :
     #                 DF_raw.set_index('TIME',drop=False,inplace=True)
     #             DF_raw.to_parquet(Folder + fileName + '_storage/raw/' + str(count) + '_rawdata.sro' , index=True)
@@ -5071,7 +5207,7 @@ class SimResult(object):
     #             file.write(str( self.attributes ))
         
     #     # prepare vectors as dataframe and dump to parquet
-    #     DF_vectors = pd.DataFrame(self.vectors)
+    #     DF_vectors = DataFrame(self.vectors)
     #     DF_vectors.set_index('TIME',drop=False,inplace=True)
     #     DF_vectors.to_parquet(Folder + fileName + '_storage/parquet/vectors.sro' , index=True )
         
@@ -5086,7 +5222,7 @@ class SimResult(object):
         
     #     # prepare restart vectors as dataframe and dump to parquet
     #     if len(self.vectorsRestart) > 0 :
-    #         DF_vectors = pd.DataFrame(self.vectorsRestart)
+    #         DF_vectors = DataFrame(self.vectorsRestart)
     #         DF_vectors.to_parquet(Folder + fileName + '_storage/parquet/restarts.sro' , index=True )
                               
     #     # txtfile = txtfile + 'pandasColumns =:= ' + str( self.pandasColumns ) + '\n'
