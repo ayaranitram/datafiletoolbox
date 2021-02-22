@@ -82,6 +82,19 @@ def _Series2Frame(aSimSeries) :
         except :
             return aSimSeries
 
+def _cleanAxis(axis=None) :
+    if axis is None :
+        return 0
+    if type(axis) is str and axis.lower() in ['row','rows','ind','index'] :
+        return 0
+    if type(axis) is str and axis.lower() in ['col','cols','column','columns'] :
+        return 1
+    if type(axis) is bool :
+        return int(axis)
+    if type(axis) is float :
+        return int(axis)
+    return axis
+
 class SimSeries(Series) :
     """
     A Series object designed to store data with units.
@@ -293,12 +306,15 @@ class SimSeries(Series) :
             return SimSeries( data=convertUnit( self.S , list(set(self.units.values()))[0] , units , self.speak ) , units=units , dtype=self.dtype ) 
     
     def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
+        axis = _cleanAxis(axis)
         return SimSeries( data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset) , units=self.units , dtype=self.dtype )
     
     def dropna(self, axis=0, inplace=False, how=None) :
+        axis = _cleanAxis(axis)
         return SimSeries( data=self.DF.dropna(axis=axis, inplace=inplace, how=how) , units=self.units , dtype=self.dtype )
 
     def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise') :
+        axis = _cleanAxis(axis)
         return SimSeries( data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors='errors') , units=self.units , dtype=self.dtype )    
     
     @property
@@ -1426,6 +1442,7 @@ class SimDataFrame(DataFrame) :
             'index' or 'rows' 0 : removes all the rows fill with zeroes
             'both' or 2 : removes all the rows and columns fill with zeroes
         """
+        axis = _cleanAxis(axis)
         if axis in ['both',2] :
             return self.replace(0,np.nan).dropna(axis='columns',how='all').dropna(axis='index',how='all').dropna(axis='columns',how='all').replace(np.nan,0)
         elif axis in ['rows','row','index',0] :
@@ -1437,24 +1454,29 @@ class SimDataFrame(DataFrame) :
         
 
     def dropna(self,axis='index', how='all', thresh=None, subset=None, inplace=False) :
+        axis = _cleanAxis(axis)
         return SimDataFrame( data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace) , units=self.units , indexName=self.index.name )
     
     def drop(self,labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise') :
+        axis = _cleanAxis(axis)
         return SimDataFrame( data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors) , units=self.units , indexName=self.index.name )
 
     def drop_duplicates(self,subset=None, keep='first', inplace=False, ignore_index=False) :
         return SimDataFrame( data=self.DF.drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index) , units=self.units , indexName=self.index.name )
     
     def fillna(self,value=None, method=None, axis='index', inplace=False, limit=None, downcast=None) :
+        axis = _cleanAxis(axis)
         return SimDataFrame( data=self.DF.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast) , units=self.units , indexName=self.index.name )
         
     def interpolate(self,method='slinear', axis='index', limit=None, inplace=False, limit_direction=None, limit_area=None, downcast=None, **kwargs) :
+        axis = _cleanAxis(axis)
         return SimDataFrame( data=self.DF.interpolate(method=method, axis=axis, limit=limit, inplace=inplace, limit_direction=limit_direction, limit_area=limit_area, downcast=downcast, **kwargs) , units=self.units , indexName=self.index.name )
 
     def replace(self,to_replace=None, value=None, inplace=False, limit=None, regex=False, method='pad') :
         return SimDataFrame( data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method) , units=self.units , indexName=self.index.name )
 
     def groupby(self, by=None, axis=0, level=None, as_index=True, sort=True, group_keys=True, squeeze=False, observed=False, dropna=True) :
+        axis = _cleanAxis(axis)
         selfGrouped = self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna)
         return SimDataFrame( data=selfGrouped , units=self.units , indexName=self.index.name , nameSeparator=self.nameSeparator ) 
 
@@ -1623,9 +1645,11 @@ class SimDataFrame(DataFrame) :
         return output
         
     def aggregate(self,func=None, axis=0, *args, **kwargs) :
+        axis = _cleanAxis(axis)
         return SimDataFrame( data=self.DF.aggregate(func=func, axis=axis, *args, **kwargs) , units=self.units , indexName=self.index.name ) 
     
     def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
+        axis = _cleanAxis(axis)
         return SimDataFrame( data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset) , units=self.units , indexName=self.index.name ) 
 
     def reindex(self,labels=None,index=None,columns=None,axis=None,**kwargs) :
@@ -1652,6 +1676,7 @@ class SimDataFrame(DataFrame) :
                 axis = 1
             else :
                 raise TypeError("labels does not match neither len(index) or len(columns).")
+        axis = _cleanAxis(axis)
         return SimDataFrame( data=self.DF.reindex(labels=labels,axis=axis,**kwargs) , units=self.units, speak=self.speak,indexUnits=self.indexUnits,nameSeparator=self.nameSeparator )
 
     def rename(self,**kwargs) :
@@ -2081,8 +2106,7 @@ class SimDataFrame(DataFrame) :
         return SimDataFrame( data=self.apply(lambda x: [int(y) for y in x] ) , units=self.units , indexName=self.index.name , autoAppend=self.autoAppend )
     
     def mode(self,axis=0,**kwargs) :
-        if axis is None :
-            axis = 0
+        axis = _cleanAxis(axis)
         if axis == 0 :
             return SimDataFrame( data=self.DF.mode(axis=axis,**kwargs) , units=self.units , speak=self.speak )
         if axis == 1 :
@@ -2103,8 +2127,7 @@ class SimDataFrame(DataFrame) :
             return SimDataFrame( data=data , units=units , speak=self.speak )
 
     def median(self,axis=0,**kwargs) :
-        if axis is None :
-            axis = 0
+        axis = _cleanAxis(axis)
         if axis == 0 :
             return SimDataFrame( data=self.DF.median(axis=axis,**kwargs) , units=self.units , speak=self.speak )
         if axis == 1 :
@@ -2129,8 +2152,7 @@ class SimDataFrame(DataFrame) :
     def average(self,axis=0,**kwargs) :
         return self.mean(axis=axis,**kwargs)
     def mean(self,axis=0,**kwargs) :
-        if axis is None :
-            axis = 0
+        axis = _cleanAxis(axis)
         if axis == 0 :
             return SimDataFrame( data=self.DF.mean(axis=axis,**kwargs) , units=self.units , speak=self.speak )
         if axis == 1 :
@@ -2151,8 +2173,7 @@ class SimDataFrame(DataFrame) :
             return SimDataFrame( data=data , units=units , speak=self.speak )
         
     def max(self,axis=0,**kwargs) :
-        if axis is None :
-            axis = 0
+        axis = _cleanAxis(axis)
         if axis == 0 :
             return SimDataFrame( data=self.DF.max(axis=axis,**kwargs) , units=self.units , speak=self.speak )
         if axis == 1 :
@@ -2173,8 +2194,7 @@ class SimDataFrame(DataFrame) :
             return SimDataFrame( data=data , units=units , speak=self.speak )
     
     def min(self,axis=0,**kwargs) :
-        if axis is None :
-            axis = 0
+        axis = _cleanAxis(axis)
         if axis == 0 :
             return SimDataFrame( data=self.DF.min(axis=axis,**kwargs) , units=self.units , speak=self.speak )
         if axis == 1 :
@@ -2195,8 +2215,7 @@ class SimDataFrame(DataFrame) :
             return SimDataFrame( data=data , units=units , speak=self.speak )
     
     def sum(self,axis=0,**kwargs) :
-        if axis is None :
-            axis = 0
+        axis = _cleanAxis(axis)
         if axis == 0 :
             return SimDataFrame( data=self.DF.sum(axis=axis,**kwargs) , units=self.units , speak=self.speak )
         if axis == 1 :
@@ -2217,8 +2236,7 @@ class SimDataFrame(DataFrame) :
             return SimDataFrame( data=data , units=units , speak=self.speak )
 
     def std(self,axis=0,**kwargs) :
-        if axis is None :
-            axis = 0
+        axis = _cleanAxis(axis)
         if axis == 0 :
             return SimDataFrame( data=self.DF.std(axis=axis,**kwargs) , units=self.units , speak=self.speak )
         if axis == 1 :
@@ -2239,8 +2257,7 @@ class SimDataFrame(DataFrame) :
             return SimDataFrame( data=data , units=units , speak=self.speak )
     
     def prod(self,axis=0,**kwargs) :
-        if axis is None :
-            axis = 0
+        axis = _cleanAxis(axis)
         if axis == 0 :
             return SimDataFrame( data=self.DF.prod(axis=axis,**kwargs) , units=self.units , speak=self.speak )
         if axis == 1 :
@@ -2261,8 +2278,7 @@ class SimDataFrame(DataFrame) :
             return SimDataFrame( data=data , units=units , speak=self.speak )
     
     def var(self,axis=0,**kwargs) :
-        if axis is None :
-            axis = 0
+        axis = _cleanAxis(axis)
         if axis == 0 :
             return SimDataFrame( data=self.DF.var(axis=axis,**kwargs) , units=self.units , speak=self.speak )
         if axis == 1 :
@@ -2283,8 +2299,7 @@ class SimDataFrame(DataFrame) :
             return SimDataFrame( data=data , units=units , speak=self.speak )
     
     def quantile(self,q=0.5,axis=0,**kwargs) :
-        if axis is None :
-            axis = 0
+        axis = _cleanAxis(axis)
         if axis == 0 :
             return SimDataFrame( data=self.DF.quantile(q=q,axis=axis,**kwargs) , units=self.units , speak=self.speak )
         if axis == 1 :
