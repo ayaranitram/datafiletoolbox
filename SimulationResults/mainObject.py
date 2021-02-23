@@ -3766,7 +3766,9 @@ class SimResult(object):
         
         # validating Units
         if type(Units) is str :
-            Units = Units.strip('( )')
+            Units = Units.strip()
+            if Units.startswith('(') and Units.endswith(')') and Units.count('(') == 1 and Units.count(')') == 1 :
+                Units = Units.strip('()')
             if unit.isUnit(Units) :
                 pass
             elif Units == 'DEGREES' and 'API' in _mainKey(Key).upper() :
