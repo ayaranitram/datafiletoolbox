@@ -20,9 +20,9 @@ from ..PlotResults.SmartPlot import Plot
 # from .vipObject import VIP
 # from .SimulationResults import ECL
 
-from bases.units import unit
-from bases.units import convertUnit
-from bases.units import convertible as convertibleUnits
+from .._common.units import unit
+from .._common.units import convertUnit
+from .._common.units import convertible as convertibleUnits
 
 from matplotlib.colors import is_color_like
 from datetime import timedelta
