@@ -4397,7 +4397,7 @@ class SimResult(object):
             else :
                 CalculationTuple = [ '-' + CalculationTuple[1] ]
         
-        while CalculationTuple[0] in ['*','+','/'] :
+        while CalculationTuple[0] in ['*','+','/','**','//'] :
             _verbose( self.speak , 2 , "the first item '" + CalculationTuple.pop(0) + "' is an operand and will ignored") 
 
         # convert numbers to float or int        
