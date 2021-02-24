@@ -95,6 +95,7 @@ def _cleanAxis(axis=None) :
         return int(axis)
     return axis
 
+
 class SimSeries(Series) :
     """
     A Series object designed to store data with units.
@@ -2637,102 +2638,126 @@ class SimDataFrame(DataFrame) :
 
             else :
                 return self.iloc[key]
-        
+    
+    def _columnsNameAndUnits2MultiIndex(self) :
+        out = {} 
+        units = self.get_units()
+        for col in self.columns :
+            if col in units :
+                out[col] = units[col]
+            else :
+                out[col] = None
+        out = pd.MultiIndex.from_tuples( out.items() ) 
+        return out
+    
+    def _DataFrameWithMultiIndex(self) :
+        result = self.DF.copy()
+        newName = self._columnsNameAndUnits2MultiIndex()
+        result.columns=newName
+        return result
+    
+    def _repr_html_(self) :
+        """
+        Return a html representation for a particular DataFrame, with Units.
+        """
+        return self._DataFrameWithMultiIndex()._repr_html_()
+    
     def __repr__(self) -> str:
         """
         Return a string representation for a particular DataFrame, with Units.
         """
-        firstRow = 1 if self.index.name is None else 2
-        lastRow = -2
-        def thisColumnMaxLen() :
-            thisColumn = [None]*len( result[firstRow:lastRow] )
-            for line in range(len(result[firstRow:lastRow])) :
-                rawLine = multisplit( result[firstRow:lastRow][line] , ['  ',' -'] )
-                thisLine = []
-                for raw in rawLine :
-                    if len(raw.strip(' -')) > 0 :
-                        thisLine.append( raw )
-                # print('\ndebug:\n   keys:',keys,'\n   line:',line,'len(thisColumn):',len(thisColumn),'\n   keyN:',keyN,'len(thisLine):',len(thisLine),'\n   rawLine:"',rawLine,'"\n')
-                thisColumn[line] = len(thisLine[keyN]) if keyN < len(thisLine) else 0
-            return max( thisColumn ) 
+        return self._DataFrameWithMultiIndex().__repr__()
+        # firstRow = 1 if self.index.name is None else 2
+        # lastRow = -2
+        # def thisColumnMaxLen() :
+        #     thisColumn = [None]*len( result[firstRow:lastRow] )
+        #     for line in range(len(result[firstRow:lastRow])) :
+        #         rawLine = multisplit( result[firstRow:lastRow][line] , ['  ',' -'] )
+        #         thisLine = []
+        #         for raw in rawLine :
+        #             if len(raw.strip(' -')) > 0 :
+        #                 thisLine.append( raw )
+        #         # print('\ndebug:\n   keys:',keys,'\n   line:',line,'len(thisColumn):',len(thisColumn),'\n   keyN:',keyN,'len(thisLine):',len(thisLine),'\n   rawLine:"',rawLine,'"\n')
+        #         thisColumn[line] = len(thisLine[keyN]) if keyN < len(thisLine) else 0
+        #     return max( thisColumn ) 
         
-        buf = StringIO("")
-        if self._info_repr():
-            self.info(buf=buf)
-            return buf.getvalue()
+        # buf = StringIO("")
+        # if self._info_repr():
+        #     self.info(buf=buf)
+        #     return buf.getvalue()
 
-        max_rows = get_option("display.max_rows")
-        min_rows = get_option("display.min_rows")
-        max_cols = get_option("display.max_columns")
-        max_colwidth = get_option("display.max_colwidth")
-        show_dimensions = get_option("display.show_dimensions")
-        if get_option("display.expand_frame_repr"):
-            width, _ = console.get_console_size()
-        else:
-            width = None
-        self.to_string(
-            buf=buf,
-            max_rows=max_rows,
-            min_rows=min_rows,
-            max_cols=max_cols,
-            line_width=width,
-            max_colwidth=max_colwidth,
-            show_dimensions=show_dimensions,
-        )
+        # max_rows = get_option("display.max_rows")
+        # min_rows = get_option("display.min_rows")
+        # max_cols = get_option("display.max_columns")
+        # max_colwidth = get_option("display.max_colwidth")
+        # show_dimensions = get_option("display.show_dimensions")
+        # if get_option("display.expand_frame_repr"):
+        #     width, _ = console.get_console_size()
+        # else:
+        #     width = None
+        # self.to_string(
+        #     buf=buf,
+        #     max_rows=max_rows,
+        #     min_rows=min_rows,
+        #     max_cols=max_cols,
+        #     line_width=width,
+        #     max_colwidth=max_colwidth,
+        #     show_dimensions=show_dimensions,
+        # )
         
-        result = buf.getvalue()
+        # result = buf.getvalue()
         
-        if result.startswith('Empty SimDataFrame\n') or result.startswith('Empty DataFrame\n') :
-            return result
+        # if result.startswith('Empty SimDataFrame\n') or result.startswith('Empty DataFrame\n') :
+        #     return result
         
-        result = result.split('\n')
-        UnitsLine = ''
-        keys = result[0] + ' '
-        keyN = 0
-        i , f = 0 , 0
-        while i < len(keys) :
+        # result = result.split('\n')
+        # UnitsLine = ''
+        # keys = result[0] + ' '
+        # keyN = 0
+        # i , f = 0 , 0
+        # while i < len(keys) :
             
-            if keys[i] == ' ' :
-                i += 1
-                continue
-            else :
-                f = keys.index(' ',i) 
-                key = keys[i:f]
-                keyN += 1
+        #     if keys[i] == ' ' :
+        #         i += 1
+        #         continue
+        #     else :
+        #         f = keys.index(' ',i) 
+        #         key = keys[i:f]
+        #         keyN += 1
                 
-                if key == '...' :
-                    UnitsLine += '  ...'
+        #         if key == '...' :
+        #             UnitsLine += '  ...'
                     
-                # key might be a column name
-                else :
-                    while key not in self.columns and f <= len(keys) :
-                        f = keys.index(' ',f+1)
-                        key = keys[i:f]
-                    maxLen = max( thisColumnMaxLen() , len(key) )
-                    if key in self.units :
-                        UnitLabel = self.units[key].strip()
-                        if len(UnitLabel) < maxLen :
-                            UnitLabel = ' ' * ( maxLen - len(UnitLabel) ) + UnitLabel
-                        elif len(UnitLabel) > maxLen :
-                            UnitLabel = UnitLabel[:maxLen]
-                    else :
-                        UnitLabel = ' ' * maxLen
-                    UnitsLine += '  ' + UnitLabel
-                i = f
+        #         # key might be a column name
+        #         else :
+        #             while key not in self.columns and f <= len(keys) :
+        #                 f = keys.index(' ',f+1)
+        #                 key = keys[i:f]
+        #             maxLen = max( thisColumnMaxLen() , len(key) )
+        #             if key in self.units :
+        #                 UnitLabel = self.units[key].strip()
+        #                 if len(UnitLabel) < maxLen :
+        #                     UnitLabel = ' ' * ( maxLen - len(UnitLabel) ) + UnitLabel
+        #                 elif len(UnitLabel) > maxLen :
+        #                     UnitLabel = UnitLabel[:maxLen]
+        #             else :
+        #                 UnitLabel = ' ' * maxLen
+        #             UnitsLine += '  ' + UnitLabel
+        #         i = f
         
-        keyN = 0
-        indexColumnLen = thisColumnMaxLen()
-        UnitsLabel = 'Units'
-        if indexColumnLen < 5 :
-            UnitsLabel = UnitsLabel[:indexColumnLen] + ':'
-        elif indexColumnLen > 6 :
-            UnitsLabel = UnitsLabel + ':' + ' '*(indexColumnLen-6-1)
-        else :
-            UnitsLabel = UnitsLabel + ':'
+        # keyN = 0
+        # indexColumnLen = thisColumnMaxLen()
+        # UnitsLabel = 'Units'
+        # if indexColumnLen < 5 :
+        #     UnitsLabel = UnitsLabel[:indexColumnLen] + ':'
+        # elif indexColumnLen > 6 :
+        #     UnitsLabel = UnitsLabel + ':' + ' '*(indexColumnLen-6-1)
+        # else :
+        #     UnitsLabel = UnitsLabel + ':'
         
-        UnitsLine = UnitsLabel + UnitsLine
-        result = '\n' + result[0] + '\n' + UnitsLine + '\n' + '\n'.join(result[1:])
-        return result
+        # UnitsLine = UnitsLabel + UnitsLine
+        # result = '\n' + result[0] + '\n' + UnitsLine + '\n' + '\n'.join(result[1:])
+        # return result
     
     @property
     def right(self) :
