@@ -22,8 +22,8 @@ import numpy as np
 import datetime as dt
 from warnings import warn
 
-from bases.units import unit # to use unit.isUnit method
-from bases.units import convertUnit, unitProduct, unitDivision , convertible as convertibleUnits
+from .._common.units import unit # to use unit.isUnit method
+from .._common.units import convertUnit, unitProduct, unitDivision , convertible as convertibleUnits
 
 try :
     from datafiletoolbox import multisplit , isDate , strDate
