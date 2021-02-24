@@ -1419,7 +1419,27 @@ class SimDataFrame(DataFrame) :
         """
         if type(units) is str and len(set( self.get_Units(self.columns).values() )) == 1 :
             if convertibleUnits(list(set( self.get_Units(self.columns).values() ))[0],units) :
-                return SimDataFrame( data=convertUnit( self.DF , list(set( self.get_Units(self.columns).values() ))[0] , units , self.speak ) , units=units ) 
+                return SimDataFrame( data=convertUnit( self.DF , list(set( self.get_Units(self.columns).values() ))[0] , units , self.speak ) , units=units )
+        elif type(units) is str :
+            result = self.copy()
+            valid = False
+            for col in self.columns :
+                if convertibleUnits( self.get_Units(col)[col] , units ) :
+                    result[col] = self[col].to(units) 
+                    valid = True
+            if valid :
+                return result
+        if type(units) in [list,tuple] :
+            result = self.copy()
+            valid = False
+            for col in self.columns :
+                for ThisUnits in units :
+                    if convertibleUnits( self.get_Units(col)[col] , ThisUnits ) :
+                        result[col] = self[col].to(ThisUnits)
+                        valid = True
+                        break
+            if valid :
+                return result
         if type(units) is dict :
             unitsDict = {}
             for k,v in units.items() :
