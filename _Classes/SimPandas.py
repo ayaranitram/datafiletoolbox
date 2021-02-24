@@ -1408,7 +1408,7 @@ class SimDataFrame(DataFrame) :
 
     def to(self,units) :
         """
-        returns the series converted to the requested units if possible, 
+        returns the dataframe converted to the requested units if possible, 
         else returns None
         """
         return self.convert(units)
