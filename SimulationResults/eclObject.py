@@ -5,7 +5,7 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.20-10-18'
+__version__ = '0.2.21-02-10'
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult

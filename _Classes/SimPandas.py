@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.5.20-10-18'
+__version__ = '0.5.21-02-24'
 __all__ = ['SimSeries','SimPandas']
 
 from io import StringIO

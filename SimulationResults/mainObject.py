@@ -5,7 +5,7 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.5.20-10-18'
+__version__ = '0.5.21-02-24'
 __all__ = ['SimResult']
 
 from .. import _dictionaries

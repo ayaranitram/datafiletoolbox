@@ -5,7 +5,7 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.1.20-10-18'
+__version__ = '0.1.21-02-05'
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
