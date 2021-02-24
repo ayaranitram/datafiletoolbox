@@ -273,7 +273,11 @@ class SimSeries(Series) :
             return self.nameSeparator
 
     def to_Pandas(self) :
-        return self.as_Series()
+        return self.to_Series()
+    def to_pandas(self) :
+        return self.to_Series()
+    def to_Series(self) :
+        return Series( self ).copy()
 
     def as_Series(self) :
         return Series( self )
@@ -1394,9 +1398,16 @@ class SimDataFrame(DataFrame) :
         
     
     def as_Pandas(self) :
-        return self.as_DataFrame()
+        return self.to_DataFrame()
+    def to_pandas(self) :
+        return self.to_DataFrame()
     def to_Pandas(self) :
-        return self.as_DataFrame()
+        return self.to_DataFrame()
+    def to_DataFrameMultiIndex(self) :
+        return self._DataFrameWithMultiIndex()
+    def to_DataFrame(self) :
+        return DataFrame( self ).copy()
+    
     def as_DataFrame(self) :
         return DataFrame( self )
     @property
