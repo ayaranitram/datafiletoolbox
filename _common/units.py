@@ -1001,7 +1001,7 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True , AllowRecursion
         conversionPath = None
     
     # if direct conversion fail, try to divide the unit to it fundamental units
-    if conversionPath == None and AllowRecursion > 0 :
+    if conversionPath is None and AllowRecursion > 0 :
         # print( 'doing something... /')
         operator = ''
         if fromUnit == toUnit or ( fromUnit in unit.dictionary['date'] and toUnit in unit.dictionary['date'] ) :
@@ -1009,7 +1009,7 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True , AllowRecursion
             partB = toUnit
             operator = ' = '
         # print(fromUnit,toUnit )
-        if conversionPath == None and ( '/' in fromUnit or '/' in toUnit ) :
+        if conversionPath is None and ( '/' in fromUnit or '/' in toUnit ) :
             AllowRecursion -= 1
             if '/' in fromUnit and '/' in toUnit :
                 operator = ' / '
@@ -1024,24 +1024,24 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True , AllowRecursion
                 else :
                     partB = converter(    1 , fromUnit.split('/')[1] , toUnit.split('/')[1] , PrintConversionPath , AllowRecursion , Start=False ) # denominator
                     unit.Memory[ ( fromUnit.split('/')[1] , toUnit.split('/')[1] ) ]  = partB
-                if type(partA) == None or type(partB) == None :
+                if type(partA) is None or type(partB) is None :
                     # if PrintConversionPath :
                     # print( "no conversion found from " + fromUnit + " to " + toUnit + " ." )
                     # conversionPath = None 
                     for middleFrom in UnCo.childrenOf(UnCo.getNode(fromUnit)) : #+ UnCo.childrenOf(UnCo.getNode(fromUnit.split('/')[0])) + UnCo.childrenOf(UnCo.getNode(fromUnit.split('/')[1])) :
                         #for middleTo in UnCo.childrenOf(UnCo.getNode(toUnit)) : # + UnCo.childrenOf(UnCo.getNode(toUnit.split('/')[0])) + UnCo.childrenOf(UnCo.getNode(toUnit.split('/')[1])) :
                         middle = converter( converter( value , fromUnit , str(middleFrom) , PrintConversionPath , Start=False ) , str(middleFrom) , toUnit , PrintConversionPath , AllowRecursion , Start=False )
-                        if type(middle) != None :
+                        if type(middle) is not None :
                             return middle
                         middle = converter( converter( value , fromUnit , str(middleFrom) , PrintConversionPath , Start=False ) , str(middleFrom) , toUnit.split('/')[0] , PrintConversionPath , AllowRecursion , Start=False )
-                        if type(middle) != None :
+                        if type(middle) is not None :
                             return middle 
                         middle = converter( converter( value , fromUnit , str(middleFrom) , PrintConversionPath , Start=False ) , str(middleFrom) , toUnit.split('/')[1] , PrintConversionPath , AllowRecursion , Start=False )
-                        if type(middle) != None :
+                        if type(middle) is not None :
                             return 1/middle
                     for middleTo in UnCo.childrenOf(UnCo.getNode(toUnit)) :
                         middle = converter( value , fromUnit , str(middleTo) , PrintConversionPath , AllowRecursion , Start=False )
-                        if type(middle) != None :
+                        if type(middle) is not None :
                             return converter( middle , str(middleTo) , toUnit, PrintConversionPath , AllowRecursion , Start=False )
 
                     # return value
@@ -1055,7 +1055,7 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True , AllowRecursion
                 for middleUnit in UnCo.childrenOf(UnCo.getNode(toUnit)) :
                     # print('from ' + fromUnit + ' to ' + str(middleUnit))
                     middle = converter(value, fromUnit , str(middleUnit), PrintConversionPath , AllowRecursion , Start=False )
-                    if type(middle) != None :
+                    if type(middle) is not None :
                         return converter(middle, str(middleUnit), toUnit, PrintConversionPath , AllowRecursion , Start=False )  
 
             else : # elif '/' in toUnit :
@@ -1063,13 +1063,13 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True , AllowRecursion
                 for middleUnit in UnCo.childrenOf(UnCo.getNode(fromUnit)) :
                     # print('from ' + fromUnit + ' to ' + str(middleUnit))
                     middle = converter( converter( value , fromUnit , str(middleUnit) , PrintConversionPath ) , str(middleUnit), toUnit, PrintConversionPath , AllowRecursion , Start=False )
-                    if type(middle) != None :
+                    if type(middle) is not None :
                         return middle
             return None
 
                 
     # if direct conversion fail, try to multiply the unit to it fundamental units
-    if conversionPath == None and AllowRecursion > 0 :
+    if conversionPath is None and AllowRecursion > 0 :
         # print( 'doing something... *')
         operator = ''
         if fromUnit == toUnit or ( fromUnit in unit.dictionary['date'] and toUnit in unit.dictionary['date'] ) :
@@ -1077,30 +1077,30 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True , AllowRecursion
             partB = toUnit
             operator = ' = '
         
-        if conversionPath == None and ( '*' in fromUnit or '*' in toUnit ) :
+        if conversionPath is None and ( '*' in fromUnit or '*' in toUnit ) :
             AllowRecursion -= 1
             if '*' in fromUnit and '*' in toUnit :
                 operator = ' * '
                 partA = converter(value , fromUnit.split('*')[0] , toUnit.split('*')[0] , PrintConversionPath , AllowRecursion , Start=False ) # 1st factor
                 partB = converter(    1 , fromUnit.split('*')[1] , toUnit.split('*')[1] , PrintConversionPath , AllowRecursion , Start=False ) # 2nd factor
-                if type(partA) == None or type(partB) == None :
+                if type(partA) is None or type(partB) is None :
                     # if PrintConversionPath :
                     # print( "no conversion found from " + fromUnit + " to " + toUnit + " ." )
                     # conversionPath = None 
                     for middleFrom in UnCo.childrenOf(UnCo.getNode(fromUnit)) : #+ UnCo.childrenOf(UnCo.getNode(fromUnit.split('/')[0])) + UnCo.childrenOf(UnCo.getNode(fromUnit.split('/')[1])) :
                         #for middleTo in UnCo.childrenOf(UnCo.getNode(toUnit)) : # + UnCo.childrenOf(UnCo.getNode(toUnit.split('/')[0])) + UnCo.childrenOf(UnCo.getNode(toUnit.split('/')[1])) :
                         middle = converter( converter( value , fromUnit , str(middleFrom) , PrintConversionPath , AllowRecursion, Start=False ) , str(middleFrom) , toUnit , PrintConversionPath , AllowRecursion , Start=False )
-                        if type(middle) != None :
+                        if type(middle) is not None :
                             return middle
                         middle = converter( converter( value , fromUnit , str(middleFrom) , PrintConversionPath , AllowRecursion, Start=False ) , str(middleFrom) , toUnit.split('/')[0] , PrintConversionPath , AllowRecursion , Start=False )
-                        if type(middle) != None :
+                        if type(middle) is not None :
                             return middle 
                         middle = converter( converter( value , fromUnit , str(middleFrom) , PrintConversionPath , AllowRecursion, Start=False ) , str(middleFrom) , toUnit.split('/')[1] , PrintConversionPath , AllowRecursion , Start=False )
-                        if type(middle) != None :
+                        if type(middle) is not None :
                             return 1/middle
                     for middleTo in UnCo.childrenOf(UnCo.getNode(toUnit)) :
                         middle = converter( value , fromUnit , str(middleTo) , PrintConversionPath , AllowRecursion , Start=False )
-                        if type(middle) != None :
+                        if type(middle) is not None :
                             return converter( middle , str(middleTo) , toUnit, PrintConversionPath , AllowRecursion, Start=False )
                         
                     # return value
@@ -1114,7 +1114,7 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True , AllowRecursion
                 for middleUnit in UnCo.childrenOf(UnCo.getNode(toUnit)) :
                     # print('from ' + fromUnit + ' to ' + str(middleUnit))
                     middle = converter(value, fromUnit , str(middleUnit), PrintConversionPath , AllowRecursion , Start=False )
-                    if type(middle) != None :
+                    if type(middle) is not None :
                         return converter(middle, str(middleUnit), toUnit, PrintConversionPath , AllowRecursion, Start=False )  
 
             else : # elif '*' in toUnit :
@@ -1122,12 +1122,12 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True , AllowRecursion
                 for middleUnit in UnCo.childrenOf(UnCo.getNode(fromUnit)) :
                     # print('from ' + fromUnit + ' to ' + str(middleUnit))
                     middle = converter( converter( value , fromUnit , str(middleUnit) , PrintConversionPath , AllowRecursion, Start=False ) , str(middleUnit), toUnit, PrintConversionPath , AllowRecursion , Start=False )
-                    if type(middle) != None :
+                    if type(middle) is not None :
                         return middle 
             return None
             
 
-    if conversionPath == None :
+    if conversionPath is None :
         # if PrintConversionPath :
         # print( "no conversion found from " + fromUnit + " to " + toUnit + " ." )
         return None
@@ -1135,9 +1135,9 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True , AllowRecursion
     # if returnPath :
     #     return conversionPath
 
-    if type(value) == list or type(value) == tuple :
+    if type(value) in [list,tuple] :
         value = numpy.array(value)
-    if PrintConversionPath == True and conversionPath != None:
+    if PrintConversionPath is True and conversionPath is not None:
         # print( "\n converting from '" + str(fromUnit) + "' to '" + str(toUnit) + "'")
         print( "\n converting from '" + str(fromUnit) + "' to '" + str(toUnit) + "'\n  " + printPath(conversionPath) )
     for conversion in range(len(conversionPath)-1) :
@@ -1149,9 +1149,12 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True , AllowRecursion
 
 
 def convertible(fromUnit, toUnit,PrintPath=False) :
-    if converter(1,fromUnit,toUnit,PrintPath) != None :
-        return True
-    else :
+    try :
+        if converter(1,fromUnit,toUnit,PrintPath) is not None :
+            return True
+        else :
+            return False
+    except :
         return False
 
 
