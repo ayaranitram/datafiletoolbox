@@ -1435,10 +1435,10 @@ class SimDataFrame(DataFrame) :
         returns the dataframe converted to the requested units if possible, 
         else returns None
         """
-        if type(units) is str and len(set( self.get_Units(self.columns).values() )) == 1 :
-            if convertibleUnits(list(set( self.get_Units(self.columns).values() ))[0],units) :
-                return SimDataFrame( data=convertUnit( self.DF , list(set( self.get_Units(self.columns).values() ))[0] , units , self.speak ) , units=units )
-        elif type(units) is str :
+        # if type(units) is str and len(set( self.get_Units(self.columns).values() )) == 1 :
+        #     if convertibleUnits(list(set( self.get_Units(self.columns).values() ))[0],units) :
+        #         return SimDataFrame( data=convertUnit( self.DF , list(set( self.get_Units(self.columns).values() ))[0] , units , self.speak ) , units=units )
+        if type(units) is str :
             result = self.copy()
             valid = False
             for col in self.columns :
