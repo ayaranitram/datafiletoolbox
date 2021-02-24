@@ -121,7 +121,7 @@ class SimSeries(Series) :
 
     """
     
-    _metadata = ["units","speak",'indexUnits','nameSeparator','intersectionCharacter']
+    _metadata = ["units","speak",'indexUnits','nameSeparator','intersectionCharacter','autoAppend']
     
     def __init__(self, data=None , units=None , index=None , speak=False , *args , **kwargs) :
         Uname = None
@@ -131,6 +131,7 @@ class SimSeries(Series) :
         self.indexUnits = None
         self.nameSeparator = None
         self.intersectionCharacter = '∩'
+        self.autoAppend = False
         
         # validaton
         if isinstance(data,DataFrame) and len(data.columns)>1 :
@@ -170,6 +171,7 @@ class SimSeries(Series) :
         kwargs.pop('indexName',None)
         kwargs.pop('indexUnits',None)
         kwargs.pop('nameSeparator',None)
+        kwargs.pop('autoAppend',None)
         # convert to pure Pandas
         if type(data) in [ SimDataFrame , SimSeries ] :
             self.nameSeparator = data.nameSeparator
@@ -218,6 +220,10 @@ class SimSeries(Series) :
             self.nameSeparator = ''
         if self.nameSeparator is True :
             self.nameSeparator = ':'
+        
+        # catch autoAppend from kwargs
+        if 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None :
+            self.autoAppend = bool( kwargs['autoAppend'] )
     
     @property
     def _constructor(self):
@@ -1145,7 +1151,7 @@ class SimDataFrame(DataFrame) :
             self.nameSeparator = ':'
         
         # set autoAppend if provided as argument
-        if 'autoAppend' in kwargsB and type(kwargsB['autoAppend']) is str and len(kwargsB['autoAppend'].strip())>0 :
+        if 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None :
             self.autoAppend = bool(kwargsB['autoAppend'])
     
     # @property
