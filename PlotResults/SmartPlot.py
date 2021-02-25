@@ -19,7 +19,7 @@ from math import log
 from .._common.functions import _is_SimulationResult
 from .._common.inout import _verbose
 from .._common.functions import _mainKey
-from bases.units import convertUnit
+from .._common.units import convertUnit
 
 timeout = 0.1
 
