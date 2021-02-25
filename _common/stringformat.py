@@ -7,8 +7,9 @@ Created on Wed Sep 18 12:33:46 2019
 routine intended to manipulate and transform date strings.
 """
 
-__version__ = '0.1.20-10-17'
-__all__ = ['multisplit','isnumeric','getnumber','isDate','date']
+__version__ = 0.1
+__release__ = 210225
+__all__ = ['multisplit', 'isnumeric', 'getnumber', 'isDate', 'date']
 
 from .._Classes.Errors import UndefinedDateFormat
 
@@ -16,7 +17,7 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
-def multisplit(string,sep=[' '],remove=[' ']) :
+def multisplit(string, sep=[' '], remove=[' ']) :
     """
     receives a string and returns a list with string split by all the separators in sep.
     the default separator is the blank space ' '.
@@ -24,24 +25,24 @@ def multisplit(string,sep=[' '],remove=[' ']) :
     by default, the blank space is not reported.
     """
     assert type(string) is str
-    
+
     # check sep is list
     if type(sep) is str :
         sep = [sep]
-    
+
     # eliminate duplicated separators
     sep = list( set( sep ) )
-    
+
     # sort sep by lenght
     s = len(sep)
     for i in range(s-1) :
         for j in range(s-i-1) :
             if len(sep[j]) < len(sep[j+1]) :
-                sep[j] , sep[j+1] = sep[j+1] , sep[j]
-    
+                sep[j], sep[j+1] = sep[j+1], sep[j]
+
     # initialize counters
     stringlist = []
-    i , x , t = 0 , 0 , len(string)
+    i, x, t = 0, 0, len(string)
     # loop through the entire string
     while i < t :
         found = False # flag for found separator
@@ -49,22 +50,22 @@ def multisplit(string,sep=[' '],remove=[' ']) :
         for se in sep :
             s = len(se)
             if (i+s <= t) and string[i:i+s] == se :
-                stringlist += [ string[x:i] , se ]
+                stringlist += [ string[x:i], se ]
                 x = i+s
                 i += s
                 found = True
                 break
         i += 1 if not found else 0
     stringlist += [ string[x:] ]
-    
+
     # clean the output
     newlist = []
     for part in stringlist :
         if part not in remove + [''] :
             newlist += [ part ]
-    
+
     return newlist
-                
+
 
 def isnumeric(string) :
     """
@@ -83,47 +84,47 @@ def getnumber(string) :
         try :
             return int(string)
         except :
-            return float(string)           
+            return float(string)
 
-def isDate(dateStr , formatIN='' , speak=False , returnFormat=False ):
+def isDate(dateStr, formatIN='', speak=False, returnFormat=False ):
     """
     returns True if the string 'dateStr' is a valid date, otherwise returns False.
     """	
     if formatIN != '' :
         try :
-            date(dateStr , formatIN=formatIN , speak=speak , returnFormat=returnFormat )
+            date(dateStr, formatIN=formatIN, speak=speak, returnFormat=returnFormat )
             if returnFormat :
-                return date(dateStr , formatIN=formatIN , speak=speak , returnFormat=True )
+                return date(dateStr, formatIN=formatIN, speak=speak, returnFormat=True )
             return True
         except :
             return False
-    
+
     else :
         try :
-            date(dateStr , formatIN='' , speak=speak )
+            date(dateStr, formatIN='', speak=speak )
             if returnFormat :
-                return date(dateStr , formatIN='' , speak=speak , returnFormat=True )
+                return date(dateStr, formatIN='', speak=speak, returnFormat=True )
             return True
         except :
             pass
-    
-        formats = [ 'DD-MM-YYYY','DD-MMM-YYYY','YYYY-MM-DD' , 'YYYY-MMM-DD' , 'MM-DD-YYYY' , 'MMM-DD-YYYY' , 'YYYY-DD-MM' , 'YYYY-DD-MMM' , 'YYYYMMDD' , 'YYYYMMMDD' , 'DD-MM-YY' ,  'MMM-DD-YY' , 'MM-DD-YY'  ]
-        separators = ['-', '/' , ' ' , '\t', '_', ':', ';', ',', '.', '#', "'"]
+
+        formats = [ 'DD-MM-YYYY', 'DD-MMM-YYYY', 'YYYY-MM-DD', 'YYYY-MMM-DD', 'MM-DD-YYYY', 'MMM-DD-YYYY', 'YYYY-DD-MM', 'YYYY-DD-MMM', 'YYYYMMDD', 'YYYYMMMDD', 'DD-MM-YY', 'MMM-DD-YY', 'MM-DD-YY'  ]
+        separators = ['-', '/', ' ', '\t', '_', ':', ';', ', ', '.', '#', "'"]
         for f in formats :
             for sep in separators :
-                fIN = f.replace('-',sep) if sep != '-' else f
+                fIN = f.replace('-', sep) if sep != '-' else f
                 try :
-                    date(dateStr , formatIN=fIN , speak=speak )
+                    date(dateStr, formatIN=fIN, speak=speak )
                     if returnFormat :
                         return fIN
                     return True
                 except :
                     pass
-        
-        formats = [ 'YYYYMMDD' , 'YYYYMMMDD' ]
+
+        formats = [ 'YYYYMMDD', 'YYYYMMMDD' ]
         for f in formats :
             try :
-                date(dateStr , formatIN=fIN , speak=speak )
+                date(dateStr, formatIN=fIN, speak=speak )
                 if returnFormat :
                     return f
                 return True
@@ -132,7 +133,7 @@ def isDate(dateStr , formatIN='' , speak=False , returnFormat=False ):
     return False
 
 def splitDMMMY(string) :
-    mi,mf = -1,-1
+    mi, mf = -1, -1
     for x in range(len(string)) :
         if not string[x].isdigit() and mf == -1 :
             mi = x
@@ -140,9 +141,9 @@ def splitDMMMY(string) :
             mf = x+1
             break
     if mi > 0 and mf > 0 :
-        return [string[:mi],string[mi:mf],string[mf:]]
+        return [string[:mi], string[mi:mf], string[mf:]]
 
-def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , returnFormat=False ):
+def date(date, formatIN='', formatOUT='', speak=True, YYbaseIN=1900, returnFormat=False ):
     """
     stringformat.date receives a string containing a date or a list of strings
     containing dates and changes the date format to the format especified by
@@ -150,7 +151,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
 
     The input and output format can be stated with the keywords formatIN
     and formatOUT followed by a string containing the characters 'D', 'M'
-    and 'Y' to identify day, month and year and the characters '/', '-' , ' ',
+    and 'Y' to identify day, month and year and the characters '/', '-', ' ',
     '\t' (tab) or '_' as separators.
 
     If the keyword formatIN is not entered, the program will try to infer
@@ -158,33 +159,33 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
 
     syntax examples:
 
-    stringformat.date('31/DEC/1984' , formatIN='DD/MMM/YYYY' , formatOUT='MM-DD-YYYY')
+    stringformat.date('31/DEC/1984', formatIN='DD/MMM/YYYY', formatOUT='MM-DD-YYYY')
 
     speak parameter set to True will print a message showing the input and output formats.
     """
     npDateOnly = lambda x : x.split('T')[0]
-    
-    MonthString2Number = {'JAN' :  1 ,
-                          'FEB' :  2 ,
-                          'MAR' :  3 ,
-                          'APR' :  4 ,
-                          'MAY' :  5 ,
-                          'JUN' :  6 ,
-                          'JLY' :  7 ,
-                          'JUL' :  7 ,
-                          'AUG' :  8 ,
-                          'SEP' :  9 ,
-                          'OCT' : 10 ,
-                          'NOV' : 11 ,
+
+    MonthString2Number = {'JAN' :  1,
+                          'FEB' :  2,
+                          'MAR' :  3,
+                          'APR' :  4,
+                          'MAY' :  5,
+                          'JUN' :  6,
+                          'JLY' :  7,
+                          'JUL' :  7,
+                          'AUG' :  8,
+                          'SEP' :  9,
+                          'OCT' : 10,
+                          'NOV' : 11,
                           'DEC' : 12 }
-    MonthNumber2String = dict(zip( MonthString2Number.values() , MonthString2Number.keys()  ))
-    
+    MonthNumber2String = dict(zip( MonthString2Number.values(), MonthString2Number.keys()  ))
+
     separator = '' # initialize
     formatIN = formatIN.upper().strip()
     formatOUT = formatOUT.upper().strip()
     # define if input is a list/tuple of dates or a single date
     sample = str(date)
-    
+
     if type(date) is list or type(date) is tuple:
         output = list
         if type(date[0]) is str :
@@ -194,14 +195,14 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
         elif type(date[0]) is np.datetime64 :
             date = np.array(date)
         elif type(date[0]) is np.str_ :
-            date = list( map( str , date ) )
+            date = list( map( str, date ) )
             sample = date[0].strip()
-            
+
     if type(date) is np.ndarray :
         output = list
         if 'datetime64' in str(date.dtype) :
             date = list(np.datetime_as_string(date))
-            date = list(map( npDateOnly , date ))
+            date = list(map( npDateOnly, date ))
             formatIN = 'YYYY-MM-DD'
             sample = date[0]
             separator = '-'
@@ -213,7 +214,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
         sample = date
         output = str
         separator = '-'
-        
+
     if type(date) is pd.Timestamp : # pd._libs.tslibs.timestamps.Timestamp
         date = date.date()
 
@@ -221,12 +222,12 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
         date = str( date )
         if formatIN == '' :
             formatIN = 'YYYY-MM-DD'
-    
+
     if type(date) is dt.datetime :
         date = str( date ).split()[0]
         if formatIN == '' :
             formatIN = 'YYYY-MM-DD'
-    
+
     if type(date) is str :
         sample = date.strip(' "\'')
         date = [ date ]
@@ -234,7 +235,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
 
     # look for the separator, empty string if not found
     if separator == '' :
-        for sep in ['/', '-' , ' ' , '\t', '_', ':', ';', ',', '.', '#', "'"] :
+        for sep in ['/', '-', ' ', '\t', '_', ':', ';', ', ', '.', '#', "'"] :
             if sep in sample :
                 separator = sep
                 break
@@ -243,50 +244,50 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
     if separator != '' :
         # separate the 1st, 2nd and 3rd components of the DATEs in three lists
         datelist = separator.join(date).split(separator)
-        datelist = [ datelist[0::3] , datelist[1::3] , datelist[2::3] ]
-    
+        datelist = [ datelist[0::3], datelist[1::3], datelist[2::3] ]
+
     else :
         l = 0
-        if max(map(len,date)) == min(map(len,date)) :
-            l = max(map(len,date))
-        
+        if max(map(len, date)) == min(map(len, date)) :
+            l = max(map(len, date))
+
         if formatIN != '' :
-            x,y = 0,0
-            for i in range(1,len(formatIN)) :
+            x, y = 0, 0
+            for i in range(1, len(formatIN)) :
                 if formatIN[i] != formatIN[i-1] :
                     if x == 0 :
                         x = i
                     else :
                         y = i
                         break
-            datelist = [ [d[:x],d[x:y],d[y:]] for d in date ]
-            datelist = [ [ datelist[i][0] for i in range(len(datelist)) ] , [ datelist[i][1] for i in range(len(datelist)) ] , [ datelist[i][2] for i in range(len(datelist)) ] ]
-            
+            datelist = [ [d[:x], d[x:y], d[y:]] for d in date ]
+            datelist = [ [ datelist[i][0] for i in range(len(datelist)) ], [ datelist[i][1] for i in range(len(datelist)) ], [ datelist[i][2] for i in range(len(datelist)) ] ]
+
         elif l == 6 :
-            datelist = [ [d[0:2],d[2:4],d[4:6]] for d in date ]
-            datelist = [ [ datelist[i][0] for i in range(len(datelist)) ] , [ datelist[i][1] for i in range(len(datelist)) ] , [ datelist[i][2] for i in range(len(datelist)) ] ]
+            datelist = [ [d[0:2], d[2:4], d[4:6]] for d in date ]
+            datelist = [ [ datelist[i][0] for i in range(len(datelist)) ], [ datelist[i][1] for i in range(len(datelist)) ], [ datelist[i][2] for i in range(len(datelist)) ] ]
         elif l == 8 :
-            datelist = [ [d[0:2],d[2:4],d[4:8]] for d in date ]
-            datelist = [ [ datelist[i][0] for i in range(len(datelist)) ] , [ datelist[i][1] for i in range(len(datelist)) ] , [ datelist[i][2] for i in range(len(datelist)) ] ]        
+            datelist = [ [d[0:2], d[2:4], d[4:8]] for d in date ]
+            datelist = [ [ datelist[i][0] for i in range(len(datelist)) ], [ datelist[i][1] for i in range(len(datelist)) ], [ datelist[i][2] for i in range(len(datelist)) ] ]
             if int(max(datelist[0])) <= 31 and int(min(datelist[2])) >= 1900 and int(max(datelist[2])) <= 2050 and int(max(datelist[1]))<=12 :
                 pass # DDMMYYYY
             else :
-                datelist = [ [d[0:4],d[4:6],d[6:8]] for d in date ]
-                datelist = [ [ datelist[i][0] for i in range(len(datelist)) ] , [ datelist[i][1] for i in range(len(datelist)) ] , [ datelist[i][2] for i in range(len(datelist)) ] ]        
+                datelist = [ [d[0:4], d[4:6], d[6:8]] for d in date ]
+                datelist = [ [ datelist[i][0] for i in range(len(datelist)) ], [ datelist[i][1] for i in range(len(datelist)) ], [ datelist[i][2] for i in range(len(datelist)) ] ]
                 if int(max(datelist[2])) <= 31 and int(min(datelist[0])) >= 1900 and int(max(datelist[0])) <= 2050 and int(max(datelist[1]))<=12 :
                     pass # YYYYMMDD
                 else :
                     raise UndefinedDateFormat('unable to idenfy date format, please provide with keyword formatIN')
         elif l == 9 :
-            x,y = 0,0
+            x, y = 0, 0
             for i in range(9) :
                 if not date[0][i].isdigit() and x == 0 :
                     x = i
                 elif date[0][i].isdigit() and x > 0 :
                     y = i
                     break
-            datelist = [ [d[:x],d[x:y],d[y:]] for d in date ]
-            datelist = [ [ datelist[i][0] for i in range(len(datelist)) ] , [ datelist[i][1] for i in range(len(datelist)) ] , [ datelist[i][2] for i in range(len(datelist)) ] ]
+            datelist = [ [d[:x], d[x:y], d[y:]] for d in date ]
+            datelist = [ [ datelist[i][0] for i in range(len(datelist)) ], [ datelist[i][1] for i in range(len(datelist)) ], [ datelist[i][2] for i in range(len(datelist)) ] ]
         else :
             raise UndefinedDateFormat('unable to idenfy date format, please provide with keyword formatIN')
 
@@ -306,7 +307,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
             if datestr[i] == False :
                 datemax[i] = max(datelist[i])
 
-        orderIN = [None, None, None, separator , None, None , None]
+        orderIN = [None, None, None, separator, None, None, None]
         found = ''
         if True in datestr :
             orderIN[5] = 3
@@ -364,18 +365,18 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
 
         else :
             raise UndefinedDateFormat('unable to idenfy date format, please provide with keyword formatIN')
-            
+
         if returnFormat :
             return formatIN
 
     # read input format from formatIN
     else :
-        orderIN = [None, None, None, None, None, None, None] # [day, month, year, separator, day_digit, month_digits , year_digits]
-        for sep in ['/', '-' , ' ' , '\t', '_', ':', ';', '#', "'"] :
+        orderIN = [None, None, None, None, None, None, None] # [day, month, year, separator, day_digit, month_digits, year_digits]
+        for sep in ['/', '-', ' ', '\t', '_', ':', ';', '#', "'"] :
             if sep in formatIN :
                 orderIN[3] = sep
                 break
-        indexDMY = [ formatIN.upper().index('D') , formatIN.upper().index('M') , formatIN.upper().index('Y') ]
+        indexDMY = [ formatIN.upper().index('D'), formatIN.upper().index('M'), formatIN.upper().index('Y') ]
         for i in range(3) :
             if indexDMY[i] == min(indexDMY):
                 orderIN[i] = 0
@@ -387,7 +388,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
         orderIN[5] = formatIN.upper().count('M')
         orderIN[6] = formatIN.upper().count('Y')
 
-        for sep in ['/', '-' , ' ' , '\t'] :
+        for sep in ['/', '-', ' ', '\t'] :
             if sep in formatIN :
                 test = sep
                 break
@@ -396,14 +397,14 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
     # set formatOUT by default if not provided
     if formatOUT == '' :
         formatOUT = 'DD-MMM-YYYY'
-        orderOUT = [0,1,2,'-',2,3,4]
+        orderOUT = [0, 1, 2, '-', 2, 3, 4]
         # if speak and formatIN != formatOUT :
         #     print(' default output format is: DD-MMM-YYYY')
 
     # read format from formatOUT
     else :
-        orderOUT = [None, None, None, '', None, None , None] # [day, month, year, separator, day_digit, month_digits , year_digits]
-        for sep in ['/', '-' , ' ' , '\t', '_', ':', ';', '#', "'"] :
+        orderOUT = [None, None, None, '', None, None, None] # [day, month, year, separator, day_digit, month_digits, year_digits]
+        for sep in ['/', '-', ' ', '\t', '_', ':', ';', '#', "'"] :
             if sep in formatOUT :
                 orderOUT[3] = sep
                 break
@@ -419,7 +420,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
             indexY = formatOUT.upper().index('Y')
         else :
             indexY = 2
-        indexDMY = [ indexD , indexM , indexY ]
+        indexDMY = [ indexD, indexM, indexY ]
         for i in range(3) :
             if indexDMY[i] == min(indexDMY):
                 orderOUT[i] = 0
@@ -432,7 +433,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
         orderOUT[6] = formatOUT.upper().count('Y')
 
 
-    dateOUT = [ datelist[orderIN.index(orderOUT[0])] , datelist[orderIN.index(orderOUT[1])] , datelist[orderIN.index(orderOUT[2])] ]
+    dateOUT = [ datelist[orderIN.index(orderOUT[0])], datelist[orderIN.index(orderOUT[1])], datelist[orderIN.index(orderOUT[2])] ]
 
     if orderOUT[5] == 0 :
         dateM = ''
@@ -448,9 +449,9 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
         dateM = orderOUT[1]
         for i in range(len(dateOUT[dateM])) :
             dateOUT[dateM][i] = MonthString2Number[dateOUT[dateM][i]]
-        
+
     dateOUTformated = []
-    numberformat = [None,None,None] # [year,day,month]
+    numberformat = [None, None, None] # [year, day, month]
     for i in range(3) :
         numberformat[orderOUT[i]] = orderOUT[i+4]
     for i in range(len(dateOUT[0])) :
@@ -461,7 +462,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
             dateStr = '0' + str(dateOUT[0][i]) + orderOUT[3]
         elif type(dateOUT[0][i]) == int and numberformat[0] == 3 and dateOUT[0][i] < 10 :
             dateStr = '00' + str(dateOUT[0][i]) + orderOUT[3]
-        elif type(dateOUT[0][i]) == int and numberformat[0] == 3 and dateOUT[0][i] < 100 :    
+        elif type(dateOUT[0][i]) == int and numberformat[0] == 3 and dateOUT[0][i] < 100 :
             dateStr = '0' + str(dateOUT[0][i]) + orderOUT[3]
         elif type(dateOUT[0][i]) == int and numberformat[0] == 4 and dateOUT[0][i] < 10 :
             if YYbaseIN == 0 :
@@ -477,7 +478,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
             dateStr = '0' + str(dateOUT[0][i]) + orderOUT[3]
         else :
             dateStr = str(dateOUT[0][i]) + orderOUT[3]
-            
+
         if numberformat[1] == 0 or numberformat[1] == None :
             dateStr = dateStr + ''
         elif type(dateOUT[1][i]) == int and numberformat[1] == 2 and dateOUT[1][i] < 10 :
@@ -485,7 +486,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
         elif type(dateOUT[1][i]) == int and numberformat[1] == 3 and dateOUT[1][i] < 10 :
             dateStr = dateStr + '00' + str(dateOUT[1][i]) + orderOUT[3]
         elif type(dateOUT[1][i]) == int and numberformat[1] == 3 and dateOUT[1][i] < 100 :
-            dateStr = dateStr + '0' + str(dateOUT[1][i]) + orderOUT[3]    
+            dateStr = dateStr + '0' + str(dateOUT[1][i]) + orderOUT[3]
         elif type(dateOUT[1][i]) == int and numberformat[1] == 4 and dateOUT[1][i] < 10 :
             if YYbaseIN == 0 :
                 dateStr = dateStr + '000' + str(dateOUT[1][i]) + orderOUT[3]
@@ -500,7 +501,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
             dateStr = dateStr + '0' + str(dateOUT[1][i]) + orderOUT[3]
         else :
             dateStr = dateStr + str(dateOUT[1][i]) + orderOUT[3]
-            
+
         if numberformat[2] == 0 or numberformat[2] == None:
             dateStr = dateStr + ''
         elif type(dateOUT[2][i]) == int and numberformat[2] == 2 and dateOUT[2][i] < 10 :
@@ -508,7 +509,7 @@ def date(date , formatIN='' , formatOUT='' , speak=True , YYbaseIN=1900 , return
         elif type(dateOUT[2][i]) == int and numberformat[2] == 3 and dateOUT[2][i] < 10 :
             dateStr = dateStr + '00' + str(dateOUT[2][i])
         elif type(dateOUT[2][i]) == int and numberformat[2] == 3 and dateOUT[2][i] < 100 :
-            dateStr = dateStr + '0' + str(dateOUT[2][i])        
+            dateStr = dateStr + '0' + str(dateOUT[2][i])
         elif type(dateOUT[2][i]) == int and numberformat[2] == 4 and dateOUT[2][i] < 10 :
             if YYbaseIN == 0 :
                 dateStr = dateStr + '000' + str(dateOUT[2][i])

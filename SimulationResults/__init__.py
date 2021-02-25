@@ -4,7 +4,9 @@ Created on Sat May 16 20:10:06 2020
 
 @author: martin
 """
-__version__ = '0.0.20-10-18'
+
+__version__ = 0.1
+__release__ = 210225
 __all__ = ['loadSimulationResults']
 
 from .mainObject import SimResult
@@ -12,12 +14,16 @@ from .vipObject import VIP
 from .CSVSimResultNexusDesktopObject import NexusDesktopCSV
 from .excelObject import XLSX
 
-try :
+try:
     from .eclObject import ECL
-except ImportError :
-    print ( 'ERROR: failed import ECL, usually due to fail to import libecl.\n       Please install or upgrade libecl using pip command:\n\n          pip install libecl\n\n       or upgrade:\n\n          pip install libecl --upgrade\n')
+except ImportError:
+    print("""ERROR: failed import ECL, usually due to fail to import libecl.
+                    Please install or upgrade libecl using pip command:
+
+                        pip install libecl
+
+                    or upgrade:
+                        pip install libecl --upgrade
+                        """)
 
 from .loader import loadSimulationResults
- 
-
-

@@ -5,31 +5,31 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.1.21-02-05'
+__version__ = 0.2
+__release__ = 210225
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
-from .._common.inout import _extension , _verbose
-from .._common.functions import _mainKey , _wellFromAttribute
-from .._common.stringformat import date as _strDate , getnumber as _getnumber
+from .._common.inout import _extension, _verbose
+from .._common.functions import _mainKey, _wellFromAttribute
+from .._common.stringformat import date as _strDate, getnumber as _getnumber
 from .._common.keywordsConversions import fromECLtoVIP as _fromECLtoVIP, fromVIPtoECL as _fromVIPtoECL #, fromCSVtoECL
-from .._dictionaries import UniversalKeys as _UniversalKeys , VIPTypesToExtractVectors as _VIPTypesToExtractVectors
-from .._dictionaries import ECL2VIPkey as _ECL2VIPkey , VIP2ECLtype as _VIP2ECLtype, VIP2ECLkey as _VIP2ECLkey #, ECL2VIPtype
-# from datafiletoolbox.dictionaries import ECL2CSVtype , ECL2CSVkey , CSV2ECLtype , CSV2ECLkey
-
-
+from .._dictionaries import UniversalKeys as _UniversalKeys, VIPTypesToExtractVectors as _VIPTypesToExtractVectors
+from .._dictionaries import ECL2VIPkey as _ECL2VIPkey, VIP2ECLtype as _VIP2ECLtype, VIP2ECLkey as _VIP2ECLkey #, ECL2VIPtype
+# from datafiletoolbox.dictionaries import ECL2CSVtype, ECL2CSVkey, CSV2ECLtype, CSV2ECLkey
 # from datetime import timedelta
 import pandas as pd
 import numpy as np
 import os
 
+
 class XLSX(_SimResult):
     """
     object to contain data read from .xlsx files
-    
+
     """
-    def __init__(self,inputFile=None,verbosity=2,sheet_name=None,header=[0,1],units=1,overwrite=True) :
-        _SimResult.__init__(self,verbosity=verbosity)
+    def __init__(self, inputFile=None, verbosity=2, sheet_name=None, header=[0, 1], units=1, overwrite=True) :
+        _SimResult.__init__(self, verbosity=verbosity)
         self.kind = XLSX
         self.results = {}
         self.Frames = {}
@@ -38,7 +38,7 @@ class XLSX(_SimResult):
         self.lastFrame = ''
         if type(inputFile) is str and len(inputFile.strip()) > 0 :
             if os.path.isfile(inputFile) :
-                self.readSimExcel(inputFile,sheet_name=sheet_name,header=header,units=units)
+                self.readSimExcel(inputFile, sheet_name=sheet_name, header=header, units=units)
             else :
                 print("file doesn't exists")
         if len(self.Frames) > 0 :
@@ -47,7 +47,7 @@ class XLSX(_SimResult):
             #     if 'DATE' in self.keys :
             #         TIME = np.array( [0] + list( self('DATE')[1:] - self('DATE')[:-1] ) )
             self.initialize()
-    
+
     def initialize(self) :
         """
         run intensive routines, to have the data loaded and ready
@@ -56,7 +56,7 @@ class XLSX(_SimResult):
         self.extract_Wells()
         self.extract_Groups()
         self.extract_Regions()
-        self.get_Attributes(None,True)
+        self.get_Attributes(None, True)
         self.find_index()
         _SimResult.initialize(self)
         if self.is_Key('DATES') and not self.is_Key('DATE') :
@@ -64,17 +64,17 @@ class XLSX(_SimResult):
         if not self.is_Key('DATE') :
             self.createDATES()
         elif self.get_Unit('DATE') is None or self.get_Unit('DATE') != 'DATE' :
-            self.set_Units('DATE','DATE',overwrite=True)
+            self.set_Units('DATE', 'DATE', overwrite=True)
         if not self.is_Key('DATES') and self.is_Key('DATE') :
             self['DATES'] = 'DATE'
         if self.is_Key('DATES') and ( self.get_Unit('DATES') is None or self.get_Unit('DATES') != 'DATE' ) :
-            self.set_Unit('DATES','DATE',overwrite=True)
+            self.set_Unit('DATES', 'DATE', overwrite=True)
         if not self.is_Key('TIME') and self.is_Key('DATE') :
             self['TIME'] = ( self('DATE').astype('datetime64[s]') - self.start ).astype('int') / (60*60*24)
-        if self.is_Key('TIME') and ( self.get_Unit('TIME') is None or self.get_Unit('TIME').upper() in ['','NONE'] ) :
-            self.set_Unit('TIME','DAYS',overwrite=True)
-        
-    
+        if self.is_Key('TIME') and ( self.get_Unit('TIME') is None or self.get_Unit('TIME').upper() in ['', 'NONE'] ) :
+            self.set_Unit('TIME', 'DAYS', overwrite=True)
+
+
     def find_index(self) :
         """
         identify the column that is common to all the frames, to be used as index.
@@ -97,9 +97,9 @@ class XLSX(_SimResult):
                 break
         if KeyIndex :
             return self.DTindex
-        
+
         # look for other index
-        for Key in ('TIME','DATE','DATES','DAYS','MONTHS','YEARS') + self.keys :
+        for Key in ('TIME', 'DATE', 'DATES', 'DAYS', 'MONTHS', 'YEARS') + self.keys :
             KeyIndex = True
             IndexVector = None
             for frame in self.Frames :
@@ -117,76 +117,76 @@ class XLSX(_SimResult):
             if KeyIndex :
                 self.DTindex = Key
                 break
-        
+
         if KeyIndex :
             return self.DTindex
         else :
             self.DTindex = None
-    
-    def readSimExcel(self,inputFile,sheet_name=None,header=[0,1],units=1,combine_SheetName_ColumnName=False) :
+
+    def readSimExcel(self, inputFile, sheet_name=None, header=[0, 1], units=1, combine_SheetName_ColumnName=False) :
         """
         internal function to read an excel file with SimDataFrame format (header in first row, units in second row)
         """
         if type(header) is int :
             if type(units) is int :
                 if header != units :
-                    header = [header,units]
-        elif type(header) in [list,tuple] :
+                    header = [header, units]
+        elif type(header) in [list, tuple] :
             if type(units) is int :
                 if units not in header :
                     header = list(header)+[units]
         try :
-            NewFrames = pd.read_excel(inputFile,sheet_name=sheet_name,header=header)
+            NewFrames = pd.read_excel(inputFile, sheet_name=sheet_name, header=header)
         except :
             NewFrames = {}
-            _verbose(self.speak,-1,'not able to read the excel file, please check input parameters and excel sheets format.')
+            _verbose(self.speak, -1, 'not able to read the excel file, please check input parameters and excel sheets format.')
             return None
-        
+
         if sheet_name is not None and type(NewFrames) is not dict :
             NewFrames = {str(sheet_name):NewFrames}
-        
+
         for each in NewFrames :
             if each not in self.Frames :
                 self.Frames[str(each)] = NewFrames[each]
                 for col in NewFrames[each].columns :
                     NewKey = ' '.join(col[0:-1]).strip()
-                    self.FramesIndex[NewKey] = ( each , col )
+                    self.FramesIndex[NewKey] = ( each, col )
                     if col[-1].startswith('Unnamed:') :
                         NewUnits = ''
                         unitsMessage = ''
                     else :
                         NewUnits = col[-1].strip()
                         unitsMessage = " with units: '"+NewUnits+"'"
-                    self.add_Key( NewKey ) 
+                    self.add_Key( NewKey )
                     self.set_Unit( NewKey, NewUnits )
-                    _verbose(self.speak,1," > found key: '"+NewKey+"'" + unitsMessage )
+                    _verbose(self.speak, 1, " > found key: '"+NewKey+"'" + unitsMessage )
             elif self.Frames[str(each)].equals(NewFrames[each]) :
-                _verbose(self.speak,2,"the sheet '"+each+"' was already loaded.")
+                _verbose(self.speak, 2, "the sheet '"+each+"' was already loaded.")
             else :
                 if self.overwrite :
-                    _verbose(self.speak,2,"the sheet '"+str(each)+"' will overwrite the previously loaded sheet.")
+                    _verbose(self.speak, 2, "the sheet '"+str(each)+"' will overwrite the previously loaded sheet.")
                 else :
                     i = 1
                     while str(each)+'_'+str(i).zfill(2) in self.Frames :
                         i += 1
-                    _verbose(self.speak,2,"the sheet '"+str(each)+"' will be loaded as '"+str(each)+'_'+str(i).zfill(2)+"' to not overwrite the previously loaded sheet.")
+                    _verbose(self.speak, 2, "the sheet '"+str(each)+"' will be loaded as '"+str(each)+'_'+str(i).zfill(2)+"' to not overwrite the previously loaded sheet.")
                     self.Frames[str(each)+'_'+str(i).zfill(2)] = NewFrames[each]
                     for col in NewFrames[each].columns :
                         NewKey = ' '.join(col[0:-1]).strip()
-                        self.FramesIndex[NewKey] = ( str(each)+'_'+str(i).zfill(2) , col )
+                        self.FramesIndex[NewKey] = ( str(each)+'_'+str(i).zfill(2), col )
                         if col[-1].startswith('Unnamed:') :
                             NewUnits = ''
                             unitsMessage = ''
                         else :
                             NewUnits = col[-1].strip()
                             unitsMessage = " with units: '"+NewUnits+"'"
-                        self.add_Key( NewKey ) 
-                        userVerbose , self.speak = self.speak , 0
+                        self.add_Key( NewKey )
+                        userVerbose, self.speak = self.speak, 0
                         self.set_Unit( NewKey, NewUnits )
                         self.speak = userVerbose
-                        _verbose(self.speak,1," > found key: '"+NewKey+"'" + unitsMessage )
-    
-    def list_Keys(self,pattern=None,reload=False) :
+                        _verbose(self.speak, 1, " > found key: '"+NewKey+"'" + unitsMessage )
+
+    def list_Keys(self, pattern=None, reload=False) :
         """
         Return a StringList of summary keys matching @pattern.
 
@@ -198,19 +198,19 @@ class XLSX(_SimResult):
         If pattern is None you will get all the keys of summary
         object.
         """
-                    
+
         if pattern is None :
             return self.keys
         else:
-            keysList = [] 
+            keysList = []
             for key in self.keys:
                 if pattern in key :
                     keysList.append(key)
             return tuple( keysList )
-    
+
     # support functions for get_Vector:
-    def loadVector(self,key,Frame=None) :
-        """ 
+    def loadVector(self, key, Frame=None) :
+        """
         internal function to return a numpy vector from the Frame files
         """
         if Frame is None and key in self.FramesIndex :
@@ -218,11 +218,11 @@ class XLSX(_SimResult):
         elif Frame in self.Frames :
             pass # OK
         else :
-            _verbose(self.speak,1,"the key '"+key+"' is not present in these frames.")
+            _verbose(self.speak, 1, "the key '"+key+"' is not present in these frames.")
             return None
         if self.lastFrame == '' :
             self.lastFrame = Frame
-        
+
         if key == self.DTindex :
             if key in self.Frames[self.lastFrame] :
                 return self.Frames[self.lastFrame][self.FramesIndex[key][1]].to_numpy()
@@ -238,17 +238,17 @@ class XLSX(_SimResult):
             result = self.Frames[Frame][self.FramesIndex[key][1]].to_numpy()
             self.lastFrame = Frame
             return result
-    
-    def extract_Wells(self) : 
-                
+
+    def extract_Wells(self) :
+
         wellsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'W' and ':' in K ) ]
         wellsList = list( set( wellsList ) )
         wellsList.sort()
-        self.wells = tuple( wellsList ) 
+        self.wells = tuple( wellsList )
 
         return self.wells
-            
-    def extract_Groups(self,pattern=None,reload=False) :
+
+    def extract_Groups(self, pattern=None, reload=False) :
         """
         Will return a list of all the group names in case.
 
@@ -259,7 +259,7 @@ class XLSX(_SimResult):
         groupsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
         groupsList = list( set( groupsList ) )
         groupsList.sort()
-        self.groups = tuple( groupsList ) 
+        self.groups = tuple( groupsList )
         if pattern != None :
             results = []
             for group in self.groups :
@@ -268,13 +268,13 @@ class XLSX(_SimResult):
             return tuple(results)
         else :
             return self.groups
-        
-    def extract_Regions(self,pattern=None) :
+
+    def extract_Regions(self, pattern=None) :
         # preparing object attribute
         regionsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
         regionsList = list( set( regionsList ) )
         regionsList.sort()
-        self.groups = tuple( regionsList ) 
+        self.groups = tuple( regionsList )
         if pattern != None :
             results = []
             for group in self.groups :
@@ -283,16 +283,16 @@ class XLSX(_SimResult):
             return tuple(results)
         else :
             return self.groups
-    
-    def get_Unit(self,Key='--EveryType--') :
+
+    def get_Unit(self, Key='--EveryType--') :
         """
         returns a string identifiying the unit of the requested Key
-        
-        Key could be a list containing Key strings, in this case a dictionary 
+
+        Key could be a list containing Key strings, in this case a dictionary
         with the requested Keys and units will be returned.
-        the Key '--EveryType--' will return a dictionary Keys and units 
+        the Key '--EveryType--' will return a dictionary Keys and units
         for all the keys in the results file
-        
+
         """
         if type(Key) is str and Key.strip() != '--EveryType--' :
             Key = Key.strip().upper()
@@ -314,7 +314,7 @@ class XLSX(_SimResult):
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
-                    else :                    
+                    else :
                         return None
                 elif Key[0] == 'G' :
                     UList=[]
@@ -326,7 +326,7 @@ class XLSX(_SimResult):
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
-                    else :                    
+                    else :
                         return None
                 elif Key[0] == 'R' :
                     UList=[]
@@ -338,10 +338,10 @@ class XLSX(_SimResult):
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
-                    else :                    
+                    else :
                         return None
                 UList = None
-                
+
         elif type(Key) is str and Key.strip() == '--EveryType--' :
             Key = []
             KeyDict = {}
@@ -377,5 +377,5 @@ class XLSX(_SimResult):
             tempUnits = {}
             for each in Key :
                 if type(each) == str :
-                    tempUnits[each] = self.get_Unit(each) 
+                    tempUnits[each] = self.get_Unit(each)
             return tempUnits

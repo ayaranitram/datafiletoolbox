@@ -5,7 +5,8 @@ Created on Wed May 13 00:45:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.20-10-18'
+__version__ = 0.5
+__release__ = 210225
 __all__ = ['loadSimulationResults']
 
 from .._common.inout import _extension
@@ -21,6 +22,7 @@ try :
 except ImportError :
     print ( 'failed import ECL, usually due to fail to import libecl')
 
+
 def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
     """
     Loads the results of reservoir simulation into and SimuResult object.
@@ -32,14 +34,14 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
         if Verbosity is None :
             Verbosity = kwargs['speak']
             del kwargs['speak']
-    
+
     if Verbosity is None :
         Verbosity = 2
     elif type(Verbosity) in [bool,float] :
         Verbosity = int(Verbosity)
     else :
         Verbosity = 2
-            
+
     if FullPath is None :
         print( 'Please provide the path to the simulation results as string.')
         return None
@@ -71,8 +73,8 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
         OBJ = _NexusDesktopCSV(FullPath,verbosity=Verbosity)
     elif Simulator in ['SimPandasExcel'] :
         OBJ = _XLSX(FullPath,verbosity=Verbosity,**kwargs)
-    
+
     if OBJ is not None and Verbosity != 0 :
         print(OBJ.__repr__())
     return OBJ
-    
+
