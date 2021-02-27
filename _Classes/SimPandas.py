@@ -213,7 +213,7 @@ class SimSeries(Series) :
         # get separator for the column names, 'partA'+'separator'+'partB'
         if 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
             self.set_NameSeparator(kwargsB['nameSeparator'])
-        elif ( self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False ) and ( self.name is not None and ':' in self.name ) :
+        elif (self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False ) and (self.name is not None and ':' in self.name ) :
             self.nameSeparator = ':'
         elif self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False :
             self.nameSeparator = ''
@@ -349,7 +349,7 @@ class SimSeries(Series) :
         if SDF1.nameSeparator is None or SDF2.nameSeparator is None :
             raise ValueError("the 'nameSeparator' must not be empty in both SimSeries.")
 
-        if LR == 'L' or ( LR is None and len(SDF1.left) == 1 and len(SDF2.left) == 1 ) :
+        if LR == 'L' or (LR is None and len(SDF1.left) == 1 and len(SDF2.left) == 1 ) :
             SDF2C = SDF2.copy()
             SDF2C.renameRight()
             SDF1C = SDF1.copy()
@@ -368,7 +368,7 @@ class SimSeries(Series) :
                 if len(alternative[2]) < len(commonNames) :
                     return alternative
 
-        elif LR == 'R' or ( LR is None and len(SDF1.right) == 1 and len(SDF2.right) == 1 ) :
+        elif LR == 'R' or (LR is None and len(SDF1.right) == 1 and len(SDF2.right) == 1 ) :
             SDF2C = SDF2.copy()
             SDF2C.renameLeft()
             SDF1C = SDF1.copy()
@@ -1891,7 +1891,7 @@ class SimDataFrame(DataFrame) :
         if SDF1.nameSeparator is None or SDF2.nameSeparator is None :
             raise ValueError("the 'nameSeparator' must not be empty in both SimDataFrames.")
 
-        if LR == 'L' or ( LR is None and len(SDF1.left) == 1 and len(SDF2.left) == 1 ) :
+        if LR == 'L' or (LR is None and len(SDF1.left) == 1 and len(SDF2.left) == 1 ) :
             SDF2C = SDF2.copy()
             SDF2C.renameRight()
             SDF1C = SDF1.copy()
@@ -1910,7 +1910,7 @@ class SimDataFrame(DataFrame) :
                 if len(alternative[2]) < len(commonNames) :
                     return alternative
 
-        elif LR == 'R' or ( LR is None and len(SDF1.right) == 1 and len(SDF2.right) == 1 ) :
+        elif LR == 'R' or (LR is None and len(SDF1.right) == 1 and len(SDF2.right) == 1 ) :
             SDF2C = SDF2.copy()
             SDF2C.renameLeft()
             SDF1C = SDF1.copy()
