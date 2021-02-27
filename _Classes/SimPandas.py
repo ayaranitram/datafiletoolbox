@@ -213,13 +213,15 @@ class SimSeries(Series) :
         # get separator for the column names, 'partA'+'separator'+'partB'
         if 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
             self.set_NameSeparator(kwargsB['nameSeparator'])
-        if self.nameSeparator in [None, '', False] and ':' in self.name :
+        elif ( self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False ) and ( self.name is not None and ':' in self.name ) :
             self.nameSeparator = ':'
-        if self.nameSeparator in [None, '', False] :
+        elif self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False :
             self.nameSeparator = ''
-        if self.nameSeparator is True :
+        elif self.nameSeparator is True :
             self.nameSeparator = ':'
-
+        else :
+            self.nameSeparator = ':'
+            
         # catch autoAppend from kwargs
         if 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None :
             self.autoAppend = bool(kwargs['autoAppend'] )
@@ -274,6 +276,7 @@ class SimSeries(Series) :
     def get_NameSeparator(self) :
         if self.nameSeparator in [None, '', False] :
             warn(" NameSeparator is not defined.")
+            return ''
         else :
             return self.nameSeparator
 
@@ -300,6 +303,90 @@ class SimSeries(Series) :
     @property
     def columns(self) :
         return Index([self.name] )
+
+    @property
+    def right(self) :
+        if self.nameSeparator in [None, '', False] :
+            return tuple(self.columns )
+        objs = []
+        for each in list(self.columns ) :
+            if self.nameSeparator in each :
+                objs += [each.split(self.nameSeparator )[-1]]
+            else :
+                objs += [each]
+        return tuple(set(objs))
+
+    @property
+    def left(self) :
+        if self.nameSeparator in [None, '', False] :
+            return tuple(self.columns )
+        objs = []
+        for each in list(self.columns ) :
+            if self.nameSeparator in each :
+                objs += [each.split(self.nameSeparator )[0]]
+            else :
+                objs += [each]
+        return tuple(set(objs))
+
+    def _CommonRename(self, SimSeries1, SimSeries2=None, LR=None) :
+        SDF1, SDF2 = SimSeries1, SimSeries2
+
+        cha = self.intersectionCharacter
+        
+        if LR is not None :
+            LR = LR.upper()
+            if LR not in 'LR' :
+                LR = None
+
+        if SDF2 is None :
+            SDF1, SDF2 = self, SDF1
+
+        if type(SDF1) is not SimSeries :
+            raise TypeError("both series to be compared must be SimSeries.")
+        if type(SDF2) is not SimSeries :
+            raise TypeError("both series to be compared must be SimSeries.")
+
+        if SDF1.nameSeparator is None or SDF2.nameSeparator is None :
+            raise ValueError("the 'nameSeparator' must not be empty in both SimSeries.")
+
+        if LR == 'L' or ( LR is None and len(SDF1.left) == 1 and len(SDF2.left) == 1 ) :
+            SDF2C = SDF2.copy()
+            SDF2C.renameRight()
+            SDF1C = SDF1.copy()
+            SDF1C.renameRight()
+            commonNames = {}
+            for c in SDF1C.columns :
+                if c in SDF2C.columns :
+                    commonNames[c] = SDF1.left[0] + cha + SDF2.left[0] + SDF1.nameSeparator + c
+                else :
+                    commonNames[c] = SDF1.left[0] + SDF1.nameSeparator + c
+            for c in SDF2C.columns :
+                if c not in SDF1C.columns :
+                    commonNames[c] = SDF2.left[0] + SDF1.nameSeparator + c
+            if LR is None and len(commonNames) > 1 :
+                alternative = self._CommonRename(SDF1, SDF2, LR='R')
+                if len(alternative[2]) < len(commonNames) :
+                    return alternative
+
+        elif LR == 'R' or ( LR is None and len(SDF1.right) == 1 and len(SDF2.right) == 1 ) :
+            SDF2C = SDF2.copy()
+            SDF2C.renameLeft()
+            SDF1C = SDF1.copy()
+            SDF1C.renameLeft()
+            commonNames = {}
+            for c in SDF1C.columns :
+                if c in SDF2C.columns :
+                    commonNames[c] = c + SDF1.nameSeparator + SDF1.right[0] + cha + SDF2.right[0]
+                else :
+                    commonNames[c] = c + SDF1.nameSeparator + SDF1.right[0]
+            for c in SDF2C.columns :
+                if c not in SDF1C.columns :
+                    commonNames[c] = c + SDF1.nameSeparator + SDF2.right[0]
+            if LR is None and len(commonNames) > 1 :
+                alternative = self._CommonRename(SDF1, SDF2, LR='L')
+                if len(alternative[2]) < len(commonNames) :
+                    return alternative
+        return SDF1C, SDF2C, commonNames
 
     def to(self, units) :
         """
@@ -513,18 +600,18 @@ class SimSeries(Series) :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
                 if self.units == other.units :
-                    result = self.add(other)
+                    result = self.S.add(other.S)
                     return SimSeries(data=result, units=self.units, dtype=self.dtype )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
-                    result = self.add(otherC)
+                    result = self.S.add(otherC.S)
                     return SimSeries(data=result, units=self.units, dtype=self.dtype )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
-                    result = other.add(selfC)
+                    result = other.S.add(selfC.S)
                     return SimSeries(data=result, units=other.units, dtype=other.dtype )
                 else :
-                    result = self.add(other)
+                    result = self.S.add(other.S)
                     return SimSeries(data=result, units=self.units+'+'+other.units, dtype=self.dtype )
             else :
                 raise NotImplementedError
@@ -1182,6 +1269,7 @@ class SimDataFrame(DataFrame) :
     def get_NameSeparator(self) :
         if self.nameSeparator in [None, '', False] :
             warn(" NameSeparator is not defined.")
+            return ''
         else :
             return self.nameSeparator
 
@@ -1782,21 +1870,28 @@ class SimDataFrame(DataFrame) :
             catch.units = newUnits
             return catch
 
-    def _CommonRename(self, SimDataFrame1, SimDataFrame2=None) :
+    def _CommonRename(self, SimDataFrame1, SimDataFrame2=None, LR=None) :
         SDF1, SDF2 = SimDataFrame1, SimDataFrame2
 
         cha = self.intersectionCharacter
+        
+        if LR is not None :
+            LR = LR.upper()
+            if LR not in 'LR' :
+                LR = None
 
         if SDF2 is None :
             SDF1, SDF2 = self, SDF1
 
-        if type(SDF1) is not SimDataFrame or type(SDF2) is not SimDataFrame :
+        if type(SDF1) is not SimDataFrame :
+            raise TypeError("both dataframes to be compared must be SimDataFrames.")
+        if type(SDF2) is not SimDataFrame :
             raise TypeError("both dataframes to be compared must be SimDataFrames.")
 
         if SDF1.nameSeparator is None or SDF2.nameSeparator is None :
             raise ValueError("the 'nameSeparator' must not be empty in both SimDataFrames.")
 
-        if len(SDF1.left) == 1 and len(SDF2.left) == 1 :
+        if LR == 'L' or ( LR is None and len(SDF1.left) == 1 and len(SDF2.left) == 1 ) :
             SDF2C = SDF2.copy()
             SDF2C.renameRight()
             SDF1C = SDF1.copy()
@@ -1810,8 +1905,12 @@ class SimDataFrame(DataFrame) :
             for c in SDF2C.columns :
                 if c not in SDF1C.columns :
                     commonNames[c] = SDF2.left[0] + SDF1.nameSeparator + c
+            if LR is None and len(commonNames) > 1 :
+                alternative = self._CommonRename(SDF1, SDF2, LR='R')
+                if len(alternative[2]) < len(commonNames) :
+                    return alternative
 
-        elif len(SDF1.right) == 1 and len(SDF2.right) == 1 :
+        elif LR == 'R' or ( LR is None and len(SDF1.right) == 1 and len(SDF2.right) == 1 ) :
             SDF2C = SDF2.copy()
             SDF2C.renameLeft()
             SDF1C = SDF1.copy()
@@ -1825,6 +1924,10 @@ class SimDataFrame(DataFrame) :
             for c in SDF2C.columns :
                 if c not in SDF1C.columns :
                     commonNames[c] = c + SDF1.nameSeparator + SDF2.right[0]
+            if LR is None and len(commonNames) > 1 :
+                alternative = self._CommonRename(SDF1, SDF2, LR='L')
+                if len(alternative[2]) < len(commonNames) :
+                    return alternative
         return SDF1C, SDF2C, commonNames
 
     def __contains__(self, item) :
