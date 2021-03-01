@@ -2320,14 +2320,15 @@ class SimResult(object):
             if len(self.continuations) == 0 :
                 print(" nothing to remove, no continuation objects defined")
             else :
-                print(" removed ALL the continuation objects (" + str(len(self.restarts)) + " objects removed)" )
-                self.restarts = []
+                print(" removed ALL the continuation objects (" + str(len(self.continuations)) + " objects removed)" )
+                self.continuations = []
 
-        if SimResultObject in self.restarts :
-            print(" removed continuation object '" + str(self.restarts.pop(SimResultObject)) + "'")
+        if SimResultObject in self.continuations :
+            print(" removed continuation object '" + str(self.continuations.pop(SimResultObject)) + "'")
 
-        # # update self.savingFilter
-        # self.set_savingFilter()
+
+        # # update self.set_vectorTemplate()
+        self.set_vectorTemplate()
         # recreate TIME vector if TimeVector is DATE
         if self.get_TimeVector() in ['DATE', 'DATES'] :
             self.createTIME()
