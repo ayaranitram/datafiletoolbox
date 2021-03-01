@@ -2156,8 +2156,6 @@ class SimResult(object):
             self.restartFilters[ self.restarts[-1] ] = thisFilter
             # update self.vectorTemplate
             self.set_vectorTemplate(Restart=True)
-            # # update self.savingFilter
-            # self.set_savingFilter(Restart=True)
 
             # recreate filter for this simulation (self), now considering the restarts
             self.redo_Filter()
@@ -2217,8 +2215,6 @@ class SimResult(object):
             self.continuationFilters[ self.continuations[0] ] = thisFilter
             # update self.vectorTemplate
             self.set_vectorTemplate(Continue=True)
-            # # update self.savingFilter
-            # self.set_savingFilter(Continue=True)
 
             # recreate filter for this simulation (self), now considering the continuations
             self.redo_Filter()
@@ -2280,8 +2276,8 @@ class SimResult(object):
         if SimResultObject in self.restarts :
             print(" removed restart object '" + str(self.restarts.pop(SimResultObject)) + "'")
 
-        # # update self.savingFilter
-        # self.set_savingFilter()
+        # # update self.set_vectorTemplate()
+        self.set_vectorTemplate()
         # recreate TIME vector if TimeVector is DATE
         if self.get_TimeVector() in ['DATE', 'DATES'] :
             self.createTIME()
