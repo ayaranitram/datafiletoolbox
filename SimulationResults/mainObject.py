@@ -2104,6 +2104,7 @@ class SimResult(object):
         else :
             _verbose(self.speak, 2, ' <set_Name> Name should be a string'  )
             self.name = str(name)
+
     def get_Name(self):
         if type(self.name ) != str :
             _verbose(self.speak, 3, ' <get_Name> the name of ' + str(self.name) + ' is not a string.' )
@@ -3910,44 +3911,46 @@ class SimResult(object):
                 rawDF = rawDF.replace(np.nan, self.null)
                 newRawVector = rawDF[Key].to_numpy()
                 self.vectors[Key] = newRawVector
-            elif len(VectorData[self.get_vectorTemplate() == 0]) > len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
+            elif len(VectorData[self.get_vectorTemplate() == 0]) > len(self.get_RawVector(self.keys[0])[self.keys[0]]):
                 raise ValueError('something went wrong')
 
         # save contuation vector part
-        if len(self.get_vectorTemplate()[self.get_vectorTemplate()==1]) > 0 :
-            if len(VectorData[self.get_vectorTemplate() == 1]) == len(self.checkContinuations(self.keys[0])[self.keys[0]]) :
+        if len(self.get_vectorTemplate()[self.get_vectorTemplate() == 1]) > 0:
+            if len(VectorData[self.get_vectorTemplate() == 1]) == len(self.checkContinuations(self.keys[0])[self.keys[0]]):
                 self.vectorsContinue[Key] = VectorData[self.get_vectorTemplate() == 1]
-            elif len(VectorData[self.get_vectorTemplate() == 1]) < len(self.checkContinuations(self.keys[0])[self.keys[0]]) :
+            elif len(VectorData[self.get_vectorTemplate() == 1]) < len(self.checkContinuations(self.keys[0])[self.keys[0]]):
                 # a filter is applied
-                filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate()==1]
-                filteredDF = DataFrame({'SelfTime':filteredTime, Key:VectorData[self.get_vectorTemplate()==1]}).set_index('SelfTime')
+                filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate() == 1]
+                filteredDF = DataFrame({'SelfTime': filteredTime, Key: VectorData[self.get_vectorTemplate() == 1]}).set_index('SelfTime')
                 rawTime = self.checkContinuations(self.get_TimeVector())[self.get_TimeVector()]
-                rawDF = DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
+                rawDF = DataFrame({'SelfTime': rawTime}).set_index('SelfTime')
                 rawDF[Key] = filteredDF[Key]
                 rawDF = rawDF.replace(np.nan, self.null)
                 newRawVector = rawDF[Key].to_numpy()
                 self.vectorsContinue[Key] = newRawVector
-            elif len(VectorData[self.get_vectorTemplate() == 1]) > len(self.checkContinuations(self.keys[0])[self.keys[0]]) :
+            elif len(VectorData[self.get_vectorTemplate() == 1]) > len(self.checkContinuations(self.keys[0])[self.keys[0]]):
                 raise ValueError('something went wrong')
 
         self.units[Key] = Units
-        if not self.is_Key(Key) :
+        if not self.is_Key(Key):
             self.add_Key(Key)
         self.get_Attributes(reload=True)
 
-    def set_Overwrite(self, overwrite) :
-        if type(overwrite) is bool :
+    def set_Overwrite(self, overwrite):
+        if type(overwrite) is bool:
             self.overwrite = overwrite
-    def get_Overwrite(self) :
+
+    def get_Overwrite(self):
         return self.overwrite
 
     def stripUnits(self):
-        for key in self.units :
-            if self.units[key] is None :
+        for key in self.units:
+            if self.units[key] is None:
                 pass
-            else :
+            else:
                 self.units[key] = self.units[key].strip().strip("'").strip('"')
-                if self.units[key][0] == '(' and self.units[key][-1] == ')' and self.units[key].count('(') == 1 and self.units[key].count(')') == 1 :
+                if ( self.units[key] is not None and len(self.units[key]) > 0 ) and (
+                        self.units[key][0] == '(' and self.units[key][-1] == ')' and self.units[key].count('(') == 1 and self.units[key].count(')') == 1 ) :
                     self.units[key] = self.units[key].strip('( )').strip(" '").strip(' "')
                 if 'DíA' in self.units[key] :
                     self.units[key] = self.units[key].replace('DíA', 'DAY')
