@@ -354,6 +354,8 @@ class SimResult(object):
             self.vectorTemplate = np.array([-1]*len(self.checkRestarts(self.get_TimeVector())[self.get_TimeVector()]) + list(self.vectorTemplate[self.vectorTemplate!=-1]) )
         if Continue :
             self.vectorTemplate = np.array(list(self.vectorTemplate[self.vectorTemplate!=1]) + [1]*len(self.checkContinuations(self.get_TimeVector())[self.get_TimeVector()]) )
+        if not Restart and not Continue :
+            self.vectorTemplate = np.array([0]*len(self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]))
 
     def get_vectorTemplate(self) :
         if self.vectorTemplate is None :
