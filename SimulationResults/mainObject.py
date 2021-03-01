@@ -2082,13 +2082,16 @@ class SimResult(object):
                 print('  ' + str(each))
 
     def set_FieldTime(self) :
-        if len(self.get_Restart() ) > 0 :
-            FieldTime = self.checkRestarts('TIME')['TIME']
-        else :
-            FieldTime = self.loadVector('TIME')
+        # if len(self.get_Restart() ) > 0 :
+        #     FieldTime = self.checkRestarts('TIME')['TIME']
+        # else :
+        #     FieldTime = self.loadVector('TIME')
+        # use property TimeVector instead of string 'TIME'
+        TimeVector = self.get_RestartsTimeVector()
+        FieldTime = self(TimeVector)
         if FieldTime is None :
-            if self.get_Vector('TIME')['TIME'] is not None :
-                FieldTime = self.get_Vector('TIME')['TIME']
+            if self.get_Vector(TimeVector)[TimeVector] is not None :
+                FieldTime = self.get_Vector(TimeVector)[TimeVector]
         if FieldTime is not None :
             self.fieldtime = (min(FieldTime), max(FieldTime), FieldTime )
 
