@@ -71,7 +71,7 @@ def _Series2Frame(aSimSeries) :
         return aSimSeries
     if type(aSimSeries) is SimSeries :
         try :
-            return SimDataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list() ) ), units=aSimSeries.get_Units(), index=[aSimSeries.name], dtype=aSimSeries.dtype )
+            return SimDataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list() ) ), units=aSimSeries.get_Units(), index=[aSimSeries.name], speak=aSimSeries.speak, indexName=aSimSeries.indexName, indexUnits=aSimSeries.indexUnits, nameSeparator=aSimSeries.nameSeparator, intersectionCharacter=aSimSeries.intersectionCharacter, autoAppend=aSimSeries.autoAppend, dtype=aSimSeries.dtype )
         except :
             return aSimSeries
     if type(aSimSeries) is Series :
@@ -94,6 +94,12 @@ def _cleanAxis(axis=None) :
         return int(axis)
     return axis
 
+
+def _stringNewName(newName):
+    if len(newName) == 1 :
+        return list(newName.values())[0]
+    else:
+        return '∩'.join(map(str,set(newName.values())))
 
 class SimSeries(Series) :
     """
@@ -122,7 +128,7 @@ class SimSeries(Series) :
     """
     _metadata = ["units", "speak", 'indexUnits', 'nameSeparator', 'intersectionCharacter', 'autoAppend']
 
-    def __init__(self, data=None, units=None, index=None, speak=False, *args, **kwargs) :
+    def __init__(self, data=None, units=None, index=None, name=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩' , autoAppend=False, *args, **kwargs) :
         Uname = None
         Udict = None
         self.units = None
@@ -225,6 +231,10 @@ class SimSeries(Series) :
         # catch autoAppend from kwargs
         if 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None :
             self.autoAppend = bool(kwargs['autoAppend'] )
+            
+        # set the provided name
+        if self.name is None and name is not None:
+            self.name = name    
 
     @property
     def _constructor(self):
@@ -233,6 +243,16 @@ class SimSeries(Series) :
     def _constructor_expanddim(self):
         # from datafiletoolbox.SimPandas.simframe import SimDataFrame
         return SimDataFrame
+    
+    @property
+    def _SimParameters(self) :
+        return {'units':self.units,
+                'speak':self.speak,
+                'indexName':self.index.name,
+                'indexUnits':self.indexUnits,
+                'nameSeparator':self.nameSeparator,
+                'intersectionCharacter':self.intersectionCharacter,
+                'autoAppend':self.autoAppend}
 
     def __getitem__(self, key=None) :
         if key is None :
@@ -327,6 +347,42 @@ class SimSeries(Series) :
             else :
                 objs += [each]
         return tuple(set(objs))
+    
+    def renameRight(self, inplace=False) :
+        if self.nameSeparator in [None, '', False] :
+            raise ValueError("name separator must not be None")
+        objs = {}
+        for each in list(self.columns ) :
+            if self.nameSeparator in each :
+                objs[each] = each.split(self.nameSeparator )[-1]
+                # self.units[ each.split(self.nameSeparator )[-1] ] = self.units[ each ]
+                # del(self.units[each])
+            else :
+                objs[each] = each
+        if len(self.columns) == 1 :
+            objs = list(objs.values())[0]
+        if inplace :
+            self.rename(objs, inplace=True)
+        else :
+            return self.rename(objs, inplace=False)
+
+    def renameLeft(self, inplace=False) :
+        if self.nameSeparator in [None, '', False] :
+            raise ValueError("name separator must not be None")
+        objs = {}
+        for each in list(self.columns ) :
+            if self.nameSeparator in each :
+                objs[each] = each.split(self.nameSeparator)[0]
+                # self.units[ each.split(self.nameSeparator )[0] ] = self.units[ each ]
+                # del(self.units[each])
+            else :
+                objs[each] = each
+        if len(self.columns) == 1 :
+            objs = list(objs.values())[0]
+        if inplace :
+            self.rename(objs, inplace=True)
+        else :
+            return self.rename(objs, inplace=False)
 
     def _CommonRename(self, SimSeries1, SimSeries2=None, LR=None) :
         SDF1, SDF2 = SimSeries1, SimSeries2
@@ -351,9 +407,9 @@ class SimSeries(Series) :
 
         if LR == 'L' or (LR is None and len(SDF1.left) == 1 and len(SDF2.left) == 1 ) :
             SDF2C = SDF2.copy()
-            SDF2C.renameRight()
+            SDF2C.renameRight(inplace=True)
             SDF1C = SDF1.copy()
-            SDF1C.renameRight()
+            SDF1C.renameRight(inplace=True)
             commonNames = {}
             for c in SDF1C.columns :
                 if c in SDF2C.columns :
@@ -370,9 +426,9 @@ class SimSeries(Series) :
 
         elif LR == 'R' or (LR is None and len(SDF1.right) == 1 and len(SDF2.right) == 1 ) :
             SDF2C = SDF2.copy()
-            SDF2C.renameLeft()
+            SDF2C.renameLeft(inplace=True)
             SDF1C = SDF1.copy()
-            SDF1C.renameLeft()
+            SDF1C.renameLeft(inplace=True)
             commonNames = {}
             for c in SDF1C.columns :
                 if c in SDF2C.columns :
@@ -388,6 +444,63 @@ class SimSeries(Series) :
                     return alternative
         return SDF1C, SDF2C, commonNames
 
+    def rename(self,index=None, **kwargs) :
+        """
+        wrapper of rename function from Pandas.
+
+        Alter Series index labels or name.
+
+        Function / dict values must be unique (1-to-1). 
+        Labels not contained in a dict / Series will be left as-is. 
+        Extra labels listed don’t throw an error.
+
+        Alternatively, change Series.name with a scalar value.
+
+        See the user guide for more.
+
+        Parameters
+        axis{0 or “index”}
+        Unused. Accepted for compatibility with DataFrame method only.
+
+        indexscalar, hashable sequence, dict-like or function, optional
+        Functions or dict-like are transformations to apply to the index. 
+        Scalar or hashable sequence-like will alter the Series.name attribute.
+
+        **kwargs
+        Additional keyword arguments passed to the function. Only the “inplace” keyword is used.
+
+        Returns
+        Series or None
+        Series with index labels or name altered or None if inplace=True.
+        """
+        if type(index) is dict :
+            if len(index) == 1 and list(index.keys()) not in self.index :
+                return self.rename(list(index.values())[0],**kwargs)
+            cBefore = list(self.index)
+            if 'inplace' in kwargs and kwargs['inplace'] :
+                super().rename(**kwargs)
+                cAfter = list(self.index)
+            else :
+                catch = super().rename(**kwargs)
+                cAfter = list(catch.index)
+            newUnits = {}
+            for i in range(len(cBefore)) :
+                newUnits[cAfter[i]] = self.units[cBefore[i]]
+            if 'inplace' in kwargs and kwargs['inplace'] :
+                self.units = newUnits
+                return None
+            else :
+                catch.units = newUnits
+                return catch
+        elif type(index) is str :
+            if 'inplace' in kwargs and kwargs['inplace'] :
+                self.name = index.strip()
+                return None
+            else :
+                catch = self.copy()
+                catch.name = index
+                return catch
+
     def to(self, units) :
         """
         returns the series converted to the requested units if possible,
@@ -402,21 +515,21 @@ class SimSeries(Series) :
         """
         if type(units) is str and type(self.units) is str :
             if convertibleUnits(self.units, units) :
-                return SimSeries(data=convertUnit(self.S, self.units, units, self.speak ), units=units, dtype=self.dtype )
+                return SimSeries(data=convertUnit(self.S, self.units, units, self.speak ), units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
         if type(units) is str and len(set(self.units.values())) == 1 :
-            return SimSeries(data=convertUnit(self.S, list(set(self.units.values()))[0], units, self.speak ), units=units, dtype=self.dtype )
+            return SimSeries(data=convertUnit(self.S, list(set(self.units.values()))[0], units, self.speak ), units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
 
     def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
         axis = _cleanAxis(axis)
-        return SimSeries(data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), units=self.units, dtype=self.dtype )
+        return SimSeries(data=self.S.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )
 
     def dropna(self, axis=0, inplace=False, how=None) :
         axis = _cleanAxis(axis)
-        return SimSeries(data=self.DF.dropna(axis=axis, inplace=inplace, how=how), units=self.units, dtype=self.dtype )
+        return SimSeries(data=self.S.dropna(axis=axis, inplace=inplace, how=how), **self._SimParameters )
 
     def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise') :
         axis = _cleanAxis(axis)
-        return SimSeries(data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors='errors'), units=self.units, dtype=self.dtype )
+        return SimSeries(data=self.S.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors='errors'), **self._SimParameters )
 
     @property
     def wells(self) :
@@ -591,7 +704,7 @@ class SimSeries(Series) :
 
     def __neg__(self) :
         result = -self.as_Series()
-        return SimSeries(data=result, units=self.units, indexUnits=self.indexUnits, dtype=self.dtype )
+        return SimSeries(data=result, **self._SimParameters )
 
     def __add__(self, other) :
         # both SimSeries
@@ -599,26 +712,27 @@ class SimSeries(Series) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
+                newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.S.add(other.S)
-                    return SimSeries(data=result, units=self.units, dtype=self.dtype )
+                    return SimSeries(data=result, name=newName, **self._SimParameters )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.S.add(otherC.S)
-                    return SimSeries(data=result, units=self.units, dtype=self.dtype )
+                    return SimSeries(data=result, name=newName, **self._SimParameters )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = other.S.add(selfC.S)
-                    return SimSeries(data=result, units=other.units, dtype=other.dtype )
+                    return SimSeries(data=result, units=other.units, name=newName, dtype=other.dtype, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.S.add(other.S)
-                    return SimSeries(data=result, units=self.units+'+'+other.units, dtype=self.dtype )
+                    return SimSeries(data=result, units=self.units+'+'+other.units, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
             else :
                 raise NotImplementedError
 
-        # let's Pandas deal with other types, maintain units and dtype
+        # let's Pandas deal with other types, maintain units, dtype and name
         result = self.as_Series() + other
-        return SimSeries(data=result, units=self.units, indexUnits=self.indexUnits, dtype=self.dtype )
+        return SimSeries(data=result, name=self.name, **self._SimParameters )
 
     def __radd__(self, other) :
         return self.__add__(other)
@@ -629,26 +743,27 @@ class SimSeries(Series) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
+                newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.sub(other)
-                    return SimSeries(data=result, units=self.units, dtype=self.dtype )
+                    return SimSeries(data=result, name=newName, **self._SimParameters )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.sub(otherC)
-                    return SimSeries(data=result, units=self.units, dtype=self.dtype )
+                    return SimSeries(data=result, name=newName, **self._SimParameters )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = selfC.sub(other)
-                    return SimSeries(data=result, units=other.units, dtype=other.dtype )
+                    return SimSeries(data=result, units=other.units, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.sub(other)
-                    return SimSeries(data=result, units=self.units+'-'+other.units, dtype=self.dtype )
+                    return SimSeries(data=result, units=self.units+'-'+other.units, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() - other
-        return SimSeries(data=result, units=self.units, indexUnits=self.indexUnits, dtype=self.dtype )
+        return SimSeries(data=result, name=self.name, **self._SimParameters )
 
     def __rsub__(self, other) :
         return self.__neg__().__add__(other)
@@ -659,30 +774,31 @@ class SimSeries(Series) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
+                newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.mul(other)
                     unitsResult = unitProduct(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=self.dtype )
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.mul(otherC)
                     unitsResult = unitProduct(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=self.dtype )
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = other.mul(selfC)
                     unitsResult = unitProduct(other.units, self.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype )
+                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.mul(other)
                     unitsResult = unitProduct(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=self.dtype )
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() * other
-        return SimSeries(data=result, units=self.units, indexUnits=self.indexUnits, dtype=self.dtype )
+        return SimSeries(data=result, name=self.name, **self._SimParameters )
 
     def __rmul__(self, other) :
         return self.__mul__(other)
@@ -693,30 +809,31 @@ class SimSeries(Series) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
+                newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.truediv(other)
                     unitsResult = unitDivision(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=self.dtype )
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.truediv(otherC)
                     unitsResult = unitDivision(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=self.dtype )
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = selfC.truediv(other)
                     unitsResult = unitDivision(other.units, self.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype )
+                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.truediv(other)
                     unitsResult = unitDivision(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=self.dtype )
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() / other
-        return SimSeries(data=result, units=self.units, indexUnits=self.indexUnits, dtype=self.dtype )
+        return SimSeries(data=result, name=self.name, **self._SimParameters )
 
     def __rtruediv__(self, other) :
         return self.__pow__(-1).__mul__(other)
@@ -727,30 +844,31 @@ class SimSeries(Series) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
+                newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.floordiv(other)
                     unitsResult = unitDivision(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=self.dtype )
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.floordiv(otherC)
                     unitsResult = unitDivision(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=self.dtype )
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = other.floordiv(selfC)
                     unitsResult = unitDivision(other.units, self.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype )
+                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.floordiv(other)
                     unitsResult = unitDivision(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=self.dtype )
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() // other
-        return SimSeries(data=result, units=self.units, indexUnits=self.indexUnits, dtype=self.dtype )
+        return SimSeries(data=result, name=self.name, **self._SimParameters )
 
     def __rfloordiv__(self, other) :
         return self.__pow__(-1).__mul__(other).__int__()
@@ -761,26 +879,27 @@ class SimSeries(Series) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
+                newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.mod(other)
-                    return SimSeries(data=result, units=self.units, dtype=self.dtype )
+                    return SimSeries(data=result, name=newName, **self._SimParameters )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.mod(otherC)
-                    return SimSeries(data=result, units=self.units, dtype=self.dtype )
+                    return SimSeries(data=result, name=newName, **self._SimParameters )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = other.mod(selfC)
-                    return SimSeries(data=result, units=other.units, dtype=other.dtype )
+                    return SimSeries(data=result, units=other.units, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.mod(other)
-                    return SimSeries(data=result, units=self.units, dtype=self.dtype )
+                    return SimSeries(data=result, name=newName, **self._SimParameters )
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() % other
-        return SimSeries(data=result, units=self.units, indexUnits=self.indexUnits, dtype=self.dtype )
+        return SimSeries(data=result, name=self.name, **self._SimParameters )
 
     def __pow__(self, other) :
         # both SimSeries
@@ -788,33 +907,37 @@ class SimSeries(Series) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
+                newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.pow(other)
                     unitsResult = self.units+'^'+other.units
-                    return SimSeries(data=result, units=unitsResult, dtype=self.dtype )
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.floordiv(otherC)
                     unitsResult = self.units+'^'+other.units
-                    return SimSeries(data=result, units=unitsResult, dtype=self.dtype )
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = other.floordiv(selfC)
                     unitsResult = other.units+'^'+self.units
-                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype )
+                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.floordiv(other)
                     unitsResult = self.units+'^'+other.units
-                    return SimSeries(data=result, units=unitsResult, dtype=self.dtype )
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() // other
-        return SimSeries(data=result, units=self.units, indexUnits=self.indexUnits, dtype=self.dtype )
+        return SimSeries(data=result, **self._SimParameters)
 
     def __int__(self) :
-        return SimSeries(data=self.apply(lambda x: [int(y) for y in x] ), units=self.units, indexUnits=self.indexUnits, dtype=self.dtype )
+        return SimSeries(data=self.S.astype(int), **self._SimParameters)
+    
+    def __abs__(self) :
+        return SimSeries(data=abs(self.S), **self._SimParameters)
 
     def __repr__(self) -> str :
         """
@@ -891,8 +1014,8 @@ class SimSeries(Series) :
 
     def copy(self) :
         if type(self.units) is dict :
-            return SimSeries(data=self.as_Series().copy(True), units=self.units.copy(), dtype=self.dtype, indexName=self.index.name )
-        return SimSeries(data=self.as_Series().copy(True), units=self.units, dtype=self.dtype, indexName=self.index.name )
+            return SimSeries(data=self.as_Series().copy(True), units=self.units.copy(), speak=self.speak, name=self.name, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+        return SimSeries(data=self.as_Series().copy(True), **self._SimParameters )
 
     def filter(self, conditions=None, **kwargs) :
         """
@@ -970,18 +1093,18 @@ class SimSeries(Series) :
                 # if key is the index
                 if key in ['.i', '.index'] :
                     filterStr = filterStr.rstrip()
-                    filterStr += ' self.DF.index'
+                    filterStr += ' self.S.index'
                 # if key is a column
                 elif key in self.columns :
                     filterStr = filterStr.rstrip()
-                    filterStr += " self.DF['"+key+"']"
+                    filterStr += " self.S['"+key+"']"
                 # key might be a wellname, attribute or a pattern
                 elif len(self.find_Keys(key) ) == 1 :
                     filterStr = filterStr.rstrip()
-                    filterStr += " self.DF['"+ self.find_Keys(key)[0] +"']"
+                    filterStr += " self.S['"+ self.find_Keys(key)[0] +"']"
                 elif len(self.find_Keys(key) ) > 1 :
                     filterStr = filterStr.rstrip()
-                    filterStr += " self.DF["+ str(list(self.find_Keys(key)) ) +"]"
+                    filterStr += " self.S["+ str(list(self.find_Keys(key)) ) +"]"
                     PandasAgg = '.any(axis=1)'
                 else :
                     filterStr += ' ' + key
@@ -1107,9 +1230,9 @@ class SimSeries(Series) :
         filterStr = filterStr.strip()
         # check missing key, means .index by default
         if filterStr[0] in ['=', '>', '<', '!'] :
-            filterStr = 'self.DF.index ' + filterStr
+            filterStr = 'self.S.index ' + filterStr
         elif filterStr[-1] in ['=', '>', '<', '!'] :
-            filterStr = filterStr + ' self.DF.index'
+            filterStr = filterStr + ' self.S.index'
         # close last parethesis and aggregation
         filterStr += ' )' * bool(AndOrNot + bool(PandasAgg) ) + PandasAgg
         # open parenthesis for aggregation, if needed
@@ -1124,7 +1247,7 @@ class SimSeries(Series) :
         if returnFilter :
             retTuple += [ filterArray ]
         if returnFrame :
-            retTuple += [ self.DF[ filterArray ] ]
+            retTuple += [ self.S[ filterArray ] ]
 
         if len(retTuple ) == 1 :
             return retTuple[0]
@@ -1153,7 +1276,7 @@ class SimDataFrame(DataFrame) :
     """
     _metadata = ["units", "speak", "indexUnits", "nameSeparator", "intersectionCharacter", "autoAppend"]
 
-    def __init__(self, data=None, units=None, index=None, speak=False, *args, **kwargs) :
+    def __init__(self, data=None, units=None, index=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩', autoAppend=False, *args, **kwargs) :
         self.units = None
         self.speak = bool(speak)
         self.indexUnits = None
@@ -1251,6 +1374,16 @@ class SimDataFrame(DataFrame) :
     # @property
     # def _constructor(self):
     #     return SimDataFrame
+
+    @property
+    def _SimParameters(self) :
+        return {'units':self.units,
+                'speak':self.speak,
+                'indexName':self.index.name,
+                'indexUnits':self.indexUnits,
+                'nameSeparator':self.nameSeparator,
+                'intersectionCharacter':self.intersectionCharacter,
+                'autoAppend':self.autoAppend}
 
     def set_indexName(self, Name) :
         if type(Name) is str and len(Name.strip())>0:
@@ -1590,30 +1723,30 @@ class SimDataFrame(DataFrame) :
 
     def dropna(self, axis='index', how='all', thresh=None, subset=None, inplace=False) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace), units=self.units, indexName=self.index.name )
+        return SimDataFrame(data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise') :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors), units=self.units, indexName=self.index.name )
+        return SimDataFrame(data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def drop_duplicates(self, subset=None, keep='first', inplace=False, ignore_index=False) :
-        return SimDataFrame(data=self.DF.drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index), units=self.units, indexName=self.index.name )
+        return SimDataFrame(data=self.DF.drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def fillna(self, value=None, method=None, axis='index', inplace=False, limit=None, downcast=None) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast), units=self.units, indexName=self.index.name )
+        return SimDataFrame(data=self.DF.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def interpolate(self, method='slinear', axis='index', limit=None, inplace=False, limit_direction=None, limit_area=None, downcast=None, **kwargs) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.interpolate(method=method, axis=axis, limit=limit, inplace=inplace, limit_direction=limit_direction, limit_area=limit_area, downcast=downcast, **kwargs), units=self.units, indexName=self.index.name )
+        return SimDataFrame(data=self.DF.interpolate(method=method, axis=axis, limit=limit, inplace=inplace, limit_direction=limit_direction, limit_area=limit_area, downcast=downcast, **kwargs), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def replace(self, to_replace=None, value=None, inplace=False, limit=None, regex=False, method='pad') :
-        return SimDataFrame(data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method), units=self.units, indexName=self.index.name )
+        return SimDataFrame(data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def groupby(self, by=None, axis=0, level=None, as_index=True, sort=True, group_keys=True, squeeze=False, observed=False, dropna=True) :
         axis = _cleanAxis(axis)
         selfGrouped = self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna)
-        return SimDataFrame(data=selfGrouped, units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=selfGrouped, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def daily(self, outBy='mean') :
         """
@@ -1664,7 +1797,7 @@ class SimDataFrame(DataFrame) :
         else :
             raise ValueError(" outBy parameter is not valid.")
 
-        output = SimDataFrame(data=result, units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+        output = SimDataFrame(data=result, **self._SimParameters)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         output.index.names = ['YEAR', 'MONTH', 'DAY']
         output.index.name = 'YEAR_MONTH_DAY'
         return output
@@ -1718,7 +1851,7 @@ class SimDataFrame(DataFrame) :
         else :
             raise ValueError(" outBy parameter is not valid.")
 
-        output = SimDataFrame(data=result, units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+        output = SimDataFrame(data=result, **self._SimParameters)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         output.index.names = ['YEAR', 'MONTH']
         output.index.name = 'YEAR_MONTH'
         return output
@@ -1772,18 +1905,18 @@ class SimDataFrame(DataFrame) :
         else :
             raise ValueError(" outBy parameter is not valid.")
 
-        output = SimDataFrame(data=result, units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+        output = SimDataFrame(data=result, **self._SimParameters)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         output.index.names = ['YEAR']
         output.index.name = 'YEAR'
         return output
 
     def aggregate(self, func=None, axis=0, *args, **kwargs) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.aggregate(func=func, axis=axis, *args, **kwargs), units=self.units, indexName=self.index.name )
+        return SimDataFrame(data=self.DF.aggregate(func=func, axis=axis, *args, **kwargs), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), units=self.units, indexName=self.index.name )
+        return SimDataFrame(data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def reindex(self, labels=None, index=None, columns=None, axis=None, **kwargs) :
         """
@@ -1810,7 +1943,7 @@ class SimDataFrame(DataFrame) :
             else :
                 raise TypeError("labels does not match neither len(index) or len(columns).")
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.reindex(labels=labels, axis=axis, **kwargs), units=self.units, speak=self.speak, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=self.DF.reindex(labels=labels, axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator )
 
     def rename(self, **kwargs) :
         """
@@ -1865,10 +1998,66 @@ class SimDataFrame(DataFrame) :
             newUnits[cAfter[i]] = self.units[cBefore[i]]
         if 'inplace' in kwargs and kwargs['inplace'] :
             self.units = newUnits
-            return self
+            return None
         else :
             catch.units = newUnits
             return catch
+
+    @property
+    def right(self) :
+        if self.nameSeparator in [None, '', False] :
+            return tuple(self.columns )
+        objs = []
+        for each in list(self.columns ) :
+            if self.nameSeparator in each :
+                objs += [each.split(self.nameSeparator )[-1]]
+            else :
+                objs += [each]
+        return tuple(set(objs))
+
+    @property
+    def left(self) :
+        if self.nameSeparator in [None, '', False] :
+            return tuple(self.columns )
+        objs = []
+        for each in list(self.columns ) :
+            if self.nameSeparator in each :
+                objs += [each.split(self.nameSeparator )[0]]
+            else :
+                objs += [each]
+        return tuple(set(objs))
+
+    def renameRight(self, inplace=False) :
+        if self.nameSeparator in [None, '', False] :
+            raise ValueError("name separator must not be None")
+        objs = {}
+        for each in list(self.columns ) :
+            if self.nameSeparator in each :
+                objs[each] = each.split(self.nameSeparator )[-1]
+                # self.units[ each.split(self.nameSeparator )[-1] ] = self.units[ each ]
+                # del(self.units[each])
+            else :
+                objs[each] = each
+        if inplace :
+            self.rename(columns=objs, inplace=True)
+        else :
+            return self.rename(columns=objs, inplace=False)
+
+    def renameLeft(self, inplace=False) :
+        if self.nameSeparator in [None, '', False] :
+            raise ValueError("name separator must not be None")
+        objs = {}
+        for each in list(self.columns ) :
+            if self.nameSeparator in each :
+                objs[each] = each.split(self.nameSeparator )[0]
+                # self.units[ each.split(self.nameSeparator )[0] ] = self.units[ each ]
+                # del(self.units[each])
+            else :
+                objs[each] = each
+        if inplace :
+            self.rename(columns=objs, inplace=True)
+        else :
+            return self.rename(columns=objs, inplace=False)
 
     def _CommonRename(self, SimDataFrame1, SimDataFrame2=None, LR=None) :
         SDF1, SDF2 = SimDataFrame1, SimDataFrame2
@@ -1893,9 +2082,9 @@ class SimDataFrame(DataFrame) :
 
         if LR == 'L' or (LR is None and len(SDF1.left) == 1 and len(SDF2.left) == 1 ) :
             SDF2C = SDF2.copy()
-            SDF2C.renameRight()
+            SDF2C.renameRight(inplace=True)
             SDF1C = SDF1.copy()
-            SDF1C.renameRight()
+            SDF1C.renameRight(inplace=True)
             commonNames = {}
             for c in SDF1C.columns :
                 if c in SDF2C.columns :
@@ -1912,9 +2101,9 @@ class SimDataFrame(DataFrame) :
 
         elif LR == 'R' or (LR is None and len(SDF1.right) == 1 and len(SDF2.right) == 1 ) :
             SDF2C = SDF2.copy()
-            SDF2C.renameLeft()
+            SDF2C.renameLeft(inplace=True)
             SDF1C = SDF1.copy()
-            SDF1C.renameLeft()
+            SDF1C.renameLeft(inplace=True)
             commonNames = {}
             for c in SDF1C.columns :
                 if c in SDF2C.columns :
@@ -1940,7 +2129,7 @@ class SimDataFrame(DataFrame) :
 
     def __neg__(self) :
         result = -self.as_DataFrame()
-        return SimDataFrame(data=result, units=self.units, indexName=self.index.name )
+        return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def __add__(self, other) :
         # both are SimDataFrame
@@ -1980,7 +2169,7 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() + other
-            return SimDataFrame(data=result, units=self.units, indexName=self.index.name )
+            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def __radd(self, other) :
         return self.__add__(other)
@@ -2023,7 +2212,7 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() - other
-            return SimDataFrame(data=result, units=self.units, indexName=self.index.name )
+            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def __rsub__(self, other) :
         return self.__neg__().__add__(other)
@@ -2048,7 +2237,7 @@ class SimDataFrame(DataFrame) :
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
                         for col in newNames.values() :
-                            if '∩' in col :
+                            if self.intersectionCharacter in col :  # intersectionCharacter = '∩'
                                 result[col] = resultX[col]
                     else :
                         result = resultX
@@ -2068,7 +2257,7 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() * other
-            return SimDataFrame(data=result, units=self.units, indexName=self.index.name )
+            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def __rmul__(self, other) :
         return self.__mul__(other)
@@ -2093,7 +2282,7 @@ class SimDataFrame(DataFrame) :
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
                         for col in newNames.values() :
-                            if '∩' in col :
+                            if self.intersectionCharacter in col :  # intersectionCharacter = '∩'
                                 result[col] = resultX[col]
                     else :
                         result = resultX
@@ -2112,7 +2301,7 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() / other
-            return SimDataFrame(data=result, units=self.units, indexName=self.index.name )
+            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def __rtruediv__(self, other) :
         return self.__pow__(-1).__mul__(other)
@@ -2137,7 +2326,7 @@ class SimDataFrame(DataFrame) :
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
                         for col in newNames.values() :
-                            if '∩' in col :
+                            if self.intersectionCharacter in col :  # intersectionCharacter = '∩'
                                 result[col] = resultX[col]
                     else :
                         result = resultX
@@ -2156,7 +2345,7 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() // other
-            return SimDataFrame(data=result, units=self.units, indexName=self.index.name )
+            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def __rfloordiv__(self, other) :
         return self.__pow__(-1).__mul__(other).__int__()
@@ -2181,7 +2370,7 @@ class SimDataFrame(DataFrame) :
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
                         for col in newNames.values() :
-                            if '∩' in col :
+                            if self.intersectionCharacter in col :  # intersectionCharacter = '∩'
                                 result[col] = resultX[col]
                     else :
                         result = resultX
@@ -2201,7 +2390,7 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() % other
-            return SimDataFrame(data=result, units=self.units, indexName=self.index.name )
+            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def __pow__(self, other) :
         # both are SimDataFrame
@@ -2223,7 +2412,7 @@ class SimDataFrame(DataFrame) :
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
                         for col in newNames.values() :
-                            if '∩' in col :
+                            if self.intersectionCharacter in col :  # intersectionCharacter = '∩'
                                 result[col] = resultX[col]
                     else :
                         result = resultX
@@ -2243,15 +2432,15 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() ** other
-            return SimDataFrame(data=result, units=self.units, indexName=self.index.name )
+            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
 
     def __int__(self) :
-        return SimDataFrame(data=self.apply(lambda x: [int(y) for y in x] ), units=self.units, indexName=self.index.name, autoAppend=self.autoAppend )
+        return SimDataFrame(data=self.DF.astype(int), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator, autoAppend=self.autoAppend )
 
     def mode(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.mode(axis=axis, **kwargs), units=self.units, speak=self.speak )
+            return SimDataFrame(data=self.DF.mode(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         if axis == 1 :
             newName = '.mode'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -2260,19 +2449,19 @@ class SimDataFrame(DataFrame) :
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(False).columns ))[0]+newName
-            elif len(set(self.renameLeft(False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(False).columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
             data=self.DF.mode(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak )
-
+            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+    
     def median(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.median(axis=axis, **kwargs), units=self.units, speak=self.speak )
+            return SimDataFrame(data=self.DF.median(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         if axis == 1 :
             newName = '.median'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -2281,14 +2470,14 @@ class SimDataFrame(DataFrame) :
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(False).columns ))[0]+newName
-            elif len(set(self.renameLeft(False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(False).columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
             data=self.DF.median(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak )
+            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
 
     def avg(self, axis=0, **kwargs) :
         return self.mean(axis=axis, **kwargs)
@@ -2299,7 +2488,7 @@ class SimDataFrame(DataFrame) :
     def mean(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.mean(axis=axis, **kwargs), units=self.units, speak=self.speak )
+            return SimDataFrame(data=self.DF.mean(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, nameSeparator=self.nameSeparator, speak=self.speak )
         if axis == 1 :
             newName = '.mean'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -2308,19 +2497,19 @@ class SimDataFrame(DataFrame) :
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(False).columns ))[0]+newName
-            elif len(set(self.renameLeft(False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(False).columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
             data=self.DF.mean(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak )
+            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
 
     def max(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.max(axis=axis, **kwargs), units=self.units, speak=self.speak )
+            return SimDataFrame(data=self.DF.max(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         if axis == 1 :
             newName = '.max'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -2329,19 +2518,19 @@ class SimDataFrame(DataFrame) :
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(False).columns ))[0]+newName
-            elif len(set(self.renameLeft(False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(False).columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
             data=self.DF.max(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak )
+            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
 
     def min(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.min(axis=axis, **kwargs), units=self.units, speak=self.speak )
+            return SimDataFrame(data=self.DF.min(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         if axis == 1 :
             newName = '.min'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -2350,19 +2539,19 @@ class SimDataFrame(DataFrame) :
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(False).columns ))[0]+newName
-            elif len(set(self.renameLeft(False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(False).columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
             data=self.DF.min(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak )
+            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
 
     def sum(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.sum(axis=axis, **kwargs), units=self.units, speak=self.speak )
+            return SimDataFrame(data=self.DF.sum(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         if axis == 1 :
             newName = '.sum'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -2371,19 +2560,19 @@ class SimDataFrame(DataFrame) :
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(False).columns ))[0]+newName
-            elif len(set(self.renameLeft(False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(False).columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
             data=self.DF.sum(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak )
+            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
 
     def std(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.std(axis=axis, **kwargs), units=self.units, speak=self.speak )
+            return SimDataFrame(data=self.DF.std(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         if axis == 1 :
             newName = '.std'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -2392,19 +2581,19 @@ class SimDataFrame(DataFrame) :
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(False).columns ))[0]+newName
-            elif len(set(self.renameLeft(False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(False).columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
             data=self.DF.std(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak )
-
+            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+    
     def prod(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.prod(axis=axis, **kwargs), units=self.units, speak=self.speak )
+            return SimDataFrame(data=self.DF.prod(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         if axis == 1 :
             newName = '.prod'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -2413,19 +2602,19 @@ class SimDataFrame(DataFrame) :
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(False).columns ))[0]+newName
-            elif len(set(self.renameLeft(False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(False).columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
             data=self.DF.prod(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak )
-
+            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+   
     def var(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.var(axis=axis, **kwargs), units=self.units, speak=self.speak )
+            return SimDataFrame(data=self.DF.var(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         if axis == 1 :
             newName = '.var'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -2434,19 +2623,19 @@ class SimDataFrame(DataFrame) :
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(False).columns ))[0]+newName
-            elif len(set(self.renameLeft(False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(False).columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
             data=self.DF.var(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak )
+            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
 
     def quantile(self, q=0.5, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.quantile(q=q, axis=axis, **kwargs), units=self.units, speak=self.speak )
+            return SimDataFrame(data=self.DF.quantile(q=q, axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         if axis == 1 :
             newName = '.Q'+str(q*100)
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -2455,20 +2644,20 @@ class SimDataFrame(DataFrame) :
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(False).columns ))[0]+newName
-            elif len(set(self.renameLeft(False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(False).columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
             data=self.DF.quantile(q=q, axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak )
+            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
 
     def round(self, decimals=0, **kwargs) :
-        return SimDataFrame(data=self.DF.round(decimals=decimals, **kwargs), units=self.units, speak=self.speak )
+        return SimDataFrame(data=self.DF.round(decimals=decimals, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
 
     def copy(self, **kwargs) :
-        return SimDataFrame(data=self.as_DataFrame().copy(True), units=self.units.copy(), indexName=self.index.name )
+        return SimDataFrame(data=self.as_DataFrame().copy(True), units=self.units.copy(), speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
 
     def __call__(self, key=None) :
         if key is None :
@@ -2587,19 +2776,19 @@ class SimDataFrame(DataFrame) :
                 result = self._getbyIndex(key)
                 if result is not None : byIndex = True
         else :
-            result = SimDataFrame(data=self )
+            result = SimDataFrame(data=self, **self._SimParameters)
 
         ### convert returned object to SimDataFrame or SimSeries accordingly
         if type(result) is DataFrame :
             resultUnits = self.get_Units(result.columns)
-            result = SimDataFrame(data=result, units=resultUnits)
+            result = SimDataFrame(data=result, units=resultUnits, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend)
         elif type(result) is Series :
             if result.name is None or type(result.name) is not str :
                 # this Series is one index for multiple columns
                 resultUnits = self.get_Units(result.index)
             else :
                 resultUnits = self.get_Units(result.name)
-            result = SimSeries(data=result, units=resultUnits)
+            result = SimSeries(data=result, units=resultUnits, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend)
 
         ### apply filter array if applicable
         if indexFilter is not None :
@@ -2721,7 +2910,7 @@ class SimDataFrame(DataFrame) :
                 keyParts = multisplit(key, ('==', '!=', '>=', '<=', '<>', '><', '>', '<', '=', ' '))
                 keySearch = ''
                 datesDict = {}
-                temporal = SimDataFrame(index=self.index)
+                temporal = SimDataFrame(index=self.index, **self._SimParameters)
                 datesN = len(self)
                 for P in range(len(keyParts)) :
                     if isDate(keyParts[P]) :
@@ -2764,62 +2953,6 @@ class SimDataFrame(DataFrame) :
         Return a string representation for a particular DataFrame, with Units.
         """
         return self._DataFrameWithMultiIndex().__repr__()
-
-    @property
-    def right(self) :
-        if self.nameSeparator in [None, '', False] :
-            return tuple(self.columns )
-        objs = []
-        for each in list(self.columns ) :
-            if self.nameSeparator in each :
-                objs += [each.split(self.nameSeparator )[-1]]
-            else :
-                objs += [each]
-        return tuple(set(objs))
-
-    @property
-    def left(self) :
-        if self.nameSeparator in [None, '', False] :
-            return tuple(self.columns )
-        objs = []
-        for each in list(self.columns ) :
-            if self.nameSeparator in each :
-                objs += [each.split(self.nameSeparator )[0]]
-            else :
-                objs += [each]
-        return tuple(set(objs))
-
-    def renameRight(self, inplace=True) :
-        if self.nameSeparator in [None, '', False] :
-            raise ValueError("name separator must not be None")
-        objs = {}
-        for each in list(self.columns ) :
-            if self.nameSeparator in each :
-                objs[each] = each.split(self.nameSeparator )[-1]
-                # self.units[ each.split(self.nameSeparator )[-1] ] = self.units[ each ]
-                # del(self.units[each])
-            else :
-                objs[each] = each
-        if inplace :
-            self.rename(columns=objs, inplace=True)
-        else :
-            return self.rename(columns=objs, inplace=False)
-
-    def renameLeft(self, inplace=True) :
-        if self.nameSeparator in [None, '', False] :
-            raise ValueError("name separator must not be None")
-        objs = {}
-        for each in list(self.columns ) :
-            if self.nameSeparator in each :
-                objs[each] = each.split(self.nameSeparator )[0]
-                # self.units[ each.split(self.nameSeparator )[0] ] = self.units[ each ]
-                # del(self.units[each])
-            else :
-                objs[each] = each
-        if inplace :
-            self.rename(columns=objs, inplace=True)
-        else :
-            return self.rename(columns=objs, inplace=False)
 
     @property
     def wells(self) :
@@ -3426,4 +3559,4 @@ class SimDataFrame(DataFrame) :
                 newUnits[C]=U+'*'+dtUnits
 
         firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]) )
-        return SimDataFrame(np.cumsum(firstRow.append(Cumulative ) ), units=newUnits )
+        return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative ) ), units=newUnits, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator,  intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
