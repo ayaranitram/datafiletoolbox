@@ -141,7 +141,7 @@ class unit(object) :
                                            'gallonUK' : ('gal', 'galUK', 'UKgal', 'UKgallon', 'gallon'),
                                            'gallonUS' : ('gal', 'galUS', 'USgal', 'USgallon', 'gallon'),
         }
-    dictionary['volume_NAMES_UPPER_REVERSE_PLURALwS_SPACES'] = { 'litre' : ('l', 'liter', 'liter', ),
+    dictionary['volume_NAMES_UPPER_REVERSE_PLURALwS_SPACES'] = { 'litre' : ('l', 'liter', ),
                                         'mililitre' : ('ml', 'mililiter', 'cubic centimeter'),
                                         'centilitre' : ('cl', 'centiliter'),
                                         'decilitre' : ('dl', 'deciliter'),
@@ -731,10 +731,10 @@ def UnitConversions():
     UC.addEdge(conversion(UC.getNode('minute'), UC.getNode('second'), lambda t: t*60 ))
     UC.addEdge(conversion(UC.getNode('hour'), UC.getNode('minute'), lambda t: t*60 ))
     UC.addEdge(conversion(UC.getNode('day'), UC.getNode('hour'), lambda t: t*24 ))
-    UC.addEdge(conversion(UC.getNode('day'), UC.getNode('month'), lambda t: t/365.25*12 ))
+    UC.addEdge(conversion(UC.getNode('day'), UC.getNode('month'), lambda t: t/36525/100*12 ))
     UC.addEdge(conversion(UC.getNode('week'), UC.getNode('day'), lambda t: t*7 ))
     UC.addEdge(conversion(UC.getNode('year'), UC.getNode('month'), lambda t: t*12 ))
-    UC.addEdge(conversion(UC.getNode('year'), UC.getNode('day'), lambda t: t*365.25 ))
+    UC.addEdge(conversion(UC.getNode('year'), UC.getNode('day'), lambda t: t*36525/100 ))
     UC.addEdge(conversion(UC.getNode('lustrum'), UC.getNode('year'), lambda t: t*5 ))
     UC.addEdge(conversion(UC.getNode('decade'), UC.getNode('year'), lambda t: t*10 ))
     UC.addEdge(conversion(UC.getNode('century'), UC.getNode('year'), lambda t: t*100 ))
@@ -751,8 +751,8 @@ def UnitConversions():
 
     
     # lenght conversions
-    UC.addEdge(conversion(UC.getNode('yard'), UC.getNode('meter'), lambda d: d*0.9144 ))
-    UC.addEdge(conversion(UC.getNode('foot'), UC.getNode('meter'), lambda d: d*0.3048 ))
+    UC.addEdge(conversion(UC.getNode('yard'), UC.getNode('meter'), lambda d: d*9144/10000 ))
+    # UC.addEdge(conversion(UC.getNode('foot'), UC.getNode('meter'), lambda d: d*3048/10000 ))
     UC.addEdge(conversion(UC.getNode('inch'), UC.getNode('thou'), lambda d: d*1000 ))
     UC.addEdge(conversion(UC.getNode('foot'), UC.getNode('inch'), lambda d: d*12))
     UC.addEdge(conversion(UC.getNode('yard'), UC.getNode('foot'), lambda d: d*3))
@@ -761,15 +761,15 @@ def UnitConversions():
     UC.addEdge(conversion(UC.getNode('mile'), UC.getNode('furlong'), lambda d: d*8))
     UC.addEdge(conversion(UC.getNode('league'), UC.getNode('mile'), lambda d: d*3))
     UC.addEdge(conversion(UC.getNode('nautical mile'), UC.getNode('meter'), lambda d: d*1852))
-    UC.addEdge(conversion(UC.getNode('rod'), UC.getNode('yard'), lambda d: d*5.5))
+    UC.addEdge(conversion(UC.getNode('rod'), UC.getNode('yard'), lambda d: d*55/10))
     
     # area conversions
     UC.addEdge(conversion(UC.getNode('square mile'), UC.getNode('acre'), lambda d: d*640 ))
     UC.addEdge(conversion(UC.getNode('acre'), UC.getNode('square yard'), lambda d: d*4840 ))
-    UC.addEdge(conversion(UC.getNode('square rod'), UC.getNode('square yard'), lambda d: d*30.25))
+    UC.addEdge(conversion(UC.getNode('square rod'), UC.getNode('square yard'), lambda d: d*3025/100))
     UC.addEdge(conversion(UC.getNode('square yard'), UC.getNode('square foot'), lambda d: d*9))
     UC.addEdge(conversion(UC.getNode('square foot'), UC.getNode('square inch'), lambda d: d*144))
-    UC.addEdge(conversion(UC.getNode('square foot'), UC.getNode('square meter'), lambda d: d*0.3048**2))
+    UC.addEdge(conversion(UC.getNode('square foot'), UC.getNode('square meter'), lambda d: d*(3048**2)/(10000**2)))
     UC.addEdge(conversion(UC.getNode('Darcy'), UC.getNode('mD'), lambda d: d*1000 ))
     # UC.addEdge(conversion(UC.getNode('m*m'), UC.getNode('m'), lambda d: d**0.5 ))
     # UC.addEdge(conversion(UC.getNode('m'), UC.getNode('m*m'), lambda d: d**2 ))
@@ -789,8 +789,8 @@ def UnitConversions():
     UC.addEdge(conversion(UC.getNode('gallonUK'), UC.getNode('quart'), lambda v: v*4))
     UC.addEdge(conversion(UC.getNode('gallonUS'), UC.getNode('cubic inch'), lambda v: v*231))
     UC.addEdge(conversion(UC.getNode('gallonUK'), UC.getNode('liter'), lambda v: v* 4.54609))
-    UC.addEdge(conversion(UC.getNode('cubic foot'), UC.getNode('cubic meter'), lambda v: v*0.3048**3))  
-    UC.addEdge(conversion(UC.getNode('standard cubic foot'), UC.getNode('standard cubic meter'), lambda v: v*0.3048**3)) 
+    UC.addEdge(conversion(UC.getNode('cubic foot'), UC.getNode('cubic meter'), lambda v: v*(3048**3)/(10000**3)))  
+    UC.addEdge(conversion(UC.getNode('standard cubic foot'), UC.getNode('standard cubic meter'), lambda v: v*(3048**3)/(10000**3))) 
     UC.addEdge(conversion(UC.getNode('standard barrel'), UC.getNode('USgal'), lambda v: v*42))
     UC.addEdge(conversion(UC.getNode('standard cubic meter'), UC.getNode('standard barrel'), lambda v: v*6.289814))
     UC.addEdge(conversion(UC.getNode('standard barrel'), UC.getNode('standard cubic foot'), lambda v: v*5.614584))
@@ -804,9 +804,9 @@ def UnitConversions():
     UC.addEdge(conversion(UC.getNode('bar gauge'), UC.getNode('bara'), lambda p: p+1.01325))
     UC.addEdge(conversion(UC.getNode('absolute bar'), UC.getNode('bar gauge'), lambda p: p-1.01325))
     
-    UC.addEdge(conversion(UC.getNode('bara'), UC.getNode('Pascal'), lambda p: p*100E3))
+    UC.addEdge(conversion(UC.getNode('bara'), UC.getNode('Pascal'), lambda p: p*100000))
     UC.addEdge(conversion(UC.getNode('atmosphere'), UC.getNode('absolute bar'), lambda p: p*1.01325))
-    UC.addEdge(conversion(UC.getNode('absolute bar'), UC.getNode('absolute psi'), lambda p: p*14.5038))
+    UC.addEdge(conversion(UC.getNode('absolute bar'), UC.getNode('absolute psi'), lambda p: p*14.503773773022))
     UC.addEdge(conversion(UC.getNode('atmosphere'), UC.getNode('Pascal'), lambda p: p*101325))
     UC.addEdge(conversion(UC.getNode('atmosphere'), UC.getNode('Torr'), lambda p: p*760))
 
