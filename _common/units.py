@@ -730,7 +730,7 @@ def UnitConversions():
     # UC.addEdge(conversion(UC.getNode('second'), UC.getNode('millisecond'), lambda t: t*1000 ))
     UC.addEdge(conversion(UC.getNode('minute'), UC.getNode('second'), lambda t: t*60 ))
     UC.addEdge(conversion(UC.getNode('hour'), UC.getNode('minute'), lambda t: t*60 ))
-    UC.addEdge(conversion(UC.getNode('day'), UC.getNode('hour'), lambda t: t*60 ))
+    UC.addEdge(conversion(UC.getNode('day'), UC.getNode('hour'), lambda t: t*24 ))
     UC.addEdge(conversion(UC.getNode('day'), UC.getNode('month'), lambda t: t/365.25*12 ))
     UC.addEdge(conversion(UC.getNode('week'), UC.getNode('day'), lambda t: t*7 ))
     UC.addEdge(conversion(UC.getNode('year'), UC.getNode('month'), lambda t: t*12 ))
