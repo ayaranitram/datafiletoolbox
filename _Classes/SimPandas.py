@@ -95,6 +95,13 @@ def _cleanAxis(axis=None) :
     return axis
 
 
+def jitter(df,std=0.10) :
+    import numpy as np
+    jit = np.random.randn(len(df),len(df.columns))
+    jit = ( jit * std ) + 1
+    return df*jit
+
+
 def _stringNewName(newName):
     if len(newName) == 1 :
         return list(newName.values())[0]
@@ -1253,6 +1260,12 @@ class SimSeries(Series) :
             return retTuple[0]
         else :
             return tuple(retTuple )
+
+    def jitter(self,std=0.10) :
+        """
+        add jitter the values of the SimSeries
+        """
+        return jitter(self,std)
 
 
 class SimDataFrame(DataFrame) :
@@ -3560,3 +3573,9 @@ class SimDataFrame(DataFrame) :
 
         firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]) )
         return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative ) ), units=newUnits, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator,  intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+     
+    def jitter(self,std=0.10) :
+        """
+        add jitter the values of the SimDataFrame
+        """
+        return jitter(self,std)
