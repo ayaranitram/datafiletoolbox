@@ -10,6 +10,7 @@ __release__ = 210225
 __all__ = ['_mainKey', '_itemKey', '_keyType', '_wellFromAttribute', 'tamiz', '_meltDF']
 
 import pandas
+from .._Classes.SimPandas import SimSeries, SimDataFrame
 
 def _is_SimulationResult(obj) :
     """
@@ -176,10 +177,17 @@ def tamiz( ListOrTuple ) :
         others += [ListOrTuple]
     return strings, others
 
-def _meltDF(df, hue='--auto', label='--auto', SimObject=None) :
+def _meltDF(df, hue='--auto', label='--auto', SimObject=None, FullOutput=False) :
         """
         common procedure to melt and rename the dataframe
         """
+        if type(df) in [SimSeries,SimDataFrame]:
+            SimDF = True 
+            unitsdict = df.get_units().copy()
+            units = lambda col : unitsdict[col] if col in unitsdict else None
+        else:
+            SimDF = False
+        
         df = df.melt(var_name='SDFvariable', value_name='value', ignore_index=False)
         df['attribute'] = _mainKey( list(df['SDFvariable']), False)
         df['item'] = _itemKey( list(df['SDFvariable']), False)
@@ -290,4 +298,9 @@ def _meltDF(df, hue='--auto', label='--auto', SimObject=None) :
         df = df.drop(columns='SDFvariable')
         df = df.rename(columns={'item':itemLabel})
 
-        return hue, label, itemLabel, values, df
+        if FullOutput:
+            return hue, label, itemLabel, values, df
+        elif SimDF:
+            unitsCol = [units(df['attribute'].iloc[i] + ':' + df[itemLabel].iloc[i] ) for i in range(len(df))]
+        else:
+            return df
