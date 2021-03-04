@@ -2684,7 +2684,7 @@ class SimDataFrame(DataFrame) :
     def __setitem__(self, key, value, units=None):
         if type(key) is str :
             key = key.strip()
-        if type(value) is tuple and len(value) == 2 and type(value[0]) in [SimSeries, Series, list, tuple, np.array] and units is None :
+        if type(value) is tuple and len(value) == 2 and type(value[0]) in [SimSeries, Series, list, tuple, np.ndarray] and units is None :
             value, units = value[0], value[1]
         if units is None :
             if type(value) is SimSeries :
@@ -2717,9 +2717,28 @@ class SimDataFrame(DataFrame) :
                     self.new_Units(self.columns[c], 'UNITLESS' )
 
     def __getitem__(self, key) :
-        if isinstance(key, (Series)) or type(key) is np.array :
+        
+        ### if key is boolean filter, return the filtered SimDataFrame
+        if isinstance(key, (Series)) or type(key) is np.ndarray :
             if str(key.dtype) == 'bool' :
-                return self._getbyFilter(key)
+                return SimDataFrame( data=self._getbyFilter(key), **self._SimParameters )
+        
+        ### if key is pd.Index or pd.MultiIndex return selected rows or columns 
+        if isinstance(key, (Index)) :
+            keyCols = True
+            for each in key :
+                if each not in self.columns :
+                    keyCols = False
+                    break
+            if keyCols :
+                return SimDataFrame(data=self._getbyColumn(key), **self._SimParameters )
+            else :
+                result = SimDataFrame(data=self._getbyIndex(key), **self._SimParameters )
+                if len(result) == 1 :
+                    result = _Series2Frame(result)
+                return result
+
+        ### here below we try to guess what the user is requesting
         byIndex = False
         indexFilter = None
         indexes = None
@@ -2836,13 +2855,13 @@ class SimDataFrame(DataFrame) :
         """
         if len(key) != len(self.DF) :
             raise ValueError('Filter wrong length ' + len(key) + ' instead of ' + len(self.DF) )
-        if not isinstance(key, (Series, SimSeries)) and type(key) is not np.array :
+        if not isinstance(key, (Series, SimSeries)) and type(key) is not np.ndarray :
             raise TypeError("Filter must be a Series or Array" )
         else :
             if str(key.dtype) != 'bool' :
                 raise TypeError("Filter dtype must be 'bool'" )
 
-        return super().loc(key)
+        return super().loc[key]
 
     def _getbyCriteria(self, key) :
         """
