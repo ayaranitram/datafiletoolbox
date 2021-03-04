@@ -294,6 +294,10 @@ def _meltDF(df, hue='--auto', label='--auto', SimObject=None, FullOutput=False) 
                     label = itemLabel
                 elif label == 'main' :
                     label = 'attribute'
+        
+        # generate values for units columns
+        if SimDF:
+            unitsCol = [units(df['SDFvariable'].iloc[i]) for i in range(len(df))]
 
         df = df.drop(columns='SDFvariable')
         df = df.rename(columns={'item':itemLabel})
@@ -301,6 +305,7 @@ def _meltDF(df, hue='--auto', label='--auto', SimObject=None, FullOutput=False) 
         if FullOutput:
             return hue, label, itemLabel, values, df
         elif SimDF:
-            unitsCol = [units(df['attribute'].iloc[i] + ':' + df[itemLabel].iloc[i] ) for i in range(len(df))]
+            df['units'] = unitsCol
+            return df
         else:
             return df
