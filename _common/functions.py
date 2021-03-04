@@ -185,6 +185,7 @@ def _meltDF(df, hue='--auto', label='--auto', SimObject=None, FullOutput=False,*
             SimDF = True 
             unitsdict = df.get_units().copy()
             units = lambda col : unitsdict[col] if col in unitsdict else None
+            df = df.DF
         else:
             SimDF = False
             

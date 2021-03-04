@@ -23,6 +23,7 @@ import datetime as dt
 from warnings import warn
 from .._common.units import unit  # to use unit.isUnit method
 from .._common.units import convertUnit, unitProduct, unitDivision, convertible as convertibleUnits
+from .._common.functions import _meltDF
 
 try :
     from datafiletoolbox import multisplit, isDate, strDate
@@ -3598,3 +3599,6 @@ class SimDataFrame(DataFrame) :
         add jitter the values of the SimDataFrame
         """
         return jitter(self,std)
+
+    def melt(self,**kwargs):
+        return _meltDF(self,FullOutput=False)
