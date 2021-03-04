@@ -13,7 +13,7 @@ __version__ = 0.3
 __release__ = 210225
 __author__ = 'Martin Carlos Araya <martinaraya@gmail.com>'
 __all__ = ['stringformat', 'extension', 'Alternate', 'convert', 'SimPandas',
-           'SimSeries', 'SimDataFrame', 'loadSimulationResults']
+           'SimSeries', 'SimDataFrame', 'loadSimulationResults','melt']
 
 _msg = """     implementing libecl 2.9.1 from pypi, released on Aug 2020"""
 
@@ -23,7 +23,7 @@ from ._Classes.SimPandas import SimSeries, SimDataFrame
 from ._Classes import SimPandas
 
 from ._common.eclDATES import simDate as ECLdate
-from ._common.functions import _mainKey as mainKey, _itemKey as itemKey, tamiz
+from ._common.functions import _mainKey as mainKey, _itemKey as itemKey, tamiz, _meltDF as melt
 from ._common.inout import _extension as extension
 from ._common.keywordsConversions import fromECLtoVIP, fromVIPtoECL, fromECLtoCSV, fromCSVtoECL
 from ._common.stringformat import date as strDate, isDate, multisplit, isnumeric, getnumber

@@ -1328,7 +1328,7 @@ class SimResult(object):
         return Keys, objects, otherSims
 
     def _auto_meltingDF(self, df, hue='--auto', label='--auto') :
-        return _meltDF(df, hue=hue, label=label, SimObject=self)
+        return _meltDF(df, hue=hue, label=label, SimObject=self, FullOutput=True)
 
     def relplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', size='--auto', style='--auto', col='--auto', row='--auto', kind='line', col_wrap=None, share_Yaxis=True, share_Xaxis=True, **kwargs) :
         """
