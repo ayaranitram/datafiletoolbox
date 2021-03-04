@@ -137,11 +137,19 @@ class XLSX(_SimResult):
                     header = list(header)+[units]
         try :
             NewFrames = pd.read_excel(inputFile, sheet_name=sheet_name, header=header)
+        except ImportError:
+            raise ImportError("Missing optional dependencies 'xlrd' and 'openpyxl'.\nInstall xlrd and openpyxl for Excel support.\nUse pip or conda to install xlrd and install openpyxl.")
         except :
-            NewFrames = {}
-            _verbose(self.speak, -1, 'not able to read the excel file, please check input parameters and excel sheets format.')
-            return None
-
+            try:
+                import xlrd
+                try:
+                    import openpyxl
+                except:
+                    raise ModuleNotFoundError("Missing optional dependency 'openpyxl'.\nInstall openpyxl for Excel support.\nUse pip or conda to install openpyxl.")
+            except:
+                raise ModuleNotFoundError("Missing optional dependency 'xlrd'.\nInstall xlrd for Excel support.\nUse pip or conda to install xlrd.")
+            raise TypeError('Not able to read the excel file, please check input parameters and excel sheets format.')
+            
         if sheet_name is not None and type(NewFrames) is not dict :
             NewFrames = {str(sheet_name):NewFrames}
 
