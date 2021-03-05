@@ -6,7 +6,7 @@ Created on Thu Jan 21 11:00:20 2021
 """
 
 __version__ = 0.2
-__release__ = 210225
+__release__ = 210305
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult

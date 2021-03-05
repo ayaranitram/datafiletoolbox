@@ -5,8 +5,8 @@ Created on Wed May 13 00:46:05 2020
 @author: MCARAYA
 """
 
-__version__ = 0.1
-__release__ = 210225
+__version__ = 0.2
+__release__ = 210305
 __all__ = ['_mainKey', '_itemKey', '_keyType', '_wellFromAttribute', 'tamiz', '_meltDF']
 
 import pandas
