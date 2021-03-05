@@ -7,7 +7,7 @@ Created on Sun Oct 11 11:14:32 2020
 """
 
 __version__ = 0.5
-__release__ = 210225
+__release__ = 210305
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -23,7 +23,6 @@ import datetime as dt
 from warnings import warn
 from .._common.units import unit  # to use unit.isUnit method
 from .._common.units import convertUnit, unitProduct, unitDivision, convertible as convertibleUnits
-from .._common.functions import _meltDF
 
 try :
     from datafiletoolbox import multisplit, isDate, strDate
@@ -72,12 +71,12 @@ def _Series2Frame(aSimSeries) :
         return aSimSeries
     if type(aSimSeries) is SimSeries :
         try :
-            return SimDataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list() ) ), units=aSimSeries.get_Units(), index=[aSimSeries.name], speak=aSimSeries.speak, indexName=aSimSeries.indexName, indexUnits=aSimSeries.indexUnits, nameSeparator=aSimSeries.nameSeparator, intersectionCharacter=aSimSeries.intersectionCharacter, autoAppend=aSimSeries.autoAppend, dtype=aSimSeries.dtype )
+            return SimDataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list() ) ), units=aSimSeries.get_Units(), index=aSimSeries.columns, speak=aSimSeries.speak, indexName=aSimSeries.index.name, indexUnits=aSimSeries.indexUnits, nameSeparator=aSimSeries.nameSeparator, intersectionCharacter=aSimSeries.intersectionCharacter, autoAppend=aSimSeries.autoAppend )
         except :
             return aSimSeries
     if type(aSimSeries) is Series :
         try :
-            return DataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list() ) ), index=[aSimSeries.name], dtype=aSimSeries.dtype )
+            return DataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list() ) ), index=aSimSeries.columns )
         except :
             return aSimSeries
 
@@ -192,10 +191,12 @@ class SimSeries(Series) :
         super().__init__(data=data, index=index, *args, **kwargs)
 
         # set the name of the index
-        if(self.index.name is None or(type(self.index.name) is str and len(self.index.name)==0 ) ) and(type(indexInput) is str and len(indexInput)>0 ) :
+        if (self.index.name is None or(type(self.index.name) is str and len(self.index.name)==0 ) ) and (type(indexInput) is str and len(indexInput)>0 ) :
             self.index.name = indexInput
         # overwrite the index.name with input from the argument indexName
-        if 'indexName' in kwargsB and type(kwargsB['indexName']) is str and len(kwargsB['indexName'].strip())>0 :
+        if indexName is not None and type(indexName) is str and len(indexName.strip())>0 :
+            self.set_indexName(indexName)
+        elif 'indexName' in kwargsB and type(kwargsB['indexName']) is str and len(kwargsB['indexName'].strip())>0 :
             self.set_indexName(kwargsB['indexName'])
 
         # set the units
@@ -219,13 +220,17 @@ class SimSeries(Series) :
         if Udict is not None and self.index.name is not None and self.index.name in Udict :
             self.indexUnits = Udict[self.index.name]
         # overwrite the indexUnits with input from the argument indexName
+        if indexUnits is not None and type(indexUnits) is str and len(indexUnits.strip())>0 :
+            self.indexUnits = indexUnits
         if 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is str and len(kwargsB['indexUnits'].strip())>0 :
             self.indexUnits = kwargsB['indexUnits']
         elif 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is dict and len(kwargsB['indexUnits'])>0 :
             self.indexUnits = kwargsB['indexUnits'].copy()
 
         # get separator for the column names, 'partA'+'separator'+'partB'
-        if 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
+        if nameSeparator is not None and type(nameSeparator) is str and len(nameSeparator.strip())>0 :
+            self.nameSeparator = nameSeparator
+        elif 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
             self.set_NameSeparator(kwargsB['nameSeparator'])
         elif (self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False ) and (self.name is not None and ':' in self.name ) :
             self.nameSeparator = ':'
@@ -235,9 +240,14 @@ class SimSeries(Series) :
             self.nameSeparator = ':'
         else :
             self.nameSeparator = ':'
-            
+
+        if intersectionCharacter is not None and type(intersectionCharacter) is str:
+            self.intersectionCharacter = intersectionCharacter
+
         # catch autoAppend from kwargs
-        if 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None :
+        if autoAppend is not None :
+            self.autoAppend = bool(autoAppend)
+        elif 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None :
             self.autoAppend = bool(kwargs['autoAppend'] )
             
         # set the provided name
@@ -1343,10 +1353,14 @@ class SimDataFrame(DataFrame) :
         if(self.index.name is None or(type(self.index.name) is str and len(self.index.name)==0 ) ) and(type(indexInput) is str and len(indexInput)>0 ) :
             self.index.name = indexInput
         # overwrite the index.name with input from the argument indexName
-        if 'indexName' in kwargsB and type(kwargsB['indexName']) is str and len(kwargsB['indexName'].strip())>0 :
+        if indexName is not None and type(indexName) is str and len(indexName.strip())>0 :
+            self.set_indexName(indexName)
+        elif 'indexName' in kwargsB and type(kwargsB['indexName']) is str and len(kwargsB['indexName'].strip())>0 :
             self.set_indexName(kwargsB['indexName'])
         # set units of the index
-        if 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is str and len(kwargsB['indexUnits'].strip())>0 :
+        elif indexUnits is not None and type(indexUnits) is str and len(indexUnits.strip())>0 :
+            self.set_indexUnits(indexUnits)
+        elif 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is str and len(kwargsB['indexUnits'].strip())>0 :
             self.set_indexUnits(kwargsB['indexUnits'])
 
         # set the units
@@ -1368,11 +1382,13 @@ class SimDataFrame(DataFrame) :
             if self.index.name in self.columns :
                 self.indexUnits = self.units[self.index.name]
 
-        if self.index.name not in self.units :
+        if self.index.name is not None and self.index.name not in self.units :
             self.units[self.index.name] = '' if self.indexUnits is None else self.indexUnits
 
         # get separator for the column names, 'partA'+'separator'+'partB'
-        if 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
+        if nameSeparator is not None and type(nameSeparator) is str and len(nameSeparator.strip())>0 :
+            self.set_NameSeparator(nameSeparator)
+        elif 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
             self.set_NameSeparator(kwargsB['nameSeparator'])
         if self.nameSeparator in [None, '', False] and ':' in ' '.join(list(map(str, self.columns))) :
             self.nameSeparator = ':'
@@ -1382,7 +1398,9 @@ class SimDataFrame(DataFrame) :
             self.nameSeparator = ':'
 
         # set autoAppend if provided as argument
-        if 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None :
+        if autoAppend is not None :
+            self.autoAppend = bool(autoAppend)
+        elif 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None :
             self.autoAppend = bool(kwargsB['autoAppend'])
 
     # @property
@@ -1661,6 +1679,23 @@ class SimDataFrame(DataFrame) :
 
     def as_DataFrame(self) :
         return DataFrame(self )
+    
+    def to_Series(self):
+        return self.to_SimSeries()
+    
+    def to_SimSeries(self):
+        if len(self) <= 1:
+            return SimSeries(data=self.DF.T.to_numpy(), name=self.index[0], index=self.columns.to_list() , **self._SimParameters)
+    
+    @property
+    def Series(self):
+        return self.to_SimSeries()
+    @property
+    def SimSeries(self):
+        return self.to_SimSeries()
+    @property
+    def S(self):
+        return self.to_SimSeries()
 
     @property
     def DataFrame(self) :
@@ -2046,7 +2081,7 @@ class SimDataFrame(DataFrame) :
             raise ValueError("name separator must not be None")
         objs = {}
         for each in list(self.columns ) :
-            if self.nameSeparator in each :
+            if type(each) is str and self.nameSeparator in each :
                 objs[each] = each.split(self.nameSeparator )[-1]
                 # self.units[ each.split(self.nameSeparator )[-1] ] = self.units[ each ]
                 # del(self.units[each])
@@ -2062,7 +2097,7 @@ class SimDataFrame(DataFrame) :
             raise ValueError("name separator must not be None")
         objs = {}
         for each in list(self.columns ) :
-            if self.nameSeparator in each :
+            if type(each) is str and self.nameSeparator in each :
                 objs[each] = each.split(self.nameSeparator )[0]
                 # self.units[ each.split(self.nameSeparator )[0] ] = self.units[ each ]
                 # del(self.units[each])
@@ -2162,8 +2197,11 @@ class SimDataFrame(DataFrame) :
             if notFount == len(other.columns) :
                 if self.nameSeparator is not None and other.nameSeparator is not None :
                     selfC, otherC, newNames = self._CommonRename(other)
-                    resultX = selfC + otherC
-                    resultX.rename(columns=newNames, inplace=True)
+                    if (self.columns != selfC.columns).any() or (other.columns != otherC.columns).any() :
+                        resultX = selfC + otherC
+                        resultX.rename(columns=newNames, inplace=True)
+                    else :
+                        resultX = result
                     if self.autoAppend :
                         for col in newNames.values() :
                             result[col] = resultX[col]
@@ -2802,7 +2840,7 @@ class SimDataFrame(DataFrame) :
                     raise Warning('filter conditions removed every row :\n   '+ ' and '.join(filters) )
 
         ### attempt to get the desired keys, first as column names, then as indexes
-        if bool(key) :
+        if bool(key) or key == 0 :
             try :
                 result = self._getbyColumn(key)
             except :
@@ -3601,4 +3639,5 @@ class SimDataFrame(DataFrame) :
         return jitter(self,std)
 
     def melt(self,**kwargs):
+        from .._common.functions import _meltDF
         return _meltDF(self,FullOutput=False)
