@@ -999,8 +999,8 @@ class SimSeries(Series) :
                     if key == '...' :
                         i = len(keys)
                         continue
-                    while key not in self.index and f <= len(keys) :
-                        f = keys.index(' ', f+1)
+                    while key not in self.index and f <= len(keys):
+                        f = keys.index(' ', f+1) if ' ' in keys[f+1:] else len(keys)+1
                         key = keys[i:f]
                     if key not in self.index :
                         i = len(keys)
