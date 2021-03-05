@@ -1685,7 +1685,7 @@ class SimDataFrame(DataFrame) :
     
     def to_SimSeries(self):
         if len(self) <= 1:
-            return SimSeries(data=self.DF.T.to_numpy(), name=self.index[0], index=self.columns.to_list() , **self._SimParameters)
+            return SimSeries(data=Series(self.DF.iloc[0].to_list(), name=self.index[0], index=self.columns.to_list()) , **self._SimParameters)
     
     @property
     def Series(self):
