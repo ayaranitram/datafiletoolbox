@@ -5,57 +5,25 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = 0.2
-__release__ = 210225
+__version__ = 0.25
+__release__ = 210308
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
 from .._common.functions import _mainKey
 from .._common.inout import _extension
 from .._common.inout import _verbose
+from .._Classes.EclSumLoader import EclSumLoader
 import numpy as np
 import os
-
-try :
-    # try to use libecl instalation from pypi.org
-    from ecl.summary import EclSum
-    from ecl.version import version as libecl_version
-    print('\n using libecl version ' + str(libecl_version))
-    _EclSum = True
-except :
-    _EclSum = False
-
-
-def loadEclSum() :
-    # try :
-    #     # try to use libecl instalation from pypi.org
-    #     from ecl.summary import EclSum
-    #     from ecl.version import version as libecl_version
-    #     print('\n using libecl version ' + str(libecl_version))
-    # except :
-    if _EclSum :
-        return EclSum
-    else :
-        # try to use my compiled version of libecl from https://github.com/equinor/libecl
-        eclPath = _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib/python'
-        os.environ['PYTHONPATH'] = eclPath + ';' + os.environ['PYTHONPATH']
-        eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib'
-        eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
-        os.environ['PATH'] = eclPath + ';' + os.environ['PATH']
-        #from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
-        try :
-            from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary import EclSum
-            print('\n using ecl from https://github.com/equinor/libecl compiled for Windows10')
-            return EclSum
-        except ModuleNotFoundError :
-            print("\n ERROR: missing 'cwrap', please intall it using pip command:\n           pip install crwap\n\n       or upgrade:\n\n          pip install crwap --upgrade\n        or intall libecl using pip command:\n           pip install libecl\n\n       or upgrade:\n\n          pip install libecl --upgrade" )
-            raise ModuleNotFoundError()
 
 
 class ECL(_SimResult):
     """
     object to contain eclipse format results read from SMSPEC using libecl from equinor
-    """
+    """  
+    loadEclSum = EclSumLoader()
+    
     def __init__(self, inputFile=None, verbosity=2) :
         _SimResult.__init__(self, verbosity=verbosity)
         self.kind = ECL
@@ -81,7 +49,7 @@ class ECL(_SimResult):
 
             if os.path.isfile(SummaryFilePath) :
                 _verbose( self.speak, 1, ' > loading summary file:\n  ' + SummaryFilePath)
-                EclSummary = loadEclSum()
+                EclSummary = ECL.loadEclSum
                 self.results = EclSummary(SummaryFilePath) # ecl.summary.EclSum(SummaryFilePath)
                 self.name = _extension(SummaryFilePath)[1]
                 self.set_FieldTime()
@@ -90,7 +58,7 @@ class ECL(_SimResult):
                 self.get_Regions(reload=True)
                 self.get_Keys(reload=True)
                 self.units = self.get_Unit(self.keys)
-                _verbose( self.speak, 1, 'simulation runs from ' +  str( self.get_Dates()[0] ) + ' to ' + str( self.get_Dates()[-1] ) )
+                _verbose( self.speak, 1, 'simulation runs from ' +  str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
                 self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), DataType='datetime', overwrite=True)
                 self.stripUnits()
                 self.get_Attributes(reload=True)
@@ -116,7 +84,7 @@ class ECL(_SimResult):
                 return self.results.numpy_vector(str(key).upper().strip())
 
     def get_Dates(self) :
-        self.start = np.datetime64(self.results.start_date, 's' )
+        self.start = np.datetime64(self.results.start_date, 's')
         try :
             self.end = self.results.end_date
         except :
@@ -124,7 +92,7 @@ class ECL(_SimResult):
         return self.results.numpy_dates
 
     def extract_Wells(self) :
-        self.wells = tuple( self.results.wells() )
+        self.wells = tuple(self.results.wells())
         return self.wells
 
     def extract_Groups(self, pattern=None, reload=False) :
@@ -138,11 +106,11 @@ class ECL(_SimResult):
         on fnmatch(), i.e. shell style wildcards.
         """
         if len(self.groups) == 0 or reload == True :
-            self.groups = tuple( self.results.groups() )
+            self.groups = tuple(self.results.groups())
         if pattern is None :
             return self.groups
         else:
-            return tuple( self.results.groups(pattern) )
+            return tuple( self.results.groups(pattern))
 
     def list_Keys(self, pattern=None, reload=False) :
         """
@@ -157,7 +125,7 @@ class ECL(_SimResult):
         object.
         """
         if len(self.keys) == 0 or reload == True :
-            self.keys = tuple( self.results.keys(pattern) )
+            self.keys = tuple( self.results.keys(pattern))
             for extra in ( 'TIME', 'DATE', 'DATES' ) :
                 if extra not in self.keys :
                     self.keys = tuple( [extra] + list(self.keys) )
