@@ -2751,16 +2751,16 @@ class SimDataFrame(DataFrame) :
         elif after > before :
             for c in range(before, after ) :
                 if self.columns[c] in self.columns[ before : after ] :
-                    self.new_Units(self.columns[c], uDic[ self.columns[c] ] )
+                    self.new_Units(self.columns[c], uDic[ self.columns[c] ])
                 else :
-                    self.new_Units(self.columns[c], 'UNITLESS' )
+                    self.new_Units(self.columns[c], 'UNITLESS')
 
     def __getitem__(self, key) :
         
         ### if key is boolean filter, return the filtered SimDataFrame
         if isinstance(key, (Series)) or type(key) is np.ndarray :
             if str(key.dtype) == 'bool' :
-                return SimDataFrame( data=self._getbyFilter(key), **self._SimParameters )
+                return SimDataFrame( data=self._getbyFilter(key), **self._SimParameters)
         
         ### if key is pd.Index or pd.MultiIndex return selected rows or columns 
         if isinstance(key, (Index)) :
@@ -2770,9 +2770,9 @@ class SimDataFrame(DataFrame) :
                     keyCols = False
                     break
             if keyCols :
-                return SimDataFrame(data=self._getbyColumn(key), **self._SimParameters )
+                return SimDataFrame(data=self._getbyColumn(key), **self._SimParameters)
             else :
-                result = SimDataFrame(data=self._getbyIndex(key), **self._SimParameters )
+                result = SimDataFrame(data=self._getbyIndex(key), **self._SimParameters)
                 if len(result) == 1 :
                     result = _Series2Frame(result)
                 return result
@@ -2790,16 +2790,21 @@ class SimDataFrame(DataFrame) :
         ### if key is a string but not a column name, check if it is an item, attribute, pattern, filter or index
         if type(key) is str and key not in self.columns :
 
-            if bool(self.find_Keys(key) ) : # catch the column names this key represent
-                key = list(self.find_Keys(key) )
+            if bool(self.find_Keys(key)) : # catch the column names this key represent
+                key = list(self.find_Keys(key))
             else : # key is not a column name
                 try : # to evalue as a filter
-                    return self._getbyCriteria(key)
+                    result = self._getbyCriteria(key)
                 except :
                     try : # to evaluate as an index value
-                        return self._getbyIndex(key)
+                        result = self._getbyIndex(key)
                     except :
-                        raise ValueError('requested key is not a valid column name, pattern, index or filter criteria:\n   '+ key)
+                        raise ValueError('requested key is not a valid column name, pattern, index or filter criteria:\n   ' + key)
+                if result is None :
+                    try:
+                        result = self._getbyIndex(key)
+                    except:
+                        raise ValueError('requested key is not a valid column name, pattern, index or filter criteria:\n   ' + key)
 
         ### key is a list, have to check every item in the list
         elif type(key) is list :
@@ -2835,9 +2840,9 @@ class SimDataFrame(DataFrame) :
                 try :
                     indexFilter = self.filter(filters, returnFilter=True)
                 except :
-                    raise Warning('filter conditions are not valid:\n   '+ ' and '.join(filters) )
+                    raise Warning('filter conditions are not valid:\n   '+ ' and '.join(filters))
                 if not indexFilter.any() :
-                    raise Warning('filter conditions removed every row :\n   '+ ' and '.join(filters) )
+                    raise Warning('filter conditions removed every row :\n   '+ ' and '.join(filters))
 
         ### attempt to get the desired keys, first as column names, then as indexes
         if bool(key) or key == 0 :
@@ -2854,7 +2859,7 @@ class SimDataFrame(DataFrame) :
             resultUnits = self.get_Units(result.columns)
             result = SimDataFrame(data=result, units=resultUnits, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend)
         elif type(result) is Series :
-            if result.name is None or type(result.name) is not str :
+            if result.name is None or result.name not in self.get_Units():  # type(result.name) is not str :
                 # this Series is one index for multiple columns
                 resultUnits = self.get_Units(result.index)
             else :
@@ -3031,7 +3036,7 @@ class SimDataFrame(DataFrame) :
             return []
         objs = []
         for each in list(self.columns ) :
-            if self.nameSeparator in each and each[0] == 'W' :
+            if type(each) is str and self.nameSeparator in each and each[0] == 'W' :
                 objs += [each.split(self.nameSeparator )[-1]]
         return tuple(set(objs))
     def get_Wells(self, pattern=None) :
@@ -3061,7 +3066,7 @@ class SimDataFrame(DataFrame) :
             return []
         objs = []
         for each in list(self.columns ) :
-            if self.nameSeparator in each and each[0] == 'G' :
+            if type(each) is str and self.nameSeparator in each and each[0] == 'G' :
                 objs += [each.split(self.nameSeparator )[-1]]
         return tuple(set(objs))
 
@@ -3092,7 +3097,7 @@ class SimDataFrame(DataFrame) :
             return []
         objs = []
         for each in list(self.columns ) :
-            if self.nameSeparator in each and each[0] == 'R' :
+            if type(each) is str and self.nameSeparator in each and each[0] == 'R' :
                 objs += [each.split(self.nameSeparator )[-1]]
         return tuple(set(objs))
 
@@ -3122,8 +3127,8 @@ class SimDataFrame(DataFrame) :
             return tuple(self.columns )
         atts = {}
         for each in list(self.columns ) :
-            if self.nameSeparator in each :
-                if each.split(self.nameSeparator )[0] in atts :
+            if type(each) is str and self.nameSeparator in each :
+                if type(each) is str and each.split(self.nameSeparator )[0] in atts :
                     atts[each.split(self.nameSeparator )[0]] += [each.split(self.nameSeparator )[-1]]
                 else :
                     atts[each.split(self.nameSeparator )[0]] = [each.split(self.nameSeparator )[-1]]
@@ -3174,12 +3179,17 @@ class SimDataFrame(DataFrame) :
             [!seq]      matches any character not in seq
 
         """
-        if pattern is not None and type(pattern ) is not str :
+        if pattern is not None and type(pattern) is not str and type(pattern) not in [int,float]:
             raise TypeError('pattern argument must be a string.\nreceived '+str(type(pattern))+' with value '+str(pattern))
+        if type(pattern) in [int,float]:
+            if pattern in self.columns:
+                return self[pattern]
+            else:
+                raise KeyError("The requested key: "+str(pattern)+"is not present in this SimDataFrame.")
         if pattern is None :
-            return tuple(self.columns )
+            return tuple(self.columns)
         else:
-            return tuple(fnmatch.filter(tuple(self.columns ), pattern ) )
+            return tuple(fnmatch.filter(map(str,tuple(self.columns)), pattern))
 
     def find_Keys(self, criteria=None) :
         """
@@ -3238,7 +3248,7 @@ class SimDataFrame(DataFrame) :
         if items is None :
             return self.units
         uDic = {}
-        if type(items) is str :
+        if not isinstance(items,(list,tuple,dict,set,Index)):
             items = [items]
         for each in items :
             if each in self.units :
@@ -3252,7 +3262,7 @@ class SimDataFrame(DataFrame) :
                         uDic[att] = self.units[att]
                     else :
                         uDic[att] = 'UNITLESS'
-            elif len(self.get_Keys(each) ) > 0 :
+            elif len(self.get_Keys(each)) > 0 :
                 for key in self.get_Keys(each) :
                     uDic[key] = self.units[key]
         return uDic
