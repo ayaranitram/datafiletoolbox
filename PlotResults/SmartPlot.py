@@ -185,8 +185,8 @@ def Plot( SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], 
                 Y_Axis[i] = Y_Names[ Y_Keys[i].split(':')[0] ]
                 _verbose( SimResultObjects[0].get_Verbosity(), 1, "<Plot> Axis for '" + Y_Keys[i] + "' is " + str(Y_Names[ Y_Keys[i].split(':')[0] ]))
             else :
-                Y_Names[ Y_Keys[i].split(':')[0] ] = Y_Counter%2
-                Y_Axis[i] = Y_Counter%2
+                Y_Names[ Y_Keys[i].split(':')[0] ] = Y_Counter % 2
+                Y_Axis[i] = Y_Counter % 2
                 Y_Counter += 1
                 _verbose( SimResultObjects[0].get_Verbosity(), 1, "<Plot> Axis for '" + Y_Keys[i] + "' is " + str(Y_Names[ Y_Keys[i].split(':')[0] ]))
             time.sleep(timeout)
@@ -261,7 +261,7 @@ def Plot( SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], 
                 markersize = minmarkersize
             markersize = [markersize] * len(SimResultObjects)
         elif len(Y_Keys) > 1 :
-            markersize = 2.0 / round((log(len( Y_Keys )) +1), 2)
+            markersize = 2.0 / round((log(len( Y_Keys )) + 1), 2)
             if markersize < minmarkersize :
                 markersize = minmarkersize
             markersize = [markersize] * len(Y_Keys)
@@ -317,7 +317,7 @@ def Plot( SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], 
                 linewidth = minlinewidth
             linewidth = [linewidth] * len(SimResultObjects)
         elif len(Y_Keys) > 1 :
-            linewidth = 2.0 / round((log(len( Y_Keys )) +1), 2)
+            linewidth = 2.0 / round((log(len( Y_Keys )) + 1), 2)
             if linewidth < minlinewidth :
                 linewidth = minlinewidth
             linewidth = [linewidth] * len(Y_Keys)
