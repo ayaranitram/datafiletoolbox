@@ -1750,7 +1750,13 @@ class SimDataFrame(DataFrame) :
                     result[col] = self[col].to(unitsDict[col]) # convertUnit(self[col].S, self.get_Units(col)[col], unitsDict[col], self.speak ), unitsDict[col]
             return result
 
-    def drop_zeros(self, axis='both') :
+    def dropzeros(self,axis='both'):
+        """
+        alias for .drop_zeros() method
+        """
+        return self.drop_zeros(axis=axis)
+
+    def drop_zeros(self, axis='both'):
         """
         drop the axis(rows or columns) where all the values are zeross.
 
