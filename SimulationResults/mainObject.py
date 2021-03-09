@@ -2424,7 +2424,7 @@ class SimResult(object):
         if MatplotlibColor is None :
             MatplotlibColor = (random.random(), random.random(), random.random() )
         elif not is_color_like(MatplotlibColor) :
-            _verbose(self.speak, 3, 'the provided color code is not a correct matplotlib color' )
+            _verbose(self.speak, 3, '<set_Color> the provided color code is not a correct matplotlib color' )
         if type(MatplotlibColor) is list :
            MatplotlibColor = tuple(MatplotlibColor )
         if Key is None :
@@ -2436,8 +2436,8 @@ class SimResult(object):
                 self.keyColors[Key] = MatplotlibColor
             elif len(self.find_Keys(Key)) > 0 :
                 for K in self.find_Keys(Key) :
-                    _verbose(self.speak, 2, ' applying width to key', K)
-                    self.set_Width(MatplotlibColor, K)
+                    _verbose(self.speak, 2, "<set_Color> applying color to key '" + str(K) + "'")
+                    self.set_Color(MatplotlibColor,K)
 
     def set_RandomColorPerWell(self) :
         """
