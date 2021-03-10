@@ -2424,7 +2424,7 @@ class SimResult(object):
         if MatplotlibColor is None :
             MatplotlibColor = (random.random(), random.random(), random.random() )
         elif not is_color_like(MatplotlibColor) :
-            _verbose(self.speak, 3, '<set_Color> the provided color code is not a correct matplotlib color' )
+            raise ValueError('<set_Color> the provided color code is not a correct matplotlib color' )
         if type(MatplotlibColor) is list :
            MatplotlibColor = tuple(MatplotlibColor )
         if Key is None :
@@ -2437,7 +2437,7 @@ class SimResult(object):
             elif len(self.find_Keys(Key)) > 0 :
                 for K in self.find_Keys(Key) :
                     _verbose(self.speak, 2, "<set_Color> applying color to key '" + str(K) + "'")
-                    self.set_Color(MatplotlibColor,K)
+                    self.keyColors[K] = MatplotlibColor
 
     def set_RandomColorPerWell(self) :
         """
@@ -2476,9 +2476,9 @@ class SimResult(object):
             if len(self.find_Keys(linewidth)) > 0 :
                 linewidth, Key = None, linewidth
             else :
-                raise TypeError(' the `linewidth´ value must be int or float')
+                raise TypeError('<set_Width> the `linewidth´ value must be int or float')
         elif type(linewidth) not in [float, int, bool] :
-            TypeError(' the `linewidth´ value must be int or float' )
+            TypeError('<set_Width> the `linewidth´ value must be int or float' )
         if type(linewidth) in [int, bool] :
            linewidth = float(linewidth )
         if Key is None :
@@ -2490,7 +2490,7 @@ class SimResult(object):
                 self.keyWidths[Key] = linewidth
             elif len(self.find_Keys(Key)) > 0 :
                 for K in self.find_Keys(Key) :
-                    _verbose(self.speak, 2, ' applying width to key', K)
+                    _verbose(self.speak, 2, '<set_Width> applying width to key', K)
                     self.set_Width(linewidth, K)
 
     def get_Width(self, Key=None):
@@ -2534,9 +2534,9 @@ class SimResult(object):
             elif self.get_Style(Key).startswith('None#') :
                 linestyle = self.get_Style(Key)[5:].strip()
         if type(linestyle) is not str:
-            _verbose(self.speak, 3, 'the `linestyle´ value must be a string valid as matplotlib linestyle' )
+            raise TypeError('<set_Style> the `linestyle´ value must be a string valid as matplotlib linestyle')
         elif linestyle not in ['-', 'solid', '--', 'dashed', '-.', 'dashdot', ':', 'dotted', 'None', ' ', ''] :
-            _verbose(self.speak, 3, 'the `linestyle´ value must be a string valid as matplotlib linestyle:\n  '+"'-' or 'solid' 	      solid line\n  '--' or 'dashed'      dashed line\n  '-.' or 'dashdot'     dash-dotted line\n  ':' or 'dotted'	      dotted line\n  'None' or ' ' or ''   draw nothing\n" )
+            raise ValueError('<set_Style> the `linestyle´ value must be a string valid as matplotlib linestyle:\n  '+"'-' or 'solid' 	      solid line\n  '--' or 'dashed'      dashed line\n  '-.' or 'dashdot'     dash-dotted line\n  ':' or 'dotted'	      dotted line\n  'None' or ' ' or ''   draw nothing\n" )
 
         if Key is None :
             self.style = linestyle
@@ -2547,7 +2547,7 @@ class SimResult(object):
                 self.keyStyles[Key] = linestyle
             elif len(self.find_Keys(Key)) > 0 :
                 for K in self.find_Keys(Key) :
-                    _verbose(self.speak, 2, ' applying style to key', K)
+                    _verbose(self.speak, 2, '<set_Style> applying style to key', K)
                     self.set_Style(linestyle, K)
 
     def get_Style(self, Key=None):
@@ -2580,20 +2580,20 @@ class SimResult(object):
            elif len(marker.strip()) > 2 and marker.strip()[0] == marker.strip()[-1] :
                marker = marker.strip()
            else :
-               _verbose(self.speak, 3, 'the provided marker is not a valid string code for matplotlib' )
+               raise ValueError('<set_Marker> the provided marker is not a valid string code for matplotlib')
         elif type(marker) in [int, float] :
             if int(marker) >= 0 and int(marker) <= 11 :
                 market = int(marker)
             else :
-               _verbose(self.speak, 3, 'the provided marker is not a valid integer for matplotlib' )
+               raise ValueError('<set_Marker> the provided marker is not a valid integer for matplotlib')
         elif type(marker) is tuple :
             if len(marker) == 3 :
                 if type(marker[0]) is int and marker[0] > 0 and type(marker[1]) is int and marker[1] in [0, 1, 2, 3] and type(marker[2]) in [float, int] :
                     pass # ok
                 else :
-                    _verbose(self.speak, 3, 'the provided marker is not a valid tuple - (numsides, style, angle) - for matplotlib' )
+                    raise ValueError('<set_Marker> the provided marker is not a valid tuple - (numsides, style, angle) - for matplotlib')
         else :
-            _verbose(self.speak, 3, 'the provided marker could not be validated, will be stored as received' )
+            _verbose(self.speak, 3, '<set_Marker> the provided marker could not be validated, will be stored as received' )
 
         if Key is None :
             self.marker = marker
@@ -2604,8 +2604,8 @@ class SimResult(object):
                 self.keyMarkers[Key] = marker
             elif len(self.find_Keys(Key)) > 0 :
                 for K in self.find_Keys(Key) :
-                    _verbose(self.speak, 2, ' applying marker to key', K)
-                    self.set_Marker(marker, K)
+                    _verbose(self.speak, 2, '<set_Marker> applying marker to key', K)
+                    self.keyMarkers[Key] = marker
 
     def get_Marker(self, Key=None):
         if Key is None :
@@ -2633,14 +2633,14 @@ class SimResult(object):
             markersize = 1.0
         if type(markersize) is str :
             markersize = 1.0
-            _verbose(self.speak, 3, 'the provided markersize is not a float or integer' )
+            raise TypeError('<set_MarkerSize> the provided markersize is not a float or integer' )
         elif type(markersize) in [int, float] :
             if markersize >= 0 :
                 markersize = float(markersize)
             else :
-               _verbose(self.speak, 3, 'the provided markersize must be positive' )
+               raise ValueError('<set_MarkerSize> the provided markersize must be positive' )
         else :
-            _verbose(self.speak, 3, 'the provided markersize is not valid' )
+            raise TypeError('<set_MarkerSize> the provided markersize is not valid' )
 
         if Key is None :
             self.markersize = markersize
@@ -2651,8 +2651,8 @@ class SimResult(object):
                 self.keyMarkersSize[Key] = markersize
             elif len(self.find_Keys(Key)) > 0 :
                 for K in self.find_Keys(Key) :
-                    _verbose(self.speak, 2, ' applying marker size to key', K)
-                    self.set_Marker(markersize, K)
+                    _verbose(self.speak, 2, '<set_MarkerSize>  applying marker size to key', K)
+                    self.keyMarkersSize[Key] = markersize
 
     def get_MarkerSize(self, Key=None):
         if Key is None :
@@ -2680,9 +2680,9 @@ class SimResult(object):
             else :
                 print('wrong set_Verbosity argument: ' + str(verbosity_level) + '\nVerbosity will be set to True (1)')
                 self.speak = 1
+                
     def get_Verbosity(self) :
         return self.speak
-
 
     def set_Start(self, startDate):
         """
@@ -2699,6 +2699,7 @@ class SimResult(object):
 
     def isKey(self, Key) :
         return self.is_Key(Key)
+    
     def is_Key(self, Key) :
         if type(Key) != str or len(Key)==0 :
             return False
@@ -2725,7 +2726,6 @@ class SimResult(object):
             return True
         else :
             return False
-
 
     def get_Attributes(self, pattern=None, reload=False) :
         """
