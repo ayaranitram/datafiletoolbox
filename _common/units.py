@@ -1191,6 +1191,27 @@ def convertible(fromUnit, toUnit, PrintPath=False) :
 #                 pass
     # return unit1 + '*' + unit2
 
+def unitBasePower(unit):
+    Ubas, Upow = '', ''
+    oth = ''
+    for c in unit :
+        if c.isdigit() :
+            Upow += oth + c
+            oth = ''
+        elif c in ['-', '+', '.'] :
+            oth += c
+        else :
+            Ubas += oth + c
+            oth = ''
+    Upow = 1 if Upow == '' else float(Upow) if '.' in Upow else int(Upow)
+    return Ubas, Upow
+
+def unitBase(unit):
+    return unitBasePower(unit)[0]
+
+def unitPower(unit):
+    return unitBasePower(unit)[1]
+
 def unitProduct(unit1, unit2):
     
     if unit1 is None :
