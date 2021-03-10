@@ -22,7 +22,7 @@ import numpy as np
 import datetime as dt
 from warnings import warn
 from .._common.units import unit  # to use unit.isUnit method
-from .._common.units import convertUnit, unitProduct, unitDivision, convertible as convertibleUnits
+from .._common.units import convertUnit, unitProduct, unitDivision, convertible as convertibleUnits, unitBase
 
 try :
     from datafiletoolbox import multisplit, isDate, strDate
@@ -368,7 +368,7 @@ class SimSeries(Series) :
     
     def renameRight(self, inplace=False) :
         if self.nameSeparator in [None, '', False] :
-            raise ValueError("name separator must not be None")
+            return self  # raise ValueError("name separator must not be None")
         objs = {}
         for each in list(self.columns ) :
             if self.nameSeparator in each :
@@ -386,7 +386,7 @@ class SimSeries(Series) :
 
     def renameLeft(self, inplace=False) :
         if self.nameSeparator in [None, '', False] :
-            raise ValueError("name separator must not be None")
+            return self  # raise ValueError("name separator must not be None")
         objs = {}
         for each in list(self.columns ) :
             if self.nameSeparator in each :
@@ -797,19 +797,29 @@ class SimSeries(Series) :
                     result = self.mul(other)
                     unitsResult = unitProduct(self.units, other.units)
                     return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
-                elif convertibleUnits(other.units, self.units ) :
+                elif convertibleUnits(other.units, self.units):
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.mul(otherC)
                     unitsResult = unitProduct(self.units, other.units)
                     return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
-                elif convertibleUnits(self.units, other.units ) :
+                elif convertibleUnits(self.units, other.units):
                     selfC = convertUnit(self, self.units, other.units, self.speak )
+                    result = other.mul(selfC)
+                    unitsResult = unitProduct(other.units, self.units)
+                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                elif convertibleUnits(other.units, unitBase(self.units)):
+                    otherC = convertUnit(other, other.units, unitBase(self.units), self.speak )
+                    result = self.mul(otherC)
+                    unitsResult = unitProduct(self.units, other.units)
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )                
+                elif convertibleUnits(self.units, unitBase(other.units)):
+                    selfC = convertUnit(self, self.units, unitBase(other.units), self.speak )
                     result = other.mul(selfC)
                     unitsResult = unitProduct(other.units, self.units)
                     return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.mul(other)
-                    unitsResult = unitProduct(self.units, other.units)
+                    unitsResult = self.units + '*' + other.units
                     return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
             else :
                 raise NotImplementedError
@@ -832,19 +842,29 @@ class SimSeries(Series) :
                     result = self.truediv(other)
                     unitsResult = unitDivision(self.units, other.units)
                     return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
-                elif convertibleUnits(other.units, self.units ) :
+                elif convertibleUnits(other.units, self.units) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.truediv(otherC)
                     unitsResult = unitDivision(self.units, other.units)
                     return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
-                elif convertibleUnits(self.units, other.units ) :
+                elif convertibleUnits(self.units, other.units) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
+                    result = selfC.truediv(other)
+                    unitsResult = unitDivision(other.units, self.units)
+                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                elif convertibleUnits(other.units, unitBase(self.units)):
+                    otherC = convertUnit(other, other.units, unitBase(self.units), self.speak )
+                    result = self.truediv(otherC)
+                    unitsResult = unitDivision(self.units, other.units)
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                elif convertibleUnits(self.units, unitBase(other.units)):
+                    selfC = convertUnit(self, self.units, unitBase(other.units), self.speak )
                     result = selfC.truediv(other)
                     unitsResult = unitDivision(other.units, self.units)
                     return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.truediv(other)
-                    unitsResult = unitDivision(self.units, other.units)
+                    unitsResult = self.units + '/' + other.units
                     return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
             else :
                 raise NotImplementedError
@@ -877,9 +897,19 @@ class SimSeries(Series) :
                     result = other.floordiv(selfC)
                     unitsResult = unitDivision(other.units, self.units)
                     return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                elif convertibleUnits(other.units, unitBase(self.units) ) :
+                    otherC = convertUnit(other, other.units, unitBase(self.units), self.speak )
+                    result = self.floordiv(otherC)
+                    unitsResult = unitDivision(self.units, other.units)
+                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                elif convertibleUnits(self.units, unitBase(other.units)) :
+                    selfC = convertUnit(self, self.units, unitBase(other.units), self.speak )
+                    result = other.floordiv(selfC)
+                    unitsResult = unitDivision(other.units, self.units)
+                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.floordiv(other)
-                    unitsResult = unitDivision(self.units, other.units)
+                    unitsResult = self.units + '/' + other.units
                     return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
             else :
                 raise NotImplementedError
