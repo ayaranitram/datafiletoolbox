@@ -4644,17 +4644,29 @@ class SimResult(object):
             _verbose(self.speak, 3, "Not possible to create 'DATE' key, the requiered data is not available")
             return False
 
-    def createYEAR(self) :
-        Years = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).year)
-        self.set_Vector('YEAR', Years, 'Year', DataType='int', overwrite=True)
+    def createYEAR(self):
+        if self.is_Key('DATE'):
+            Years = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).year)
+            self.set_Vector('YEAR', Years, 'Year', DataType='int', overwrite=True)
+        else:
+            _verbose(self.speak, 3, "Not possible to create 'YEAR' key, the requiered data is not available")
+            return False
 
-    def createMONTH(self) :
-        Months = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).month)
-        self.set_Vector('MONTH', Months, 'Month', DataType='int', overwrite=True)
+    def createMONTH(self):
+        if self.is_Key('DATE'):
+            Months = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).month)
+            self.set_Vector('MONTH', Months, 'Month', DataType='int', overwrite=True)
+        else:
+            _verbose(self.speak, 3, "Not possible to create 'MONTH' key, the requiered data is not available")
+            return False
 
-    def createDAY(self) :
-        Days = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).day)
-        self.set_Vector('DAY', Days, 'Day', DataType='int', overwrite=True)
+    def createDAY(self):
+        if self.is_Key('DATE'):
+            Days = list(pd.to_datetime(self.get_Vector('DATE')['DATE']).day)
+            self.set_Vector('DAY', Days, 'Day', DataType='int', overwrite=True)
+        else:
+            _verbose(self.speak, 3, "Not possible to create 'DAY' key, the requiered data is not available")
+            return False
 
     def createTIME(self, startDate=None) :
         if self.is_Key('DATE') :
