@@ -11,22 +11,15 @@ __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
 from .._common.inout import _extension, _verbose
-from .._common.functions import _mainKey, _wellFromAttribute
-from .._common.stringformat import date as _strDate, getnumber as _getnumber
-from .._common.keywordsConversions import fromECLtoVIP as _fromECLtoVIP, fromVIPtoECL as _fromVIPtoECL #, fromCSVtoECL
-from .._dictionaries import UniversalKeys as _UniversalKeys, VIPTypesToExtractVectors as _VIPTypesToExtractVectors
-from .._dictionaries import ECL2VIPkey as _ECL2VIPkey, VIP2ECLtype as _VIP2ECLtype, VIP2ECLkey as _VIP2ECLkey #, ECL2VIPtype
-# from datafiletoolbox.dictionaries import ECL2CSVtype, ECL2CSVkey, CSV2ECLtype, CSV2ECLkey
-# from datetime import timedelta
+from .._common.functions import _mainKey
 import pandas as pd
-import numpy as np
 import os
 
 
 class XLSX(_SimResult):
     """
     object to contain data read from .xlsx files
-
+    
     """
     def __init__(self, inputFile=None, verbosity=2, sheet_name=None, header=[0, 1], units=1, overwrite=True) :
         _SimResult.__init__(self, verbosity=verbosity)
@@ -73,7 +66,6 @@ class XLSX(_SimResult):
             self['TIME'] = ( self('DATE').astype('datetime64[s]') - self.start ).astype('int') / (60*60*24)
         if self.is_Key('TIME') and ( self.get_Unit('TIME') is None or self.get_Unit('TIME').upper() in ['', 'NONE'] ) :
             self.set_Unit('TIME', 'DAYS', overwrite=True)
-
 
     def find_index(self) :
         """
@@ -180,7 +172,7 @@ class XLSX(_SimResult):
                     _verbose(self.speak, 2, "the sheet '"+str(each)+"' will be loaded as '"+str(each)+'_'+str(i).zfill(2)+"' to not overwrite the previously loaded sheet.")
                     self.Frames[str(each)+'_'+str(i).zfill(2)] = NewFrames[each]
                     for col in NewFrames[each].columns :
-                        NewKey = ' '.join(col[0:-1]).strip()
+                        NewKey = ' '.join(list(map(str,col[0:-1]))).strip()
                         self.FramesIndex[NewKey] = ( str(each)+'_'+str(i).zfill(2), col )
                         if col[-1].startswith('Unnamed:') :
                             NewUnits = ''
@@ -232,7 +224,7 @@ class XLSX(_SimResult):
             self.lastFrame = Frame
 
         if key == self.DTindex :
-            if key in self.Frames[self.lastFrame] :
+            if self.lastFrame in self.Frames and key in self.Frames[self.lastFrame] :
                 return self.Frames[self.lastFrame][self.FramesIndex[key][1]].to_numpy()
             elif key in self.FramesIndex :
                 result = self.Frames[Frame][self.FramesIndex[key][1]]
@@ -248,7 +240,13 @@ class XLSX(_SimResult):
             return result
 
     def extract_Wells(self) :
+        """
+        Will return a list of all the well names in case.
 
+        If the pattern variable is different from None only groups
+        matching the pattern will be returned; the matching is based
+        on fnmatch(), i.e. shell style wildcards.
+        """
         wellsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'W' and ':' in K ) ]
         wellsList = list( set( wellsList ) )
         wellsList.sort()
