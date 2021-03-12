@@ -14,6 +14,7 @@ from .._common.inout import _extension
 from .vipObject import VIP as _VIP
 from .CSVSimResultNexusDesktopObject import NexusDesktopCSV as _NexusDesktopCSV
 from .excelObject import XLSX as _XLSX
+from .tableObject import TABLE as _TABLE
 
 okECL = False
 try :
@@ -56,6 +57,8 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
             Simulator = 'NexusDesktopSimResult'
         elif _extension(FullPath)[0].upper() in ['.XLSX'] :
             Simulator = 'SimPandasExcel'
+        elif _extension(FullPath)[0].upper() in ['.TXT'] :
+            Simulator = 'DataTable'
     elif type(Simulator) is str and len(Simulator.strip()) > 0 :
         Simulator = Simulator.strip().upper()
 
@@ -73,6 +76,8 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
         OBJ = _NexusDesktopCSV(FullPath,verbosity=Verbosity)
     elif Simulator in ['SimPandasExcel'] :
         OBJ = _XLSX(FullPath,verbosity=Verbosity,**kwargs)
+    elif Simulator in ['DataTable'] :
+        OBJ = _TABLE(FullPath,verbosity=Verbosity,**kwargs)
 
     if OBJ is not None and Verbosity != 0 :
         print(OBJ.__repr__())

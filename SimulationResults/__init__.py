@@ -13,6 +13,7 @@ from .mainObject import SimResult
 from .vipObject import VIP
 from .CSVSimResultNexusDesktopObject import NexusDesktopCSV
 from .excelObject import XLSX
+from .tableObject import TABLE
 
 try:
     from .eclObject import ECL
