@@ -185,7 +185,7 @@ def date(date, formatIN='', formatOUT='', speak=True, YYbaseIN=1900, returnForma
     formatOUT = formatOUT.upper().strip()
     # define if input is a list/tuple of dates or a single date
     sample = str(date)
-
+    output = list
     if type(date) is list or type(date) is tuple:
         output = list
         if type(date[0]) is str :
@@ -527,7 +527,7 @@ def date(date, formatIN='', formatOUT='', speak=True, YYbaseIN=1900, returnForma
 
         dateOUTformated.append( dateStr )
 
-    if output == str :
+    if output is str :
         return dateOUTformated[0]
     else :
         return dateOUTformated
