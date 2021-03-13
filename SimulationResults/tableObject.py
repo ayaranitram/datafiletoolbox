@@ -19,6 +19,7 @@ from .._dictionaries import ECL2VIPkey as _ECL2VIPkey, VIP2ECLtype as _VIP2ECLty
 # from datafiletoolbox.dictionaries import ECL2CSVtype, ECL2CSVkey, CSV2ECLtype, CSV2ECLkey
 # from datetime import timedelta
 import pandas as pd
+import numpy as np
 from numpy import nan as NaN
 import os
 
@@ -335,45 +336,135 @@ class TABLE(_SimResult):
         identify the column that is common to all the frames, to be used as index.
         If there is a single frame the first column is used.
         """
-        # # check current KeyIndex
-        # KeyIndex = True
-        # IndexVector = None
-        # for frame in self.Frames :
-        #     if self.DTindex not in self.FramesIndex :
-        #         KeyIndex = False
-        #         break
-        #     elif self.FramesIndex[self.DTindex][1] not in self.Frames[frame] :
-        #         KeyIndex = False
-        #         break
-        #     elif IndexVector is None :
-        #         IndexVector = self.Frames[frame][self.FramesIndex[self.DTindex][1]]
-        #     elif not IndexVector.equals( self.Frames[frame][self.FramesIndex[IndexVector][1]] ) :
-        #         KeyIndex = False
-        #         break
-        # if KeyIndex :
-        #     return self.DTindex
+        # check current KeyIndex
+        KeyIndex = True
+        IndexVector = None
+        for frame in self.Frames :
+            if self.DTindex not in self.Frames[frame].columns :
+                KeyIndex = False
+                break
+            elif IndexVector is None :
+                IndexVector = self.Frames[frame][self.DTindex]
+            elif not IndexVector.equals( self.Frames[frame][IndexVector] ) :
+                KeyIndex = False
+                break
+        if KeyIndex :
+            return self.DTindex
 
-        # # look for other index
-        # for Key in ('TIME', 'DATE', 'DATES', 'DAYS', 'MONTHS', 'YEARS') + self.keys :
-        #     KeyIndex = True
-        #     IndexVector = None
-        #     for frame in self.Frames :
-        #         if Key not in self.FramesIndex :
-        #             KeyIndex = False
-        #             break
-        #         if self.FramesIndex[Key][1] not in self.Frames[frame].columns :
-        #             KeyIndex = False
-        #             break
-        #         elif IndexVector is None :
-        #             IndexVector = self.Frames[frame][self.FramesIndex[Key][1]]
-        #         elif not IndexVector.equals( self.Frames[frame][self.FramesIndex[Key][1]] ) :
-        #             KeyIndex = False
-        #             break
-        #     if KeyIndex :
-        #         self.DTindex = Key
-        #         break
+        # look for other index
+        for Key in ('TIME', 'DATE', 'DATES', 'DAYS', 'MONTHS', 'YEARS') + self.keys :
+            KeyIndex = True
+            IndexVector = None
+            for frame in self.Frames :
+                if Key not in self.Frames[frame].columns :
+                    KeyIndex = False
+                    break
+                elif IndexVector is None :
+                    IndexVector = np.array(sorted(set(self.Frames[frame][Key].to_list())))
+                elif not IndexVector.equals( np.array(sorted(set(self.Frames[frame][Key]))) ):
+                    KeyIndex = False
+                    break
+            if KeyIndex :
+                self.DTindex = Key
+                break
 
-        # if KeyIndex :
-        #     return self.DTindex
-        # else :
-        #     self.DTindex = None
+        if KeyIndex :
+            return self.DTindex
+        else :
+            self.DTindex = None
+
+    def get_Unit(self, Key='--EveryType--') :
+        """
+        returns a string identifiying the unit of the requested Key
+
+        Key could be a list containing Key strings, in this case a dictionary
+        with the requested Keys and units will be returned.
+        the Key '--EveryType--' will return a dictionary Keys and units
+        for all the keys in the results file
+
+        """
+        if type(Key) is str and Key.strip() != '--EveryType--' :
+            Key = Key.strip().upper()
+            if Key in self.units :
+                return self.units[Key]
+            if Key == 'DATES' or Key == 'DATE' :
+                    self.units[Key] = 'DATE'
+                    return 'DATE'
+            if Key in self.keys :
+                return self.results.unit(Key)
+            else:
+                if Key[0] == 'W' :
+                    UList=[]
+                    for W in self.get_Wells() :
+                        if Key+':'+W in self.units :
+                            UList.append(self.units[Key+':'+W])
+                        elif Key in self.keys :
+                            UList.append( self.results.unit(Key+':'+W) )
+                    if len(set(UList)) == 1 :
+                        self.units[Key] = UList[0]
+                        return UList[0]
+                    else :
+                        return None
+                elif Key[0] == 'G' :
+                    UList=[]
+                    for G in self.get_Groups() :
+                        if Key+':'+G in self.units :
+                            UList.append(self.units[Key+':'+G])
+                        elif Key in self.keys :
+                            UList.append( self.results.unit(Key+':'+G) )
+                    if len(set(UList)) == 1 :
+                        self.units[Key] = UList[0]
+                        return UList[0]
+                    else :
+                        return None
+                elif Key[0] == 'R' :
+                    UList=[]
+                    for R in self.get_Regions() :
+                        if Key+':'+R in self.units :
+                            UList.append(self.units[Key+':'+R])
+                        elif Key in self.keys :
+                            UList.append( self.results.unit(Key+':'+R) )
+                    if len(set(UList)) == 1 :
+                        self.units[Key] = UList[0]
+                        return UList[0]
+                    else :
+                        return None
+                UList = None
+
+        elif type(Key) is str and Key.strip() == '--EveryType--' :
+            Key = []
+            KeyDict = {}
+            for each in self.keys :
+                if ':' in each :
+                    Key.append( _mainKey(each) )
+                    KeyDict[ _mainKey(each) ] = each
+                else :
+                    Key.append(each)
+            Key = list( set (Key) )
+            Key.sort()
+            tempUnits = {}
+            for each in Key :
+                if each in self.units :
+                    tempUnits[each] = self.units[each]
+                elif each in self.keys and ( each != 'DATES' and each != 'DATE' ) :
+                    if self.results.unit(each) is None :
+                        tempUnits[each] = self.results.unit(each)
+                    else :
+                        tempUnits[each] = self.results.unit(each).strip('( )').strip("'").strip('"')
+                elif each in self.keys and ( each == 'DATES' or each == 'DATE' ) :
+                    tempUnits[each] = 'DATE'
+                else :
+                    if KeyDict[each] in self.units :
+                        tempUnits[each] = self.units[KeyDict[each]]
+                    elif KeyDict[each] in self.keys :
+                        if self.results.unit(KeyDict[each]) is None :
+                            tempUnits[each] = self.results.unit(KeyDict[each])
+                        else :
+                            tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
+            return tempUnits
+        elif type(Key) == list or type(Key) == tuple :
+            tempUnits = {}
+            for each in Key :
+                if type(each) == str :
+                    tempUnits[each] = self.get_Unit(each)
+            return tempUnits
