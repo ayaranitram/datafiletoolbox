@@ -308,7 +308,7 @@ class XLSX(_SimResult):
                     self.units[Key] = 'DATE'
                     return 'DATE'
             if Key in self.keys :
-                return self.results.unit(Key)
+                return None
             else:
                 if Key[0] == 'W' :
                     UList=[]
