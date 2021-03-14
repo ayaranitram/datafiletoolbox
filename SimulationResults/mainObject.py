@@ -934,7 +934,7 @@ class SimResult(object):
         """
         if reload is True or 'OilProducers' not in self.wellsLists :
             _verbose(self.printMessages, 1, '# extrating data to count oil production wells' )
-            if self.is_Attribute('WOPR') and self.is_Attribute('WGPR') :
+            if self.is_Attribute('WOPR') and self.is_Attribute('WGPR') and self.get_Unit('WGPR') is not None and self.get_Unit('WOPR') is not None :
                 OIL = self[['WOPR']]
                 OIL.rename(columns=_wellFromAttribute(OIL.columns ), inplace=True )
                 # OIL.replace(0, np.nan, inplace=True )
@@ -959,7 +959,7 @@ class SimResult(object):
                 self.wellsLists['OilProducers'] = list((GOR<=GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns )
                 self.wellsLists['GasProducers'] = list((GOR >GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns )
 
-            elif self.is_Attribute('WGOR') :
+            elif self.is_Attribute('WGOR') and self.get_Unit('WGOR') is not None :
                 GOR = self[['WGOR']]
                 GOR = (GOR.rename(columns=_wellFromAttribute(GOR.columns ) ) )
 
@@ -977,19 +977,20 @@ class SimResult(object):
                 GOR = GOR[rateCheck].dropna(axis=1, how='all')
 
                 GORcriteria = convertUnit(self.GORcriteria[0], self.GORcriteria[1], self.get_Unit('WGOR') )
-                self.wellsLists['OilProducers'] = list((GOR<=GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns )
-                self.wellsLists['GasProducers'] = list((GOR >GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns )
+                self.wellsLists['OilProducers'] = list((GOR<=GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
+                self.wellsLists['GasProducers'] = list((GOR >GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
 
-            elif self.is_Attribute('WOGR') :
-                GOR = 1 / self[['WGOR']]
+            elif self.is_Attribute('WOGR') and self.get_Unit('WOGR') is not None :
+                GOR = 1 / self[['WOGR']]
                 GOR = (GOR.rename(columns=_wellFromAttribute(GOR.columns ) ) ).dropna(axis=1, how='all')
-                GORcriteria = convertUnit(self.GORcriteria[0], self.GORcriteria[1], self.get_Unit('WGOR') )
-                self.wellsLists['OilProducers'] = list((GOR<=GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns )
-                self.wellsLists['GasProducers'] = list((GOR >GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns )
+
+                GORcriteria = convertUnit(self.GORcriteria[0], self.GORcriteria[1], self.get_Unit('WOGR') )
+                self.wellsLists['OilProducers'] = list((GOR<=GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
+                self.wellsLists['GasProducers'] = list((GOR >GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
 
             elif self.is_Attribute('WOPR') :
                 _verbose(self.speak, 2, 'neither GOR or GAS RATE available, every well with oil rate > 0 will be listeda as oil producer.' )
-                self.wellsLists['OilProducers'] = _wellFromAttribute(list(self[['WOPR']].replace(0, np.nan).dropna(axis=1, how='all').columns ) )
+                self.wellsLists['OilProducers'] = list(_wellFromAttribute(list(self[['WOPR']].replace(0, np.nan).dropna(axis=1, how='all').columns) ) )
 
             else :
                 self.wellsLists['OilProducers'] = []
@@ -1004,15 +1005,15 @@ class SimResult(object):
             _verbose(self.printMessages, 1, '# extrating data to count gas production wells' )
             catch = self.get_OilProducers(reload=True)
             if 'GasProducers' not in self.wellsLists and self.is_Attribute('WGPR') is True :
-                _verbose(self.speak, 2, 'neither GOR or OIL RATE available, every well with gas rate > 0 will be listeda as gas producer.' )
-                self.wellsLists['GasProducers'] = _wellFromAttribute(list(self[['WGPR']].replace(0, np.nan).dropna(axis=1, how='all').columns ) )
+                _verbose(self.speak, 2, 'neither GOR or OIL RATE available, every well with gas rate > 0 will be listeda as gas producer.')
+                self.wellsLists['GasProducers'] = list(_wellFromAttribute(list(self[['WGPR']].replace(0, np.nan).dropna(axis=1, how='all').columns) ) )
             elif 'GasProducers' not in self.wellsLists :
                 self.wellsLists['GasProducers'] = []
         return self.wellsLists['GasProducers']
 
     def get_Producers(self, reload=False ) :
         if 'Producers' not in self.wellsLists or reload is True :
-            self.wellsLists['Producers'] = list(set(self.get_WaterProducers(reload ) + self.get_GasProducers(reload ) + self.get_OilProducers(reload ) ) )
+            self.wellsLists['Producers'] = list(set(self.get_WaterProducers(reload) + self.get_GasProducers(reload) + self.get_OilProducers(reload) ) )
         return self.wellsLists['Producers']
 
     def set_index(self, Key) :
@@ -1185,6 +1186,10 @@ class SimResult(object):
                 Key = [Key]
             elif self.is_Attribute(Key) :
                 Key = self.attributes[Key]
+            elif len(self.find_Keys(Key)) > 0:
+                Key = list(self.find_Keys(Key))
+            else:
+                raise ValueError("the key '" + Key + "'is not present in this object.")
         if type(Unit) is str :
             Unit = [Unit]*len(Key)
 
@@ -2082,11 +2087,6 @@ class SimResult(object):
                 print('  ' + str(each))
 
     def set_FieldTime(self) :
-        # if len(self.get_Restart() ) > 0 :
-        #     FieldTime = self.checkRestarts('TIME')['TIME']
-        # else :
-        #     FieldTime = self.loadVector('TIME')
-        # use property TimeVector instead of string 'TIME'
         TimeVector = self.get_RestartsTimeVector()
         FieldTime = self(TimeVector)
         if FieldTime is None :
@@ -3682,7 +3682,6 @@ class SimResult(object):
                 returnVectors[each] = returnVectors[each]#[self.get_Filter()]
             return returnVectors
 
-
     def checkIfLoaded(self, key, reload) :
         """
         internal function to avoid reloading the same vector twice...
@@ -3692,7 +3691,6 @@ class SimResult(object):
         if str(key).upper().strip() not in self.vectors or reload is True :
             self.vectors[key.upper().strip()] = self.loadVector(key)
         return self.vectors[key.upper().strip()]
-
 
     def get_VectorWithoutRestart(self, key=None, reload=False):
         """
@@ -3710,7 +3708,6 @@ class SimResult(object):
                 for each in listOfKeys :
                     returnVectors[each] = self.checkIfLoaded(each, reload)
         return returnVectors
-
 
     def set_Vector(self, Key, VectorData, Units, DataType='auto', overwrite=None) :
         """
