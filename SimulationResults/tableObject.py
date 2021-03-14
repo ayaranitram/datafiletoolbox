@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = 0.0
-__release__ = 210312
+__version__ = 0.1
+__release__ = 210314
 __all__ = ['TABLE']
 
 from .mainObject import SimResult as _SimResult
@@ -21,6 +21,7 @@ from .._dictionaries import ECL2VIPkey as _ECL2VIPkey, VIP2ECLtype as _VIP2ECLty
 import pandas as pd
 import numpy as np
 from numpy import nan as NaN
+from pandas import Series
 import os
 
 
@@ -34,9 +35,11 @@ class TABLE(_SimResult):
         self.kind = TABLE
         self.results = {}
         self.Frames = {}
+        self.DTindexValues = None
         self.lastFrame = ''
         self.lastItem = ''
         self.null = NaN
+        self.interpolateNaN = False
         self.overwrite = False
         self.itemsCol = {}
         self.dates = None
@@ -72,9 +75,16 @@ class TABLE(_SimResult):
         if self.is_Key('DATES') and ( self.get_Unit('DATES') is None or self.get_Unit('DATES') != 'DATE' ) :
             self.set_Unit('DATES', 'DATE', overwrite=True)
         if not self.is_Key('TIME') and self.is_Key('DATE') :
-            self['TIME'] = ( self('DATE').astype('datetime64[s]') - self.start ).astype('int') / (60*60*24)
+            self.createTIME()
+            # self['TIME'] = ( self('DATE').astype('datetime64[s]') - self.start ).astype('int') / (60*60*24)
         if self.is_Key('TIME') and ( self.get_Unit('TIME') is None or self.get_Unit('TIME').upper() in ['', 'NONE'] ) :
             self.set_Unit('TIME', 'DAYS', overwrite=True)
+        if not self.is_Key('YEAR') and self.is_Key('DATE') :
+            self.createYEAR()
+        if not self.is_Key('MONTH') and self.is_Key('DATE') :
+            self.createMONTH()
+        if not self.is_Key('DAY') and self.is_Key('DATE') :
+            self.createDAY()
         _SimResult.initialize(self)
     
     def set_itemsCol(self,column,frame=None):
@@ -174,6 +184,8 @@ class TABLE(_SimResult):
         """
         if key in self.vectors:
             return self.vectors[key]
+        if key == self.DTindex:
+            return self.DTindexValues
         
         if frame is None:
             frame = list(self.Frames.keys())
@@ -187,51 +199,33 @@ class TABLE(_SimResult):
             if len(key) == 0:
                 return None
             if key == self.DTindex and self.lastFrame in self.Frames and key in self.Frames[self.lastFrame] and self.lastItem != '':
-                return self.Frames[self.lastFrame][self.Frames[self.lastFrame][self.itemsCol[self.lastFrame]] == self.lastItem][key]
+                result = self.Frames[self.lastFrame][self.Frames[self.lastFrame][self.itemsCol[self.lastFrame]] == self.lastItem][key]
+                
             for Frame in self.Frames:
                 if ':' in key and ':' not in [key[0],key[-1]]:
                     if _mainKey(key) in self.Frames[Frame].columns:
-                        if _itemKey(key) in self.Frames[Frame][self.itemsCol]:
+                        if _itemKey(key) in self.Frames[Frame][self.itemsCol[Frame]].to_list():
                             self.lastItem = _itemKey(key)
                             self.lastFrame = Frame
-                            return self.Frames[Frame][self.Frames[Frame][self.itemsCol[Frame]] == _itemKey(key)][_mainKey(key)]
+                            result = self.Frames[Frame][self.Frames[Frame][self.itemsCol[Frame]] == _itemKey(key)][_mainKey(key)]
+                            result.index = self.Frames[Frame][self.Frames[Frame][self.itemsCol[Frame]] == _itemKey(key)][self.DTindex]
+                # the next two option should never happen because key has been already processed by __getitem__
                 elif ':' in key and key[0] == ':':
                     if key[1:] in self.Frames[Frame][self.itemsCol[Frame]]:
                         self.lastItem = _itemKey(key)
                         self.lastFrame = Frame
-                        return self.Frame[self.Frames[Frame][self.itemsCol[Frame]] == _itemKey(key)]
+                        result = self.Frame[self.Frames[Frame][self.itemsCol[Frame]] == _itemKey(key)]
                 elif ':' in key and key[-1] == ':':
                     if key[:-1] in self.Frames[Frame].columns:
                         self.lastItem = ''
                         self.lastFrame = Frame
-                        return self.Frames[Frame][key[:-1]]
-                   
-        # if Frame is None and key in self.FramesIndex :
-        #     Frame = self.FramesIndex[key][0]
-        # elif Frame in self.Frames :
-        #     pass # OK
-        # else :
-        #     _verbose(self.speak, 1, "the key '"+key+"' is not present in these frames.")
-        #     return None
-        # if self.lastFrame == '' :
-        #     self.lastFrame = Frame
+                        result = self.Frames[Frame][key[:-1]]
+        
+        vector = Series(data=[0]*len(self.DTindexValues),index=self.DTindexValues)
+        vector = vector + result
+        self.vectors[key] = vector.to_numpy()
+        return vector.to_numpy()
 
-        # if key == self.DTindex :
-        #     if key in self.Frames[self.lastFrame] :
-        #         return self.Frames[self.lastFrame][self.FramesIndex[key][1]].to_numpy()
-        #     elif key in self.FramesIndex :
-        #         result = self.Frames[Frame][self.FramesIndex[key][1]]
-        #         if len(result) == len(self.Frames[self.lastFrame]) :
-        #             return result.to_numpy()
-        #         else :
-        #             return self.Frames[self.lastFrame].index.to_numpy()
-        #     else :
-        #         return None
-        # elif key in self.FramesIndex :
-        #     result = self.Frames[Frame][self.FramesIndex[key][1]].to_numpy()
-        #     self.lastFrame = Frame
-        #     return result
-    
     def extract_Keys(self):
         keys = []
         for frame in self.Frames:
@@ -239,7 +233,8 @@ class TABLE(_SimResult):
                 if col != self.itemsCol[frame]:
                     for item in set(self.Frames[frame][self.itemsCol[frame]]):
                         if not self.Frames[frame][ self.Frames[frame][self.itemsCol[frame]] == item ][col].isna().all():
-                            keys.append(str(col) + ':' + str(item))
+                            if col not in ['DATE','DATES','TIME','YEARS','MONTHS','DAYS'] :
+                                keys.append(str(col) + ':' + str(item))
         self.keys = tuple(sorted(set(keys)))
         
     def list_Keys(self, pattern=None, reload=False) :
@@ -328,8 +323,17 @@ class TABLE(_SimResult):
                         except:
                             pass
         if len(dates) > 0:
-            self.dates = tuple(sorted(set(dates)))
+            self.dates = np.array(sorted(set(dates)),dtype='datetime64[s]')
+            self.vectors['DATE'] = self.dates.copy()
             self.add_Key('DATE')
+            self.set_Unit('DATE','DATE')
+            self.vectors['DATES'] = self.vectors['DATE']
+            self.add_Key('DATES')
+            self.set_Unit('DATES','DATE')
+            self.start = min(self.dates)
+            self.end = max(self.dates)
+            return True
+        return False
 
     def find_index(self) :
         """
@@ -349,6 +353,13 @@ class TABLE(_SimResult):
                 KeyIndex = False
                 break
         if KeyIndex :
+            if self.DTindex in ['DATE','DATES']:
+                self.DTindexValues = self.dates
+            else :
+                indexValues = []
+                for frame in self.Frames:
+                    indexValues += self.Frames[frame][KeyIndex].to_list()
+                indexValues = np.array(sorted(set(indexValues)))
             return self.DTindex
 
         # look for other index
@@ -369,6 +380,13 @@ class TABLE(_SimResult):
                 break
 
         if KeyIndex :
+            if Key in ['DATE','DATES']:
+                self.DTindexValues = self.dates
+            else :
+                indexValues = []
+                for frame in self.Frames:
+                    indexValues += self.Frames[frame][KeyIndex].to_list()
+                indexValues = np.array(sorted(set(indexValues)))
             return self.DTindex
         else :
             self.DTindex = None
@@ -391,7 +409,7 @@ class TABLE(_SimResult):
                     self.units[Key] = 'DATE'
                     return 'DATE'
             if Key in self.keys :
-                return self.results.unit(Key)
+                return None
             else:
                 if Key[0] == 'W' :
                     UList=[]
