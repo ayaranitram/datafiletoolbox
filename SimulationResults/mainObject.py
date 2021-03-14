@@ -463,13 +463,16 @@ class SimResult(object):
             if self.is_Key(item) :
                 return self.__call__([item])[item]
             if item in self.wells or item in self.groups or item in self.regions :
-                keys = list(self.get_Keys('*:'+item) )
+                keys = list(self.get_Keys('*:'+item))
                 return self.__getitem__(keys)
             if item in ['FIELD', 'ROOT'] :
-                keys = list(self.get_Keys('F*') )
+                keys = list(self.get_Keys('F*'))
                 return self.__getitem__(keys)
-            if len(self.get_Keys(item) ) > 0 :
-                keys = list(self.get_Keys(item) )
+            if len(self.get_Keys(item)) > 0 :
+                keys = list(self.get_Keys(item))
+                return self.__getitem__(keys)
+            if len(self.find_Keys(item)) > 0 :
+                keys = list(self.find_Keys(item))
                 return self.__getitem__(keys)
             else :
                 meti = self.__getitem__([item])
