@@ -1057,6 +1057,45 @@ class SimSeries(Series) :
                 else :
                     uDic[each] = 'UNITLESS'
         return uDic
+    
+    def set_Units(self,units,item=None):
+        if item is not None and item not in self.columns:
+            raise ValueError("the required item '" + str(item) + "' is not in this SimSeries")
+        if self.units is None or type(self.units) is str:
+            if units is None:
+                self.units = None
+            elif type(units) is str:
+                self.units = units.strip()
+            else:
+                raise TypeError("units must be a string.")
+        elif type(self.units) is dict:
+            if type(units) in [list,tuple]:
+                if type(item) in [list,tuple]:
+                    if len(item) == len(units):
+                        return self.set_Units( dict(zip(item,units)) )
+                    else:
+                        raise ValueError("both units and item must have the same length.")
+                elif item is None:
+                    if len(units) == len(self.columns):
+                        return self.set_Units( dict(zip(list(self.columns),units)) )
+                    else:
+                        raise ValueError("units list must be the same length of columns in the SimSeries or must be followed by a list of items.")
+                else:
+                    raise TypeError("if units is a list, items must be a list of the same length.")
+                
+            if item is None and len(self.columns) > 1:
+                raise ValueError("item must not be None")
+            elif item is None and len(self.columns) == 1:
+                return self.set_Units(units,[list(self.columns)[0]])
+            elif item is not None:
+                if item in self.columns:
+                    if units is None:
+                        self.units[item] = None
+                    elif type(units) is str:
+                        self.units[item] = units.strip()
+                    else:
+                        raise TypeError("units must be a string.")
+
     def get_UnitsString(self, items=None) :
         if len(self.get_Units(items)) == 1 :
             return list(self.get_Units(items).values())[0]
@@ -3311,6 +3350,41 @@ class SimDataFrame(DataFrame) :
             return list(self.get_Units(items).values())[0]
         elif len(set(self.get_Units(items).values() )) == 1 :
             return list(set(self.get_Units(items).values() ))[0]
+
+    def set_Units(self,units,item=None):
+        if item is not None and item not in self.columns:
+            raise ValueError("the required item '" + str(item) + "' is not in this SimDataFrame.")
+        if type(units) in [list,tuple]:
+            if type(item) in [list,tuple]:
+                if len(item) == len(units):
+                    return self.set_Units( dict(zip(item,units)) )
+                else:
+                    raise ValueError("both units and item must have the same length.")
+            elif item is None:
+                if len(units) == len(self.columns):
+                    return self.set_Units( dict(zip(list(self.columns),units)) )
+                else:
+                    raise ValueError("units list must be the same length of columns in the SimDataFrame or must be followed by a list of items.")
+            else:
+                raise TypeError("if units is a list, items must be a list of the same length.")
+
+        if type(units) is dict:
+            for k,u in dict.items():
+                self.set_Units(u,k)
+            return None
+        if type(self.units) is dict:
+            if item is None and len(self.columns) > 1:
+                raise ValueError("item must not be None")
+            elif item is None and len(self.columns) == 1:
+                return self.set_Units(units,[list(self.columns)[0]])
+            elif item is not None:
+                if item in self.columns:
+                    if units is None:
+                        self.units[item] = None
+                    elif type(units) is str:
+                        self.units[item] = units.strip()
+                    else:
+                        raise TypeError("units must be a string.")
 
     def keysByUnits(self) :
         """
