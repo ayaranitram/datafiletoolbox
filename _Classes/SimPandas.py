@@ -2165,6 +2165,8 @@ class SimDataFrame(DataFrame) :
                 # del(self.units[each])
             else :
                 objs[each] = each
+        if len(set(objs.keys())) != len(set(objs.values())) :
+            objs = dict( zip(objs.keys(),objs.keys()) ) 
         if inplace :
             self.rename(columns=objs, inplace=True)
         else :
@@ -2181,6 +2183,8 @@ class SimDataFrame(DataFrame) :
                 # del(self.units[each])
             else :
                 objs[each] = each
+        if len(set(objs.keys())) != len(set(objs.values())) :
+            objs = dict( zip(objs.keys(),objs.keys()) ) 
         if inplace :
             self.rename(columns=objs, inplace=True)
         else :
