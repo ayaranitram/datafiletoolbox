@@ -1035,14 +1035,17 @@ class SimSeries(Series) :
                     if key not in self.index :
                         i = len(keys)
                         continue
-                    if key in self.units :
+                    if key in self.units and self.units[key] is not None:
                         result[n] += '    ' + self.units[key].strip()
                     i = len(keys)
             result = '\n'.join(result)
             return '\n' + result
+        else:
+            return result
 
     def get_units(self, items=None) :
         return self.get_Units()
+    
     def get_Units(self, items=None) :
         if type(self.units) is str and type(self.name) is str :
             uDic = { str(self.name) : self.units }
