@@ -24,15 +24,15 @@ class ECL(_SimResult):
     """  
     loadEclSum = EclSumLoader()
     
-    def __init__(self, inputFile=None, verbosity=2) :
+    def __init__(self, inputFile=None, verbosity=2, **kwargs) :
         _SimResult.__init__(self, verbosity=verbosity)
         self.kind = ECL
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
-            self.loadSummary(inputFile)
+            self.loadSummary(inputFile, **kwargs)
         if self.results is not None :
             self.initialize()
 
-    def loadSummary(self, SummaryFilePath):
+    def loadSummary(self, SummaryFilePath, **kwargs):
         if type(SummaryFilePath) is str :
             SummaryFilePath = SummaryFilePath.strip()
             if self.path is None :
@@ -50,7 +50,7 @@ class ECL(_SimResult):
             if os.path.isfile(SummaryFilePath) :
                 _verbose( self.speak, 1, ' > loading summary file:\n  ' + SummaryFilePath)
                 EclSummary = ECL.loadEclSum
-                self.results = EclSummary(SummaryFilePath) # ecl.summary.EclSum(SummaryFilePath)
+                self.results = EclSummary(SummaryFilePath, **kwargs) # ecl.summary.EclSum(SummaryFilePath)
                 self.name = _extension(SummaryFilePath)[1]
                 self.set_FieldTime()
                 self.get_Wells(reload=True)
