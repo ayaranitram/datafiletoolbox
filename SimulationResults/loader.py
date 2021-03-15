@@ -5,16 +5,18 @@ Created on Wed May 13 00:45:52 2020
 @author: MCARAYA
 """
 
-__version__ = 0.5
-__release__ = 210225
+__version__ = 0.51
+__release__ = 210315
 __all__ = ['loadSimulationResults']
 
 from .._common.inout import _extension
+from .._common.sharedVariables import _loadingECLfile
 #from datafiletoolbox.SimulationResults.mainObject import SimResult
 from .vipObject import VIP as _VIP
 from .CSVSimResultNexusDesktopObject import NexusDesktopCSV as _NexusDesktopCSV
 from .excelObject import XLSX as _XLSX
 from .tableObject import TABLE as _TABLE
+
 
 okECL = False
 try :
@@ -62,10 +64,12 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
     elif type(Simulator) is str and len(Simulator.strip()) > 0 :
         Simulator = Simulator.strip().upper()
 
+    _loadingECLfile[0] = False
     OBJ = None
     if Simulator in ['ECL','E100','E300','ECLIPSE','IX','INTERSECT','TNAV','TNAVIGATOR'] :
         if okECL is True :
-            OBJ = _ECL(FullPath,verbosity=Verbosity)
+            _loadingECLfile[0] = True
+            OBJ = _ECL(FullPath,verbosity=Verbosity,**kwargs)
         else :
             print( 'ECL object not loaded')
     elif Simulator in ['VIP'] :
@@ -79,6 +83,7 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
     elif Simulator in ['DataTable'] :
         OBJ = _TABLE(FullPath,verbosity=Verbosity,**kwargs)
 
+    _loadingECLfile[0] = False
     if OBJ is not None and Verbosity != 0 :
         print(OBJ.__repr__())
     return OBJ
