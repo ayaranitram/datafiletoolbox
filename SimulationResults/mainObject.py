@@ -4371,15 +4371,15 @@ class SimResult(object):
 
         # supported operators:
         operators = [' ', '**', '--', '+-', '-+', '++', '*-', '/-', '//', '=', '+', '*', '/', '^', '.sum', '.avg', '.mean', '.min', '.max', '.mode', '.prod', '.var', '.std', '.sum0', '.avg0', '.mean0', '.min0', '.max0', '.std0', '.mode0', '.prod0', '.var0']
-        if '-' in (' '.join(map(str,self.wells)) + ' '.join(map(str,self.groups)) + ' '.join(map(str(self.regions)))) :
+        if '-' in (' '.join(map(str,self.wells)) + ' '.join(map(str,self.groups)) + ' '.join(map(str,self.regions))) :
             operators.append(' -')
         else :
             operators.append('-')
         
         # convert string to calculation tuple
-        if type(CalculationTuple ) is str :
+        if type(CalculationTuple) is str :
             _verbose (self.speak, 1, ' the received string for CalculatedTuple was converted to tuple, \n  received: ' + CalculationTuple + '\n  converted to: ' + str(tuple(_multisplit(CalculationTuple, operators ) ) ) )
-            CalculationTuple = tuple (_multisplit(' ' + CalculationTuple + ' ', operators ) )
+            CalculationTuple = tuple (_multisplit(' ' + CalculationTuple + ' ', operators))
         elif type(CalculationTuple ) is list :
             CalculationTuple = tuple(CalculationTuple )
         if ResultName is None :
