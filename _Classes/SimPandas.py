@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = 0.51
-__release__ = 210314
+__version__ = 0.52
+__release__ = 210412
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -1343,6 +1343,13 @@ class SimSeries(Series) :
             return retTuple[0]
         else :
             return tuple(retTuple )
+
+    def sort_values(self, axis=0, ascending=True, inplace=False, kind='quicksort', na_position='last', ignore_index=False, key=None) :
+        if inplace :
+            self.S.sort_values(axis=axis, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
+            return None
+        else :
+            return SimSeries(data=self.S.sort_values(axis=axis, ascending=ascending, inplace=False, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
 
     def jitter(self,std=0.10) :
         """
@@ -3758,7 +3765,46 @@ class SimDataFrame(DataFrame) :
 
         firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]) )
         return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative ) ), units=newUnits, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator,  intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
-     
+    
+    def sort_values(self,by=None, axis='--auto', ascending=True, inplace=False, kind='quicksort', na_position='last', ignore_index=False, key=None) :
+        if by is None and axis == '--auto' :
+            if len(self.index) == 1 and len(self.columns) > 1 :
+                result = SimDataFrame(data=self.DF.T[self.DF.T.columns[0]].sort_values(axis=0,
+                                                                                  ascending=ascending,
+                                                                                  inplace=False,
+                                                                                  kind=kind,
+                                                                                  na_position=na_position,
+                                                                                  ignore_index=ignore_index,
+                                                                                  key=key).T, **self._SimParameters)
+                if inplace :
+                    self = result
+                    return None
+                else :
+                    return result
+            elif len(self.index) > 1 and len(self.columns) == 1 :
+                if inplace :
+                    self.DF.sort_values(by=self.columns[0], axis=0, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
+                    return None
+                else :
+                    return SimDataFrame(data=self.DF.sort_values(by=self.columns[0], axis=0, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
+            else :
+                if axis == '--auto' :
+                    axis = 0
+                if inplace :
+                    self.DF.sort_values(axis=axis, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
+                    return None
+                else :
+                    return SimDataFrame(data=self.DF.sort_values(axis=axis, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
+        else :
+            if axis == '--auto' :
+                axis = 0
+            if inplace :
+                self.DF.sort_values(by=by, axis=axis, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
+                return None
+            else :
+                return SimDataFrame(data=self.DF.sort_values(by=by, axis=axis, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
+
+    
     def jitter(self,std=0.10) :
         """
         add jitter the values of the SimDataFrame
