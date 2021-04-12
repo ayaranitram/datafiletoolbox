@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = 0.5
-__release__ = 210314
+__version__ = 0.52
+__release__ = 210412
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -1575,9 +1575,146 @@ class SimResult(object):
 
         return fig
 
-    def boxplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item') :
+    def box(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True) :
+        """
+        alias of boxplot method
+        """
+        return self.boxplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid, sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout)
+
+    def boxplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item',ascending=True, rotation=True, tight_layout=True) :
         """
         creates a boxplot for the desired keys
+
+        hue must be None, 'item', 'attribute' or 'main'
+        label must be None, 'item', 'attribute' or 'main'
+        sort must be None, 'item', 'mean', 'max', 'min', 'std'
+            or a quantile expressed as a float
+
+        main and item refers to the ECL style kewords, like:
+            main:item   -->   WOPR:P1
+
+
+        this function uses seaborn boxplot to create the chart.
+        """
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        sns.set_theme(style="ticks", palette="pastel")
+
+        # getting and cleaning the Keys
+        Keys, objects, otherSims = self._commonInputCleaning(Keys=Keys, objects=objects, otherSims=otherSims)
+
+        # define plot units
+        plotUnits = {}
+        for K in Keys :
+            plotUnits[K] = self.get_plotUnits(K)
+
+        # define sorting
+        quantile = 0.5 # P50 by default
+        if sort is None :
+            sort = 'none'
+        if type(sort) is not str :
+            if type(sort) is float :
+                quantile = sort
+                sort = 'quantile'
+            elif type(sort) is int :
+                quantile = sort/100
+                sort = 'quantile'
+            else :
+                sort = 'item'
+
+        sort = sort.lower().strip()
+        if sort.replace('.', '').replace(', ', '').isdigit() :
+            if '.' in sort :
+                quantile = float(sort)
+                sort = 'quantile'
+            elif '.' in sort :
+                quantile = float(sort.replace(', ', '.'))
+                sort = 'quantile'
+            else :
+                quantile = int(sort)/100
+                sort = 'quantile'
+
+
+
+        if sort in ['name', 'wellname', 'well', 'groupname', 'group', 'region', 'regionname', 'alphabeticaly', 'alpha', 'abc'] :
+            sort = 'item'
+        if sort not in ['item', 'min', 'mean', 'median', 'max', 'sum', 'quantile', 'std'] :
+            if sort[0] in ['p', 'q'] and sort[1:].isdigit() :
+                quantile = int(sort[1:])/100
+                sort = 'quantile'
+            else :
+                sort = ''
+
+        # get the data
+        df = self[Keys]
+
+        # clean the data
+        if cleanAllZeros :
+            df = df.replace(0, np.nan).dropna(axis='columns', how='all').replace(np.nan, 0)
+        if ignoreZeros :
+            df = df.replace(0, np.nan)
+        
+        if type(df) is SimDataFrame :
+            df = df.convert(plotUnits)
+            df = df.DF
+
+        # sort the data
+        if sort in ['min', 'mean', 'median', 'max', 'sum', 'quantile', 'std'] :
+            ascending = bool(ascending)
+            if sort == 'min' :
+                sorted_index = list(df.min().sort_values(ascending=ascending).index )
+            elif sort == 'mean' :
+                sorted_index = list(df.mean().sort_values(ascending=ascending).index )
+            elif sort == 'median' :
+                sorted_index = list(df.median().sort_values(ascending=ascending).index )
+            elif sort == 'max' :
+                sorted_index = list(df.max().sort_values(ascending=ascending).index )
+            elif sort == 'sum' :
+                sorted_index = list(df.sum().sort_values(ascending=ascending).index )
+            elif sort == 'quantile' :
+                sorted_index = list(df.quantile(q=quantile).sort_values(ascending=ascending).index )
+            elif sort == 'std' :
+                sorted_index = list(df.std().sort_values(ascending=ascending).index )
+            df = df[sorted_index]
+
+
+        # melt the dataframe
+        hue, label, itemLabel, values, df = self._auto_meltingDF(df, hue, label)
+
+        if ignoreZeros :
+            df = df.dropna(axis='index', how='any')
+
+        if sort in ['item'] :
+            df = df.sort_values(by=itemLabel, axis=0, ascending=bool(ascending))
+
+        fig = plt.figure(figsize=figsize, dpi=dpi)
+        # Draw a nested boxplot to show bills by day and time
+        ax = sns.boxplot(x=label, y=values,
+                    hue=hue,
+                    data=df )
+        sns.despine(offset=10, trim=True)
+        if grid :
+            ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+            
+        if bool(rotation) is True :
+            if rotation is True :
+                rotation = 90
+            plt.xticks(rotation=rotation)
+        
+        if bool(tight_layout) :
+            plt.tight_layout()
+        plt.show()
+        return fig
+
+    def violin(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, scale='width', split=True) :
+        """
+        wrapper for violinplot method
+        """
+        return self.violinplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid, sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout, scale=scale, split=split)
+
+    def violinplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, scale='width', split=True) :
+        """
+        creates a violin plot for the desired keys
 
         hue must be None, 'item', 'attribute' or 'main'
         label must be None, 'item', 'attribute' or 'main'
@@ -1630,7 +1767,7 @@ class SimResult(object):
 
         if sort in ['name', 'wellname', 'well', 'groupname', 'group', 'region', 'regionname', 'alphabeticaly', 'alpha', 'abc'] :
             sort = 'item'
-        if sort not in ['item', 'min', 'mean', 'median', 'max', 'sum', 'quantile'] :
+        if sort not in ['item', 'min', 'mean', 'median', 'max', 'sum', 'quantile', 'std'] :
             if sort[0] in ['p', 'q'] and sort[1:].isdigit() :
                 quantile = int(sort[1:])/100
                 sort = 'quantile'
@@ -1645,22 +1782,28 @@ class SimResult(object):
             df = df.replace(0, np.nan).dropna(axis='columns', how='all').replace(np.nan, 0)
         if ignoreZeros :
             df = df.replace(0, np.nan)
-        df = df.convert(plotUnits)
+
+        if type(df) is SimDataFrame :
+            df = df.convert(plotUnits)
+            df = df.DF
 
         # sort the data
-        if sort in ['min', 'mean', 'median', 'max', 'sum', 'quantile'] :
+        if sort in ['min', 'mean', 'median', 'max', 'sum', 'quantile', 'std'] :
+            ascending = bool(ascending)
             if sort == 'min' :
-                sorted_index = list(df.min().sort_values().index )
+                sorted_index = list(df.min().sort_values(ascending=ascending).index )
             elif sort == 'mean' :
-                sorted_index = list(df.mean().sort_values().index )
+                sorted_index = list(df.mean().sort_values(ascending=ascending).index )
             elif sort == 'median' :
-                sorted_index = list(df.median().sort_values().index )
+                sorted_index = list(df.median().sort_values(ascending=ascending).index )
             elif sort == 'max' :
-                sorted_index = list(df.max().sort_values().index )
+                sorted_index = list(df.max().sort_values(ascending=ascending).index )
             elif sort == 'sum' :
-                sorted_index = list(df.sum().sort_values().index )
+                sorted_index = list(df.sum().sort_values(ascending=ascending).index )
             elif sort == 'quantile' :
-                sorted_index = list(df.quantile(q=quantile).sort_values().index )
+                sorted_index = list(df.quantile(q=quantile).sort_values(ascending=ascending).index )
+            elif sort == 'std' :
+                sorted_index = list(df.std().sort_values(ascending=ascending).index )
             df = df[sorted_index]
 
 
@@ -1671,17 +1814,27 @@ class SimResult(object):
             df = df.dropna(axis='index', how='any')
 
         if sort in ['item'] :
-            df = df.sort_values(by=itemLabel, axis=0)
+            df = df.sort_values(by=itemLabel, axis=0, ascending=bool(ascending))
 
         fig = plt.figure(figsize=figsize, dpi=dpi)
         # Draw a nested boxplot to show bills by day and time
-        ax = sns.boxplot(x=label, y=values,
+        ax = sns.violinplot(x=label, y=values,
                     hue=hue,
-                    data=df )
+                    data=df,
+                    scale=scale,
+                    split=split)
         sns.despine(offset=10, trim=True)
         if grid :
             ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
-
+            
+        if bool(rotation) is True :
+            if rotation is True :
+                rotation = 90
+            plt.xticks(rotation=rotation)
+        
+        if bool(tight_layout) :
+            plt.tight_layout()
+        plt.show()
         return fig
 
 
