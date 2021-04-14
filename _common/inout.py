@@ -10,7 +10,7 @@ __release__ = 210225
 __all__ = ['_extension', '_verbose']
 
 
-def _verbose(userLevel=0, programLevel=0, StringToPrint='') :
+def _verbose(userLevel=0, programLevel=0, StringToPrint='',*args) :
     """
     According to the user desired level of verbosity ( userLevel ) and the
     defined program level ( programLevel ) of the message ( StringToPrint )
@@ -35,6 +35,8 @@ def _verbose(userLevel=0, programLevel=0, StringToPrint='') :
         StringToPrint = ' '.join(StringToPrint)
     else :
         StringToPrint = str(StringToPrint)
+    if len(args) > 0 :
+        StringToPrint = (StringToPrint + ' ' + ' '.join([str(a) for a in args])).rstrip()
 
     if userLevel == None :
         userLevel = 0
