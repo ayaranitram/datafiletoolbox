@@ -1613,8 +1613,6 @@ class SimResult(object):
                 quantile = int(sort)/100
                 sort = 'quantile'
 
-
-
         if sort in ['name', 'wellname', 'well', 'groupname', 'group', 'region', 'regionname', 'alphabeticaly', 'alpha', 'abc'] :
             sort = 'item'
         if sort not in ['item', 'min', 'mean', 'median', 'max', 'sum', 'quantile', 'std'] :
@@ -1623,19 +1621,51 @@ class SimResult(object):
                 sort = 'quantile'
             else :
                 sort = ''
-
-        # get the data
-        df = self[Keys]
-
-        # clean the data
-        if cleanAllZeros :
-            df = df.replace(0, np.nan).dropna(axis='columns', how='all').replace(np.nan, 0)
-        if ignoreZeros :
-            df = df.replace(0, np.nan)
         
+        # get the data
+        df , dateIndex = self[Keys] , True
+        
+        # convert units and keep the regular Pandas DataFrame only
         if type(df) is SimDataFrame :
             df = df.convert(plotUnits)
             df = df.DF
+
+        # clean the data
+        if ignoreZeros :
+            df = df.replace(0, np.nan)
+        if cleanAllZeros :
+            df = df.replace(0, np.nan).dropna(axis='columns', how='all').replace(np.nan, 0)
+        
+        # prepare index to resample
+        if bool(resample) :
+            if self.is_Key('DATE') :
+                df.index = self('DATE')
+            elif self.is_Key('TIME') :
+                df.index = pd.to_datetime('1-1-1900') + pd.to_timedelta(self('TIME'),unit='D')
+            else :
+                dateIndex = False
+
+        # resample            
+        if resample == 'daily' :
+            resample = '1D'
+        elif resample == 'weekly' :
+            resample = '1W'
+        elif resample == 'monthly' :
+            resample = '1M'
+        elif resample in ['quarterly','quarter'] :
+            resample = '1Q'
+        elif resample == 'yearly' :
+            resample = '1Y'
+        elif resample is True :
+            resample = '1D'
+        elif resample is None :
+            resample = False
+        if bool(resample) and dateIndex :
+            resample = resample.upper()
+            if 'D' in resample or 'W' in resample or 'M' in resample or 'Q' in resample or 'Y' in resample :
+                df = df.resample('1D',axis=0).median().interpolate(axis=0,method='slinear').resample(resample,axis=0).median().interpolate(axis=0,method='slinear')
+            else :
+                df = df.resample(resample,axis=0).median().interpolate(axis=0,method='slinear')
 
         # sort the data
         if sort in ['min', 'mean', 'median', 'max', 'sum', 'quantile', 'std'] :
@@ -1656,21 +1686,152 @@ class SimResult(object):
                 sorted_index = list(df.std().sort_values(ascending=ascending).index )
             df = df[sorted_index]
 
-
         # melt the dataframe
         hue, label, itemLabel, values, df = self._auto_meltingDF(df, hue, label)
 
         if ignoreZeros :
-            df = df.dropna(axis='index', how='any')
+            df = df.replace(0, np.nan).dropna(axis=0, how='any')
 
         if sort in ['item'] :
             df = df.sort_values(by=itemLabel, axis=0, ascending=bool(ascending))
+        
+        return df, hue, label, itemLabel, values
 
+    def box(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, resample='daily', row=None, col=None, returnFig=True, returnDF=False) :
+        """
+        alias of boxplot method
+        """
+        return self.boxplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid, sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout, resample=resample, row=row, col=col, returnFig=returnFig, returnDF=returnDF)
+
+    def boxplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, resample='daily', row=None, col=None, returnFig=True, returnDF=False) :
+        """
+        creates a boxplot for the desired keys
+
+        hue must be None, 'item', 'attribute' or 'main'
+        label must be None, 'item', 'attribute' or 'main'
+        sort must be None, 'item', 'mean', 'max', 'min', 'std'
+            or a quantile expressed as a float
+
+        main and item refers to the ECL style kewords, like:
+            main:item   -->   WOPR:P1
+
+
+        this function uses seaborn boxplot to create the chart.
+        """
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        sns.set_theme(style="ticks", palette="pastel")
+
+        # # getting and cleaning the Keys
+        # Keys, objects, otherSims = self._commonInputCleaning(Keys=Keys, objects=objects, otherSims=otherSims)
+
+        # # define plot units
+        # plotUnits = {}
+        # for K in Keys :
+        #     plotUnits[K] = self.get_plotUnits(K)
+
+        # # define sorting
+        # quantile = 0.5 # P50 by default
+        # if sort is None :
+        #     sort = 'none'
+        # if type(sort) is not str :
+        #     if type(sort) is float :
+        #         quantile = sort
+        #         sort = 'quantile'
+        #     elif type(sort) is int :
+        #         quantile = sort/100
+        #         sort = 'quantile'
+        #     else :
+        #         sort = 'item'
+
+        # sort = sort.lower().strip()
+        # if sort.replace('.', '').replace(', ', '').isdigit() :
+        #     if '.' in sort :
+        #         quantile = float(sort)
+        #         sort = 'quantile'
+        #     elif '.' in sort :
+        #         quantile = float(sort.replace(', ', '.'))
+        #         sort = 'quantile'
+        #     else :
+        #         quantile = int(sort)/100
+        #         sort = 'quantile'
+
+        # if sort in ['name', 'wellname', 'well', 'groupname', 'group', 'region', 'regionname', 'alphabeticaly', 'alpha', 'abc'] :
+        #     sort = 'item'
+        # if sort not in ['item', 'min', 'mean', 'median', 'max', 'sum', 'quantile', 'std'] :
+        #     if sort[0] in ['p', 'q'] and sort[1:].isdigit() :
+        #         quantile = int(sort[1:])/100
+        #         sort = 'quantile'
+        #     else :
+        #         sort = ''
+
+        # # get the data
+        # if self.is_Key('DATE') :
+        #     df = self[Keys+['DATE']]
+        # elif self.is_Key('TIME') :
+        #     df = self[Keys+['TIME']]
+        # else :
+        #     df = self[Keys]
+
+        # # clean the data
+        # if ignoreZeros :
+        #     df = df.replace(0, np.nan)
+        # if cleanAllZeros :
+        #     df = df.replace(0, np.nan).dropna(axis='columns', how='all').replace(np.nan, 0)
+        
+        # if type(df) is SimDataFrame :
+        #     df = df.convert(plotUnits)
+        #     df = df.DF
+
+        # # sort the data
+        # if sort in ['min', 'mean', 'median', 'max', 'sum', 'quantile', 'std'] :
+        #     ascending = bool(ascending)
+        #     if sort == 'min' :
+        #         sorted_index = list(df.min().sort_values(ascending=ascending).index )
+        #     elif sort == 'mean' :
+        #         sorted_index = list(df.mean().sort_values(ascending=ascending).index )
+        #     elif sort == 'median' :
+        #         sorted_index = list(df.median().sort_values(ascending=ascending).index )
+        #     elif sort == 'max' :
+        #         sorted_index = list(df.max().sort_values(ascending=ascending).index )
+        #     elif sort == 'sum' :
+        #         sorted_index = list(df.sum().sort_values(ascending=ascending).index )
+        #     elif sort == 'quantile' :
+        #         sorted_index = list(df.quantile(q=quantile).sort_values(ascending=ascending).index )
+        #     elif sort == 'std' :
+        #         sorted_index = list(df.std().sort_values(ascending=ascending).index )
+        #     df = df[sorted_index]
+
+
+        # # melt the dataframe
+        # hue, label, itemLabel, values, df = self._auto_meltingDF(df, hue, label)
+
+        # if ignoreZeros :
+        #     df = df.dropna(axis='index', how='any')
+
+        # if sort in ['item'] :
+        #     df = df.sort_values(by=itemLabel, axis=0, ascending=bool(ascending))
+
+        df, hue, label, itemLabel, values = self._common_dataprep_for_seaborn(Keys=Keys,
+                                                                              objects=objects,
+                                                                              otherSims=otherSims,
+                                                                              cleanAllZeros=cleanAllZeros,
+                                                                              ignoreZeros=ignoreZeros,
+                                                                              hue=hue,
+                                                                              label=label,
+                                                                              sort=sort,
+                                                                              ascending=ascending,
+                                                                              resample=resample)
         fig = plt.figure(figsize=figsize, dpi=dpi)
         # Draw a nested boxplot to show bills by day and time
-        ax = sns.boxplot(x=label, y=values,
+        # ax = sns.catplot(kind='box',
+        ax = sns.boxplot(
+                    x=label, y=values,
                     hue=hue,
-                    data=df )
+                    data=df,
+                    # row=row,
+                    # col=col,
+                    )
         sns.despine(offset=10, trim=True)
         if grid :
             ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
@@ -1683,15 +1844,24 @@ class SimResult(object):
         if bool(tight_layout) :
             plt.tight_layout()
         plt.show()
-        return fig
+        
+        if bool(returnFig) and bool(returnDF) :
+            return fig, df
+        elif bool(returnFig) and not bool(returnDF) :
+            return fig
+        elif not bool(returnFig) and bool(returnDF) :
+            return df
+        else :
+            return None
 
-    def violin(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, scale='width', split=True) :
+
+    def violin(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, scale='width', split=True, resample='daily', row=None, col=None, returnFig=True, returnDF=False) :
         """
         wrapper for violinplot method
         """
-        return self.violinplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid, sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout, scale=scale, split=split)
+        return self.violinplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid, sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout, scale=scale, split=split, resample=resample, row=row, col=col, returnFig=returnFig, returnDF=returnDF)
 
-    def violinplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, scale='width', split=True) :
+    def violinplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, scale='width', split=True, resample='daily', row=None, col=None, returnFig=True, returnDF=False) :
         """
         creates a violin plot for the desired keys
 
@@ -1708,100 +1878,116 @@ class SimResult(object):
         import matplotlib.pyplot as plt
         sns.set_theme(style="ticks", palette="pastel")
 
-        # getting and cleaning the Keys
-        Keys, objects, otherSims = self._commonInputCleaning(Keys=Keys, objects=objects, otherSims=otherSims)
+        # # getting and cleaning the Keys
+        # Keys, objects, otherSims = self._commonInputCleaning(Keys=Keys, objects=objects, otherSims=otherSims)
 
-        # define plot units
-        plotUnits = {}
-        for K in Keys :
-            plotUnits[K] = self.get_plotUnits(K)
+        # # define plot units
+        # plotUnits = {}
+        # for K in Keys :
+        #     plotUnits[K] = self.get_plotUnits(K)
 
-        # define sorting
-        quantile = 0.5 # P50 by default
-        if sort is None :
-            sort = 'none'
-        if type(sort) is not str :
-            if type(sort) is float :
-                quantile = sort
-                sort = 'quantile'
-            elif type(sort) is int :
-                quantile = sort/100
-                sort = 'quantile'
-            else :
-                sort = 'item'
+        # # define sorting
+        # quantile = 0.5 # P50 by default
+        # if sort is None :
+        #     sort = 'none'
+        # if type(sort) is not str :
+        #     if type(sort) is float :
+        #         quantile = sort
+        #         sort = 'quantile'
+        #     elif type(sort) is int :
+        #         quantile = sort/100
+        #         sort = 'quantile'
+        #     else :
+        #         sort = 'item'
 
-        sort = sort.lower().strip()
-        if sort.replace('.', '').replace(', ', '').isdigit() :
-            if '.' in sort :
-                quantile = float(sort)
-                sort = 'quantile'
-            elif '.' in sort :
-                quantile = float(sort.replace(', ', '.'))
-                sort = 'quantile'
-            else :
-                quantile = int(sort)/100
-                sort = 'quantile'
-
-
-
-        if sort in ['name', 'wellname', 'well', 'groupname', 'group', 'region', 'regionname', 'alphabeticaly', 'alpha', 'abc'] :
-            sort = 'item'
-        if sort not in ['item', 'min', 'mean', 'median', 'max', 'sum', 'quantile', 'std'] :
-            if sort[0] in ['p', 'q'] and sort[1:].isdigit() :
-                quantile = int(sort[1:])/100
-                sort = 'quantile'
-            else :
-                sort = ''
-
-        # get the data
-        df = self[Keys]
-
-        # clean the data
-        if cleanAllZeros :
-            df = df.replace(0, np.nan).dropna(axis='columns', how='all').replace(np.nan, 0)
-        if ignoreZeros :
-            df = df.replace(0, np.nan)
-
-        if type(df) is SimDataFrame :
-            df = df.convert(plotUnits)
-            df = df.DF
-
-        # sort the data
-        if sort in ['min', 'mean', 'median', 'max', 'sum', 'quantile', 'std'] :
-            ascending = bool(ascending)
-            if sort == 'min' :
-                sorted_index = list(df.min().sort_values(ascending=ascending).index )
-            elif sort == 'mean' :
-                sorted_index = list(df.mean().sort_values(ascending=ascending).index )
-            elif sort == 'median' :
-                sorted_index = list(df.median().sort_values(ascending=ascending).index )
-            elif sort == 'max' :
-                sorted_index = list(df.max().sort_values(ascending=ascending).index )
-            elif sort == 'sum' :
-                sorted_index = list(df.sum().sort_values(ascending=ascending).index )
-            elif sort == 'quantile' :
-                sorted_index = list(df.quantile(q=quantile).sort_values(ascending=ascending).index )
-            elif sort == 'std' :
-                sorted_index = list(df.std().sort_values(ascending=ascending).index )
-            df = df[sorted_index]
+        # sort = sort.lower().strip()
+        # if sort.replace('.', '').replace(', ', '').isdigit() :
+        #     if '.' in sort :
+        #         quantile = float(sort)
+        #         sort = 'quantile'
+        #     elif '.' in sort :
+        #         quantile = float(sort.replace(', ', '.'))
+        #         sort = 'quantile'
+        #     else :
+        #         quantile = int(sort)/100
+        #         sort = 'quantile'
 
 
-        # melt the dataframe
-        hue, label, itemLabel, values, df = self._auto_meltingDF(df, hue, label)
 
-        if ignoreZeros :
-            df = df.dropna(axis='index', how='any')
+        # if sort in ['name', 'wellname', 'well', 'groupname', 'group', 'region', 'regionname', 'alphabeticaly', 'alpha', 'abc'] :
+        #     sort = 'item'
+        # if sort not in ['item', 'min', 'mean', 'median', 'max', 'sum', 'quantile', 'std'] :
+        #     if sort[0] in ['p', 'q'] and sort[1:].isdigit() :
+        #         quantile = int(sort[1:])/100
+        #         sort = 'quantile'
+        #     else :
+        #         sort = ''
 
-        if sort in ['item'] :
-            df = df.sort_values(by=itemLabel, axis=0, ascending=bool(ascending))
+        # # get the data
+        # df = self[Keys]
+
+        # # clean the data
+        # if ignoreZeros :
+        #     df = df.replace(0, np.nan)
+        # if cleanAllZeros :
+        #     df = df.replace(0, np.nan).dropna(axis='columns', how='all').replace(np.nan, 0)
+
+        # if type(df) is SimDataFrame :
+        #     df = df.convert(plotUnits)
+        #     df = df.DF
+
+        # # sort the data
+        # if sort in ['min', 'mean', 'median', 'max', 'sum', 'quantile', 'std'] :
+        #     ascending = bool(ascending)
+        #     if sort == 'min' :
+        #         sorted_index = list(df.min().sort_values(ascending=ascending).index )
+        #     elif sort == 'mean' :
+        #         sorted_index = list(df.mean().sort_values(ascending=ascending).index )
+        #     elif sort == 'median' :
+        #         sorted_index = list(df.median().sort_values(ascending=ascending).index )
+        #     elif sort == 'max' :
+        #         sorted_index = list(df.max().sort_values(ascending=ascending).index )
+        #     elif sort == 'sum' :
+        #         sorted_index = list(df.sum().sort_values(ascending=ascending).index )
+        #     elif sort == 'quantile' :
+        #         sorted_index = list(df.quantile(q=quantile).sort_values(ascending=ascending).index )
+        #     elif sort == 'std' :
+        #         sorted_index = list(df.std().sort_values(ascending=ascending).index )
+        #     df = df[sorted_index]
+
+
+        # # melt the dataframe
+        # hue, label, itemLabel, values, df = self._auto_meltingDF(df, hue, label)
+
+        # if ignoreZeros :
+        #     df = df.dropna(axis='index', how='any')
+
+        # if sort in ['item'] :
+        #     df = df.sort_values(by=itemLabel, axis=0, ascending=bool(ascending))
+
+        df, hue, label, itemLabel, values = self._common_dataprep_for_seaborn(Keys=Keys,
+                                                                              objects=objects,
+                                                                              otherSims=otherSims,
+                                                                              cleanAllZeros=cleanAllZeros,
+                                                                              ignoreZeros=ignoreZeros,
+                                                                              hue=hue,
+                                                                              label=label,
+                                                                              sort=sort,
+                                                                              ascending=ascending,
+                                                                              resample=resample)
 
         fig = plt.figure(figsize=figsize, dpi=dpi)
         # Draw a nested boxplot to show bills by day and time
-        ax = sns.violinplot(x=label, y=values,
+        # ax = sns.catplot(kind='violin',
+        ax = sns.violinplot(
+                    x=label, y=values,
                     hue=hue,
                     data=df,
                     scale=scale,
-                    split=split)
+                    split=split,
+                    # row=row,
+                    # col=col,
+                    )
         sns.despine(offset=10, trim=True)
         if grid :
             ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
@@ -1814,7 +2000,15 @@ class SimResult(object):
         if bool(tight_layout) :
             plt.tight_layout()
         plt.show()
-        return fig
+        
+        if bool(returnFig) and bool(returnDF) :
+            return fig, df
+        elif bool(returnFig) and not bool(returnDF) :
+            return fig
+        elif not bool(returnFig) and bool(returnDF) :
+            return df
+        else :
+            return None
 
 
     def plot(self, Keys=[], Index=None, otherSims=None, Wells=[], Groups=[], Regions=[], DoNotRepeatColors=None, grid=False) : # Index='TIME'
