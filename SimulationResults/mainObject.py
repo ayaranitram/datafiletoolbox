@@ -1575,31 +1575,10 @@ class SimResult(object):
 
         return fig
 
-    def box(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True) :
+    def _common_dataprep_for_seaborn(self,Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', sort='item', ascending=True, resample='daily'):
         """
-        alias of boxplot method
+        support function for box and violin plots data preprocessing
         """
-        return self.boxplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid, sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout)
-
-    def boxplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item',ascending=True, rotation=True, tight_layout=True) :
-        """
-        creates a boxplot for the desired keys
-
-        hue must be None, 'item', 'attribute' or 'main'
-        label must be None, 'item', 'attribute' or 'main'
-        sort must be None, 'item', 'mean', 'max', 'min', 'std'
-            or a quantile expressed as a float
-
-        main and item refers to the ECL style kewords, like:
-            main:item   -->   WOPR:P1
-
-
-        this function uses seaborn boxplot to create the chart.
-        """
-        import seaborn as sns
-        import matplotlib.pyplot as plt
-        sns.set_theme(style="ticks", palette="pastel")
-
         # getting and cleaning the Keys
         Keys, objects, otherSims = self._commonInputCleaning(Keys=Keys, objects=objects, otherSims=otherSims)
 
