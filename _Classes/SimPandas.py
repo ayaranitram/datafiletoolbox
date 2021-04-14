@@ -1517,7 +1517,7 @@ class SimDataFrame(DataFrame) :
         else :
             return self.nameSeparator
 
-    def set_index(self, key, drop=False, append=False, inplace=True, verify_integrity=False, **kwargs) :
+    def set_index(self, key, drop=False, append=False, inplace=False, verify_integrity=False, **kwargs) :
         if key not in self.columns :
             raise ValueError("The key '"+str(key)+"' is not a column name of this DataFrame.")
         super().set_index(key, drop=drop, append=append, inplace=inplace, verify_integrity=verify_integrity, **kwargs)
