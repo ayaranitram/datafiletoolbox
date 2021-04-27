@@ -6,7 +6,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = 0.52
-__release__ = 210412
+__release__ = 210421
 __all__ = ['SimResult']
 
 from .. import _dictionaries
