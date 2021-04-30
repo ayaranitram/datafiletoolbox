@@ -1697,13 +1697,13 @@ class SimResult(object):
         
         return df, hue, label, itemLabel, values
 
-    def box(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, resample='daily', row=None, col=None, returnFig=True, returnDF=False) :
+    def box(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, resample='daily', row=None, col=None, returnFig=True, returnDF=False, logY=False,logX=False,**kwargs) :
         """
         alias of boxplot method
         """
-        return self.boxplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid, sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout, resample=resample, row=row, col=col, returnFig=returnFig, returnDF=returnDF)
+        return self.boxplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid, sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout, resample=resample, row=row, col=col, returnFig=returnFig, returnDF=returnDF, logY=logY,logX=logX,**kwargs)
 
-    def boxplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, resample='daily', row=None, col=None, returnFig=True, returnDF=False) :
+    def boxplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, resample='daily', row=None, col=None, returnFig=True, returnDF=False, logY=False,logX=False,**kwargs) :
         """
         creates a boxplot for the desired keys
 
@@ -1743,6 +1743,7 @@ class SimResult(object):
                     data=df,
                     # row=row,
                     # col=col,
+                    **kwargs
                     )
         sns.despine(offset=10, trim=True)
         if grid :
@@ -1755,6 +1756,10 @@ class SimResult(object):
         
         if bool(tight_layout) :
             plt.tight_layout()
+        if bool(logY):
+            plt.yscale('log')
+        if bool(logX):
+            plt.xscale('log')
         plt.show()
         
         if bool(returnFig) and bool(returnDF) :
@@ -1767,13 +1772,13 @@ class SimResult(object):
             return None
 
 
-    def violin(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, scale='width', split=True, resample='daily', row=None, col=None, returnFig=True, returnDF=False) :
+    def violin(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, scale='width', split=True, resample='daily', row=None, col=None, inner=None, logY=False, logX=False, returnFig=True, returnDF=False, **kwargs) :
         """
         wrapper for violinplot method
         """
-        return self.violinplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid, sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout, scale=scale, split=split, resample=resample, row=row, col=col, returnFig=returnFig, returnDF=returnDF)
+        return self.violinplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid, sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout, scale=scale, split=split, resample=resample, row=row, col=col, inner=inner, logY=logY, logX=logX, returnFig=returnFig, returnDF=returnDF, **kwargs)
 
-    def violinplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, scale='width', split=True, resample='daily', row=None, col=None, returnFig=True, returnDF=False) :
+    def violinplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, scale='width', split=True, resample='daily', row=None, col=None, inner=None, logY=False, logX=False, returnFig=True, returnDF=False, **kwargs) :
         """
         creates a violin plot for the desired keys
 
@@ -1801,6 +1806,9 @@ class SimResult(object):
                                                                               ascending=ascending,
                                                                               resample=resample)
 
+        if inner not in ('box','quartile', 'point', 'stick', None) :
+            inner = None
+        
         fig = plt.figure(figsize=figsize, dpi=dpi)
         # Draw a nested boxplot to show bills by day and time
         # ax = sns.catplot(kind='violin',
@@ -1810,8 +1818,10 @@ class SimResult(object):
                     data=df,
                     scale=scale,
                     split=split,
+                    inner=inner,
                     # row=row,
                     # col=col,
+                    **kwargs
                     )
         sns.despine(offset=10, trim=True)
         if grid :
