@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = 0.1
-__release__ = 210314
+__version__ = 0.2
+__release__ = 210505
 __all__ = ['TABLE']
 
 from .mainObject import SimResult as _SimResult
@@ -30,7 +30,7 @@ class TABLE(_SimResult):
     object to contain data read from generic table files, like .txt or csv
     
     """
-    def __init__(self, inputFile=None, verbosity=2, sep=None, header='infer', units='infer', names=None, overwrite=True) :
+    def __init__(self, inputFile=None, verbosity=2, sep=None, header='infer', units='infer', names=None, overwrite=True, index_col=False) :
         _SimResult.__init__(self, verbosity=verbosity)
         self.kind = TABLE
         self.results = {}
@@ -45,7 +45,7 @@ class TABLE(_SimResult):
         self.dates = None
         if type(inputFile) is str and len(inputFile.strip()) > 0 :
             if os.path.isfile(inputFile) :
-                self.readTable(inputFile, sep=sep, header=header, units=units, names=names)
+                self.readTable(inputFile, sep=sep, header=header, units=units, names=names, index_col=index_col)
             else :
                 print("file doesn't exists")
         if len(self.Frames) > 0:
@@ -57,6 +57,7 @@ class TABLE(_SimResult):
         run intensive routines, to have the data loaded and ready
         """
         self.findItemsCol()
+        self.stripItems()
         self.extract_Keys()
         self.extractDATE()
         self.find_index()
@@ -95,7 +96,7 @@ class TABLE(_SimResult):
     
     def findItemsCol(self):
         for frame in self.Frames:
-            for col in self.Frames[frame]:
+            for col in self.Frames[frame].columns:
                 if str(self.Frames[frame][col].dtype) not in ['float64','float32','float','int64','int32','int']:
                     if type(self.Frames[frame][col][0]) is str:
                         if _isDate(self.Frames[frame][col][0]):
@@ -104,7 +105,12 @@ class TABLE(_SimResult):
                             self.itemsCol[frame] = col
                             break
     
-    def readTable(self, inputFile, sep=None, header='infer', units=None, names=None):
+    def stripItems(self):
+        for frame in self.Frames:
+            if frame in self.itemsCol:
+                self.Frames[frame][self.itemsCol[frame]] = self.Frames[frame][self.itemsCol[frame]].str.strip("""\t\r\n'" """)
+    
+    def readTable(self, inputFile, sep=None, header='infer', units=None, names=None, index_col=False):
         """
         internal function to read a generic table from a file (header in first row, units in second row)
         """
@@ -129,12 +135,16 @@ class TABLE(_SimResult):
                     header = [header,units]
             elif type(header) in (list,tuple):
                 if units in header:
-                    units = None
+                    pass  # units = None
                 else:
                     header = list(header) + [units]
 
+        user_index_col = index_col
+        if index_col is False and type(header) is not int :
+            index_col = None
+        
         try :
-            NewFrame = pd.read_table(inputFile, sep=sep, header=header, engine='python')
+            NewFrame = pd.read_table(inputFile, sep=sep, header=header, engine='python', index_col=index_col)
         except ImportError:
             raise ImportError("Missing optional dependencies 'xlrd' and 'openpyxl'.\nInstall xlrd and openpyxl for Excel support.\nUse pip or conda to install xlrd and install openpyxl.")
         except :
@@ -151,10 +161,16 @@ class TABLE(_SimResult):
         if inputFile in self.Frames:
             _verbose(self.speak, 2, "the file '"+str(inputFile)+"' will overwrite the previously loaded file with the same name.")
         
+        if user_index_col is False and type(header) is not int :
+            colNames = NewFrame.columns
+            NewFrame.reset_index(inplace=True)
+            NewFrame.drop(NewFrame.columns[-1],axis=1,inplace=True)
+            NewFrame.columns = colNames
+        
         NewNames = {}
         if units is not None:
             for col in NewFrame.columns:
-                NewKey = ' '.join(list(map(str,col[0:-1]))).strip()
+                NewKey = ' '.join(list(map(str,col[0:-1]))).strip().replace(' ','_').upper()
                 NewNames[col] = NewKey
                 if col[-1].startswith('Unnamed:') :
                     NewUnits = ''
@@ -174,7 +190,7 @@ class TABLE(_SimResult):
                 else:
                     NewNames[col] = col
 
-        NewFrame.rename(columns=NewNames,inplace=True)
+        NewFrame.columns = NewNames.values()  # NewFrame.rename(columns=NewNames,inplace=True)
         self.Frames[inputFile] = NewFrame
 
     # support functions for get_Vector:
@@ -409,6 +425,16 @@ class TABLE(_SimResult):
                     self.units[Key] = 'DATE'
                     return 'DATE'
             if Key in self.keys :
+                if ':' in Key :
+                    if Key[0] == 'W' :
+                        if Key.split(':')[-1] in self.wells :
+                            return self.get_Unit(Key.split(':')[0])
+                    if Key[0] == 'G' :
+                        if Key.split(':')[-1] in self.groups :
+                            return self.get_Unit(Key.split(':')[0])
+                    if Key[0] == 'R' :
+                        if Key.split(':')[-1] in self.regions :
+                            return self.get_Unit(Key.split(':')[0])
                 return None
             else:
                 if Key[0] == 'W' :
@@ -416,8 +442,6 @@ class TABLE(_SimResult):
                     for W in self.get_Wells() :
                         if Key+':'+W in self.units :
                             UList.append(self.units[Key+':'+W])
-                        elif Key in self.keys :
-                            UList.append( self.results.unit(Key+':'+W) )
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
@@ -428,8 +452,6 @@ class TABLE(_SimResult):
                     for G in self.get_Groups() :
                         if Key+':'+G in self.units :
                             UList.append(self.units[Key+':'+G])
-                        elif Key in self.keys :
-                            UList.append( self.results.unit(Key+':'+G) )
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
@@ -440,8 +462,6 @@ class TABLE(_SimResult):
                     for R in self.get_Regions() :
                         if Key+':'+R in self.units :
                             UList.append(self.units[Key+':'+R])
-                        elif Key in self.keys :
-                            UList.append( self.results.unit(Key+':'+R) )
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
