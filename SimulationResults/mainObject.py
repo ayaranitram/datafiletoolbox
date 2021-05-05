@@ -6,7 +6,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = 0.52
-__release__ = 210421
+__release__ = 210505
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -4832,7 +4832,7 @@ class SimResult(object):
     def createTIME(self, startDate=None) :
         if self.is_Key('DATE') :
             date = self['DATE']
-        elif self.is_Keys('DATES') :
+        elif self.is_Key('DATES') :
             date = self['DATES']
         else :
             catch = self.createDATES()
