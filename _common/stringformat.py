@@ -7,8 +7,8 @@ Created on Wed Sep 18 12:33:46 2019
 routine intended to manipulate and transform date strings.
 """
 
-__version__ = 0.1
-__release__ = 210225
+__version__ = 0.15
+__release__ = 210505
 __all__ = ['multisplit', 'isnumeric', 'getnumber', 'isDate', 'date']
 
 from .._Classes.Errors import UndefinedDateFormat
@@ -198,13 +198,16 @@ def date(date, formatIN='', formatOUT='', speak=True, YYbaseIN=1900, returnForma
             date = list( map( str, date ) )
             sample = date[0].strip()
 
+    if type(date) is pd.Series :
+        date = date.to_numpy()
+
     if type(date) is np.ndarray :
         output = list
+        sample = date[0]
         if 'datetime64' in str(date.dtype) :
             date = list(np.datetime_as_string(date))
             date = list(map( npDateOnly, date ))
             formatIN = 'YYYY-MM-DD'
-            sample = date[0]
             separator = '-'
 
     if type(date) is np.datetime64 :
