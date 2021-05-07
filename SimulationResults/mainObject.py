@@ -10,7 +10,7 @@ __release__ = 210505
 __all__ = ['SimResult']
 
 from .. import _dictionaries
-from .._Classes.Errors import OverwrittingError
+from .._Classes.Errors import OverwrittingError, InvalidKeyError
 from .._Classes.SimPandas import SimSeries, SimDataFrame
 from .._common.stringformat import date as _strDate, isDate as _isDate, multisplit as _multisplit, isnumeric as _isnumeric, getnumber as _getnumber
 from .._common.functions import _is_SimulationResult, _mainKey, _itemKey, _wellFromAttribute, _isECLkey, _keyType, tamiz as _tamiz, _meltDF  # _AttributeFromKeys,
@@ -219,54 +219,6 @@ class SimResult(object):
 
     """
 
-    ### define common dictionaries and constants
-
-    # VIPnotECL = []
-
-    # CSV_Variable2Verbose = {}
-    # CSV_Verbose2Variable = {}
-
-    # def writeCSVtoPandas(self, CSVFilePath):
-    #     if self.path is None :
-    #         self.path = CSVFilePath
-    #     with open(CSVFilePath, 'r') as CSVfile:
-    #         PandasCSV = open(_extension(CSVFilePath)[2] + _extension(CSVFilePath)[1] + '_forPandas' + _extension(CSVFilePath)[0], 'w' )
-    #         CSVlines = CSVfile.readlines()
-    #         DATA = False
-    #         HEADERS = False
-    #         for line in CSVlines :
-    #             if not HEADERS :
-    #                 if line.split(', ')[0] == "['HEADERS']" :
-    #                     print('found HEADERS')
-    #                     HEADERS = True
-    #             else :
-    #                 lineData = line.split(', ')
-    #                 if line.split()[0] == "['DATA']" :
-    #                     print('found DATA')
-    #                     DATA = True
-    #                     HEADERS = False
-
-    #                     for i in range(len(self.pandasColumns['HEADERS']['VARIABLE'] ) ):
-    #                         fullName = []
-    #                         for head in list(self.pandasColumns['HEADERS'].keys()) :
-    #                             fullName.append(self.pandasColumns['HEADERS'][head][i] )
-    #                         self.pandasColumns['COLUMNS'][':'.join(fullName)] = fullName
-
-    #                     PandasHead = ', '.join(list(self.pandasColumns['COLUMNS'].keys() ))
-    #                     PandasCSV.write(PandasHead + '\n' )
-
-    #                 else :
-    #                     self.pandasColumns['HEADERS'][ lineData[0].split(':')[0] ] = [ lineData[0].split(':')[1] ] + lineData[1:]
-    #                     print('reading header ' + str(lineData[0].split(':')[0] ))
-
-    #             if not DATA :
-    #                 if line.split()[0] == "['DATA']" :
-    #                     print('found DATA')
-    #                     DATA = True
-    #             else :
-    #                 PandasCSV.write(line )
-    #         PandasCSV.close()
-
     def __init__(self, verbosity=2) :
         self.set_Verbosity(verbosity)
         self.SimResult = True
@@ -347,7 +299,7 @@ class SimResult(object):
         # self.set_savingFilter()
         self.set_vectorTemplate()
 
-    def set_vectorTemplate(self, Restart=False, Continue=False) :
+    def set_vectorTemplate(self, Restart=False, Continue=False):
         if self.vectorTemplate is None :
             self.vectorTemplate = np.array([0]*len(self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]))
         if Restart :
@@ -915,7 +867,7 @@ class SimResult(object):
                     gasProducers = gasProducers.rename(columns=_wellFromAttribute(gasProducers.columns ) )
                     prodCheck = gasProducers + prodCheck
 
-                prodCheck = ((prodCheck==0) & (waterProducers>0) ).replace(False, np.nan).dropna(axis=1, how='all')
+                prodCheck = ((prodCheck==0) & (waterProducers>0)).replace(False, np.nan).dropna(axis=1, how='all')
 
                 self.wellsLists['WaterProducers'] = list(prodCheck.columns )
 
@@ -956,17 +908,17 @@ class SimResult(object):
                 test = False
                 while not test and i < 10 :
                     i += 1
-                    test = convertibleUnits(self.GORcriteria[1], self.get_Unit('WGPR').split('/')[0] + '/' + self.get_Unit('WOPR').split('/')[0] )
+                    test = convertibleUnits(self.GORcriteria[1], self.get_Unit('WGPR').split('/')[0] + '/' + self.get_Unit('WOPR').split('/')[0])
                 GORcriteria = convertUnit(self.GORcriteria[0], self.GORcriteria[1], self.get_Unit('WGPR').split('/')[0] + '/' + self.get_Unit('WOPR').split('/')[0], PrintConversionPath=False )
 
-                self.wellsLists['OilProducers'] = list((GOR<=GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns )
-                self.wellsLists['GasProducers'] = list((GOR >GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns )
+                self.wellsLists['OilProducers'] = list((GOR<=GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
+                self.wellsLists['GasProducers'] = list((GOR >GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
 
             elif self.is_Attribute('WGOR') and self.get_Unit('WGOR') is not None :
                 GOR = self[['WGOR']]
-                GOR = (GOR.rename(columns=_wellFromAttribute(GOR.columns ) ) )
+                GOR = (GOR.rename(columns=_wellFromAttribute(GOR.columns )))
 
-                rateCheck = (GOR<0) & (GOR>0) # to generate a dataframe full of False
+                rateCheck = (GOR<0) & (GOR>0)  # to generate a dataframe full of False
 
                 if self.is_Attribute('WOPR') :
                     OIL = self[['WOPR']]
@@ -992,41 +944,80 @@ class SimResult(object):
                 self.wellsLists['GasProducers'] = list((GOR >GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
 
             elif self.is_Attribute('WOPR') :
-                _verbose(self.speak, 2, 'neither GOR or GAS RATE available, every well with oil rate > 0 will be listeda as oil producer.' )
+                _verbose(self.speak, 2, "neither GOR or GAS RATE available or the data doesn't has units, every well with oil rate > 0 will be listeda as oil producer." )
                 self.wellsLists['OilProducers'] = list(_wellFromAttribute(list(self[['WOPR']].replace(0, np.nan).dropna(axis=1, how='all').columns) ) )
 
             else :
                 self.wellsLists['OilProducers'] = []
+            
         return self.wellsLists['OilProducers']
 
-    def get_GasProducers(self, reload=False ) :
+    def get_GasProducers(self, reload=False):
         """
         returns a list of the wells considered gas producers at any time in the simulation.
         the GOR criteria to define the oil and gas producers can be modified by the method .set_GORcriteria()
         """
-        if reload is True or 'GasProducers' not in self.wellsLists :
-            _verbose(self.printMessages, 1, '# extrating data to count gas production wells' )
-            catch = self.get_OilProducers(reload=True)
-            if 'GasProducers' not in self.wellsLists and self.is_Attribute('WGPR') is True :
-                _verbose(self.speak, 2, 'neither GOR or OIL RATE available, every well with gas rate > 0 will be listeda as gas producer.')
-                self.wellsLists['GasProducers'] = list(_wellFromAttribute(list(self[['WGPR']].replace(0, np.nan).dropna(axis=1, how='all').columns) ) )
+        if reload is True or 'GasProducers' not in self.wellsLists:
+            _verbose(self.printMessages, 1, '# extrating data to count gas production wells')
+            _ = self.get_OilProducers(reload=True)
+            if 'GasProducers' not in self.wellsLists and self.is_Attribute('WGPR') is True:
+                _verbose(self.speak, 2, "neither GOR or OIL RATE available or the data doesn't has units, every well with gas rate > 0 will be listeda as gas producer.")
+                self.wellsLists['GasProducers'] = list(_wellFromAttribute(list(self[['WGPR']].replace(0, np.nan).dropna(axis=1, how='all').columns)))
             elif 'GasProducers' not in self.wellsLists :
                 self.wellsLists['GasProducers'] = []
         return self.wellsLists['GasProducers']
 
     def get_Producers(self, reload=False ) :
-        if 'Producers' not in self.wellsLists or reload is True :
-            self.wellsLists['Producers'] = list(set(self.get_WaterProducers(reload) + self.get_GasProducers(reload) + self.get_OilProducers(reload) ) )
+        if 'Producers' not in self.wellsLists or reload is True:
+            self.wellsLists['Producers'] = list(set(self.get_WaterProducers(reload) + self.get_GasProducers(reload) + self.get_OilProducers(reload)))
         return self.wellsLists['Producers']
 
-    def set_index(self, Key) :
+    def set_index(self, Key):
+        """
+        defines the Key to be used as default index for the returned DataFrames.
+
+        Parameters
+        ----------
+        Key : str
+            a string, must be a valid Key in the loaded data.
+
+        Returns
+        -------
+        None.
+        
+        Raises
+        -------
+        InvalidKeyError if the requested Key is not valid.
+
+        """
         self.set_Index(Key)
-    def set_Index(self, Key) :
-        if self.is_Key(Key) :
+        
+    def set_Index(self, Key):
+        """
+        defines the Key to be used as default index for the returned DataFrames.
+
+        Parameters
+        ----------
+        Key : str
+            a string, must be a valid Key in the loaded data.
+
+        Returns
+        -------
+        None.
+        
+        Raises
+        -------
+        InvalidKeyError if the requested Key is not valid.
+
+        """
+        if self.is_Key(Key):
             self.DTindex = Key
-    def get_index(self) :
+        else:
+            raise InvalidKeyError(Key,'is not a valid Key in this dataset')
+            
+    def get_index(self):
         return self.get_Index()
-    def get_Index(self) :
+    def get_Index(self):
         return self.DTindex
 
     def set_GORcriteria(self, GOR=10.0, Units=None ) :
