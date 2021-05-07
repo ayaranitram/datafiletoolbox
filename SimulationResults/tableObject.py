@@ -140,7 +140,7 @@ class TABLE(_SimResult):
                     header = list(header) + [units]
 
         user_index_col = index_col
-        if index_col is False and type(header) is not int :
+        if index_col is False and ( type(header) is not int and header != 'infer' ) :
             index_col = None
         
         try :
@@ -161,7 +161,7 @@ class TABLE(_SimResult):
         if inputFile in self.Frames:
             _verbose(self.speak, 2, "the file '"+str(inputFile)+"' will overwrite the previously loaded file with the same name.")
         
-        if user_index_col is False and type(header) is not int :
+        if user_index_col is False and ( type(header) is not int and header != 'infer' ) :
             colNames = NewFrame.columns
             NewFrame.reset_index(inplace=True)
             NewFrame.drop(NewFrame.columns[-1],axis=1,inplace=True)
