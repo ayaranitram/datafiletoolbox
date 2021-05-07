@@ -25,5 +25,5 @@ class MissingDependence(Exception):
     pass
 
 
-class InvalidKey(Exception):
+class InvalidKeyError(Exception):
     pass
