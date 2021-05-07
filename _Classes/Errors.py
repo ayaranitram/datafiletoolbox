@@ -23,3 +23,7 @@ from cwrap import PrototypeError
 
 class MissingDependence(Exception):
     pass
+
+
+class InvalidKey(Exception):
+    pass
