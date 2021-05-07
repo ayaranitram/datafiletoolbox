@@ -1893,6 +1893,7 @@ class SimDataFrame(DataFrame) :
             max : returns the maximum value per year
             min : returns the minimum value per year
             mean or avg : returns the average value per year
+            median : returns the median value per month
             std : returns the standard deviation per year
             sum : returns the summation of all the values per year
             count : returns the number of rows per year
@@ -1911,6 +1912,8 @@ class SimDataFrame(DataFrame) :
             result = result.min()
         elif outBy in ['mean', 'avg'] :
             result = result.mean()
+        elif outBy == 'median' :
+            result = result.median()
         elif outBy == 'std' :
             result = result.std()
         elif outBy == 'sum' :
@@ -1947,6 +1950,7 @@ class SimDataFrame(DataFrame) :
             max : returns the maximum value per month
             min : returns the minimum value per month
             mean or avg : returns the average value per month
+            median : returns the median value per month
             std : returns the standard deviation per month
             sum : returns the summation of all the values per month
             count : returns the number of rows per month
@@ -1965,6 +1969,8 @@ class SimDataFrame(DataFrame) :
             result = result.min()
         elif outBy in ['mean', 'avg'] :
             result = result.mean()
+        elif outBy == 'median' :
+            result = result.median()
         elif outBy == 'std' :
             result = result.std()
         elif outBy == 'sum' :
@@ -2001,6 +2007,7 @@ class SimDataFrame(DataFrame) :
             max : returns the maximum value per year
             min : returns the minimum value per year
             mean or avg : returns the average value per year
+            median : returns the median value per month
             std : returns the standard deviation per year
             sum : returns the summation of all the values per year
             count : returns the number of rows per year
@@ -2019,6 +2026,8 @@ class SimDataFrame(DataFrame) :
             result = result.min()
         elif outBy in ['mean', 'avg'] :
             result = result.mean()
+        elif outBy == 'median' :
+            result = result.median()
         elif outBy == 'std' :
             result = result.std()
         elif outBy == 'sum' :
