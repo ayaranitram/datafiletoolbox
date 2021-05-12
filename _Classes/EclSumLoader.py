@@ -46,7 +46,7 @@ class _EclSumLoader(object):
                     self._EclSum = EclSum
                     _EclSumLoader._EclSum = EclSum
                 except ModuleNotFoundError :
-                    print("\n ERROR: missing 'cwrap', please intall it using pip command:\n           pip install crwap\n\n       or upgrade:\n\n          pip install crwap --upgrade\n        or intall libecl using pip command:\n           pip install libecl\n\n       or upgrade:\n\n          pip install libecl --upgrade" )
+                    print("\n ERROR: missing 'cwrap' module, please intall it using pip command:\n           pip install crwap\n\n       or upgrade:\n\n          pip install crwap --upgrade\n        or intall libecl using pip command:\n           pip install libecl\n\n       or upgrade:\n\n          pip install libecl --upgrade" )
                     raise ModuleNotFoundError()
                 except PrototypeError :
                     # the class is already registered in crwap from a previos load, no need to register again
