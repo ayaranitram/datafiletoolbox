@@ -379,10 +379,10 @@ def Plot( SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], 
         if SimResultObjects[0].historyAsDots :
             for y in range( len( Y_Keys ) ) :
                 if _mainKey( Y_Keys[y] ).endswith('H') :
-                    if type(SimResultObjects[0].get_Marker(Y_Keys[y])) is not None :
+                    if SimResultObjects[0].get_Marker(Y_Keys[y]) is not None and SimResultObjects[0].get_Marker(Y_Keys[y]).lower().strip() not in ['none','',' '] :
                         markers[y] = SimResultObjects[0].get_Marker(Y_Keys[y])
                     else :
-                        markers[y] = 'o'
+                        markers[y] = '.'
                     if type(SimResultObjects[0].get_MarkerSize(Y_Keys[y])) is float :
                         markersize[y] = SimResultObjects[0].get_MarkerSize(Y_Keys[y])
                     else :
@@ -672,7 +672,7 @@ def Plot( SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], 
                             Lw = linewidth[s]
                             Ls = linestyle[s]
                             Mk = markers[s]
-                            Ms = markersize[y]
+                            Ms = markersize[s]
                         if len( Y_Keys ) == 1 :
                             Yax = 0
                         if len( SimResultObjects ) > 1 and len( Y_Keys ) > 1 :
