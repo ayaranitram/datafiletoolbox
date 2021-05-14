@@ -164,7 +164,7 @@ class SimSeries(Series) :
         # if index is None and data is SimSeries or SimDataFrame get the name
         elif type(data) in [SimSeries, SimDataFrame] and type(data.index.name) is str and len(data.index.name)>0 :
             indexInput = data.index.name
-            self.index.units = data.index.units.copy() if type(data.index.units) is dict else data.index.units
+            self.indexUnits = data.indexUnits.copy() if type(data.indexUnits) is dict else data.indexUnits
 
         # catch units or get from data if it is SimDataFrame or SimSeries
         if type(units) is dict :
@@ -303,9 +303,9 @@ class SimSeries(Series) :
 
     def set_indexUnits(self, units) :
         if type(units) is str and len(units.strip())>0 :
-            self.index.units = units.strip()
+            self.indexUnits = units.strip()
         elif type(units) is dict and len(units)>0 :
-            self.index.units = units
+            self.indexUnits = units
 
     def set_NameSeparator(self, separator) :
         if type(separator) is str and len(separator) > 0 :
@@ -2923,7 +2923,7 @@ class SimDataFrame(DataFrame) :
                             filters += [each]
                         except :
                             try : # to evaluate as an index value
-                                trash = self._getbyIndex(each)
+                                _ = self._getbyIndex(each)
                                 indexes += [each]
                             except :
                                 # discard this item
