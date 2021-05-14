@@ -6,7 +6,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = 0.52
-__release__ = 210505
+__release__ = 210514
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -1047,7 +1047,7 @@ class SimResult(object):
 
         if type(GOR) is float or type(GOR) is int :
             self.GORcriteria = (GOR, Units )
-            catch = self.get_OilProducers(reload=True)
+            _ = self.get_OilProducers(reload=True)
             return True
         else :
             print('GOR value should be integer or float')
@@ -2087,9 +2087,9 @@ class SimResult(object):
         for sim in SimsToPlot :
             prevSpeak, sim.speak = sim.speak, 0
             for Y in PlotKeys :
-                trash = sim(Y)
+                _ = sim(Y)
             for X in IndexList :
-                trash = sim(X)
+                _ = sim(X)
             sim.speak = prevSpeak
 
         figure = Plot(SimResultObjects=SimsToPlot, Y_Keys=PlotKeys, X_Key=IndexList, DoNotRepeatColors=DoNotRepeatColors, Xgrid=Xgrid, Ygrid=Ygrid ) #, X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[], graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={})
@@ -2384,12 +2384,12 @@ class SimResult(object):
 
     def print_Restart(self) :
         prevSpeak, self.speak = self.speak, -1
-        message = self.get_Restart()
+        _ = self.get_Restart()
         self.speak = prevSpeak
 
     def print_Continuation(self) :
         prevSpeak, self.speak = self.speak, -1
-        message = self.get_Continuation()
+        _ = self.get_Continuation()
         self.speak = prevSpeak
 
     def clean_Restarts(self) :
