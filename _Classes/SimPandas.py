@@ -750,7 +750,7 @@ class SimSeries(Series) :
 
         # let's Pandas deal with other types, maintain units, dtype and name
         result = self.as_Series() + other
-        return SimSeries(data=result, name=self.name, **self._SimParameters )
+        return SimSeries(data=result, name=self.name, **self._SimParameters)
 
     def __radd__(self, other) :
         return self.__add__(other)
@@ -764,13 +764,13 @@ class SimSeries(Series) :
                 newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.sub(other)
-                    return SimSeries(data=result, name=newName, **self._SimParameters )
+                    return SimSeries(data=result, name=newName, **self._SimParameters)
                 elif convertibleUnits(other.units, self.units ) :
-                    otherC = convertUnit(other, other.units, self.units, self.speak )
+                    otherC = convertUnit(other, other.units, self.units, self.speak)
                     result = self.sub(otherC)
-                    return SimSeries(data=result, name=newName, **self._SimParameters )
+                    return SimSeries(data=result, name=newName, **self._SimParameters)
                 elif convertibleUnits(self.units, other.units ) :
-                    selfC = convertUnit(self, self.units, other.units, self.speak )
+                    selfC = convertUnit(self, self.units, other.units, self.speak)
                     result = selfC.sub(other)
                     return SimSeries(data=result, units=other.units, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
@@ -781,7 +781,7 @@ class SimSeries(Series) :
 
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() - other
-        return SimSeries(data=result, name=self.name, **self._SimParameters )
+        return SimSeries(data=result, name=self.name, **self._SimParameters)
 
     def __rsub__(self, other) :
         return self.__neg__().__add__(other)

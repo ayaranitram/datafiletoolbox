@@ -6,7 +6,7 @@ Created on Mon Mar  8 08:56:44 2021
 """
 
 __version__ = 0.11
-__release__ = 210315
+__release__ = 210514
 __all__ = ['EclSumLoader']
 
 from .._Classes.Errors import PrototypeError, MissingDependence
@@ -34,10 +34,13 @@ class _EclSumLoader(object):
             except ModuleNotFoundError:
                 # try to use my compiled version of libecl from https://github.com/equinor/libecl
                 eclPath = _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib/python'
-                os.environ['PYTHONPATH'] = eclPath + ';' + os.environ['PYTHONPATH']
+                if 'PYTHONPATH' in os.environ:
+                    os.environ['PYTHONPATH'] = eclPath + ';' + os.environ['PYTHONPATH']
+                else :
+                    os.environ['PYTHONPATH'] = eclPath
                 eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib'
                 eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
-                os.environ['PATH'] = eclPath + ';' + os.environ['PATH']
+                os.environ['PATH'] = eclPath + ( ';' + os.environ['PATH'] ) if 'PATH' in os.environ else ''
                 
                 #from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
                 try :
