@@ -4524,9 +4524,10 @@ class SimResult(object):
         # supported operators:
         operators = [' ', '**', '--', '+-', '-+', '++', '*-', '/-', '//', '=', '+', '*', '/', '^', '.sum', '.avg', '.mean', '.min', '.max', '.mode', '.prod', '.var', '.std', '.sum0', '.avg0', '.mean0', '.min0', '.max0', '.std0', '.mode0', '.prod0', '.var0']
         if '-' in (' '.join(map(str,self.wells)) + ' '.join(map(str,self.groups)) + ' '.join(map(str,self.regions))) :
-            operators.append(' -')
+            substractionSign = ' -'
         else :
-            operators.append('-')
+            substractionSign = '-'
+        operators.append(substractionSign)
         
         # convert string to calculation tuple
         if type(CalculationTuple) is str :
@@ -4592,7 +4593,7 @@ class SimResult(object):
         _verbose (self.speak, 1, "calculation simplified to " + str(CalculationTuple))
 
 
-        operators = ['+', '-', '*', '//', '/', '^', '.sum', '.avg', '.mean', '.min', '.max', '.mode', '.prod', '.std', '.var', '.sum0', '.avg0', '.mean0', '.min0', '.max0', '.mode0', '.prod0', '.std0', '.var0']
+        operators = [substractionSign] + ['+', '*', '//', '/', '^', '.sum', '.avg', '.mean', '.min', '.max', '.mode', '.prod', '.std', '.var', '.sum0', '.avg0', '.mean0', '.min0', '.max0', '.mode0', '.prod0', '.std0', '.var0']
         OK = True
         Missing = []
         WrongLen = []
@@ -4638,30 +4639,30 @@ class SimResult(object):
 
         # prepare the data
         i=0
-        while i < len(CalculationTuple ) :
+        while i < len(CalculationTuple) :
 
             # a string Key, must be interpreted
-            if type(CalculationTuple[i] ) is str and CalculationTuple[i] not in operators :
-               _getValues(CalculationTuple[i] )
+            if type(CalculationTuple[i]) is str and CalculationTuple[i] not in operators :
+               _getValues(CalculationTuple[i])
 
             # string operator
             elif type(CalculationTuple[i] ) is str and CalculationTuple[i] in operators:
                 if i == 0 and CalculationTuple[i] == '-' :
                     CalcData.append(-1 )
-                    CalcUnits.append(None )
+                    CalcUnits.append(None)
                     firstNeg = True
                 else :
                     CalcData.append(CalculationTuple[i])
-                    CalcUnits.append(None )
+                    CalcUnits.append(None)
 
             # something else, a number, array or table
             else :
-                CalcData.append(CalculationTuple[i] )
-                CalcUnits.append(None )
+                CalcData.append(CalculationTuple[i])
+                CalcUnits.append(None)
 
             if i == 1 and firstNeg :
-                CalcData.append('*' )
-                CalcUnits.append(None )
+                CalcData.append('*')
+                CalcUnits.append(None)
 
             i += 1
 
@@ -4669,16 +4670,16 @@ class SimResult(object):
         # initialize calculation with first item
         Stack = []
         # StackUnits = []
-        for i in range(len(CalcData ) ) :
+        for i in range(len(CalcData)) :
             # following the operations sequence
 
             if type(CalcData[i]) is str and CalcData[i] not in operators :
-                Stack.append(CalcData[i] )
-                # StackUnits.append(CalcUnits[i] )
+                Stack.append(CalcData[i])
+                # StackUnits.append(CalcUnits[i])
                 continue
             elif type(CalcData[i]) is not str :
-                Stack.append(CalcData[i] )
-                # StackUnits.append(CalcUnits[i] )
+                Stack.append(CalcData[i])
+                # StackUnits.append(CalcUnits[i])
                 continue
 
             else :
@@ -4692,21 +4693,21 @@ class SimResult(object):
                     operandB = 0
                     operandA = 0
 
-                if CalculationTuple[i] == '-' :
-                    Stack.append(operandA - operandB )
+                if CalculationTuple[i] == substractionSign :  # '-' or ' -'
+                    Stack.append(operandA - operandB)
                 elif CalculationTuple[i] == '+' :
-                    Stack.append(operandA + operandB )
+                    Stack.append(operandA + operandB)
                 elif CalculationTuple[i] == '*' :
-                    Stack.append(operandA * operandB )
+                    Stack.append(operandA * operandB)
                 elif CalculationTuple[i] == '/' :
-                    Stack.append(operandA / operandB )
+                    Stack.append(operandA / operandB)
                 elif CalculationTuple[i] == '//' :
-                    Stack.append(operandA // operandB )
+                    Stack.append(operandA // operandB)
                 elif CalculationTuple[i] == '^' :
-                    Stack.append(operandA ** operandB )
+                    Stack.append(operandA ** operandB)
                 elif CalculationTuple[i] in ['.sum', '.avg', '.mean', '.min', '.max', '.mode', '.prod', '.std', '.var', '.sum0', '.avg0', '.mean0', '.min0', '.max0', '.mode0', '.prod0', '.std0', '.var0'] :
-                    if isinstance(operandB, (DataFrame, Series) ) :
-                        Stack.append(operandA )
+                    if isinstance(operandB, (DataFrame, Series)) :
+                        Stack.append(operandA)
 
                         if CalculationTuple[i].endswith('0') :
                             operandB.replace(0, np.nan, inplace=True) # ignore zeros in the data
