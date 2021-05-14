@@ -17,11 +17,11 @@ class UndefinedDateFormat(Exception):
     pass
 
 
-# PrototypeError class to recognize the class from crwap
+# PrototypeError class to recognize the class from cwrap
 try :
     from cwrap import PrototypeError
 except ModuleNotFoundError :
-    print("\n WARNING: missing 'cwrap' module, will be able to load eclipse style simulation outputs.\n         Please intall it using pip command:\n           pip install crwap\n\n       or upgrade:\n\n          pip install crwap --upgrade\n        or intall libecl using pip command:\n           pip install libecl\n\n       or upgrade:\n\n          pip install libecl --upgrade" )
+    print("\n WARNING: missing 'cwrap' module, will be able to load eclipse style simulation outputs.\n         Please intall it using pip command:\n           pip install cwrap\n\n       or upgrade:\n\n          pip install cwrap --upgrade\n        or intall libecl using pip command:\n           pip install libecl\n\n       or upgrade:\n\n          pip install libecl --upgrade" )
 
 
 class MissingDependence(Exception):
