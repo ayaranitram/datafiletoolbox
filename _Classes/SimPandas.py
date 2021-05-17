@@ -2848,7 +2848,7 @@ class SimDataFrame(DataFrame) :
             self.new_Units(key, uDic[key])
         elif after > before :
             for c in range(before, after ) :
-                if self.columns[c] in self.columns[ before : after ] :
+                if self.columns[c] in self.columns[ before : after ] and self.columns[c] in uDic:
                     self.new_Units(self.columns[c], uDic[ self.columns[c] ])
                 else :
                     self.new_Units(self.columns[c], 'UNITLESS')
