@@ -1837,7 +1837,23 @@ class SimResult(object):
             return None
 
 
-    def plot(self, Keys=[], Index=None, otherSims=None, Wells=[], Groups=[], Regions=[], DoNotRepeatColors=None, grid=False) : # Index='TIME'
+    def plot(self, 
+             Keys=[], 
+             Index=None, 
+             otherSims=None, 
+             Wells=[], 
+             Groups=[], 
+             Regions=[], 
+             DoNotRepeatColors=None, 
+             grid=False, 
+             show=True, 
+             hline=False,
+             fig=None, 
+             num=None, 
+             figsize=(6, 4), 
+             dpi=150,
+             singleYaxis=False
+             **kwargs):  # Index='TIME'
         """
         creates a line chart for the selected Keys vs the selected Index.
         returns the a tuple with (the plot, list of Keys in Y axes, list of Indexes in X axis )
@@ -1853,6 +1869,23 @@ class SimResult(object):
                 To avoid that behaviour, set this parameter to True
 
         """
+        from matplotlib.figure import Figure
+        if type(fig) is tuple :
+            fig = fig[0]
+        if fig is None :
+            pass
+        elif not isinstance(fig, Figure):
+                raise TypeError('fig must be a matplotlib.pyplot Figure instance')
+        
+        if hline is not None:
+            pass
+        elif hline is True:
+            hline = 0
+        elif hline is False:
+            hline = None
+        elif type(hline) not in [int,float]:
+            raise ValueError('hline must be int, float or bool')
+        
         Xgrid, Ygrid = 0, 0
         if type(grid) is str :
             grid = grid.strip()
@@ -2091,8 +2124,16 @@ class SimResult(object):
             for X in IndexList :
                 _ = sim(X)
             sim.speak = prevSpeak
+            
+        if hline is not None:
+            xmin = min(self(IndexList[0]))
+            xmax = min(self(IndexList[0]))
+            for i in range(1,len(IndexList)):
+                xmin = min(self(IndexList[i])) if min(self(IndexList[i])) < xmin else xmin
+                xmin = max(self(IndexList[i])) if max(self(IndexList[i])) < xmax else xmax
+            hline = {'y':hline,'xmin':xmin,'xmax':xmax,'colors':'black','linestyle':'-'}
 
-        figure = Plot(SimResultObjects=SimsToPlot, Y_Keys=PlotKeys, X_Key=IndexList, DoNotRepeatColors=DoNotRepeatColors, Xgrid=Xgrid, Ygrid=Ygrid ) #, X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[], graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={})
+        figure = Plot(SimResultObjects=SimsToPlot, Y_Keys=PlotKeys, X_Key=IndexList, DoNotRepeatColors=DoNotRepeatColors, Xgrid=Xgrid, Ygrid=Ygrid , fig=fig, show=show, hline=hline, singleYaxis=singleYaxis, **kwargs) #, X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[], graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={})
 
         return (figure, PlotKeys, IndexList )
 

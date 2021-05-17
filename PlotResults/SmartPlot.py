@@ -15,6 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.colors import is_color_like
+from matplotlib.figure import Figure
 from math import log
 from .._common.functions import _is_SimulationResult
 from .._common.inout import _verbose
@@ -28,11 +29,32 @@ def savePlot(figure, FileName=''):
     figure.savefig(FileName)
 
 
-def Plot( SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[], graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={}, linewidth=[], linestyle=[], markers=[], markersize=[], DoNotRepeatColors=True, ColorBySimulation=None, ColorBySeries=None, minlinewidth=0.1, minmarkersize=0.5, Xgrid=0, Ygrid=0) :
+def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[], graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={}, linewidth=[], linestyle=[], markers=[], markersize=[], DoNotRepeatColors=True, ColorBySimulation=None, ColorBySeries=None, minlinewidth=0.1, minmarkersize=0.5, Xgrid=0, Ygrid=0, fig=None, num=None, show=True, hline=None, figsize=(6, 4), dpi=150, singleYaxis=False, **kwargs) :
     """
     uses matplot lib to create graphs of the selected vectors
     for the selected SimResult objects.
     """
+    
+    # validate pyplot figure parameters
+    if fig is None and num is None:
+        pass
+    elif not isinstance(fig, Figure) and num is None:
+        raise TypeError('fig must be a matplotlib.Figure instance')
+    elif fig is None and not isinstance(num,(str,int,Figure)):
+        raise TypeError('num must be int, str or matplotlib.Figure')
+
+    if dpi is not None and not isinstance(dpi,(int,float)):
+        raise TypeError('dpi must be int or float')
+    
+    if figsize is None:
+        pass
+    elif type(figsize) is tuple:
+        if len(figsize) != 2:
+            raise ValueError('figsize must be a tuple of two floats or integers')
+        if not isinstance(figsize[0],(int,float)):
+            raise TypeError('figsize must be a tuple of floats (float,float)')            
+        if not isinstance(figsize[1],(int,float)):
+            raise TypeError('figsize must be a tuple of floats (float,float)')            
 
     # ensure SimResultObjects is not empty and is OK
     if len(SimResultObjects) == 0 :
@@ -160,9 +182,11 @@ def Plot( SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], 
 
 
     # define the figure name if not provided
-    assert type(graphName) is str
-    if len(graphName.split()) == 0 :
+    assert type(graphName) in (str,int)
+    if type(graphName) is str and len(graphName.split()) == 0 :
         graphName = str(Y_Keys) + ' vs ' + str(X_Key) + ' from ' + str(SimResultObjects)
+    if num is None :
+        num = graphName
 
     # put Y_Axis in a list, if not already
     if type(Y_Axis) is str :
@@ -192,6 +216,9 @@ def Plot( SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], 
             time.sleep(timeout)
     if len(Y_Axis) != len(Y_Keys) :
         print('<Plot> found ' + str(len(Y_Axis)) + ' Y_Axis but ' + str(len(Y_Keys)) + ' Y_Keys.', Y_Axis, Y_Keys)
+    
+    if singleYaxis:
+        Y_Axis = [0]*len(Y_Axis)
 
     # check Y_Scales is OK
     if Y_Scales == [] :
@@ -505,14 +532,16 @@ def Plot( SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], 
         else :
             Title = str(SimResultObjects[0].get_Name())
 
-    fig = plt.figure(num=graphName, figsize=(6, 4), dpi=150)
+    if fig is None :
+        fig = plt.figure(num=num, figsize=figsize, dpi=dpi)
+    elif not isinstance(fig, Figure):
+        raise TypeError('fig must be a matplotlib.pyplot Figure instance')
 
     Axis = [ fig.add_subplot() ]
 
-    plt.title(Title)
+    plt.title(Title)    
 
     # display grid if required
-
     if Xgrid > 0 :
         if Xgrid == 1 :
             plt.grid(True, 'both', 'x', color='k', alpha=0.25, linestyle='-', linewidth=0.25)
@@ -678,7 +707,7 @@ def Plot( SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], 
                         if len( SimResultObjects ) > 1 and len( Y_Keys ) > 1 :
                             Ls = SeriesColors[s]
 
-                        plotLines += Axis[ Yax ].plot( X, Y, linestyle=Ls, linewidth=Lw, color=Lc, marker=Mk, markersize=Ms, label=ThisLabel)
+                        plotLines += Axis[ Yax ].plot( X, Y, linestyle=Ls, linewidth=Lw, color=Lc, marker=Mk, markersize=Ms, label=ThisLabel, **kwargs)
 
                         if Xdate :
                             # round to nearest years.
@@ -727,6 +756,12 @@ def Plot( SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], 
                 LegendLines += [ None ]
 
     Axis[0].legend( LegendLines, plotLabels, loc=legendLocation )  # LegendLines contains selected plotLines for the leggend
-    plt.show()
+    
+    # display horizontal line if required
+    if type(hline) is dict:
+        plt.hlines(hline['y'], xmin=hline['xmin'], xmax=hline['xmax'], colors=hline['colors'], linestyles=hline['linestyle'], label='')
+    
+    if bool(show):
+        plt.show()
 
     return fig
