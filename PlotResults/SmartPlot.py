@@ -620,6 +620,8 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
         for y in range(len(Y_Keys)) :
             time.sleep(timeout)
             # check if the key exists in the object:
+            if not SimResultObjects[s].is_Key(Y_Keys[y]) :
+                continue
             Y0 = SimResultObjects[s].get_Vector( Y_Keys[y] )[ Y_Keys[y] ]
 
             if len(Y_Keys) == len(X_Key) :

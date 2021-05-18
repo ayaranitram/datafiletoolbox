@@ -2120,9 +2120,11 @@ class SimResult(object):
         for sim in SimsToPlot :
             prevSpeak, sim.speak = sim.speak, 0
             for Y in PlotKeys :
-                _ = sim(Y)
+                if sim.is_Key(Y):
+                    _ = sim(Y)
             for X in IndexList :
-                _ = sim(X)
+                if sim.is_Key(X):
+                    _ = sim(X)
             sim.speak = prevSpeak
             
         if hline is not None:
