@@ -9,12 +9,11 @@ CLASSes of objects to contain a simulation object and child objects for the inpu
 There are routined to read the imput data from the eclipse style data file.
 """
 
-from datafiletoolbox import extension
-from datafiletoolbox import verbose
-from datafiletoolbox import datetime
-from datafiletoolbox import expandKeyword
-from datafiletoolbox import numpy as np
-from datafiletoolbox import pandas as pd
+from .._common.inout import _extension, _verbose
+# from datetime import datetime
+from .propertyManipulation import expandKeyword
+import numpy as np
+import pandas as pd
 
 from .keywords import *
 
@@ -171,8 +170,8 @@ class Simulation(object) :
             self.Objects[self.Count].set_name(name)
             # Simulation.Objects[self.ID][0][1].append(name)
         else :
-            self.Objects[self.Count].set_name(extension(filename)[0])
-            # Simulation.Objects[self.ID][0][1].append(extension(filename)[0])
+            self.Objects[self.Count].set_name(_extension(filename)[0])
+            # Simulation.Objects[self.ID][0][1].append(_extension(filename)[0])
         self.Objects[self.Count].set_SimObjectID(self.ID,self.Count)
         self.Objects[self.Count].set_parent(self)
         self.Objects[self.Count].ReadData(filename , speak)
@@ -195,8 +194,11 @@ class Model(Simulation) :
     List = {}
 
     def __init__( self , DataFilePath = '' , speak = None , parent = None ) :
-        if speak == None :
-            self.speak = self.get_speak()
+        if speak is None :
+            try:
+                self.speak = self.get_speak()
+            except AttributeError:
+                self.speak = 1
         else :
             self.speak = speak
         self.SimObjectID = None
@@ -216,7 +218,7 @@ class Model(Simulation) :
             self.name = ''
         else :
             self.path = DataFilePath.strip()
-            self.name = extension(self.path)[0]
+            self.name = _extension(self.path)[0]
         self.closing = '/'
         
         
@@ -232,6 +234,7 @@ class Model(Simulation) :
         #self.dimX = None
         #self.dimY = None
         #self.dimZ = None
+        self.start = None
         self.eqldims = None
         self.welldims = None
         self.tabdims = None
@@ -356,7 +359,7 @@ class Model(Simulation) :
         if type(intSimulationID) == int and type(intModelID) == int :
             self.SimObjectID = (intSimulationID , intModelID)
         else :
-            verbose( self.speak , self.msg2 , 'received SimObjectID is not integer: ' + str(intSimulationID) + ' & ' + str(intModelID))
+            _verbose( self.speak , self.msg2 , 'received SimObjectID is not integer: ' + str(intSimulationID) + ' & ' + str(intModelID))
 
     def set_title(self,title) :
         if type(title) == list :
@@ -375,10 +378,10 @@ class Model(Simulation) :
             try :
                 temporal.append(int(dims[i]))
             except :
-                verbose( self.speak , self.msg3 , '  ERROR: dimension must be integer ' + str(dims))
+                _verbose( self.speak , self.msg3 , '  ERROR: dimension must be integer ' + str(dims))
                 return False
             if temporal[i] <= 0 :
-                    verbose( self.speak , self.msg2 , '  WARNING: dimension must be positve and greater than zero\n           received ' + str(dims[i]))
+                    _verbose( self.speak , self.msg2 , '  WARNING: dimension must be positve and greater than zero\n           received ' + str(dims[i]))
         self.dims = tuple(temporal)
 
     def get_dimens(self) :
@@ -646,8 +649,12 @@ class Model(Simulation) :
         self.start = start
 
     def get_start(self) :
-        if self.start == None :
-            return ''
+        if self.start is None :
+            if len(self.extract('DATES')) == 0:
+                return None
+            else:
+                self.start = self.extract('DATES')[list(self.extract('DATES').keys())[0]][-1].strip().strip(' /')
+                return self.start
         else :
             return self.start
 
@@ -667,7 +674,7 @@ class Model(Simulation) :
             IncludeFile = IncludeFile[:-1]
         if "'" in IncludeFile :
             IncludeFile = IncludeFile.strip().strip("'")
-        IncludePath = extension(self.path)[2].strip("'")
+        IncludePath = _extension(self.path)[2].strip("'")
         IncludeFile = IncludeFile.strip().strip("'")
 #        if self.path[-1] == self.get_closing() :
 #            IncludePath = self.path[:-1]
@@ -707,10 +714,10 @@ class Model(Simulation) :
             try :
                 keyword_index = len(self.List) - self.List[::-1].index(keyword_index) -1
             except :
-                verbose( self.speak , self.msg2 , keyword_index + ' not in keyword list')
+                _verbose( self.speak , self.msg2 , keyword_index + ' not in keyword list')
         if type(keyword_index) == int and keyword_index <= self.Count :
-            if self.Objects[keyword_index].get_name() in Model.SpecialKeywords :
-                verbose( self.speak , self.msg1 , 'special keyword identified')
+            if self.Objects[keyword_index].get_name() in SpecialKeywords :
+                _verbose( self.speak , self.msg1 , 'special keyword identified')
                 if self.Objects[keyword_index] != None :
                     self.Objects[keyword_index].expand()
                 exec('self.set_' + str(self.Objects[keyword_index].get_name().lower()) + '("' + self.Objects[keyword_index].get_args() + '")' )
@@ -726,20 +733,23 @@ class Model(Simulation) :
         datesMin = min(datesArray)
         for each in compdatArray :
             if each < datesMin :
-                compdatDate = self.start
+                compdatDate = self.get_start()
             else :
-                compdatDate = datesDict[datesArray[ datesArray < each ][-1]][2][-1]
-            for line in compdatDict[each][2] :
-                if compdatDate == None :
-                    if self.start == None :
+                compdatDate = datesDict[datesArray[ datesArray < each ][-1]][2].strip().strip(' /').replace("'","")
+            for line in compdatDict[each][2].split('\n') :
+                if compdatDate is None :
+                    if self.get_start() is None :
                         compdatDate = '01-JAN-1900'
                         print('01-JAN-1900' , line)
                     else :
                         print(compdatDate , line)
-                        compdatDate = self.start
-                row = [ compdatDate.strip() ] + expandKeyword(line).split()
+                        compdatDate = self.get_start()
+                print('line',line)
+                row = [ compdatDate.strip() ] + expandKeyword(line.strip().strip(' /')).split()
                 compdatTable.append(row)
-        return pd.DataFrame(compdatTable)
+        df = pd.DataFrame(compdatTable)
+        df.columns = ['Date','WellName','I','J','K_upper','K_lower','Status','SaturationTable','TransmissibilityFactor','WellboreDiameter','EffectiveKH','SkinFactor','D-Factor','PenetrationDirection','PressureEquivalentRadius']
+        return df
 
     def PRODUCTIONandINJECTIONtable(self):
         ProdInjTable = []
@@ -757,34 +767,34 @@ class Model(Simulation) :
 
         for each in wconhistArray :
             if each < datesMin :
-                wconhistDate = self.start
+                wconhistDate = self.get_start()
             else :
-                wconhistDate = datesDict[datesArray[ datesArray < each ][-1]][2][-1]
-            for line in wconhistDict[each][2] :
-                if wconhistDate == None :
-                    if self.start == None :
+                wconhistDate = datesDict[datesArray[ datesArray < each ][-1]][2].strip().strip(' /').replace("'","")
+            for line in wconhistDict[each][2].split('\n') :
+                if wconhistDate is None :
+                    if self.get_start() is None :
                         wconhistDate = '01-JAN-1900'
                         print('01-JAN-1900' , line)
                     else :
                         print(wconhistDate , line)
-                        wconhistDate = self.start
+                        wconhistDate = self.get_start()
                 row = [ wconhistDate.strip() ] + ['WCONHIST'] + expandKeyword(line).split()
                 ProdInjTable.append(row)
 
 
         for each in wconinjhArray :
             if each < datesMin :
-                wconinjhDate = self.start
+                wconinjhDate = self.get_start()
             else :
-                wconinjhDate = datesDict[datesArray[ datesArray < each ][-1]][2][-1]
+                wconinjhDate = datesDict[datesArray[ datesArray < each ][-1]][2].strip().strip(' /').replace("'","")
             for line in wconinjhDict[each][2] :
                 if wconinjhDate == None :
-                    if self.start == None :
+                    if self.get_start() is None :
                         wconinjhDate = '01-JAN-1900'
                         print('01-JAN-1900' , line)
                     else :
                         print(wconinjhDate , line)
-                        wconinjhDate = self.start
+                        wconinjhDate = self.get_start()
                 row = [ wconinjhDate.strip() ] + ['WCONINJH'] + expandKeyword(line).split()
                 ProdInjTable.append(row)
 
@@ -792,7 +802,7 @@ class Model(Simulation) :
             if each < datesMin :
                 wconprodDate = self.start
             else :
-                wconprodDate = datesDict[datesArray[ datesArray < each ][-1]][2][-1]
+                wconprodDate = datesDict[datesArray[ datesArray < each ][-1]][2].strip().strip(' /').replace("'","")
             for line in wconprodDict[each][2] :
                 if wconprodDate == None :
                     if self.start == None :
@@ -808,7 +818,7 @@ class Model(Simulation) :
             if each < datesMin :
                 wconinjeDate = self.start
             else :
-                wconinjeDate = datesDict[datesArray[ datesArray < each ][-1]][2][-1]
+                wconinjeDate = datesDict[datesArray[ datesArray < each ][-1]][2].strip().strip(' /').replace("'","")
             for line in wconinjeDict[each][2] :
                 if wconinjeDate == None :
                     if self.start == None :
@@ -859,7 +869,7 @@ class Model(Simulation) :
         file.close()
 
         if self.name == '' :
-            self.set_name(extension(filename)[0])
+            self.set_name(_extension(filename)[0])
         if self.path == '' :
             self.set_path(filename)
 
@@ -873,11 +883,11 @@ class Model(Simulation) :
 
             # empty line
             if len(line.strip()) == 0 :
-                verbose( speak , self.msg0 , '<  reading empty line')
+                _verbose( speak , self.msg0 , '<  reading empty line')
 
             # comment line
             elif len(line.strip()) >=2 and line.strip()[:2] == '--' :
-                verbose( speak , self.msg0 , '<  reading comment line\n' + str(line))
+                _verbose( speak , self.msg0 , '<  reading comment line\n' + str(line))
                 keywordComments = keywordComments + line
 
             # line containing data
@@ -894,7 +904,7 @@ class Model(Simulation) :
                     # in case entered here because of SUMMARY keyword
                     if SMRYflag == False :
                         keywordName = str(values[0])
-                        verbose( speak , self.msg2 , '   _______________\n>>  found keyword ' + keywordName)
+                        _verbose( speak , self.msg2 , '   _______________\n>>  found keyword ' + keywordName)
                         SMRYflag = True
                         keywordValues = ''
 
@@ -908,7 +918,7 @@ class Model(Simulation) :
 
                         # saving the new keyword SCHEDULE
                         keywordName = str(values[0])
-                        verbose( speak , self.msg2 , '   _______________\n>>  found keyword ' + keywordName)
+                        _verbose( speak , self.msg2 , '   _______________\n>>  found keyword ' + keywordName)
                         if '--' in line :
                             keywordComments = keywordComments + line
                         self.set_newKeyword( keywordName )
@@ -929,7 +939,7 @@ class Model(Simulation) :
                     slashCounter = 0
                     keywordName = str(values[0])
                     keywordValues = ''
-                    verbose( speak , self.msg2 , '   _______________\n>>  found keyword ' + keywordName)
+                    _verbose( speak , self.msg2 , '   _______________\n>>  found keyword ' + keywordName)
                     
                     # check for keywords that cosists of a base name plus extra characters
                     if keywordName[:4] == 'TVDP' : # tracer keywords
@@ -937,7 +947,7 @@ class Model(Simulation) :
                         
 
                     # save keywords that doesn't require arguments
-                    if keywordName in Model.ZeroArgumentsKeywords :
+                    if keywordName in ZeroArgumentsKeywords :
                         self.set_newKeyword( keywordName )
                         self.set_keywordComments( keywordComments )
                         keywordFlag = False
@@ -961,7 +971,7 @@ class Model(Simulation) :
                             keywordComments = keywordComments + line
 
                         # keywords that must have only one argument line
-                        if keywordName not in Model.TableFormatKeywords and keywordName not in self.DimensionedTableKeywords :
+                        if keywordName not in TableFormatKeywords and keywordName not in self.DimensionedTableKeywords :
                             # save the arguments in case / is not the first character
                             if line.strip().index(self.get_closing()) > 0 :
                                 keywordValues = appendArgument( keywordValues ,  line )
@@ -972,7 +982,7 @@ class Model(Simulation) :
                             keywordName = ''
 
                         # keywords with undefined number of tables, closed by two consecutive slashes
-                        elif keywordName in Model.UndefinedNumberOfTables :
+                        elif keywordName in UndefinedNumberOfTables :
 
                             # found closing slash
                             if line.strip().index(self.get_closing()) == 0 :
@@ -983,7 +993,7 @@ class Model(Simulation) :
 
                                 # only if the preceding line had a slash this one will be the second slash, then closing the keyword
                                 else : #if slashCounter == 1 :
-                                    verbose( speak , self.msg1 , '<< reading final slash, end of keyword ' + keywordName)
+                                    _verbose( speak , self.msg1 , '<< reading final slash, end of keyword ' + keywordName)
                                     self.set_newKeyword( keywordName ,  keywordValues )
                                     self.set_keywordComments( keywordComments )
                                     keywordFlag = False
@@ -996,11 +1006,11 @@ class Model(Simulation) :
                                 slashCounter = 1
 
                         # keywords that could have more than one argument line
-                        elif keywordName in Model.TableFormatKeywords :
+                        elif keywordName in TableFormatKeywords :
 
                             # found closing slash
                             if line.strip().index(self.get_closing()) == 0 :
-                                verbose( speak , self.msg1 , '<< reading final slash, end of keyword ' + keywordName)
+                                _verbose( speak , self.msg1 , '<< reading final slash, end of keyword ' + keywordName)
                                 self.set_newKeyword( keywordName ,  keywordValues )
                                 self.set_keywordComments( keywordComments )
                                 keywordFlag = False
@@ -1016,12 +1026,12 @@ class Model(Simulation) :
                             keywordValues = appendArgument( keywordValues ,  line )
 
                             # in case of TableInTable the closing slash is first character in the line
-                            if keywordName in Model.TableInTableKeywords :
+                            if keywordName in TableInTableKeywords :
                                 if line.strip().index(self.get_closing()) == 0 :
                                     slashCounter = slashCounter + 1
 
                             # slash always closes a table
-                            else : # if keywordName not in Model.TableInTableKeywords :
+                            else : # if keywordName not in TableInTableKeywords :
                                 slashCounter = slashCounter + 1
 
                             # slash closing keyword or table
@@ -1039,14 +1049,14 @@ class Model(Simulation) :
                         keywordValues = appendArgument( keywordValues ,  line )
 
                         # in case the keyword does not require slash to close it
-                        if keywordName in Model.NoSlashKeywords :
+                        if keywordName in NoSlashKeywords :
                             self.set_newKeyword( keywordName ,  keywordValues )
                             self.set_keywordComments( keywordComments )
                             keywordComments = ''
                             keywordFlag = False
 
                         # keywords with undefined number of tables, closed by two consecutive slashes
-                        elif keywordName in Model.UndefinedNumberOfTables :
+                        elif keywordName in UndefinedNumberOfTables :
                             slashCounter = 0
 
 
@@ -1112,7 +1122,7 @@ class Keyword(Model) :
         #elif type(arguments) == list :
         #    self.args = ' '.join(arguments)
         #else :
-        #    verbose( self.speak , self.msg3 , '  ERROR: argument is not list or string')
+        #    _verbose( self.speak , self.msg3 , '  ERROR: argument is not list or string')
 
     def set_comments(self, comments='') :
         if comments == None:
@@ -1131,7 +1141,7 @@ class Keyword(Model) :
                 self.args.append(arguments)
             else :
                 self.args.append(arguments)
-                verbose( self.speak , self.msg2 , '  WARNING: argument is not list or string')
+                _verbose( self.speak , self.msg2 , '  WARNING: argument is not list or string')
         elif type(self.args) == list :
             if type(arguments) == str :
                 self.args.append(arguments.split())
@@ -1139,7 +1149,7 @@ class Keyword(Model) :
                 self.args.append(arguments)
             else :
                 self.args.append(arguments)
-                verbose( self.speak , self.msg2 , '  WARNING: argument is not list or string')
+                _verbose( self.speak , self.msg2 , '  WARNING: argument is not list or string')
         elif type(self.args) == tuple :
             self.args = [self.args]
             if type(arguments) == str :
@@ -1148,7 +1158,7 @@ class Keyword(Model) :
                 self.args.append(arguments)
             else :
                 self.args.append(arguments)
-                verbose( self.speak , self.msg2 , '  WARNING: argument is not list or string')
+                _verbose( self.speak , self.msg2 , '  WARNING: argument is not list or string')
 
     def annex(self , arguments) :
         if type(arguments) == str :
@@ -1156,14 +1166,14 @@ class Keyword(Model) :
         elif type(arguments) == list :
             self.args = self.args + arguments
         else :
-            verbose( self.speak , self.msg3 , '  ERROR: argument is not list or string')
+            _verbose( self.speak , self.msg3 , '  ERROR: argument is not list or string')
 
     def expand(self):
         if self.expanded == False :
             self.args = expandKeyword(self.args)
             self.expanded = True
         else :
-            verbose(self.speak , self.msg1 , 'already expanded')
+            _verbose(self.speak , self.msg1 , 'already expanded')
 
     def set_name(self , name) :
         self.name = str(name)
@@ -1293,8 +1303,8 @@ class KeywordTable(Keyword) :
                 elif dtypeInferred == 'float' :
                     tableDict[col][i] = float(tableDict[col][i])
         
-        if self.name in Model.KnownTables :
-            ColNames = ['Table'] + Model.KnownTables[self.name]
+        if self.name in KnownTables :
+            ColNames = ['Table'] + KnownTables[self.name]
         else :
             ColNames = ['Table']
             for c in range( self.columns ) :
@@ -1385,13 +1395,13 @@ class GridProperty(Keyword) :
                 for each in range(len(dimensions)) :
                     dimensions[each] = int(dimensions[each])
             except :
-                verbose( self.speak , self.msg3 , 'dimensions must be an integer or an tuple of integers' )
+                _verbose( self.speak , self.msg3 , 'dimensions must be an integer or an tuple of integers' )
                 return False
 
         elif type(dimensions) == list or type(dimensions) == tuple :
             for each in dimensions :
                 if type(each) != int :
-                    verbose( self.speak , self.msg3 , 'dimensions must be an integer or an tuple of integers' )
+                    _verbose( self.speak , self.msg3 , 'dimensions must be an integer or an tuple of integers' )
                     return False
 
         if dimensions != None and type(self.prop) == np.ndarray :
@@ -1403,7 +1413,7 @@ class GridProperty(Keyword) :
                 self.shaped = True
                 return True
             else :
-                verbose ( self.speak , self.msg3 , 'dimensions does not match size of property ' + str(self.get_name()) + '.')
+                _verbose ( self.speak , self.msg3 , 'dimensions does not match size of property ' + str(self.get_name()) + '.')
                 return False
 
     def clean( self , ValueToClean , SearchBox = None , AverageDirection = 'XY' ) :
@@ -1476,7 +1486,7 @@ class GridProperty(Keyword) :
                         temporal.append(3)
                 elif propdims == 3 :
                     if len(AverageDirection) > 3 :
-                        verbose( self.speak , self.msg3 , '4 AverageDirection provided but the property is tridimensional')
+                        _verbose( self.speak , self.msg3 , '4 AverageDirection provided but the property is tridimensional')
                     if 'Z' in AverageDirection :
                         temporal.append(0)
                     if 'Y' in AverageDirection :
@@ -1485,7 +1495,7 @@ class GridProperty(Keyword) :
                         temporal.append(2)
                 elif propdims == 2 :
                     if len(AverageDirection) > 2 :
-                        verbose( self.speak , self.msg3 , '3 AverageDirection provided but the property is bidimensional')
+                        _verbose( self.speak , self.msg3 , '3 AverageDirection provided but the property is bidimensional')
                         return False
                     if 'Z' in AverageDirection :
                         temporal.append(0)
@@ -1498,7 +1508,7 @@ class GridProperty(Keyword) :
                         temporal.append(1)
                     elif propdims == 1 :
                         if len(AverageDirection) > 1 :
-                            verbose( self.speak , self.msg3 , '2 or 3 AverageDirection provided but the property has a single dimension')
+                            _verbose( self.speak , self.msg3 , '2 or 3 AverageDirection provided but the property has a single dimension')
                             return False
                         temporal.append(0)
                     else :
@@ -1522,10 +1532,10 @@ class GridProperty(Keyword) :
                     try :
                         AverageDirection[i] = int(AverageDirection[i])
                     except :
-                        verbose( self.speak , self.msg3 , 'dimensions must be integers.')
+                        _verbose( self.speak , self.msg3 , 'dimensions must be integers.')
                 if 0 in AverageDirection :
                     if propdims <= max(AverageDirection) or propdims < len(AverageDirection) :
-                        verbose( self.speak , self.msg3 , 'more dimensions especified for search than dimensions of the property.')
+                        _verbose( self.speak , self.msg3 , 'more dimensions especified for search than dimensions of the property.')
                         return False
                     for i in range(len(AverageDirection)) :
                         AverageDirection[i] = AverageDirection[i] + 1
