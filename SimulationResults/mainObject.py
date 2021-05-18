@@ -278,8 +278,12 @@ class SimResult(object):
         """
         if self.start is None and self.is_Key('DATE') :
             self.start = min(self('DATE').astype('datetime64[s]') )
+        elif self.start is not None :
+            self.start = np.datetime64(self.start)
         if self.end is None and self.is_Key('DATE') :
             self.end = max(self('DATE').astype('datetime64[s]') )
+        elif self.end is not None :
+            self.end = np.datetime64(self.end)
         if not self.is_Key('YEAR') :
             self.createYEAR()
         if not self.is_Key('MONTH') :
