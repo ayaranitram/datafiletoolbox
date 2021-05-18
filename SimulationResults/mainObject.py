@@ -6,7 +6,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = 0.52
-__release__ = 210514
+__release__ = 210518
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -241,7 +241,7 @@ class SimResult(object):
         self.overwrite = False
         self.null = None
         self.plotUnits = {}
-        self.color = (random.random(), random.random(), random.random() )
+        self.color = (random.random(), random.random(), random.random())
         self.keyColors = {}
         self.width = None
         self.keyWidths = {}
@@ -266,8 +266,8 @@ class SimResult(object):
         self.vectorTemplate = None
         self.savingFilter = None
         self.pandasColumns = { 'HEADERS' : {}, 'COLUMNS' : {}, 'DATA' : {} }
-        self.fieldtime = (None, None, None )
-        self.GORcriteria = (10, 'Mscf/stb' )
+        self.fieldtime = (None, None, None)
+        self.GORcriteria = (10, 'Mscf/stb')
         self.WCcriteria = 1
         self.wellsLists = {}
         self.printMessages = 0
@@ -1856,7 +1856,7 @@ class SimResult(object):
              num=None, 
              figsize=(6, 4), 
              dpi=150,
-             singleYaxis=False
+             singleYaxis=False,
              **kwargs):  # Index='TIME'
         """
         creates a line chart for the selected Keys vs the selected Index.

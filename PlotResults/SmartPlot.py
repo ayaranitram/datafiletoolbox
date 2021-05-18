@@ -6,7 +6,7 @@ Created on Wed May 13 00:31:52 2020
 """
 
 __version__ = 0.3
-__release__ = 210225
+__release__ = 210518
 __all__ = ['Plot']
 
 import time
