@@ -7,7 +7,7 @@ Created on Sun Oct 11 11:14:32 2020
 """
 
 __version__ = 0.52
-__release__ = 210412
+__release__ = 210519
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -1461,7 +1461,7 @@ class SimDataFrame(DataFrame) :
             if self.index.name in self.columns :
                 self.indexUnits = self.units[self.index.name]
 
-        if self.index.name is not None and self.index.name not in self.units :
+        if self.index.name is not None and type(self.units) is dict and self.index.name not in self.units :
             self.units[self.index.name] = '' if self.indexUnits is None else self.indexUnits
 
         # get separator for the column names, 'partA'+'separator'+'partB'
