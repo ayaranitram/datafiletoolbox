@@ -138,6 +138,12 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
             Y_Units.append( SimResultObjects[-1].get_plotUnit(Y_Keys[y]) )
         time.sleep(timeout)
 
+
+    # check matplotlib.pyplot.plot color argument is provided 
+    if 'c' in kwargs and ( ObjectsColors is None or len(ObjectsColors) == 0 ):
+        SeriesColors = kwargs['c']
+    if 'color' in kwargs and ( ObjectsColors is None or len(ObjectsColors) == 0 ):
+        SeriesColors = kwargs['color']
     # check ObjectsColors is OK or empty
     if type(ObjectsColors) is str :
         ObjectsColors = [ObjectsColors]
@@ -148,6 +154,11 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     if type(ObjectsColors) is not list :
         raise TypeError('<Plot> ObjectsColors must be a matplotlib color string, a single RGB tuple, or a list of strings or RGB tuples.')
 
+    # check matplotlib.pyplot.plot color argument is provided 
+    if 'c' in kwargs and ( SeriesColors is None or len(SeriesColors) == 0 ):
+        SeriesColors = kwargs['c']
+    if 'color' in kwargs and ( SeriesColors is None or len(SeriesColors) == 0 ):
+        SeriesColors = kwargs['color']
     # check SeriesColors is OK or empty
     if type(SeriesColors) is str :
         SeriesColors = [SeriesColors]
@@ -179,7 +190,11 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
             ColorBySeries = True
 
 
-
+    # remove color argument from kwargs
+    if 'c' in kwargs:
+        del kwargs['c']
+    if 'color' in kwargs:
+        del kwargs['color']
 
     # define the figure name if not provided
     assert type(graphName) in (str,int)
