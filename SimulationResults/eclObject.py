@@ -6,7 +6,7 @@ Created on Wed May 13 15:45:12 2020
 """
 
 __version__ = 0.25
-__release__ = 210308
+__release__ = 210519
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
@@ -30,7 +30,7 @@ class ECL(_SimResult):
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             self.loadSummary(inputFile, **kwargs)
         if self.results is not None :
-            self.initialize()
+            self.initialize(**kwargs)
 
     def loadSummary(self, SummaryFilePath, **kwargs):
         if type(SummaryFilePath) is str :

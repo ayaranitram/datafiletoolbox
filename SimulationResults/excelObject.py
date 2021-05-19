@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = 0.2
-__release__ = 210314
+__version__ = 0.20
+__release__ = 210519
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -22,7 +22,7 @@ class XLSX(_SimResult):
     
     """
     def __init__(self, inputFile=None, verbosity=2, sheet_name=None, header=[0, 1], units=1, overwrite=True) :
-        _SimResult.__init__(self, verbosity=verbosity)
+        _SimResult.__init__(self, verbosity=verbosity, **kwargs)
         self.kind = XLSX
         self.results = {}
         self.Frames = {}
@@ -39,9 +39,9 @@ class XLSX(_SimResult):
             # if 'TIME' not in self.keys :
             #     if 'DATE' in self.keys :
             #         TIME = np.array( [0] + list( self('DATE')[1:] - self('DATE')[:-1] ) )
-            self.initialize()
+            self.initialize(**kwargs)
 
-    def initialize(self) :
+    def initialize(self, **kwargs) :
         """
         run intensive routines, to have the data loaded and ready
         """
@@ -51,7 +51,7 @@ class XLSX(_SimResult):
         self.extract_Regions()
         self.get_Attributes(None, True)
         self.find_index()
-        _SimResult.initialize(self)
+        _SimResult.initialize(self, **kwargs)
         if self.is_Key('DATES') and not self.is_Key('DATE') :
             self['DATE'] = 'DATES'
         if not self.is_Key('DATE') :

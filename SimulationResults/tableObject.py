@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = 0.2
-__release__ = 210505
+__version__ = 0.20
+__release__ = 210519
 __all__ = ['TABLE']
 
 from .mainObject import SimResult as _SimResult
@@ -30,7 +30,7 @@ class TABLE(_SimResult):
     object to contain data read from generic table files, like .txt or csv
     
     """
-    def __init__(self, inputFile=None, verbosity=2, sep=None, header='infer', units='infer', names=None, overwrite=True, index_col=False) :
+    def __init__(self, inputFile=None, verbosity=2, sep=None, header='infer', units='infer', names=None, overwrite=True, index_col=False, **kwargs) :
         _SimResult.__init__(self, verbosity=verbosity)
         self.kind = TABLE
         self.results = {}
@@ -50,9 +50,9 @@ class TABLE(_SimResult):
                 print("file doesn't exists")
         if len(self.Frames) > 0:
             self.name = _extension(inputFile)[1]
-            self.initialize()
+            self.initialize(**kwargs)
     
-    def initialize(self) :
+    def initialize(self, **kwargs) :
         """
         run intensive routines, to have the data loaded and ready
         """
@@ -86,7 +86,7 @@ class TABLE(_SimResult):
             self.createMONTH()
         if not self.is_Key('DAY') and self.is_Key('DATE') :
             self.createDAY()
-        _SimResult.initialize(self)
+        _SimResult.initialize(self, **kwargs)
     
     def set_itemsCol(self,column,frame=None):
         if frame is None:

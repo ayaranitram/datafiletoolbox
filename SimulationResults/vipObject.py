@@ -5,8 +5,8 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = 0.2
-__release__ = 210225
+__version__ = 0.20
+__release__ = 210519
 __all__ = ['VIP']
 
 from .mainObject import SimResult as _SimResult
@@ -27,7 +27,7 @@ class VIP(_SimResult):
     """
     object to contain VIP results read from .sss ASCII output
     """
-    def __init__(self, inputFile=None, verbosity=2) :
+    def __init__(self, inputFile=None, verbosity=2, **kwargs) :
         _SimResult.__init__(self, verbosity=verbosity)
         self.kind = VIP
         self.ECLstyle=True
@@ -42,7 +42,7 @@ class VIP(_SimResult):
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             self.selectLoader(inputFile)
         if self.results != {} :
-            self.initialize()
+            self.initialize(**kwargs)
 
     def keys(self) :
         if self.ECLstyle :
@@ -50,7 +50,7 @@ class VIP(_SimResult):
         if self.VIPstyle :
             return self.keysVIP
 
-    def initialize(self) :
+    def initialize(self, **kwargs) :
         """
         run intensive routines, to have the data loaded and ready
         """
@@ -61,7 +61,7 @@ class VIP(_SimResult):
         self.regionNumber = self.extract_Region_Numbers()
         self.buldSalinityVectors()
         self.get_TotalReservoirVolumes()
-        _SimResult.initialize(self)
+        _SimResult.initialize(self, **kwargs)
 
     def selectLoader(self, inputFile) :
         if type(inputFile) == str and len(inputFile.strip()) > 0 :

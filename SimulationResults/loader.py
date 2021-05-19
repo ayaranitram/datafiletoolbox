@@ -5,8 +5,8 @@ Created on Wed May 13 00:45:52 2020
 @author: MCARAYA
 """
 
-__version__ = 0.51
-__release__ = 210315
+__version__ = 0.52
+__release__ = 210519
 __all__ = ['loadSimulationResults']
 
 from .._common.inout import _extension
@@ -85,6 +85,10 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
 
     _loadingECLfile[0] = False
     if OBJ is not None and Verbosity != 0 :
-        print(OBJ.__repr__())
+        if ('preload' not in kwargs) or ('preload' in kwargs and kwargs['preload'] is True):
+            try:
+                print(OBJ.__repr__())
+            except:
+                pass
     return OBJ
 

@@ -5,8 +5,8 @@ Created on Mon Mar  8 08:56:44 2021
 @author: martin
 """
 
-__version__ = 0.11
-__release__ = 210514
+__version__ = 0.12
+__release__ = 210519
 __all__ = ['EclSumLoader']
 
 from .._Classes.Errors import PrototypeError, MissingDependence
@@ -66,7 +66,7 @@ class _EclSumLoader(object):
                 else:
                     print("WARNING: EclSum failed to load, you will not be able to load results in eclipse binary format.")
 
-    def __call__(self,SummaryFilePath,reload=False,unload=False) :
+    def __call__(self,SummaryFilePath,reload=False,unload=False,**kwargs) :  # kwargs will be ignored
         reload = bool(reload)
         unload = bool(unload)
         if unload:

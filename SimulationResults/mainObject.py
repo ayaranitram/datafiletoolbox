@@ -219,7 +219,7 @@ class SimResult(object):
 
     """
 
-    def __init__(self, verbosity=2) :
+    def __init__(self, verbosity=2, **kwargs) :
         self.set_Verbosity(verbosity)
         self.SimResult = True
         self.useSimPandas = False
@@ -272,7 +272,7 @@ class SimResult(object):
         self.wellsLists = {}
         self.printMessages = 0
 
-    def initialize(self) :
+    def initialize(self,**kwargs) :
         """
         run intensive routines, to have the data loaded and ready
         """
@@ -296,8 +296,12 @@ class SimResult(object):
             self.createDATES()
         if not self.is_Key('TIME') :
             self.createTIME()
-        self.get_Producers()
-        self.get_Injectors()
+        if ('preload' not in kwargs) or ('preload' in kwargs and kwargs['preload'] is True):
+            self.get_Producers()
+            self.get_Injectors()
+        else:
+            for wellList in ['WaterProducers', 'GasProducers', 'OilProducers', 'Producers', 'WaterInjectors', 'GasInjectors', 'OilInjectors', 'Injectors']:
+                self.wellsLists[wellList] = []
         self.use_SimPandas()
         self.set_RestartsTimeVector()
         # self.set_savingFilter()
@@ -716,21 +720,21 @@ class SimResult(object):
             text = text + ' in ' + str(len(self.get_Groups())) + ' group' + 's'*(len(self.get_Groups())>1)
         text = text + ':'
 
-        text = text + '\n\n production wells: ' + str(len(self.get_Producers() ) )
+        text = text + '\n\n production wells: ' + str(len(self.get_Producers()))
         if self.get_OilProducers() != [] :
-            text = text + '\n    oil wells' + ' (with GOR<' + str(self.get_GORcriteria()[0]) + str(self.get_GORcriteria()[1]) + ' ) : ' + str(len(self.get_OilProducers() ))
+            text = text + '\n    oil wells' + ' (with GOR<' + str(self.get_GORcriteria()[0]) + str(self.get_GORcriteria()[1]) + ' ) : ' + str(len(self.get_OilProducers()))
         if self.get_GasProducers() != [] :
-            text = text + '\n    gas wells' + ' (with GOR>' + str(self.get_GORcriteria()[0]) + str(self.get_GORcriteria()[1]) + ' ) : ' + str(len(self.get_GasProducers() ))
+            text = text + '\n    gas wells' + ' (with GOR>' + str(self.get_GORcriteria()[0]) + str(self.get_GORcriteria()[1]) + ' ) : ' + str(len(self.get_GasProducers()))
         if self.get_WaterProducers() != [] :
-            text = text + '\n  water wells: ' + str(len(self.get_WaterProducers() ))
+            text = text + '\n  water wells: ' + str(len(self.get_WaterProducers()))
 
-        text = text + '\n\n injection wells: ' + str(len(self.get_Injectors() ) )
+        text = text + '\n\n injection wells: ' + str(len(self.get_Injectors()))
         if self.get_OilInjectors() != [] :
-            text = text + '\n    oil wells: ' + str(len(self.get_OilInjectors() ))
+            text = text + '\n    oil wells: ' + str(len(self.get_OilInjectors()))
         if self.get_GasInjectors() != [] :
-            text = text + '\n    gas wells: ' + str(len(self.get_GasInjectors() ))
+            text = text + '\n    gas wells: ' + str(len(self.get_GasInjectors()))
         if self.get_WaterInjectors() != [] :
-            text = text + '\n  water wells: ' + str(len(self.get_WaterInjectors() ))
+            text = text + '\n  water wells: ' + str(len(self.get_WaterInjectors()))
 
         self.printMessages = 0
         return text
@@ -853,7 +857,7 @@ class SimResult(object):
         """
         returns a list of the wells that produces more than 99.99% water at any time in the simulation.
         """
-        if 'WaterProducers' not in self.wellsLists or reload is True :
+        if 'WaterProducers' not in self.wellsLists or reload is True:
             _verbose(self.printMessages, 1, '# extrating data to count water production wells' )
             if self.is_Attribute('WWPR') :
                 waterProducers = self[['WWPR']]
@@ -891,7 +895,7 @@ class SimResult(object):
         returns a list of the wells considered oil producers at any time in the simulation.
         the GOR criteria to define the oil and gas producers can be modified by the method .set_GORcriteria()
         """
-        if reload is True or 'OilProducers' not in self.wellsLists :
+        if 'OilProducers' not in self.wellsLists or reload is True:
             _verbose(self.printMessages, 1, '# extrating data to count oil production wells' )
             if self.is_Attribute('WOPR') and self.is_Attribute('WGPR') and self.get_Unit('WGPR') is not None and self.get_Unit('WOPR') is not None :
                 OIL = self[['WOPR']]
@@ -961,7 +965,7 @@ class SimResult(object):
         returns a list of the wells considered gas producers at any time in the simulation.
         the GOR criteria to define the oil and gas producers can be modified by the method .set_GORcriteria()
         """
-        if reload is True or 'GasProducers' not in self.wellsLists:
+        if 'GasProducers' not in self.wellsLists or reload is True :
             _verbose(self.printMessages, 1, '# extrating data to count gas production wells')
             _ = self.get_OilProducers(reload=True)
             if 'GasProducers' not in self.wellsLists and self.is_Attribute('WGPR') is True:
