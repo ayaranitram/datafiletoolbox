@@ -114,9 +114,9 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     # if is an empty list, take the units from the X of the first object
     elif len(X_Units) == 0 :
         if len(X_Key) == 1 :
-            X_Units = [ SimResultObjects[0].get_plotUnit(X_Key[0]) ]
+            X_Units = [ SimResultObjects[-1].get_plotUnit(X_Key[0]) ]
         else :
-            X_Units = [ SimResultObjects[0].get_plotUnit(X_Key[i]) for i in range(len(X_Key)) ]
+            X_Units = [ SimResultObjects[-1].get_plotUnit(X_Key[i]) for i in range(len(X_Key)) ]
     # if more than 1 X Units are in the list
     elif len(X_Units) > 1 :
         if len(X_Units) == len(X_Key) :
@@ -132,10 +132,10 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     if type(Y_Units) is not list :
         raise TypeError('<Plot> Y_Units must be a string, or a list of strings.')
     if len(Y_Units) == 0 :
-        Y_Units = [ SimResultObjects[0].get_plotUnit(Y_Keys[0]) ]
+        Y_Units = [ SimResultObjects[-1].get_plotUnit(Y_Keys[0]) ]
     if len(Y_Units) < len(Y_Keys) :
         for y in range( len(Y_Units), len(Y_Keys) ) :
-            Y_Units.append( SimResultObjects[0].get_plotUnit(Y_Keys[y]) )
+            Y_Units.append( SimResultObjects[-1].get_plotUnit(Y_Keys[y]) )
         time.sleep(timeout)
 
     # check ObjectsColors is OK or empty
@@ -207,12 +207,12 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
         for i in range( len(Y_Keys) ) :
             if Y_Keys[i].split(':')[0] in Y_Names :
                 Y_Axis[i] = Y_Names[ Y_Keys[i].split(':')[0] ]
-                _verbose( SimResultObjects[0].get_Verbosity(), 1, "<Plot> Axis for '" + Y_Keys[i] + "' is " + str(Y_Names[ Y_Keys[i].split(':')[0] ]))
+                _verbose( SimResultObjects[-1].get_Verbosity(), 1, "<Plot> Axis for '" + Y_Keys[i] + "' is " + str(Y_Names[ Y_Keys[i].split(':')[0] ]))
             else :
                 Y_Names[ Y_Keys[i].split(':')[0] ] = Y_Counter % 2
                 Y_Axis[i] = Y_Counter % 2
                 Y_Counter += 1
-                _verbose( SimResultObjects[0].get_Verbosity(), 1, "<Plot> Axis for '" + Y_Keys[i] + "' is " + str(Y_Names[ Y_Keys[i].split(':')[0] ]))
+                _verbose( SimResultObjects[-1].get_Verbosity(), 1, "<Plot> Axis for '" + Y_Keys[i] + "' is " + str(Y_Names[ Y_Keys[i].split(':')[0] ]))
             time.sleep(timeout)
     if len(Y_Axis) != len(Y_Keys) :
         print('<Plot> found ' + str(len(Y_Axis)) + ' Y_Axis but ' + str(len(Y_Keys)) + ' Y_Keys.', Y_Axis, Y_Keys)
@@ -274,8 +274,8 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     # by specific keys if single
     elif len(Y_Keys) > 0 :
         for i in range( len( Y_Keys ) ) :
-            if SimResultObjects[0].get_Marker(Y_Keys[i]) is not None :
-                markers[i] = SimResultObjects[0].get_Marker(Y_Keys[i])
+            if SimResultObjects[-1].get_Marker(Y_Keys[i]) is not None :
+                markers[i] = SimResultObjects[-1].get_Marker(Y_Keys[i])
 
     # check markersize parameter
     if type( markersize ) is int or type( markersize ) is float :
@@ -305,8 +305,8 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     elif len(Y_Keys) > 0 :
         markersize = markersize * len(Y_Keys)
         for i in range( len( Y_Keys ) ) :
-            if SimResultObjects[0].get_MarkerSize(Y_Keys[i]) is not None :
-                markersize[i] = SimResultObjects[0].get_MarkerSize(Y_Keys[i])
+            if SimResultObjects[-1].get_MarkerSize(Y_Keys[i]) is not None :
+                markersize[i] = SimResultObjects[-1].get_MarkerSize(Y_Keys[i])
 
 
     # check linestyle parameter
@@ -329,8 +329,8 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     # by specific keys if single
     elif len(Y_Keys) > 0 :
         for i in range( len( Y_Keys ) ) :
-            if SimResultObjects[0].get_Style(Y_Keys[i]) is not None :
-                linestyle[i] = SimResultObjects[0].get_Style(Y_Keys[i])
+            if SimResultObjects[-1].get_Style(Y_Keys[i]) is not None :
+                linestyle[i] = SimResultObjects[-1].get_Style(Y_Keys[i])
 
 
     # check linewidth parameter
@@ -361,8 +361,8 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     elif len(Y_Keys) > 0 :
         linewidth = linewidth * len(Y_Keys)
         for i in range( len( Y_Keys ) ) :
-            if SimResultObjects[0].get_Width(Y_Keys[i]) is not None :
-                linewidth[i] = SimResultObjects[0].get_Width(Y_Keys[i])
+            if SimResultObjects[-1].get_Width(Y_Keys[i]) is not None :
+                linewidth[i] = SimResultObjects[-1].get_Width(Y_Keys[i])
 
 
     # set line colors and style:
@@ -370,8 +370,8 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
         NColors = len( SeriesColors )
         SeriesColors = SeriesColors + [None]*( len( Y_Keys ) - NColors )
         for c in range ( NColors, len( Y_Keys ) ) :
-            if is_color_like( SimResultObjects[0].get_Color(Y_Keys[c]) ) :
-                SeriesColors[c] = SimResultObjects[0].get_Color(Y_Keys[c])
+            if is_color_like( SimResultObjects[-1].get_Color(Y_Keys[c]) ) :
+                SeriesColors[c] = SimResultObjects[-1].get_Color(Y_Keys[c])
             elif 'THP' in Y_Keys[c] :
                 SeriesColors[c] = ('lightgray')
             elif 'BHP' in Y_Keys[c] :
@@ -403,15 +403,15 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
             # time.sleep(timeout)
 
         # plot history keywords as dots
-        if SimResultObjects[0].historyAsDots :
+        if SimResultObjects[-1].historyAsDots :
             for y in range( len( Y_Keys ) ) :
                 if _mainKey( Y_Keys[y] ).endswith('H') :
-                    if SimResultObjects[0].get_Marker(Y_Keys[y]) is not None and SimResultObjects[0].get_Marker(Y_Keys[y]).lower().strip() not in ['none','',' '] :
-                        markers[y] = SimResultObjects[0].get_Marker(Y_Keys[y])
+                    if SimResultObjects[-1].get_Marker(Y_Keys[y]) is not None and SimResultObjects[-1].get_Marker(Y_Keys[y]).lower().strip() not in ['none','',' '] :
+                        markers[y] = SimResultObjects[-1].get_Marker(Y_Keys[y])
                     else :
                         markers[y] = '.'
-                    if type(SimResultObjects[0].get_MarkerSize(Y_Keys[y])) is float :
-                        markersize[y] = SimResultObjects[0].get_MarkerSize(Y_Keys[y])
+                    if type(SimResultObjects[-1].get_MarkerSize(Y_Keys[y])) is float :
+                        markersize[y] = SimResultObjects[-1].get_MarkerSize(Y_Keys[y])
                     else :
                         markersize[y] = 1.0
                     linestyle[y] = 'None'
@@ -494,15 +494,15 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
                     SeriesColors[c] = '--'
 
             # plot history keywords as dots
-            if SimResultObjects[0].historyAsDots :
+            if SimResultObjects[-1].historyAsDots :
                 for y in range( len( Y_Keys ) ) :
                     if _mainKey( Y_Keys[y] ).endswith('H') :
-                        if type(SimResultObjects[0].get_Marker(Y_Keys[y])) is not None :
-                            markers[y] = SimResultObjects[0].get_Marker(Y_Keys[y])
+                        if type(SimResultObjects[-1].get_Marker(Y_Keys[y])) is not None :
+                            markers[y] = SimResultObjects[-1].get_Marker(Y_Keys[y])
                         else :
                             markers[y] = 'o'
-                        if type(SimResultObjects[0].get_MarkerSize(Y_Keys[y])) is float :
-                            markersize[y] = SimResultObjects[0].get_MarkerSize(Y_Keys[y])
+                        if type(SimResultObjects[-1].get_MarkerSize(Y_Keys[y])) is float :
+                            markersize[y] = SimResultObjects[-1].get_MarkerSize(Y_Keys[y])
                         else :
                             markersize[y] = 1.0
                         linestyle[y] = 'None'
@@ -528,9 +528,9 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
         Title = Y_Keys[0] + ' vs ' + X_Key[0]
     if len(SimResultObjects) == 1 :
         if len(Title) > 0 :
-            Title = Title + ' for ' + str(SimResultObjects[0].get_Name())
+            Title = Title + ' for ' + str(SimResultObjects[-1].get_Name())
         else :
-            Title = str(SimResultObjects[0].get_Name())
+            Title = str(SimResultObjects[-1].get_Name())
 
     if fig is None :
         fig = plt.figure(num=num, figsize=figsize, dpi=dpi)
@@ -582,10 +582,10 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     Xdate = False
     if X_Key[0] in ( 'DATE', 'DATES' ) :
         Xdate = True
-        ToU = SimResultObjects[0].get_plotUnit(X_Key[0])
-        FromU = SimResultObjects[0].get_Unit(X_Key[0])
-        X0 = SimResultObjects[0].get_Vector(X_Key[0])[X_Key[0]]
-        X = convertUnit( X0, FromU, ToU, PrintConversionPath=(SimResultObjects[0].get_Verbosity()==1) )
+        ToU = SimResultObjects[-1].get_plotUnit(X_Key[0])
+        FromU = SimResultObjects[-1].get_Unit(X_Key[0])
+        X0 = SimResultObjects[-1].get_Vector(X_Key[0])[X_Key[0]]
+        X = convertUnit( X0, FromU, ToU, PrintConversionPath=(SimResultObjects[-1].get_Verbosity()==1) )
         time.sleep(timeout*5)
         datemin = np.datetime64(X[0], 'Y')
         datemax = np.datetime64(X[-1], 'Y') + np.timedelta64(1, 'Y')

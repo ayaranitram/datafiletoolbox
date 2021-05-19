@@ -2107,12 +2107,13 @@ class SimResult(object):
 
         if otherSims is not None :
             if _is_SimulationResult(otherSims) :
-                SimsToPlot = [self, otherSims]
+                SimsToPlot = [otherSims, self]
             elif type(otherSims) is list or type(otherSims) is tuple :
-                SimsToPlot = [self]
+                SimsToPlot = []
                 for each in otherSims :
                     if _is_SimulationResult(each) :
-                        SimsToPlot += [each]
+                        SimsToPlot.append(each)
+                SimsToPlot.append(self)
         else :
             # return self.get_DataFrame(PlotKeys, Index).plot()
             SimsToPlot = [self]
