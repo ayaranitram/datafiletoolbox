@@ -5,12 +5,12 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = 0.52
-__release__ = 210518
+__version__ = 0.53
+__release__ = 210519
 __all__ = ['SimResult']
 
 from .. import _dictionaries
-from .._Classes.Errors import OverwrittingError, InvalidKeyError
+from .._Classes.Errors import OverwrittingError, InvalidKeyError, MissingDependence
 from .._Classes.SimPandas import SimSeries, SimDataFrame
 from .._common.stringformat import date as _strDate, isDate as _isDate, multisplit as _multisplit, isnumeric as _isnumeric, getnumber as _getnumber
 from .._common.functions import _is_SimulationResult, _mainKey, _itemKey, _wellFromAttribute, _isECLkey, _keyType, tamiz as _tamiz, _meltDF  # _AttributeFromKeys,
@@ -4545,6 +4545,10 @@ class SimResult(object):
             but ignoring the zeros in the data
 
         """
+        
+        if not self.useSimPandas:
+            raise MissingDependence('simPandas is required to interpret calculation strings.\n Activate simPandas .use_SimPandas()')
+        
         CalcData, CalcUnits, i, firstNeg = [], [], 0, False
 
         def _getValues(Key) :
