@@ -6,7 +6,7 @@ Created on Thu Jan 21 11:00:20 2021
 """
 
 __version__ = 0.20
-__release__ = 210519
+__release__ = 210520
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -21,8 +21,8 @@ class XLSX(_SimResult):
     object to contain data read from .xlsx files
     
     """
-    def __init__(self, inputFile=None, verbosity=2, sheet_name=None, header=[0, 1], units=1, overwrite=True) :
-        _SimResult.__init__(self, verbosity=verbosity, **kwargs)
+    def __init__(self, inputFile=None, verbosity=2, sheet_name=None, header=[0, 1], units=1, overwrite=True, **kwargs) :
+        _SimResult.__init__(self, verbosity=verbosity)
         self.kind = XLSX
         self.results = {}
         self.Frames = {}

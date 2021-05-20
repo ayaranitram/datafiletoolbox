@@ -6,7 +6,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = 0.53
-__release__ = 210519
+__release__ = 210520
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -219,7 +219,7 @@ class SimResult(object):
 
     """
 
-    def __init__(self, verbosity=2, **kwargs) :
+    def __init__(self, verbosity=2) :
         self.set_Verbosity(verbosity)
         self.SimResult = True
         self.useSimPandas = False

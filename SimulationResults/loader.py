@@ -73,11 +73,11 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
         else :
             print( 'ECL object not loaded')
     elif Simulator in ['VIP'] :
-        OBJ = _VIP(FullPath,verbosity=Verbosity)
+        OBJ = _VIP(FullPath,verbosity=Verbosity,**kwargs)
     elif Simulator in ['NX','NEXUS'] :
-        OBJ = _VIP(FullPath,verbosity=Verbosity)
+        OBJ = _VIP(FullPath,verbosity=Verbosity,**kwargs)
     elif Simulator in ['NexusDesktopSimResult'] :
-        OBJ = _NexusDesktopCSV(FullPath,verbosity=Verbosity)
+        OBJ = _NexusDesktopCSV(FullPath,verbosity=Verbosity,**kwargs)
     elif Simulator in ['SimPandasExcel'] :
         OBJ = _XLSX(FullPath,verbosity=Verbosity,**kwargs)
     elif Simulator in ['DataTable'] :
