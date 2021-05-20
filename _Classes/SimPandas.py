@@ -6,14 +6,15 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = 0.52
-__release__ = 210519
+__version__ = 0.53
+__release__ = 210520
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
 from shutil import get_terminal_size
 from pandas._config import get_option
 from pandas.io.formats import console
+from os.path import commonprefix
 import pandas as pd
 import fnmatch
 import warnings
@@ -2701,23 +2702,44 @@ class SimDataFrame(DataFrame) :
     def sum(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.sum(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                params = self._SimParameters
+                params['units'] = list(set(self.get_Units(self.columns).values()))[0]
+                return SimDataFrame(data=self.DF.sum(axis=axis, **kwargs).rename('.sum'), **params)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+            else :
+                params = self._SimParameters
+                if type(params['units']) is dict:
+                    params['units']['.sum'] = '*per row'
+                return SimDataFrame(data=self.DF.sum(axis=axis, **kwargs).rename('.sum'), **params)
+
         if axis == 1 :
             newName = '.sum'
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
             else :
                 units = 'dimensionless'
-            if len(set(self.columns ) ) == 1 :
-                newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
-            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
-            data=self.DF.sum(axis=axis, **kwargs)
-            data.columns=[newName]
+            if len(set(self.columns)) == 1 :
+                newName = list(set(self.columns))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns)) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns)) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns))[0]+newName
+            else:
+                commonL = commonprefix(list(self.renameLeft(inplace=False).columns))
+                commonR = commonprefix(list(self.renameRight(inplace=False).columns))
+                if len(commonL) >= len(commonR) :
+                    newName = commonL + newName
+                else :
+                    newName = commonR + newName
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                data = self.DF.sum(axis=axis, **kwargs)  # SimDataFrame(data=self.DF.sum(axis=axis, **kwargs).rename('.sum'), **params)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+            else :
+                result = self[self.columns[0]]
+                for col in range(1,len(self.columns)):
+                    result = result + self[self.columns[col]]
+                data = result
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend)
 
     def std(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
@@ -2821,7 +2843,7 @@ class SimDataFrame(DataFrame) :
     def __setitem__(self, key, value, units=None):
         if type(key) is str :
             key = key.strip()
-        if type(value) is tuple and len(value) == 2 and type(value[0]) in [SimSeries, Series, list, tuple, np.ndarray] and units is None :
+        if type(value) is tuple and len(value) == 2 and type(value[1]) in [str,dict] and units is None :  # and type(value[0]) in [SimSeries, Series, list, tuple, np.ndarray,float,int,str] 
             value, units = value[0], value[1]
         if units is None :
             if type(value) is SimSeries :
@@ -2830,7 +2852,17 @@ class SimDataFrame(DataFrame) :
                 elif type(value.units) is dict :
                     uDic = value.units
             elif isinstance(value, SimDataFrame) :
-                pass
+                if len(value.columns) == 1 :
+                    if value.columns[0] in value.units:
+                        uDic = { str(key) : value.units[value.columns[0]] }
+                    else :
+                        uDic = { str(key) : 'UNITLESS' }
+                else :
+                    uDic = value.units.copy() if type(value.units) is dict else { str(key) : value.units }
+                    if value.index.name not in value.columns and value.index.name in uDic:
+                        del uDic[value.index.name]
+                    if key not in uDic and len(set(uDic.values())) == 1:
+                        uDic[str(key)] = list(set(uDic.values()))[0]
             else :
                 uDic = { str(key) : 'UNITLESS' }
         elif type(units) is str :
