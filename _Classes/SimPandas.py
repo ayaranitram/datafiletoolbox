@@ -2735,11 +2735,15 @@ class SimDataFrame(DataFrame) :
                 data = self.DF.sum(axis=axis, **kwargs)  # SimDataFrame(data=self.DF.sum(axis=axis, **kwargs).rename('.sum'), **params)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
             else :
                 result = self[self.columns[0]]
+                units = self.units[self.columns[0]]
                 for col in range(1,len(self.columns)):
                     result = result + self[self.columns[col]]
                 data = result
             data.name = newName
             return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend)
+        
+        if axis == 2 :
+            return self.sum(axis=1).sum(axis=0)
 
     def std(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
