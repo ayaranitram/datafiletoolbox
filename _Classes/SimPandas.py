@@ -2304,6 +2304,14 @@ class SimDataFrame(DataFrame) :
             if notFount == len(other.columns) :
                 if self.nameSeparator is not None and other.nameSeparator is not None :
                     selfC, otherC, newNames = self._CommonRename(other)
+                    
+                    # if no columns has common names
+                    if newNames is None:
+                        if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
+                            return selfC + otherC.to_SimSeries()
+                        else :
+                            raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
+                    
                     if (self.columns != selfC.columns).any() or (other.columns != otherC.columns).any() :
                         resultX = selfC + otherC
                         resultX.rename(columns=newNames, inplace=True)
@@ -2350,6 +2358,14 @@ class SimDataFrame(DataFrame) :
             if notFount == len(other.columns) :
                 if self.nameSeparator is not None and other.nameSeparator is not None :
                     selfC, otherC, newNames = self._CommonRename(other)
+                    
+                    # if no columns has common names
+                    if newNames is None:
+                        if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
+                            return selfC - otherC.to_SimSeries()
+                        else :
+                            raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
+                    
                     resultX = selfC - otherC
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
@@ -2392,6 +2408,14 @@ class SimDataFrame(DataFrame) :
             if notFount == len(other.columns) :
                 if self.nameSeparator is not None and other.nameSeparator is not None :
                     selfC, otherC, newNames = self._CommonRename(other)
+                    
+                    # if no columns has common names
+                    if newNames is None:
+                        if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
+                            return selfC * otherC.to_SimSeries()
+                        else :
+                            raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
+                    
                     resultX = selfC * otherC
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
@@ -2437,6 +2461,14 @@ class SimDataFrame(DataFrame) :
             if notFount == len(other.columns) :
                 if self.nameSeparator is not None and other.nameSeparator is not None :
                     selfC, otherC, newNames = self._CommonRename(other)
+                    
+                    # if no columns has common names
+                    if newNames is None:
+                        if len(otherC.columns) == 1:  # just in case there is only one column in the divisor
+                            return selfC / otherC.to_SimSeries()
+                        else :
+                            raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
+
                     resultX = selfC / otherC
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
@@ -2481,6 +2513,14 @@ class SimDataFrame(DataFrame) :
             if notFount == len(other.columns) :
                 if self.nameSeparator is not None and other.nameSeparator is not None :
                     selfC, otherC, newNames = self._CommonRename(other)
+                    
+                    # if no columns has common names
+                    if newNames is None:
+                        if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
+                            return selfC / otherC.to_SimSeries()
+                        else :
+                            raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
+
                     resultX = selfC // otherC
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
@@ -2525,6 +2565,14 @@ class SimDataFrame(DataFrame) :
             if notFount == len(other.columns) :
                 if self.nameSeparator is not None and other.nameSeparator is not None :
                     selfC, otherC, newNames = self._CommonRename(other)
+                    
+                    # if no columns has common names
+                    if newNames is None:
+                        if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
+                            return selfC % otherC.to_SimSeries()
+                        else :
+                            raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
+                    
                     resultX = selfC % otherC
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
@@ -2567,6 +2615,14 @@ class SimDataFrame(DataFrame) :
             if notFount == len(other.columns) :
                 if self.nameSeparator is not None and other.nameSeparator is not None :
                     selfC, otherC, newNames = self._CommonRename(other)
+                    
+                    # if no columns has common names
+                    if newNames is None:
+                        if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
+                            return selfC ** otherC.to_SimSeries()
+                        else :
+                            raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
+                    
                     resultX = selfC ** otherC
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
