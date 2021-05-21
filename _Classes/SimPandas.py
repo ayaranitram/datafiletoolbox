@@ -2268,6 +2268,11 @@ class SimDataFrame(DataFrame) :
                 alternative = self._CommonRename(SDF1, SDF2, LR='L')
                 if len(alternative[2]) < len(commonNames) :
                     return alternative
+        
+        else :
+            SDF1C, SDF2C = SDF1, SDF2.copy()
+            commonNames = None
+        
         return SDF1C, SDF2C, commonNames
 
     def __contains__(self, item) :
