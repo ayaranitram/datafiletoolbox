@@ -1764,8 +1764,11 @@ class SimDataFrame(DataFrame) :
         return self.to_SimSeries()
     
     def to_SimSeries(self):
+        if len(self.columns) == 1 :
+            return self[self.columns[0]]
         if len(self) <= 1:
             return SimSeries(data=Series(self.DF.iloc[0].to_list(), name=self.index[0], index=self.columns.to_list()) , **self._SimParameters)
+        raise TypeError('Not possioble to converto to SimSeries')
     
     @property
     def Series(self):
