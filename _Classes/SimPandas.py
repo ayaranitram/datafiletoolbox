@@ -2176,7 +2176,7 @@ class SimDataFrame(DataFrame) :
 
     def renameRight(self, inplace=False) :
         if self.nameSeparator in [None, '', False] :
-            raise ValueError("name separator must not be None")
+            return self  # raise ValueError("name separator must not be None")
         objs = {}
         for each in list(self.columns ) :
             if type(each) is str and self.nameSeparator in each :
@@ -2194,7 +2194,7 @@ class SimDataFrame(DataFrame) :
 
     def renameLeft(self, inplace=False) :
         if self.nameSeparator in [None, '', False] :
-            raise ValueError("name separator must not be None")
+            return self #  raise ValueError("name separator must not be None")
         objs = {}
         for each in list(self.columns ) :
             if type(each) is str and self.nameSeparator in each :
