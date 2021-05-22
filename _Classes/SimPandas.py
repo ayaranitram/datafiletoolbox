@@ -726,6 +726,7 @@ class SimSeries(Series) :
         return SimSeries(data=result, **self._SimParameters )
 
     def __add__(self, other) :
+        params = self._SimParameters
         # both SimSeries
         if isinstance(other, SimSeries) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
@@ -734,29 +735,35 @@ class SimSeries(Series) :
                 newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.S.add(other.S)
-                    return SimSeries(data=result, name=newName, **self._SimParameters )
+                    #return SimSeries(data=result, name=newName, **self._SimParameters )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.S.add(otherC.S)
-                    return SimSeries(data=result, name=newName, **self._SimParameters )
+                    #return SimSeries(data=result, name=newName, **self._SimParameters )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = other.S.add(selfC.S)
-                    return SimSeries(data=result, units=other.units, name=newName, dtype=other.dtype, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = other.units
+                    #return SimSeries(data=result, units=other.units, name=newName, dtype=other.dtype, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.S.add(other.S)
-                    return SimSeries(data=result, units=self.units+'+'+other.units, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = self.units+'+'+other.units
+                    #return SimSeries(data=result, units=self.units+'+'+other.units, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                return SimSeries(data=result, name=newName, **params)
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types, maintain units, dtype and name
         result = self.as_Series() + other
-        return SimSeries(data=result, name=self.name, **self._SimParameters)
+        params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        return SimSeries(data=result, name=self.name, **params)
 
     def __radd__(self, other) :
         return self.__add__(other)
 
     def __sub__(self, other) :
+        params = self._SimParameters
         # both SimSeries
         if isinstance(other, SimSeries) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
@@ -765,164 +772,185 @@ class SimSeries(Series) :
                 newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.sub(other)
-                    return SimSeries(data=result, name=newName, **self._SimParameters)
+                    #return SimSeries(data=result, name=newName, **self._SimParameters)
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak)
                     result = self.sub(otherC)
-                    return SimSeries(data=result, name=newName, **self._SimParameters)
+                    #return SimSeries(data=result, name=newName, **self._SimParameters)
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak)
                     result = selfC.sub(other)
-                    return SimSeries(data=result, units=other.units, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = other.units
+                    #return SimSeries(data=result, units=other.units, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.sub(other)
-                    return SimSeries(data=result, units=self.units+'-'+other.units, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = self.units+'-'+other.units
+                    #return SimSeries(data=result, units=self.units+'-'+other.units, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                return SimSeries(data=result, name=newName, **params)
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() - other
-        return SimSeries(data=result, name=self.name, **self._SimParameters)
+        params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        return SimSeries(data=result, name=self.name, **params)
 
     def __rsub__(self, other) :
         return self.__neg__().__add__(other)
 
     def __mul__(self, other) :
+        params = self._SimParameters
         # both SimSeries
         if isinstance(other, SimSeries) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
+                params['units'] = unitProduct(self.units, other.units)
                 newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.mul(other)
-                    unitsResult = unitProduct(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    #params['units'] = unitProduct(self.units, other.units)
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(other.units, self.units):
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.mul(otherC)
-                    unitsResult = unitProduct(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    #params['units'] = unitProduct(self.units, other.units)
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(self.units, other.units):
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = other.mul(selfC)
-                    unitsResult = unitProduct(other.units, self.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = unitProduct(other.units, self.units)
+                    #return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(other.units, unitBase(self.units)):
                     otherC = convertUnit(other, other.units, unitBase(self.units), self.speak )
                     result = self.mul(otherC)
-                    unitsResult = unitProduct(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )                
+                    #params['units'] = unitProduct(self.units, other.units)
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )                
                 elif convertibleUnits(self.units, unitBase(other.units)):
                     selfC = convertUnit(self, self.units, unitBase(other.units), self.speak )
                     result = other.mul(selfC)
-                    unitsResult = unitProduct(other.units, self.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = unitProduct(other.units, self.units)
+                    #return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.mul(other)
-                    unitsResult = self.units + '*' + other.units
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = self.units + '*' + other.units
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                return SimSeries(data=result, name=newName, **params)
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() * other
-        return SimSeries(data=result, name=self.name, **self._SimParameters )
+        params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        return SimSeries(data=result, name=self.name, **params )
 
     def __rmul__(self, other) :
         return self.__mul__(other)
 
     def __truediv__(self, other) :
+        params = self._SimParameters
         # both SimSeries
         if isinstance(other, SimSeries) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
                 newName = _stringNewName(self._CommonRename(other)[2])
+                params['units'] = unitDivision(self.units, other.units)
                 if self.units == other.units :
                     result = self.truediv(other)
-                    unitsResult = unitDivision(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    #params['units'] = unitDivision(self.units, other.units)
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=result.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(other.units, self.units) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.truediv(otherC)
-                    unitsResult = unitDivision(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    #params['units'] = unitDivision(self.units, other.units)
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=result.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(self.units, other.units) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = selfC.truediv(other)
-                    unitsResult = unitDivision(other.units, self.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = unitDivision(other.units, self.units)
+                    #return SimSeries(data=result, units=unitsResult, dtype=result.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(other.units, unitBase(self.units)):
                     otherC = convertUnit(other, other.units, unitBase(self.units), self.speak )
                     result = self.truediv(otherC)
-                    unitsResult = unitDivision(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    #params['units'] = unitDivision(self.units, other.units)
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=result.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(self.units, unitBase(other.units)):
                     selfC = convertUnit(self, self.units, unitBase(other.units), self.speak )
                     result = selfC.truediv(other)
-                    unitsResult = unitDivision(other.units, self.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = unitDivision(other.units, self.units)
+                    #return SimSeries(data=result, units=unitsResult, dtype=result.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.truediv(other)
-                    unitsResult = self.units + '/' + other.units
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = self.units + '/' + other.units
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=result.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                return SimSeries(data=result, name=newName, **params)
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() / other
-        return SimSeries(data=result, name=self.name, **self._SimParameters )
+        params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        return SimSeries(data=result, name=self.name, **params )
 
     def __rtruediv__(self, other) :
         return self.__pow__(-1).__mul__(other)
 
     def __floordiv__(self, other) :
+        params = self._SimParameters
         # both SimSeries
         if isinstance(other, SimSeries) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
+                params['units'] = unitDivision(self.units, other.units)
                 newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.floordiv(other)
-                    unitsResult = unitDivision(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    #params['units'] = unitDivision(self.units, other.units)
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.floordiv(otherC)
-                    unitsResult = unitDivision(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    #params['units'] = unitDivision(self.units, other.units)
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = other.floordiv(selfC)
-                    unitsResult = unitDivision(other.units, self.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = unitDivision(other.units, self.units)
+                    #return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(other.units, unitBase(self.units) ) :
                     otherC = convertUnit(other, other.units, unitBase(self.units), self.speak )
                     result = self.floordiv(otherC)
-                    unitsResult = unitDivision(self.units, other.units)
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    #params['units'] = unitDivision(self.units, other.units)
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(self.units, unitBase(other.units)) :
                     selfC = convertUnit(self, self.units, unitBase(other.units), self.speak )
                     result = other.floordiv(selfC)
-                    unitsResult = unitDivision(other.units, self.units)
-                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = unitDivision(other.units, self.units)
+                    #return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.floordiv(other)
-                    unitsResult = self.units + '/' + other.units
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = self.units + '/' + other.units
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                params['dtype'] = result.dtype  # self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                return SimSeries(data=result, name=newName, **params)
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() // other
-        return SimSeries(data=result, name=self.name, **self._SimParameters )
+        params['dtype'] = result.dtype
+        return SimSeries(data=result, name=self.name, **params )
 
     def __rfloordiv__(self, other) :
         return self.__pow__(-1).__mul__(other).__int__()
 
     def __mod__(self, other) :
+        params = self._SimParameters
         # both SimSeries
         if isinstance(other, SimSeries) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
@@ -931,56 +959,65 @@ class SimSeries(Series) :
                 newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.mod(other)
-                    return SimSeries(data=result, name=newName, **self._SimParameters )
+                    #return SimSeries(data=result, name=newName, **self._SimParameters )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
                     result = self.mod(otherC)
-                    return SimSeries(data=result, name=newName, **self._SimParameters )
+                    #return SimSeries(data=result, name=newName, **self._SimParameters )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = other.mod(selfC)
-                    return SimSeries(data=result, units=other.units, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    params['units'] = other.units
+                    #return SimSeries(data=result, units=other.units, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
                     result = self.mod(other)
-                    return SimSeries(data=result, name=newName, **self._SimParameters )
+                    #return SimSeries(data=result, name=newName, **self._SimParameters )
+                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                return SimSeries(data=result, name=newName, **params )
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() % other
-        return SimSeries(data=result, name=self.name, **self._SimParameters )
+        params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        return SimSeries(data=result, name=self.name, **params )
 
     def __pow__(self, other) :
+        params = self._SimParameters
         # both SimSeries
         if isinstance(other, SimSeries) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
+                params['units'] = self.units+'^'+other.units
                 newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
                     result = self.pow(other)
-                    unitsResult = self.units+'^'+other.units
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    #params['units'] = self.units+'^'+other.units
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
-                    result = self.floordiv(otherC)
-                    unitsResult = self.units+'^'+other.units
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    result = self.pow(otherC)
+                    params['units'] = self.units+'^'+self.units
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
-                    result = other.floordiv(selfC)
-                    unitsResult = other.units+'^'+self.units
-                    return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    result = other.pow(selfC)
+                    params['units'] = other.units+'^'+other.units
+                    #return SimSeries(data=result, units=unitsResult, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
-                    result = self.floordiv(other)
-                    unitsResult = self.units+'^'+other.units
-                    return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                    result = self.pow(other)
+                    #params['units'] = self.units+'^'+other.units
+                    #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                return SimSeries(data=result, name=newName, **params )
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
-        result = self.as_Series() // other
-        return SimSeries(data=result, **self._SimParameters)
+        result = self.as_Series() ** other
+        params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        return SimSeries(data=result, **params)
 
     def __int__(self) :
         return SimSeries(data=self.S.astype(int), **self._SimParameters)
@@ -2329,8 +2366,11 @@ class SimDataFrame(DataFrame) :
             result = self.copy()
             if other.name in self.columns :
                 result[other.name] = self[other.name] + other
-            else :
+            elif self.autoAppend :
                 result[other.name] = other
+            else :
+                for col in self.columns :
+                    result[col] = self[col] + other
             return result
 
         # let's Pandas deal with other types, maintain units and dtype
@@ -2380,8 +2420,11 @@ class SimDataFrame(DataFrame) :
             result = self.copy()
             if other.name in self.columns :
                 result[other.name] = self[other.name] - other
-            else :
+            elif self.autoAppend :
                 result[other.name] = -other
+            else :
+                for col in self.columns :
+                    result[col] = self[col] - other
             return result
 
         # let's Pandas deal with other types, maintain units and dtype
@@ -2517,7 +2560,7 @@ class SimDataFrame(DataFrame) :
                     # if no columns has common names
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
-                            return selfC / otherC.to_SimSeries()
+                            return selfC // otherC.to_SimSeries()
                         else :
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
 
