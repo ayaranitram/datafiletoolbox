@@ -1394,7 +1394,60 @@ class SimSeries(Series) :
         add jitter the values of the SimSeries
         """
         return jitter(self,std)
+    
+    def daily(self, outBy='mean') :
+        """
+        return a Series with a single row per day.
+        index must be a date type.
 
+        available gropuing calculations are:
+            first : keeps the fisrt row per day
+            last : keeps the last row per day
+            max : returns the maximum value per year
+            min : returns the minimum value per year
+            mean or avg : returns the average value per year
+            median : returns the median value per month
+            std : returns the standard deviation per year
+            sum : returns the summation of all the values per year
+            count : returns the number of rows per year
+        """
+        return self.to_SimDataFrame().daily(outBy=outBy).to_SimSeries()
+
+    def monthly(self, outBy='mean') :
+        """
+        return a dataframe with a single row per month.
+        index must be a date type.
+
+        available gropuing calculations are:
+            first : keeps the fisrt row per month
+            last : keeps the last row per month
+            max : returns the maximum value per month
+            min : returns the minimum value per month
+            mean or avg : returns the average value per month
+            median : returns the median value per month
+            std : returns the standard deviation per month
+            sum : returns the summation of all the values per month
+            count : returns the number of rows per month
+        """
+        return self.to_SimDataFrame().monthly(outBy=outBy).to_SimSeries()
+
+    def yearly(self, outBy='mean') :
+        """
+        return a dataframe with a single row per year.
+        index must be a date type.
+
+        available gropuing calculations are:
+            first : keeps the fisrt row
+            last : keeps the last row
+            max : returns the maximum value per year
+            min : returns the minimum value per year
+            mean or avg : returns the average value per year
+            median : returns the median value per month
+            std : returns the standard deviation per year
+            sum : returns the summation of all the values per year
+            count : returns the number of rows per year
+        """
+        return self.to_SimDataFrame().yearly(outBy=outBy).to_SimSeries()
 
 class SimDataFrame(DataFrame) :
     """
