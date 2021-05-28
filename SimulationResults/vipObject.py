@@ -150,8 +150,13 @@ class VIP(_SimResult):
 
             self.SSSfiles = self.SSSparts( SSSFilePath )
             self.name = _extension(SSSFilePath)[1]
+            validSSSfiles = []
             for file in self.SSSfiles :
-                self.results[ _extension(file)[1] + _extension(file)[0] ] = self.SSSread( file )
+                readAttempt = self.SSSread( file )
+                if readAttempt is not False:
+                    validSSSfiles.append(file)
+                    self.results[ _extension(file)[1] + _extension(file)[0] ] = readAttempt
+            self.SSSfiles = tuple(validSSSfiles)
             self.strip('NAME')
             self.set_FieldTime()
             self.get_Vector('DATE')
@@ -636,8 +641,12 @@ class VIP(_SimResult):
         sssfile = open(sssPath, 'r')
         sss = sssfile.read()
         sssfile.close()
-        sss = sss.split('\n')
 
+        if len(sss.strip()) == 0:
+            return False
+        else:
+            sss = sss.split('\n')
+        
         sssType = sss[0].split()[0]
         _verbose( self.speak, 1, 'Type of data in this input file: ' + str(sssType) )
 
@@ -917,8 +926,9 @@ class VIP(_SimResult):
         SSStype = SSStype.strip()
         if type(SSStype) is str :
             SSS = None
-            for SSS in self.SSSfiles :
-                if _extension(SSS)[1].upper().endswith( SSStype.upper() ) :
+            for S in self.SSSfiles :
+                if _extension(S)[1].upper().endswith( SSStype.upper() ) :
+                    SSS = S
                     break
             if SSS is None :
                 print('SSS type ' + SSStype + ' not found')
@@ -988,8 +998,10 @@ class VIP(_SimResult):
         Names = self.directSSS('NAME', 'REGION')
         regNum = {}
 
+        if Numbers is None or Names is None:
+            return regNum
         if len(Names) != len(Numbers) :
-            print("lenght doesn't match!")
+            print("<extract_Region_Numbers> lenght doesn't match! Not able to create dictionary of regions names and numbers.")
         for i in range(len(Names)) :
             regNum[Names[i].strip()] = _getnumber(Numbers[i])
         return regNum
