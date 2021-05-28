@@ -3332,6 +3332,8 @@ class SimDataFrame(DataFrame) :
     def _columnsNameAndUnits2MultiIndex(self) :
         out = {}
         units = self.get_units()
+        if units is None:
+            return self.columns  # there are not units, return column names as they are
         for col in self.columns :
             if col in units :
                 out[col] = units[col]
@@ -3622,6 +3624,8 @@ class SimDataFrame(DataFrame) :
             for k,u in dict.items():
                 self.set_Units(u,k)
             return None
+        if self.units is None:
+            self.units = {}
         if type(self.units) is dict:
             if item is None and len(self.columns) > 1:
                 raise ValueError("item must not be None")
