@@ -326,13 +326,28 @@ class SimSeries(Series) :
         return self.to_Series()
 
     def to_Series(self) :
-        return Series(self ).copy()
+        return Series(self).copy()
 
     def as_Series(self) :
-        return Series(self )
+        return Series(self)
+    
+    def to_SimDataFrame(self):
+        return SimDataFrame(data=self)
+
+    @property
+    def sdf(self) :
+        return self.to_SimDataFrame()
+
+    @property
+    def SDF(self) :
+        return self.to_SimDataFrame()
 
     @property
     def Series(self) :
+        return self.as_Series()
+
+    @property
+    def s(self) :
         return self.as_Series()
 
     @property
@@ -1845,13 +1860,13 @@ class SimDataFrame(DataFrame) :
         return self._DataFrameWithMultiIndex()
 
     def to_DataFrame(self) :
-        return DataFrame(self ).copy()
+        return DataFrame(self).copy()
 
     def as_DataFrame(self) :
-        return DataFrame(self )
+        return DataFrame(self)
     
     def to_Series(self):
-        return self.to_SimSeries()
+        return self.to_SimSeries().to_Series()
     
     def to_SimSeries(self):
         if len(self.columns) == 1 :
@@ -1862,13 +1877,28 @@ class SimDataFrame(DataFrame) :
     
     @property
     def Series(self):
-        return self.to_SimSeries()
+        return self.to_Series()
+    
     @property
     def SimSeries(self):
         return self.to_SimSeries()
+    
     @property
     def S(self):
         return self.to_SimSeries()
+
+    @property
+    def SS(self):
+        return self.to_SimSeries()
+    
+    @property
+    def s(self):
+        return self.to_SimSeries()
+
+    @property
+    def ss(self):
+        return self.to_SimSeries()
+
 
     @property
     def DataFrame(self) :
@@ -1876,6 +1906,10 @@ class SimDataFrame(DataFrame) :
 
     @property
     def DF(self) :
+        return self.as_DataFrame()
+    
+    @property
+    def df(self) :
         return self.as_DataFrame()
 
     def to(self, units) :
