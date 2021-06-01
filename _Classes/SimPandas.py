@@ -736,6 +736,14 @@ class SimSeries(Series) :
         else:
             return tuple(fnmatch.filter(keys, pattern ) )
 
+    def diff(self, periods=1, forward=False):
+        if type(periods) is bool:
+            periods, forward = 1, periods
+        if forward:
+            return SimSeries(data=-1*self.S.diff(periods=-1*periods), **self._SimParameters )
+        else:
+            return SimSeries(data=self.S.diff(periods=periods), **self._SimParameters ) 
+        
     def __neg__(self) :
         result = -self.as_Series()
         return SimSeries(data=result, **self._SimParameters )
@@ -3023,8 +3031,39 @@ class SimDataFrame(DataFrame) :
             data.name = newName
             return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
 
-    def round(self, decimals=0, **kwargs) :
+    def round(self, decimals=0, **kwargs):
         return SimDataFrame(data=self.DF.round(decimals=decimals, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+
+    def diff(self,periods=1, axis=0, forward=False):
+        axis = _cleanAxis(axis)
+        if type(periods) is bool:
+            periods, forward = 1, periods
+        if axis == 0 :
+            if forward:
+                return SimDataFrame(data=-1*self.DF.diff(periods=-1*periods, axis=axis), **self._SimParameters )  # units=self.units, nameSeparator=self.nameSeparator, speak=self.speak )
+            else:
+                return SimDataFrame(data=self.DF.diff(periods=periods, axis=axis), **self._SimParameters )  # units=self.units, nameSeparator=self.nameSeparator, speak=self.speak )
+        if axis == 1 :
+            newName = '.diff'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len(set(self.columns ) ) == 1 :
+                newName = list(set(self.columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
+            if forward:
+                data=-1*self.DF.diff(periods=-1*periods, axis=axis)
+            else:
+                data=self.DF.diff(periods=periods, axis=axis)
+            data.columns=[newName]
+            data.name = newName
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
 
     def copy(self, **kwargs) :
         return SimDataFrame(data=self.as_DataFrame().copy(True), units=self.units.copy(), speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
