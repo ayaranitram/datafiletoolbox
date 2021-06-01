@@ -1926,6 +1926,26 @@ class SimDataFrame(DataFrame) :
         else returns None
         """
         return self.convert(units)
+    
+    @property
+    def indexName(self):
+        return self.index.name
+
+    def reset_index(self,level=None, drop=False, inplace=False, col_level=0, col_fill=''):
+        if inplace:
+            indexUnits, indexName = self.indexUnits, None if drop else self.index.name
+            super().reset_index(level=level, drop=drop, inplace=inplace, col_level=col_level, col_fill='')
+            if indexUnits is not None and indexName is not None:
+                self.set_Units(indexUnits,indexName)
+            self.index.name = None
+        else:
+            result = SimDataFrame(
+                data=self.DF.reset_index(level=level, drop=drop, inplace=inplace, col_level=col_level, col_fill=''),
+                **self._SimParameters)
+            if not drop and self.indexUnits is not None and self.index.name is not None:
+                result.set_Units(self.indexUnits,item=self.index.name)
+            result.index.name = None
+            return result
 
     def convert(self, units) :
         """
