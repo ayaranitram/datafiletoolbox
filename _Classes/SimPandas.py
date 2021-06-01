@@ -4121,3 +4121,29 @@ class SimDataFrame(DataFrame) :
     def melt(self,**kwargs):
         from .._common.functions import _meltDF
         return _meltDF(self,FullOutput=False)
+
+    def DaysInYear(self,column=None):
+        return self.daysInYear(column=column)
+    
+    def daysinyear(self,column=None):
+        return self.daysInYear(column=column)
+    
+    def daysInYear(self,column=None):
+        params = self._SimParameters
+        params['index'] = self.index
+        params['name'] = 'DaysInYear'
+        params['units'] = 'days'
+        if column is not None:
+            if self[column].dtype in ('int','int64') and self[column].min() > 0 :
+                return SimSeries( data=[ dt.date(Y, 12, 31).timetuple().tm_yday for Y in self[column] ], **params )
+            elif 'datetime' in str(self[column].dtype):
+                return SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self[column] ], **params )
+            else:
+                raise ValueError('selected column is not a valid date or year integer')
+        else:
+            if self.index.dtype in ('int','int64') and self.index.min() > 0 :
+                return SimSeries( data=[ dt.date(Y, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
+            elif 'datetime' in str(self.index.dtype):
+                return SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
+            else:
+                raise ValueError('index is not a valid date or year integer')
