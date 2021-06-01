@@ -25,6 +25,7 @@ from warnings import warn
 from .._common.units import unit  # to use unit.isUnit method
 from .._common.units import convertUnit, unitProduct, unitDivision, convertible as convertibleUnits, unitBase
 
+
 try :
     from datafiletoolbox import multisplit, isDate, strDate
 except :
@@ -1808,7 +1809,7 @@ class SimDataFrame(DataFrame) :
                 indexName = tuple(self.index.names)
             else :
                 indexName =(self.index.name, )
-            indexUnit = '' if self.indexUnits is None else self.indexUnits
+            indexUnits = '' if self.indexUnits is None else self.indexUnits
             indexCols = len(self.index.names) if type(self.index) is pd.core.indexes.multi.MultiIndex else 1
 
         if freeze_panes is None :
@@ -2093,6 +2094,7 @@ class SimDataFrame(DataFrame) :
         output = SimDataFrame(data=result, **self._SimParameters)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         output.index.names = ['YEAR', 'MONTH', 'DAY']
         output.index.name = 'YEAR_MONTH_DAY'
+        # output.indexUnits = ('year','month','day')
         return output
 
     def monthly(self, outBy='mean') :
@@ -2150,6 +2152,7 @@ class SimDataFrame(DataFrame) :
         output = SimDataFrame(data=result, **self._SimParameters)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         output.index.names = ['YEAR', 'MONTH']
         output.index.name = 'YEAR_MONTH'
+        # output.indexUnits = ('year','month')
         return output
 
     def yearly(self, outBy='mean') :
@@ -2207,6 +2210,7 @@ class SimDataFrame(DataFrame) :
         output = SimDataFrame(data=result, **self._SimParameters)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
         output.index.names = ['YEAR']
         output.index.name = 'YEAR'
+        output.indexUnits = 'year'
         return output
 
     def aggregate(self, func=None, axis=0, *args, **kwargs) :
@@ -3662,7 +3666,10 @@ class SimDataFrame(DataFrame) :
         elif len(set(self.get_Units(items).values() )) == 1 :
             return list(set(self.get_Units(items).values() ))[0]
 
-    def set_Units(self,units,item=None):
+    def set_units(self, units, item=None):
+        return self.set_Units(units=units, item=item)
+
+    def set_Units(self, units, item=None):
         if item is not None and item not in self.columns:
             raise ValueError("the required item '" + str(item) + "' is not in this SimDataFrame.")
         if type(units) in [list,tuple]:
@@ -3683,6 +3690,7 @@ class SimDataFrame(DataFrame) :
             for k,u in dict.items():
                 self.set_Units(u,k)
             return None
+        
         if self.units is None:
             self.units = {}
         if type(self.units) is dict:
