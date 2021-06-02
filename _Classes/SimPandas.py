@@ -1120,9 +1120,60 @@ class SimSeries(Series) :
                     uDic[each] = 'UNITLESS'
         return uDic
     
+    def set_units(self,units,item=None):
+        """
+        Alias of .set_Units method.
+        This method can be used to define the units related to the values of a column (item).
+
+        Parameters
+        ----------
+        units : str or list of str
+            the units to be assigned
+        item : str, optional
+            The name of the column to apply the units. 
+            The default is None. In this case the unit
+
+        Raises
+        ------
+        ValueError
+            when units can't be applied.
+        TypeError
+            when units or item has the wrong format.
+
+        Returns
+        -------
+        None.
+
+        """
+        return self.set_Units(units=units,item=item)
+    
     def set_Units(self,units,item=None):
+        """
+        This method can be used to define the units related to the values of a column (item).
+
+        Parameters
+        ----------
+        units : str or list of str
+            the units to be assigned
+        item : str, optional
+            The name of the column to apply the units. 
+            The default is None. In this case the unit
+
+        Raises
+        ------
+        ValueError
+            when units can't be applied.
+        TypeError
+            when units or item has the wrong format.
+
+        Returns
+        -------
+        None.
+
+        """
         if item is not None and item not in self.columns:
             raise ValueError("the required item '" + str(item) + "' is not in this SimSeries")
+            
         if self.units is None or type(self.units) is str:
             if units is None:
                 self.units = None
