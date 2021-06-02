@@ -9,7 +9,7 @@ Created on Sat Jul 27 14:49:56 2019
 from math import floor
 from datetime import date
 
-__version__ = 0.1
+__version__ = '0.1.0'
 __release__ = 210225
 __all__ = ['simDate']
 

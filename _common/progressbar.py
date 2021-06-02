@@ -5,7 +5,7 @@ Created on Sun Jun 14 20:39:44 2020
 @author: MCARAYA
 """
 
-__version__ = 0.5
+__version__ = '0.5.0'
 __release__ = 210225
 __all__ = ['progressbar']
 

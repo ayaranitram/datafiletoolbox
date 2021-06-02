@@ -5,7 +5,7 @@ Created on Thu Aug  6 14: 07: 00 2020
 @author: MCARAYA
 """
 
-__version__ = 0.0
+__version__ = '0.0.0'
 __release__ = 210225
 
 unitsFIELD = {'OIP': 'MMstb',

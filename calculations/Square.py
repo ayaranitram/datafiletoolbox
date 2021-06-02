@@ -5,7 +5,7 @@ Created on Wed May 13 15:00:45 2020
 @author: MCARAYA
 """
 
-__version__ = 0.1
+__version__ = '0.1.0'
 __release__ = 210225
 __all__ = ['SquareDifferences']
 

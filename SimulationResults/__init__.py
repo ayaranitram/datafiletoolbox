@@ -5,7 +5,7 @@ Created on Sat May 16 20:10:06 2020
 @author: martin
 """
 
-__version__ = 0.1
+__version__ = '0.1.0'
 __release__ = 210225
 __all__ = ['loadSimulationResults']
 

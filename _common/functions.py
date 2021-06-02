@@ -5,7 +5,7 @@ Created on Wed May 13 00:46:05 2020
 @author: MCARAYA
 """
 
-__version__ = 0.2
+__version__ = '0.2.0'
 __release__ = 210305
 __all__ = ['_mainKey', '_itemKey', '_keyType', '_wellFromAttribute', 'tamiz', '_meltDF']
 

@@ -6,7 +6,7 @@ Created on Sun Oct 18 05:32:42 2020
 @author: martin
 """
 
-__version__ = 0.1
+__version__ = '0.1.0'
 __release__ = 210225
 __all__ = ['Alternate']
 

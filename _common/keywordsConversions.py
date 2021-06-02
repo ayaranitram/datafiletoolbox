@@ -5,7 +5,7 @@ Created on Thu Aug  6 13:59:36 2020
 @author: MCARAYA
 """
 
-__version__ = 0.1
+__version__ = '0.1.0'
 __release__ = 210225
 __all__ = ['fromECLtoVIP', 'fromVIPtoECL', 'fromCSVtoECL', 'fromECLtoCSV']
 

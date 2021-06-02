@@ -5,7 +5,7 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = 0.25
+__version__ = '0.25.0'
 __release__ = 210519
 __all__ = ['ECL']
 

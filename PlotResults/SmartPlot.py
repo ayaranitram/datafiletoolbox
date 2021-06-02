@@ -5,7 +5,7 @@ Created on Wed May 13 00:31:52 2020
 @author: MCARAYA
 """
 
-__version__ = 0.3
+__version__ = '0.3.0'
 __release__ = 210518
 __all__ = ['Plot']
 

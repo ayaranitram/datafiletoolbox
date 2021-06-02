@@ -5,7 +5,7 @@ Created on Wed May 29 16:22:25 2019
 @author: MCARAYA
 """
 
-__version__ = 1.0
+__version__ = '1.0.0'
 __release__ = 210225
 __all__ = ['_extension', '_verbose']
 

@@ -5,7 +5,7 @@ Created on Sun Jan 19 16: 03: 33 2020
 @author: MCARAYA
 """
 
-__version__ = 0.1
+__version__ = '0.1.0'
 __release__ = 210225
 
 # highly recommended to automatically create inverse dictionaries

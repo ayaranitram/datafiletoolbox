@@ -5,7 +5,7 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = 0.20
+__version__ = '0.20.0'
 __release__ = 210519
 __all__ = ['TABLE']
 

@@ -5,7 +5,7 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = 0.53
+__version__ = '0.53.0'
 __release__ = 210520
 __all__ = ['SimResult']
 

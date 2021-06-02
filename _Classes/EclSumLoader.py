@@ -5,7 +5,7 @@ Created on Mon Mar  8 08:56:44 2021
 @author: martin
 """
 
-__version__ = 0.12
+__version__ = '0.12.0'
 __release__ = 210519
 __all__ = ['EclSumLoader']
 
