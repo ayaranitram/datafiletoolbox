@@ -464,18 +464,18 @@ class SimResult(object):
                 elif each in self.wells or each in self.groups or each in self.regions :
                     cols += list(self.get_Keys('*:'+each) )
                 elif each in ['FIELD', 'ROOT'] :
-                    cols += list(self.get_Keys('F*') )
+                    cols += list(self.get_Keys('F*'))
                 else :
-                    cols += list(self.get_Keys(each) )
+                    cols += list(self.get_Keys(each))
 
             return self.__call__(cols)
 
         else :
             try:
-                return self.__getitem__(list(self.get_Keys() ) ).loc[item]
+                return self.__getitem__(list(self.get_Keys())).loc[item]
             except :
                 try :
-                    return self.__getitem__(list(self.get_Keys() ) ).iloc[item]
+                    return self.__getitem__(list(self.get_Keys())).iloc[item]
                 except:
                     return None
 
