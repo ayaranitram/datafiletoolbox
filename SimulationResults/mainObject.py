@@ -394,13 +394,14 @@ class SimResult(object):
                     data=self.get_DataFrame(Key, Index)
                     units=self.get_Units(Key)
                     unitsIndex=self.get_Units(Index)
-                    return SimDataFrame(data=data, units=units, indexName=Index, indexUnits=unitsIndex, nameSeparator=':' )
+                    units[Index] = unitsIndex
+                    return SimDataFrame(data=data, units=units, indexName=Index, indexUnits=unitsIndex, nameSeparator=':')
                 else :
                     return self.get_DataFrame(Key, Index)
             elif type(Key) is str and len(Key) > 0 :
                 return self.get_Vector(Key)[Key]
         else :
-            print(SimResult.__doc__ )
+            print(SimResult.__doc__)
 
     def __getitem__(self, item) :
         if type(item) is tuple :
