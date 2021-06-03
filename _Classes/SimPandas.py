@@ -1885,7 +1885,7 @@ class SimDataFrame(DataFrame) :
 
             # get the columns for this sheet
             if split_by is None :
-                colselect = tuple(sorted(cols))
+                colselect = tuple(cols) #  tuple(sorted(cols))
             elif split_by == 'left' :
                 colselect = tuple(sorted(fnmatch.filter(cols, names[i]+'*' )))
             elif split_by == 'right' :
