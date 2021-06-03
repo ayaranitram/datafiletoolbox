@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.55.0'
+__version__ = '0.56.0'
 __release__ = 210603
 __all__ = ['SimSeries', 'SimDataFrame']
 
@@ -1703,7 +1703,7 @@ class SimDataFrame(DataFrame) :
             raise ValueError("The key '"+str(key)+"' is not a column name of this DataFrame.")
         super().set_index(key, drop=drop, append=append, inplace=inplace, verify_integrity=verify_integrity, **kwargs)
 
-    def to_excel(self, excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None, header=True, units=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None) :
+    def to_excel(self, excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None, header=True, units=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None, sort=None) :
         """
         Wrapper of .to_excel method from Pandas.
         On top of Pandas method this method is able to split the data into different
@@ -1779,6 +1779,16 @@ class SimDataFrame(DataFrame) :
         freeze_panes : tuple of int(length 2), optional
             Specifies the one-based bottommost row and rightmost column that
             is to be frozen.
+        sort: None, bool or int
+            if None, default behaviour depends on split_by parameter:
+                if split_by is None will keep the current order of the columns in the SimDataFrame.
+                if split_by is not None will sort alphabetically ascending the names of the columns.
+            if True (bool) will sort the columns alphabetically ascending.
+            if False (bool) will maintain the current order.
+            if int > 0 will sort the columns alphabetically ascending.
+            if int < 0 will sort the columns alphabetically descending.
+            if int == 0 will keep the current order of the columns.
+            
         """
         # if header is not requiered and sheet_name is str, directly pass it to Pandas
         if(not header and type(sheet_name) is str ) or(not units and type(sheet_name) is str ) :
@@ -1835,6 +1845,7 @@ class SimDataFrame(DataFrame) :
                 if len(sheet_name) > 32 and verbose :
                     print(" the sheet_name '"+sheet_name+"' is longer than 32 characters, \n will be but to the first 32 characters: '"+sheet_name[:32]+"'")
                 names =(sheet_name[:32], )
+                
         elif type(split_by) is str :
             if split_by == 'left' :
                 names = tuple(sorted(self[cols].left))
@@ -1844,11 +1855,13 @@ class SimDataFrame(DataFrame) :
                 names = tuple(sorted(set(map(firstChar, cols))))
             elif split_by == 'last' :
                 names = tuple(sorted(set(map(lastChar, cols))))
+                
         elif type(split_by) is int :
             if split_by == 0 :
                 raise ValueError(" integer `split_by´ parameter must be positive or negative, not zero.")
             else :
                 names = tuple(sorted(set([iChar(c)(split_by) for c in cols] )))
+                
         else :
             raise ValueError(" `split_by´ parameter must be 'left', 'right', 'first', 'last', an integer or None.")
 
@@ -1885,14 +1898,55 @@ class SimDataFrame(DataFrame) :
         for i in range(len(names)) :
 
             # get the columns for this sheet
-            if split_by is None :
-                colselect = tuple(cols) #  tuple(sorted(cols))
+            if split_by is None:
+                if sort is None:
+                    colselect = tuple(cols) 
+                elif int(sort) > 0:
+                    colselect = tuple(sorted(cols)) 
+                elif int(sort) < 0:
+                    colselect = tuple(sorted(cols)[::-1])
+                else:
+                    colselect = tuple(cols)
+
             elif split_by == 'left' :
-                colselect = tuple(sorted(fnmatch.filter(cols, names[i]+'*' )))
+                if sort is None:
+                    colselect = tuple(sorted(fnmatch.filter(cols, names[i]+'*' )))
+                elif int(sort) > 0:
+                    colselect = tuple(sorted(fnmatch.filter(cols, names[i]+'*' )))
+                elif int(sort) < 0:
+                    colselect = tuple(sorted(fnmatch.filter(cols, names[i]+'*' ))[::-1])
+                else:
+                    colselect = tuple(fnmatch.filter(cols, names[i]+'*' ))
+
             elif split_by == 'right' :
-                colselect = tuple(sorted(fnmatch.filter(cols, '*'+names[i] )))
+                if sort is None:
+                    colselect = tuple(sorted(fnmatch.filter(cols, '*'+names[i] )))
+                elif int(sort) > 0:
+                    colselect = tuple(sorted(fnmatch.filter(cols, '*'+names[i] )))
+                elif int(sort) < 0:
+                    colselect = tuple(sorted(fnmatch.filter(cols, '*'+names[i] ))[::-1])
+                else:
+                    colselect = tuple(fnmatch.filter(cols, '*'+names[i] ))
+
             elif split_by == 'first' :
-                colselect = tuple(sorted(fnmatch.filter(cols, names[i][0]+'*' )))
+                if sort is None:
+                    colselect = tuple(sorted(fnmatch.filter(cols, names[i][0]+'*' )))
+                elif int(sort) > 0:
+                    colselect = tuple(sorted(fnmatch.filter(cols, names[i][0]+'*' )))
+                elif int(sort) < 0:
+                    colselect = tuple(sorted(fnmatch.filter(cols, names[i][0]+'*' ))[::-1])
+                else:
+                    colselect = tuple(fnmatch.filter(cols, names[i][0]+'*' ))
+
+            elif split_by == 'last' :
+                if sort is None:
+                    colselect = tuple(sorted(fnmatch.filter(cols, '*'+names[i][-1] )))
+                elif int(sort) > 0:
+                    colselect = tuple(sorted(fnmatch.filter(cols, '*'+names[i][-1] )))
+                elif int(sort) < 0:
+                    colselect = tuple(sorted(fnmatch.filter(cols, '*'+names[i][-1] ))[::-1])
+                else:
+                    colselect = tuple(fnmatch.filter(cols, names[i][0]+'*' ))
 
             # write the sheet to the ExcelWriter
             self.DF.to_excel(SDFwriter, sheet_name=names[i], na_rep=na_rep, float_format=float_format, columns=colselect, header=False, index=index, index_label=index_label, startrow=startrow+headerRows, startcol=startcol, engine=engine, merge_cells=merge_cells, encoding=encoding, inf_rep=inf_rep, verbose=verbose, freeze_panes=freeze_panes)
