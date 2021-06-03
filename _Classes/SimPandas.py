@@ -1636,7 +1636,8 @@ class SimDataFrame(DataFrame) :
             if self.index.name in units:
                 self.units[key] = units[key]
             for key in self.index.names:
-                self.units[key] = units[key]
+                if key is not None and key in units:
+                    self.units[key] = units[key]
         if self.indexUnits is None and self.index.name is not None and units is not None:
             if self.index.name in units:
                 self.indexUnits = units[self.index.name]
