@@ -88,11 +88,17 @@ class ECL(_SimResult):
                 return self.results.numpy_vector(str(key).upper().strip())
 
     def get_Dates(self) :
-        self.start = np.datetime64(self.results.start_date, 's')
+        try:
+            self.start = np.datetime64(self.results.start_date, 's')
+        except:
+            self.start = None
         try :
             self.end = self.results.end_date
         except :
-            self.end = self.start + int(max(self.get_Vector('TIME')['TIME']))
+            if self.start is None:
+                self.end = None
+            else:
+                self.end = self.start + int(max(self.get_Vector('TIME')['TIME']))
         return self.results.numpy_dates
 
     def extract_Wells(self) :
