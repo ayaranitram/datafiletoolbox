@@ -568,6 +568,17 @@ class SimSeries(Series) :
         axis = _cleanAxis(axis)
         return SimSeries(data=self.S.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )
 
+    def reindex(self, index=None, **kwargs) :
+        """
+        wrapper for pandas.Series.reindex
+
+        index : array-like, optional
+            New labels / index to conform to, should be specified using keywords.
+            Preferably an Index object to avoid duplicating data.
+        """
+        return SimSeries(data=self.S.reindex(index=index, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator )
+
+
     def dropna(self, axis=0, inplace=False, how=None) :
         axis = _cleanAxis(axis)
         return SimSeries(data=self.S.dropna(axis=axis, inplace=inplace, how=how), **self._SimParameters )
