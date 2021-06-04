@@ -276,14 +276,14 @@ class SimResult(object):
         """
         run intensive routines, to have the data loaded and ready
         """
-        if self.start is None and self.is_Key('DATE') :
-            self.start = min(self('DATE').astype('datetime64[s]') )
-        elif self.start is not None :
-            self.start = np.datetime64(self.start)
-        if self.end is None and self.is_Key('DATE') :
-            self.end = max(self('DATE').astype('datetime64[s]') )
-        elif self.end is not None :
-            self.end = np.datetime64(self.end)
+        # if self.start is None and self.is_Key('DATE') :
+        #     self.start = min(self('DATE').astype('datetime64[s]') )
+        # elif self.start is not None :
+        #     self.start = np.datetime64(self.start)
+        # if self.end is None and self.is_Key('DATE') :
+        #     self.end = max(self('DATE').astype('datetime64[s]') )
+        # elif self.end is not None :
+        #     self.end = np.datetime64(self.end)
         if not self.is_Key('YEAR') :
             self.createYEAR()
         if not self.is_Key('MONTH') :
@@ -295,7 +295,10 @@ class SimResult(object):
         if not self.is_Key('DATES') :
             self.createDATES()
         if not self.is_Key('TIME') :
-            self.createTIME()
+            self.createTIME()         
+        _ = self.get_start()
+        _ = self.get_end()
+        
         if ('preload' not in kwargs) or ('preload' in kwargs and kwargs['preload'] is True):
             self.get_Producers()
             self.get_Injectors()
@@ -306,6 +309,32 @@ class SimResult(object):
         self.set_RestartsTimeVector()
         # self.set_savingFilter()
         self.set_vectorTemplate()
+
+    def get_start(self):
+        if self.start is not None:
+            try:
+                self.start = np.datetime64(self.start)
+            except:
+                self.start = None
+        if self.start is None and self.is_Key('DATE'):
+            self.start = min(self('DATE').astype('datetime64[s]'))
+        elif self.start is not None and self.is_Key('DATE') and self.start > min(self('DATE')):
+            self.start = min(self('DATE').astype('datetime64[s]'))
+        return self.start
+
+    def get_end(self):
+        if self.end is not None :
+            try:
+                self.end = np.datetime64(self.end)
+            except:
+                self.end = None
+        if self.end is None and self.is_Key('DATE'):
+            self.end = max(self('DATE').astype('datetime64[s]'))
+        elif self.end is not None and self.is_Key('DATE') and self.end < max(self('DATE')):
+            self.end = max(self('DATE').astype('datetime64[s]'))
+        elif self.end is None and not self.is_Key('DATE') and self.is_Key('TIME') and self.start is not None and type(self.get_Units('TIME')) is str and self.get_Units('TIME').upper() in ['DAY','DAYS']:
+            self.end = self.start + np.timedelta64(int(max(self('TIME'))*24*60*60),'s')
+        return self.end
 
     def set_vectorTemplate(self, Restart=False, Continue=False):
         if self.vectorTemplate is None :
