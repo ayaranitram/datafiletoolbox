@@ -760,19 +760,19 @@ class SimSeries(Series) :
             if type(self.units) is str and type(other.units) is str :
                 newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
-                    result = self.S.add(other.S)
+                    result = self.S.add(other.S, fill_value=0)
                     #return SimSeries(data=result, name=newName, **self._SimParameters )
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak )
-                    result = self.S.add(otherC.S)
+                    result = self.S.add(otherC.S, fill_value=0)
                     #return SimSeries(data=result, name=newName, **self._SimParameters )
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
-                    result = other.S.add(selfC.S)
+                    result = other.S.add(selfC.S, fill_value=0)
                     params['units'] = other.units
                     #return SimSeries(data=result, units=other.units, name=newName, dtype=other.dtype, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
-                    result = self.S.add(other.S)
+                    result = self.S.add(other.S, fill_value=0)
                     params['units'] = self.units+'+'+other.units
                     #return SimSeries(data=result, units=self.units+'+'+other.units, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
@@ -797,19 +797,19 @@ class SimSeries(Series) :
             if type(self.units) is str and type(other.units) is str :
                 newName = _stringNewName(self._CommonRename(other)[2])
                 if self.units == other.units :
-                    result = self.sub(other)
+                    result = self.sub(other, fill_value=0)
                     #return SimSeries(data=result, name=newName, **self._SimParameters)
                 elif convertibleUnits(other.units, self.units ) :
                     otherC = convertUnit(other, other.units, self.units, self.speak)
-                    result = self.sub(otherC)
+                    result = self.sub(otherC, fill_value=0)
                     #return SimSeries(data=result, name=newName, **self._SimParameters)
                 elif convertibleUnits(self.units, other.units ) :
                     selfC = convertUnit(self, self.units, other.units, self.speak)
-                    result = selfC.sub(other)
+                    result = selfC.sub(other, fill_value=0)
                     params['units'] = other.units
                     #return SimSeries(data=result, units=other.units, dtype=other.dtype, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 else :
-                    result = self.sub(other)
+                    result = self.sub(other, fill_value=0)
                     params['units'] = self.units+'-'+other.units
                     #return SimSeries(data=result, units=self.units+'-'+other.units, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
@@ -2568,18 +2568,28 @@ class SimDataFrame(DataFrame) :
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            result = self.copy()
             notFount = 0
-            for col in other.columns :
-                if col in self.columns :
-                    result[col] = self[col] + other[col]
+            
+            if len(self.index) == len(other.index) and (self.index == other.index).all():
+                newIndex = None
+                selfI = self
+                otherI = other
+            else:
+                newIndex= pd.merge(self.DF.iloc[:,0],other.DF.iloc[:,0],how='outer',left_index=True,right_index=True).index
+                selfI = self.reindex(index=newIndex) 
+                otherI = other.reindex(index=newIndex)
+            result = selfI.copy()
+            
+            for col in otherI.columns :
+                if col in selfI.columns :
+                    result[col] = selfI[col] + otherI[col]
                 else :
                     notFount += 1
-                    result[col] = other[col]
+                    result[col] = otherI[col]
 
-            if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None :
-                    selfC, otherC, newNames = self._CommonRename(other)
+            if notFount == len(otherI.columns) :
+                if selfI.nameSeparator is not None and otherI.nameSeparator is not None :
+                    selfC, otherC, newNames = selfI._CommonRename(otherI)
                     
                     # if no columns has common names
                     if newNames is None:
@@ -2588,7 +2598,7 @@ class SimDataFrame(DataFrame) :
                         else :
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
                     
-                    if (self.columns != selfC.columns).any() or (other.columns != otherC.columns).any() :
+                    if (selfI.columns != selfC.columns).any() or (otherI.columns != otherC.columns).any() :
                         resultX = selfC + otherC
                         resultX.rename(columns=newNames, inplace=True)
                     else :
@@ -2602,14 +2612,24 @@ class SimDataFrame(DataFrame) :
 
         # other is SimSeries
         elif isinstance(other, SimSeries) :
-            result = self.copy()
-            if other.name in self.columns :
-                result[other.name] = self[other.name] + other
+            
+            if len(self.index) == len(other.index) and (self.index == other.index).all():
+                newIndex = None
+                selfI = self
+                otherI = other
+            else:
+                newIndex= pd.merge(self.DF.iloc[:,0],other.S.iloc[:,0],how='outer',left_index=True,right_index=True).index
+                selfI = self.reindex(index=newIndex) 
+                otherI = other.reindex(index=newIndex)
+            
+            result = selfI.copy()
+            if otherI.name in selfI.columns :
+                result[otherI.name] = self[otherI.name] + otherI
             elif self.autoAppend :
-                result[other.name] = other
+                result[otherI.name] = otherI
             else :
-                for col in self.columns :
-                    result[col] = self[col] + other
+                for col in selfI.columns :
+                    result[col] = selfI[col] + otherI
             return result
 
         # let's Pandas deal with other types, maintain units and dtype
