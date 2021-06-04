@@ -110,6 +110,24 @@ def _stringNewName(newName):
     else:
         return '∩'.join(map(str,set(newName.values())))
 
+def typeOfFrame(frame):
+    try:
+        if frame._isSimSeries:
+            return SimSeries
+    except:
+        try:
+            if frame._isSimDataFrame:
+                return SimDataFrame
+        except:
+            if type(frame) is Series:
+                return Series
+            elif type(frame) is DataFrame:
+                return DataFrame
+            else:
+                raise TypeError('frame is not an instance of Pandas or SimPandas Frames')
+
+
+
 class SimSeries(Series) :
     """
     A Series object designed to store data with units.
@@ -299,7 +317,7 @@ class SimSeries(Series) :
             return False
 
     def set_index(self, name) :
-        self.set_indexName(name )
+        self.set_indexName(name)
 
     def set_indexName(self, name) :
         if type(name) is str and len(name.strip())>0 :
@@ -372,11 +390,11 @@ class SimSeries(Series) :
     @property
     def right(self) :
         if self.nameSeparator in [None, '', False] :
-            return tuple(self.columns )
+            return tuple(self.columns)
         objs = []
-        for each in list(self.columns ) :
+        for each in list(self.columns) :
             if self.nameSeparator in each :
-                objs += [each.split(self.nameSeparator )[-1]]
+                objs += [each.split(self.nameSeparator)[-1]]
             else :
                 objs += [each]
         return tuple(set(objs))
@@ -384,11 +402,11 @@ class SimSeries(Series) :
     @property
     def left(self) :
         if self.nameSeparator in [None, '', False] :
-            return tuple(self.columns )
+            return tuple(self.columns)
         objs = []
-        for each in list(self.columns ) :
+        for each in list(self.columns) :
             if self.nameSeparator in each :
-                objs += [each.split(self.nameSeparator )[0]]
+                objs += [each.split(self.nameSeparator)[0]]
             else :
                 objs += [each]
         return tuple(set(objs))
@@ -799,6 +817,13 @@ class SimSeries(Series) :
             else :
                 raise NotImplementedError
 
+        # other is Pandas Series
+        elif isinstance(other, Series) :
+            result = self.S.add(other, fill_value=0)
+            newName = _stringNewName(self._CommonRename(SimSeries(other,**self._SimParameters))[2])
+            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+            return SimSeries(data=result, name=newName, **params)
+            
         # let's Pandas deal with other types, maintain units, dtype and name
         result = self.as_Series() + other
         params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
@@ -836,6 +861,13 @@ class SimSeries(Series) :
             else :
                 raise NotImplementedError
 
+        # other is Pandas Series
+        elif isinstance(other, Series) :
+            result = self.S.sub(other, fill_value=0)
+            newName = _stringNewName(self._CommonRename(SimSeries(other,**self._SimParameters))[2])
+            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+            return SimSeries(data=result, name=newName, **params)
+        
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() - other
         params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
@@ -2506,8 +2538,6 @@ class SimDataFrame(DataFrame) :
             return self.rename(columns=objs, inplace=False)
 
     def _CommonRename(self, SimDataFrame1, SimDataFrame2=None, LR=None) :
-        SDF1, SDF2 = SimDataFrame1, SimDataFrame2
-
         cha = self.intersectionCharacter
         
         if LR is not None :
@@ -2515,8 +2545,10 @@ class SimDataFrame(DataFrame) :
             if LR not in 'LR' :
                 LR = None
 
-        if SDF2 is None :
-            SDF1, SDF2 = self, SDF1
+        if SimDataFrame2 is None :
+            SDF1, SDF2 = self, SimDataFrame1
+        else:
+            SDF1, SDF2 = SimDataFrame1, SimDataFrame2
 
         if type(SDF1) is not SimDataFrame :
             raise TypeError("both dataframes to be compared must be SimDataFrames.")
@@ -2598,14 +2630,7 @@ class SimDataFrame(DataFrame) :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             notFount = 0
             
-            if len(self.index) == len(other.index) and (self.index == other.index).all():
-                newIndex = None
-                selfI = self
-                otherI = other
-            else:
-                newIndex= pd.merge(self.DF.iloc[:,0],other.DF.iloc[:,0],how='outer',left_index=True,right_index=True).index
-                selfI = self.reindex(index=newIndex) 
-                otherI = other.reindex(index=newIndex)
+            selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
             
             for col in otherI.columns :
@@ -2640,25 +2665,23 @@ class SimDataFrame(DataFrame) :
 
         # other is SimSeries
         elif isinstance(other, SimSeries) :
-            
-            if len(self.index) == len(other.index) and (self.index == other.index).all():
-                newIndex = None
-                selfI = self
-                otherI = other
-            else:
-                newIndex= pd.merge(self.DF.iloc[:,0],other.S.iloc[:,0],how='outer',left_index=True,right_index=True).index
-                selfI = self.reindex(index=newIndex) 
-                otherI = other.reindex(index=newIndex)
-            
+            selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
             if otherI.name in selfI.columns :
-                result[otherI.name] = self[otherI.name] + otherI
-            elif self.autoAppend :
+                result[otherI.name] = selfI[otherI.name] + otherI
+            elif selfI.autoAppend :
                 result[otherI.name] = otherI
             else :
                 for col in selfI.columns :
                     result[col] = selfI[col] + otherI
             return result
+
+        # other is Pandas DataFrame
+        elif isinstance(other, DataFrame) :
+            result = self.DF.add(other, fill_value=0)
+            selfC, otherC, newNames = self._CommonRename(SimDataFrame(other,**self._SimParameters))
+            result = selfC + otherC
+            return result if newNames is None else result.rename(columns=newNames)
 
         # let's Pandas deal with other types, maintain units and dtype
         else :
@@ -2673,18 +2696,21 @@ class SimDataFrame(DataFrame) :
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            result = self.copy()
             notFount = 0
-            for col in other.columns :
-                if col in self.columns :
-                    result[col] = self[col] - other[col]
+            
+            selfI, otherI = self._JoinedIndex(other)
+            result = selfI.copy()
+            
+            for col in otherI.columns :
+                if col in selfI.columns :
+                    result[col] = selfI[col] - otherI[col]
                 else :
                     notFount += 1
-                    result[col] = other[col] if self.intersectionCharacter in col else -other[col]
+                    result[col] = otherI[col] if selfI.intersectionCharacter in col else -otherI[col]
 
-            if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None :
-                    selfC, otherC, newNames = self._CommonRename(other)
+            if notFount == len(otherI.columns) :
+                if selfI.nameSeparator is not None and otherI.nameSeparator is not None :
+                    selfC, otherC, newNames = selfI._CommonRename(otherI)
                     
                     # if no columns has common names
                     if newNames is None:
@@ -2704,15 +2730,23 @@ class SimDataFrame(DataFrame) :
 
         # other is SimSeries
         elif isinstance(other, SimSeries) :
-            result = self.copy()
-            if other.name in self.columns :
-                result[other.name] = self[other.name] - other
+            selfI, otherI = self._JoinedIndex(other)
+            result = selfI.copy()
+            if otherI.name in selfI.columns :
+                result[otherI.name] = selfI[otherI.name] - otherI
             elif self.autoAppend :
-                result[other.name] = -other
+                result[otherI.name] = -otherI
             else :
-                for col in self.columns :
-                    result[col] = self[col] - other
+                for col in selfI.columns :
+                    result[col] = selfI[col] - otherI
             return result
+
+        # other is Pandas DataFrame
+        elif isinstance(other, DataFrame) :
+            result = self.DF.sub(other, fill_value=0)
+            selfC, otherC, newNames = self._CommonRename(SimDataFrame(other,**self._SimParameters))
+            result = selfC + otherC
+            return result if newNames is None else result.rename(columns=newNames)
 
         # let's Pandas deal with other types, maintain units and dtype
         else :
@@ -2727,17 +2761,20 @@ class SimDataFrame(DataFrame) :
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            result = self.copy()
+            
+            selfI, otherI = self._JoinedIndex(other)
+            result = selfI.copy()
+            
             notFount = 0
-            for col in other.columns :
-                if col in self.columns :
-                    result[col] = self[col] * other[col]
+            for col in otherI.columns :
+                if col in selfI.columns :
+                    result[col] = selfI[col] * otherI[col]
                 else :
                     notFount += 1
 
-            if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None :
-                    selfC, otherC, newNames = self._CommonRename(other)
+            if notFount == len(otherI.columns) :
+                if selfI.nameSeparator is not None and otherI.nameSeparator is not None :
+                    selfC, otherC, newNames = selfI._CommonRename(otherI)
                     
                     # if no columns has common names
                     if newNames is None:
@@ -2759,12 +2796,13 @@ class SimDataFrame(DataFrame) :
 
         # other is SimSeries
         elif isinstance(other, SimSeries) :
-            result = self.copy()
-            if other.name in self.columns :
-                result[other.name] = self[other.name] * other
+            selfI, otherI = self._JoinedIndex(other)
+            result = selfI.copy()
+            if otherI.name in selfI.columns :
+                result[otherI.name] = self[otherI.name] * otherI
             else :
-                for col in self.columns :
-                    result[col] = self[col] * other
+                for col in selfI.columns :
+                    result[col] = selfI[col] * otherI
             return result
 
         # let's Pandas deal with other types, maintain units and dtype
@@ -2780,17 +2818,20 @@ class SimDataFrame(DataFrame) :
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            result = self.copy()
+            
+            selfI, otherI = self._JoinedIndex(other)
+            result = selfI.copy()
+            
             notFount = 0
-            for col in other.columns :
-                if col in self.columns :
-                    result[col] = self[col] / other[col]
+            for col in otherI.columns :
+                if col in selfI.columns :
+                    result[col] = selfI[col] / otherI[col]
                 else :
                     notFount += 1
 
-            if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None :
-                    selfC, otherC, newNames = self._CommonRename(other)
+            if notFount == len(otherI.columns) :
+                if self.nameSeparator is not None and otherI.nameSeparator is not None :
+                    selfC, otherC, newNames = selfI._CommonRename(otherI)
                     
                     # if no columns has common names
                     if newNames is None:
@@ -2811,12 +2852,13 @@ class SimDataFrame(DataFrame) :
 
         # other is SimSeries
         elif isinstance(other, SimSeries) :
-            result = self.copy()
-            if other.name in self.columns :
-                result[other.name] = self[other.name] / other
+            selfI, otherI = self._JoinedIndex(other)
+            result = selfI.copy()
+            if otherI.name in selfI.columns :
+                result[otherI.name] = selfI[otherI.name] / otherI
             else :
-                for col in self.columns :
-                    result[col] = self[col] / other
+                for col in selfI.columns :
+                    result[col] = selfI[col] / otherI
             return result
 
         # let's Pandas deal with other types, maintain units and dtype
@@ -2832,17 +2874,20 @@ class SimDataFrame(DataFrame) :
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            result = self.copy()
+            
+            selfI, otherI = self._JoinedIndex(other)
+            result = selfI.copy()
+            
             notFount = 0
-            for col in other.columns :
-                if col in self.columns :
-                    result[col] = self[col] // other[col]
+            for col in otherI.columns :
+                if col in selfI.columns :
+                    result[col] = selfI[col] // otherI[col]
                 else :
                     notFount += 1
 
-            if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None :
-                    selfC, otherC, newNames = self._CommonRename(other)
+            if notFount == len(otherI.columns) :
+                if selfI.nameSeparator is not None and otherI.nameSeparator is not None :
+                    selfC, otherC, newNames = selfI._CommonRename(otherI)
                     
                     # if no columns has common names
                     if newNames is None:
@@ -2863,9 +2908,10 @@ class SimDataFrame(DataFrame) :
 
         # other is SimSeries
         elif isinstance(other, SimSeries) :
-            result = self.copy()
-            if other.name in self.columns :
-                result[other.name] = self[other.name] // other
+            selfI, otherI = self._JoinedIndex(other)
+            result = selfI.copy()
+            if otherI.name in selfI.columns :
+                result[otherI.name] = selfI[otherI.name] // otherI
             else :
                 for col in self.columns :
                     result[col] = self[col] // other
@@ -2884,17 +2930,20 @@ class SimDataFrame(DataFrame) :
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            result = self.copy()
+            
+            selfI, otherI = self._JoinedIndex(other)
+            result = selfI.copy()
+            
             notFount = 0
-            for col in other.columns :
-                if col in self.columns :
-                    result[col] = self[col] % other[col]
+            for col in otherI.columns :
+                if col in selfI.columns :
+                    result[col] = selfI[col] % otherI[col]
                 else :
                     notFount += 1
 
-            if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None :
-                    selfC, otherC, newNames = self._CommonRename(other)
+            if notFount == len(otherI.columns) :
+                if selfI.nameSeparator is not None and otherI.nameSeparator is not None :
+                    selfC, otherC, newNames = selfI._CommonRename(otherI)
                     
                     # if no columns has common names
                     if newNames is None:
@@ -2916,12 +2965,13 @@ class SimDataFrame(DataFrame) :
 
         # other is SimSeries
         elif isinstance(other, SimSeries) :
-            result = self.copy()
-            if other.name in self.columns :
-                result[other.name] = self[other.name] % other
+            selfI, otherI = self._JoinedIndex(other)
+            result = selfI.copy()
+            if otherI.name in selfI.columns :
+                result[otherI.name] = selfI[other.name] % otherI
             else :
-                for col in self.columns :
-                    result[col] = self[col] % other
+                for col in selfI.columns :
+                    result[col] = selfI[col] % otherI
             return result
 
         # let's Pandas deal with other types, maintain units and dtype
@@ -2934,17 +2984,20 @@ class SimDataFrame(DataFrame) :
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            result = self.copy()
+            
+            selfI, otherI = self._JoinedIndex(other)
+            result = selfI.copy()
+            
             notFount = 0
-            for col in other.columns :
-                if col in self.columns :
-                    result[col] = self[col] ** other[col]
+            for col in otherI.columns :
+                if col in selfI.columns :
+                    result[col] = selfI[col] ** otherI[col]
                 else :
                     notFount += 1
 
-            if notFount == len(other.columns) :
-                if self.nameSeparator is not None and other.nameSeparator is not None :
-                    selfC, otherC, newNames = self._CommonRename(other)
+            if notFount == len(otherI.columns) :
+                if selfI.nameSeparator is not None and otherI.nameSeparator is not None :
+                    selfC, otherC, newNames = self._CommonRename(otherI)
                     
                     # if no columns has common names
                     if newNames is None:
@@ -2966,12 +3019,13 @@ class SimDataFrame(DataFrame) :
 
         # other is SimSeries
         elif isinstance(other, SimSeries) :
-            result = self.copy()
-            if other.name in self.columns :
-                result[other.name] = self[other.name] ** other
+            selfI, otherI = self._JoinedIndex(other)
+            result = selfI.copy()
+            if otherI.name in selfI.columns :
+                result[otherI.name] = self[otherI.name] ** otherI
             else :
-                for col in self.columns :
-                    result[col] = self[col] ** other
+                for col in selfI.columns :
+                    result[col] = selfI[col] ** otherI
             return result
 
         # let's Pandas deal with other types, maintain units and dtype
