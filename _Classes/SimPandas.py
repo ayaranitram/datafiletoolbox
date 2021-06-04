@@ -1720,7 +1720,7 @@ class SimDataFrame(DataFrame) :
     def set_index(self, key, drop=False, append=False, inplace=False, verify_integrity=False, **kwargs) :
         if key not in self.columns :
             raise ValueError("The key '"+str(key)+"' is not a column name of this DataFrame.")
-        super().set_index(key, drop=drop, append=append, inplace=inplace, verify_integrity=verify_integrity, **kwargs)
+        return super().set_index(key, drop=drop, append=append, inplace=inplace, verify_integrity=verify_integrity, **kwargs)
 
     def to_excel(self, excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None, header=True, units=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None, sort=None) :
         """
