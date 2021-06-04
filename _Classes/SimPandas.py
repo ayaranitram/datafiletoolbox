@@ -2569,6 +2569,15 @@ class SimDataFrame(DataFrame) :
             commonNames = None
         
         return SDF1C, SDF2C, commonNames
+    
+    def _JoinedIndex(self,other):
+        return _MergeIndex(self,other,how='outer')
+    
+    def _CommonIndex(self,other):
+        return _MergeIndex(self,other,how='inner')
+    
+    def _MergeIndex(self,other,how='outer'):
+        return _MergeIndex(self,other,how=how)
 
     def __contains__(self, item) :
         if item in self.columns :
@@ -4368,3 +4377,42 @@ class SimDataFrame(DataFrame) :
                 return SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
             else:
                 raise ValueError('index is not a valid date or year integer')
+
+
+def _MergeIndex(left,right,how='outer'):
+    if how not in ('outer','inner','left','right','cross'):
+        raise ValueError("how must be 'outer', 'iner', 'left', 'right' or 'cross'")
+    
+    # if both indexes are equal
+    if len(left.index) == len(right.index) and (left.index == right.index).all():
+        return left, right
+    
+    # if are different, extract a Series accoring to the type of input    
+    else:
+        # from datafiletoolbox import SimSeries, SimDataFrame
+        # from pandas import Series, DataFrame
+        # checking left
+        if type(left) is SimDataFrame:
+            ileft = left.DF.iloc[:,0]
+        elif type(left) is SimSeries:
+            ileft = left.S
+        elif type(left) is DataFrame:
+            ileft = left.iloc[:,0]
+        elif type(left) is Series:
+            ileft = left
+        
+        # checking right
+        if type(right) is SimDataFrame:
+            iright = right.DF.iloc[:,0]
+        elif type(right) is SimSeries:
+            iright = right.S
+        elif type(right) is DataFrame:
+            iright = right.iloc[:,0]
+        elif type(right) is Series:
+            iright = right
+        
+        # merge the indexes
+        newIndex= pd.merge(ileft,iright,how=how,left_index=True,right_index=True).index
+        
+        # return original dataframes reindexed to the merged index
+        return left.reindex(index=newIndex), right.reindex(index=newIndex)
