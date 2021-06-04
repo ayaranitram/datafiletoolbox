@@ -346,6 +346,14 @@ class SimSeries(Series) :
         return self.to_SimDataFrame()
 
     @property
+    def df(self) :
+        return self.to_SimDataFrame().to_DataFrame()
+
+    @property
+    def DF(self) :
+        return self.to_SimDataFrame().to_DataFrame()
+
+    @property
     def Series(self) :
         return self.as_Series()
 
