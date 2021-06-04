@@ -47,7 +47,9 @@ class ECL(_SimResult):
                         SummaryFilePath = newPath
                         _verbose( self.speak, 3, "\nWARNING: '.SMSPEC' file found in 'RESULTS' subdirectory, not in the same folder the '.DATA' is present.\n")
 
-            if os.path.isfile(SummaryFilePath) :
+            if os.path.isfile(SummaryFilePath):
+                if not os.path.isfile(SummaryFilePath[:-6]+'UNSMRY'):
+                    raise FileNotFoundError( "the file doesn't exist:\n  -> " + SummaryFilePath[:-6]+'UNSMRY' )
                 _verbose( self.speak, 1, ' > loading summary file:\n  ' + SummaryFilePath)
                 EclSummary = ECL.loadEclSum
                 self.results = EclSummary(SummaryFilePath, **kwargs) # ecl.summary.EclSum(SummaryFilePath)
@@ -66,7 +68,9 @@ class ECL(_SimResult):
 
             else :
                 # print("\n ERROR the file doesn't exists:\n  -> " + SummaryFilePath)
-                raise FileNotFoundError( "the file doesn't exists:\n  -> " + SummaryFilePath )
+                if not os.path.isfile(SummaryFilePath[:-6]+"UNSMRY"):
+                    raise FileNotFoundError( "the files doesn't exist:\n  -> " + SummaryFilePath[:-6]+"UNSMRY\n  -> " + SummaryFilePath )
+                raise FileNotFoundError( "the file doesn't exist:\n  -> " + SummaryFilePath )
         else :
             print("SummaryFilePath must be a string")
 
