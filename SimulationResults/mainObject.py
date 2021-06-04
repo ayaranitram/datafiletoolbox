@@ -4909,13 +4909,13 @@ class SimResult(object):
 
     def createTIME(self, startDate=None) :
         if self.is_Key('DATE') :
-            date = self['DATE']
+            date = self('DATE')
         elif self.is_Key('DATES') :
-            date = self['DATES']
+            date = self('DATES')
         else :
             catch = self.createDATES()
             if catch is None :
-                date = self['DATES']
+                date = self('DATES')
             else:
                 date = None
         if date is None :
