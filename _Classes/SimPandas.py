@@ -14,11 +14,12 @@ from io import StringIO
 from shutil import get_terminal_size
 from pandas._config import get_option
 from pandas.io.formats import console
+from pandas.core import indexing
 from os.path import commonprefix
 import pandas as pd
 import fnmatch
 import warnings
-from pandas import Series, DataFrame, DatetimeIndex, Timestamp, Index
+from pandas import Series, DataFrame, DatetimeIndex, Timestamp, Index 
 import numpy as np
 import datetime as dt
 from warnings import warn
@@ -73,15 +74,14 @@ def _Series2Frame(aSimSeries) :
         return aSimSeries
     if type(aSimSeries) is SimSeries :
         try :
-            return SimDataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list() ) ), units=aSimSeries.get_Units(), index=aSimSeries.columns, speak=aSimSeries.speak, indexName=aSimSeries.index.name, indexUnits=aSimSeries.indexUnits, nameSeparator=aSimSeries.nameSeparator, intersectionCharacter=aSimSeries.intersectionCharacter, autoAppend=aSimSeries.autoAppend )
+            return SimDataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list())), units=aSimSeries.get_Units(), index=aSimSeries.columns, speak=aSimSeries.speak, indexName=aSimSeries.index.name, indexUnits=aSimSeries.indexUnits, nameSeparator=aSimSeries.nameSeparator, intersectionCharacter=aSimSeries.intersectionCharacter, autoAppend=aSimSeries.autoAppend)
         except :
             return aSimSeries
     if type(aSimSeries) is Series :
         try :
-            return DataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list() ) ), index=aSimSeries.columns )
+            return DataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list())), index=aSimSeries.columns)
         except :
             return aSimSeries
-
 
 def _cleanAxis(axis=None) :
     if axis is None :
@@ -96,13 +96,11 @@ def _cleanAxis(axis=None) :
         return int(axis)
     return axis
 
-
 def jitter(df,std=0.10) :
     import numpy as np
     jit = np.random.randn(len(df),len(df.columns))
     jit = ( jit * std ) + 1
     return df*jit
-
 
 def _stringNewName(newName):
     if len(newName) == 1 :
@@ -126,6 +124,31 @@ def typeOfFrame(frame):
             else:
                 raise TypeError('frame is not an instance of Pandas or SimPandas Frames')
 
+
+class _SimLocIndexer(indexing._LocIndexer):
+    def __init__(self, *args):
+        self.spd = args[1]
+        super().__init__(*args)
+        
+    def __getitem__(self, *args):
+        result = super().__getitem__(*args)
+        if isinstance(result,(Series,DataFrame)):
+            if type(self.spd) is SimSeries:
+                return self.spd._class(data=result, **self.spd._SimParameters)
+            
+            elif type(self.spd) is SimDataFrame and type(*args) is not tuple and isinstance(result,Series):
+                return self.spd._class(data=dict(zip(result.index,result.values)),index=[result.name], **self.spd._SimParameters)
+            elif type(self.spd) is SimDataFrame and type(*args) is not tuple and isinstance(result,DataFrame):
+                return self.spd._class(data=result, **self.spd._SimParameters)
+            elif type(self.spd) is SimDataFrame and type(*args) is tuple and len(*args) > 1 and type(args[0][-1]) in (list,tuple,slice) and isinstance(result,DataFrame):
+                return self.spd._class(data=result, **self.spd._SimParameters)
+            else:
+                result = self.spd._class(data=result.values,index=result.index, **self.spd._SimParameters)
+                result.rename(columns=dict(zip(result.columns,self.spd[[args[0][-1]]].columns)),inplace=True)
+                result.set_units(self.spd.get_units(self.spd[[args[0][-1]]].columns))
+                return result
+        else:
+            return result
 
 
 class SimSeries(Series) :
@@ -153,7 +176,7 @@ class SimSeries(Series) :
     pandas.Series
 
     """
-    _metadata = ["units", "speak", 'indexUnits', 'nameSeparator', 'intersectionCharacter', 'autoAppend']
+    _metadata = ["units", "speak", 'indexUnits', 'nameSeparator', 'intersectionCharacter', 'autoAppend', 'spdLocator']  #, 'spdiLocator']
 
     def __init__(self, data=None, units=None, index=None, name=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩' , autoAppend=False, *args, **kwargs) :
         Uname = None
@@ -164,6 +187,8 @@ class SimSeries(Series) :
         self.nameSeparator = None
         self.intersectionCharacter = '∩'
         self.autoAppend = False
+        self.spdLocator = _SimLocIndexer("loc", self)
+        # self.spdiLocator = _SimLocIndexer("iloc", self)
 
         # validaton
         if isinstance(data, DataFrame) and len(data.columns)>1 :
@@ -254,7 +279,7 @@ class SimSeries(Series) :
             self.nameSeparator = nameSeparator
         elif 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
             self.set_NameSeparator(kwargsB['nameSeparator'])
-        elif (self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False ) and (self.name is not None and ':' in self.name ) :
+        elif (self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False ) and (type(self.name) is str and ':' in self.name ) :
             self.nameSeparator = ':'
         elif self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False :
             self.nameSeparator = ''
@@ -275,7 +300,7 @@ class SimSeries(Series) :
         # set the provided name
         if self.name is None and name is not None:
             self.name = name    
-
+    
     @property
     def _constructor(self):
         return _simseries_constructor_with_fallback
@@ -287,12 +312,31 @@ class SimSeries(Series) :
     @property
     def _SimParameters(self) :
         return {'units':self.units,
+                'name':self.name,
                 'speak':self.speak,
                 'indexName':self.index.name,
                 'indexUnits':self.indexUnits,
                 'nameSeparator':self.nameSeparator,
                 'intersectionCharacter':self.intersectionCharacter,
                 'autoAppend':self.autoAppend}
+    
+    @property
+    def loc(self) -> _SimLocIndexer:
+        """
+        wrapper for .loc indexing
+        """
+        return self.spdLocator
+
+    # @property
+    # def iloc(self) -> _SimLocIndexer:
+    #     """
+    #     wrapper for .iloc indexing
+    #     """
+    #     return self.spdiLocator
+    
+    @property
+    def _class(self):
+        return SimSeries
 
     def __getitem__(self, key=None) :
         if key is None :
@@ -1583,6 +1627,7 @@ class SimSeries(Series) :
         """
         return self.to_SimDataFrame().yearly(outBy=outBy).to_SimSeries()
 
+
 class SimDataFrame(DataFrame) :
     """
     A SimDataFrame object is a pandas.DataFrame that units associated with to
@@ -1602,7 +1647,7 @@ class SimDataFrame(DataFrame) :
     pandas.DataFrame
 
     """
-    _metadata = ["units", "speak", "indexUnits", "nameSeparator", "intersectionCharacter", "autoAppend"]
+    _metadata = ["units", "speak", "indexUnits", "nameSeparator", "intersectionCharacter", "autoAppend", "spdLocator"]  #, "spdiLocator"]
 
     def __init__(self, data=None, units=None, index=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩', autoAppend=False, *args, **kwargs) :
         self.units = None
@@ -1611,6 +1656,9 @@ class SimDataFrame(DataFrame) :
         self.nameSeparator = None
         self.intersectionCharacter = '∩'
         self.autoAppend = False
+        self.spdLocator = _SimLocIndexer("loc", self)
+        # self.spdiLocator = _SimLocIndexer("iloc", self)
+
 
         indexInput = None
         # catch index keyword from input parameters
@@ -1717,6 +1765,24 @@ class SimDataFrame(DataFrame) :
     # @property
     # def _constructor(self):
     #     return SimDataFrame
+
+    @property
+    def loc(self) -> _SimLocIndexer:
+        """
+        wrapper for .loc indexing
+        """
+        return self.spdLocator
+
+    # @property
+    # def iloc(self) -> _SimLocIndexer:
+    #     """
+    #     wrapper for .iloc indexing
+    #     """
+    #     return self.spdiLocator
+
+    @property
+    def _class(self):
+        return SimDataFrame
 
     @property
     def _SimParameters(self) :
@@ -3501,6 +3567,11 @@ class SimDataFrame(DataFrame) :
         ### if is a single row return it as a DataFrame instead of a Series
         if byIndex :
             result = _Series2Frame(result)
+        
+        if type(result) is DataFrame:
+            result = SimDataFrame(result, **self._SimParameters)
+        elif type(result) is Series:
+            result = SimSeries(result, **self._SimParameters)
 
         return result
 
@@ -3558,7 +3629,13 @@ class SimDataFrame(DataFrame) :
             try :
                 return self.iloc[key]
             except :
-                raise ValueError(' ' + str(key) + ' is not a valid index value or position.')
+                try:
+                    return self.loc[:,key]
+                except:
+                    try:
+                        return self.iloc[:,key]
+                    except:
+                        raise ValueError(' ' + str(key) + ' is not a valid index value or position.')
 
     def _getbyDateIndex(self, key) :
         """
