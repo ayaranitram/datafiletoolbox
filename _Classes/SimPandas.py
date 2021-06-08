@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.56.0'
-__release__ = 210603
+__version__ = '0.58.2'
+__release__ = 210608
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -19,7 +19,7 @@ from os.path import commonprefix
 import pandas as pd
 import fnmatch
 import warnings
-from pandas import Series, DataFrame, DatetimeIndex, Timestamp, Index 
+from pandas import Series, DataFrame, DatetimeIndex, Timestamp, Index
 import numpy as np
 import datetime as dt
 from warnings import warn
@@ -1635,6 +1635,68 @@ class SimSeries(Series) :
         """
         return self.to_SimDataFrame().yearly(outBy=outBy).to_SimSeries()
 
+    def DaysInYear(self,column=None):
+        return self.daysInYear(column=column)
+    
+    def daysinyear(self,column=None):
+        return self.daysInYear(column=column)
+    
+    def daysInYear(self,column=None):
+        # params = self._SimParameters
+        # params['index'] = self.index
+        # params['name'] = 'DaysInYear'
+        # params['units'] = 'days'
+        if column is not None:
+            if type(column) is str and column in self.columns:
+                if self[column].dtype in ('int','int64') and self[column].min() > 0 :
+                    return daysInYear(self[column])  # SimSeries( data=[ dt.date(Y, 12, 31).timetuple().tm_yday for Y in self[column] ], **params )
+                elif 'datetime' in str(self[column].dtype):
+                    return daysInYear(self[column])  # SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self[column] ], **params )
+                else:
+                    raise ValueError('selected column is not a valid date or year integer')
+            elif type(column) is str and column not in self.columns:
+                raise ValueError('the selected column is not in this SimDataFrame')
+            elif type(colum) is list:
+                result = self._class(data={},index=self.index,**self._SimParameters)
+                for col in column:
+                    if col in self.columns:
+                        result[col] = daysInYear(self[col])
+                return result
+        else:
+            if self.index.dtype in ('int','int64') and self.index.min() > 0 :
+                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )  # [ dt.date(Y, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
+            elif 'datetime' in str(self.index.dtype):
+                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )  # SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
+            else:
+                raise ValueError('index is not a valid date or year integer')
+
+    def RealYear(self,column=None):
+        return self.realYear(column)
+
+    def realyear(self,column=None):
+        return self.realYear(column)
+
+    def realYear(self,column=None):
+        if column is not None:
+            if type(column) is str and column in self.columns:
+                if 'datetime' in str(self[column].dtype):
+                    return realYear(self[column])  
+                else :
+                    raise ValueError('selected column is not a valid date format')
+            elif type(column) is str and column not in self.columns:
+                raise ValueError('the selected column is not in this SimDataFrame')
+            elif type(colum) is list:
+                result = self._class(data={},index=self.index,**self._SimParameters)
+                for col in column:
+                    if col in self.columns:
+                        result[col] = daysInYear(self[col])
+                return result
+        else:
+            if 'datetime' in str(self.index.dtype):
+                return self._class( data=self.values, index=list(realYear(self.index)), columns=self.columns, **self._SimParameters )
+            else:
+                raise ValueError('index is not a valid date or year integer')
+
 
 class SimDataFrame(DataFrame) :
     """
@@ -1687,7 +1749,8 @@ class SimDataFrame(DataFrame) :
         # if units is None data is SimDataFrame or SimSeries get the units
         if units is None :
             if type(data) is SimDataFrame :
-                units = data.units.copy()
+                if type(data.units) is dict:
+                    units = data.units.copy()
             elif type(data) is SimSeries :
                 if type(data.units) is dict :
                     units = data.units.copy()
@@ -1727,21 +1790,22 @@ class SimDataFrame(DataFrame) :
         
         # set the units
         if type(units) is str :
-            self.units = {}
-            for key in list(self.columns ) :
-                self.units[ key ] = units
+            # self.units = {}
+            # for key in list(self.columns) :
+            #     self.units[ key ] = units
+            self.units = dict(zip(list(self.columns), [units]*len(list(self.columns))))
         elif type(units) is list or type(units) is tuple :
             if len(units) == len(self.columns) :
-                self.units = dict(zip(list(self.columns), units ) )
+                self.units = dict(zip(list(self.columns), units))
         elif type(units) is dict and len(units)>0 :
             self.units = {}
-            for key in list(self.columns ):
-                if key in units :
+            for key in list(self.columns):
+                if key is not None and key in units :
                     self.units[key] = units[key]
                 else :
                     self.units[key] = 'UNITLESS'
             if self.index.name in units:
-                self.units[key] = units[key]
+                self.units[self.index.name] = units[self.index.name]
             for key in self.index.names:
                 if key is not None and key in units:
                     self.units[key] = units[key]
@@ -4503,22 +4567,166 @@ class SimDataFrame(DataFrame) :
         params['name'] = 'DaysInYear'
         params['units'] = 'days'
         if column is not None:
-            if self[column].dtype in ('int','int64') and self[column].min() > 0 :
-                return SimSeries( data=[ dt.date(Y, 12, 31).timetuple().tm_yday for Y in self[column] ], **params )
-            elif 'datetime' in str(self[column].dtype):
-                return SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self[column] ], **params )
-            else:
-                raise ValueError('selected column is not a valid date or year integer')
+            if type(column) is str and column in self.columns:
+                if self[column].dtype in ('int','int64') and self[column].min() > 0 :
+                    return daysInYear(self[column])  # SimSeries( data=[ dt.date(Y, 12, 31).timetuple().tm_yday for Y in self[column] ], **params )
+                elif 'datetime' in str(self[column].dtype):
+                    return daysInYear(self[column])  # SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self[column] ], **params )
+                else:
+                    raise ValueError('selected column is not a valid date or year integer')
+            elif type(column) is str and column not in self.columns:
+                raise ValueError('the selected column is not in this SimDataFrame')
+            elif type(colum) is list:
+                result = self._class(data={},index=self.index,**self._SimParameters)
+                for col in column:
+                    if col in self.columns:
+                        result[col] = daysInYear(self[col])
+                return result
         else:
             if self.index.dtype in ('int','int64') and self.index.min() > 0 :
-                return SimSeries( data=[ dt.date(Y, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
+                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )  # [ dt.date(Y, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
             elif 'datetime' in str(self.index.dtype):
-                return SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
+                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )  # SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
             else:
                 raise ValueError('index is not a valid date or year integer')
 
+    def RealYear(self,column=None):
+        return self.realYear(column)
+
+    def realyear(self,column=None):
+        return self.realYear(column)
+
+    def realYear(self,column=None):
+        if column is not None:
+            if type(column) is str and column in self.columns:
+                if 'datetime' in str(self[column].dtype):
+                    return realYear(self[column])  
+                else :
+                    raise ValueError('selected column is not a valid date format')
+            elif type(column) is str and column not in self.columns:
+                raise ValueError('the selected column is not in this SimDataFrame')
+            elif type(colum) is list:
+                result = self._class(data={},index=self.index,**self._SimParameters)
+                for col in column:
+                    if col in self.columns:
+                        result[col] = daysInYear(self[col])
+                return result
+        else:
+            if 'datetime' in str(self.index.dtype):
+                return self._class( data=self.values, index=list(realYear(self.index)), columns=self.columns, **self._SimParameters )
+            else:
+                raise ValueError('index is not a valid date or year integer')
+                
+
+
+def daysInYear(year):
+    """
+    returns the number of days in a particular year
+
+    Parameters
+    ----------
+    year : int, date, datetime or array-like of int, date, or datetime
+        The year to calculate the number of day.
+        Can a single year, represented as an integer or as date or datetime object
+        Also, list or array of year is accepted.
+
+    Returns
+    -------
+    int or array of ints, according to the input
+    """
+    if type(year) in (int,float):
+        return dt.date(int(year), 12, 31).timetuple().tm_yday
+    if type(year) in (dt.date, dt.datetime):
+        return dt.date(year.timetuple().tm_year, 12, 31).timetuple().tm_yday
+    if type(year) is pd.Timestamp:
+        return dt.date(year.year,12,31).timetuple().tm_yday
+    
+    if type(year) in (list,tuple,np.ndarray):
+        if np.array(year).dtype in ('int','int64','float','float64') :
+            return np.array([ dt.date(int(Y), 12, 31).timetuple().tm_yday for Y in year ], dtype=int)
+        elif 'datetime' in str(np.array(year).dtype):
+            return np.array([ dt.date(Y.astype(object).timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in year ], dtype=int)
+        elif len(set(map(type,year))) == 1 and list(set(map(type,year)))[0] in (dt.date, dt.datetime):
+            return np.array([ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in year ], dtype=int)
+        elif len(set(map(type,year))) == 2 and list(set(map(type,year)))[0] in (dt.date, dt.datetime) and list(set(map(type,year)))[1] in (dt.date, dt.datetime):
+            return np.array([ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in year ], dtype=int)
+    if isinstance(year,pd.DatetimeIndex):
+        return np.array([ dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in year ], dtype=int) 
+    
+    if isinstance(year,SimSeries):
+        params = year._SimParameters
+        params['name'] = 'DaysInYear'
+        params['units'] = 'days'
+        return SimSeries(data=np.array([ dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in year ], dtype=int), index=year.index, **params)
+    
+    if isinstance(year,Series):
+        return Series(data=np.array([ dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in year ], dtype=int), index=year.index)
+
+    raise ValueError("input 'year' is not a valid date or year integer")
+
+def realYear(date):
+    """
+    returns a float corresponding for the year and the fraction of year represented by the date.
+
+    Parameters
+    ----------
+    date : date, datetime, or array of date objects
+
+    Returns
+    -------
+    float
+    """
+    if type(date) in (dt.date, dt.datetime):
+        return date.timetuple().tm_year + date.timetuple().tm_yday / dt.date(date.timetuple().tm_year, 12, 31).timetuple().tm_yday
+    if type(date) is pd.Timestamp:
+        return date.year + dt.date(date.year,date.month,date.day).timetuple().tm_yday / dt.date(date.year, 12, 31).timetuple().tm_yday
+    
+    if type(date) is np.ndarray and 'datetime' in str(np.array(date).dtype):
+            return np.array([ Y.year + dt.date(Y.year, Y.month, Y.day).timetuple().tm_yday / dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in pd.to_datetime(date) ], dtype=float)
+    if type(date) in (list,tuple):
+        if len(set(map(type,date))) == 1 and list(set(map(type,date)))[0] in (dt.date, dt.datetime):
+            return np.array([ Y.timetuple().tm_year + Y.timetuple().tm_yday / dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in date ], dtype=float)
+        elif len(set(map(type,date))) == 2 and list(set(map(type,date)))[0] in (dt.date, dt.datetime) and list(set(map(type,date)))[1] in (dt.date, dt.datetime):
+            return np.array([ Y.timetuple().tm_year + Y.timetuple().tm_yday / dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in date ], dtype=float)
+    if isinstance(date,pd.DatetimeIndex):
+        return np.array([ Y.year + dt.date(Y.year,Y.month,Y.day).timetuple().tm_yday / dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in date ], dtype=float) 
+
+    if isinstance(date,SimSeries):
+        params = date._SimParameters
+        params['name'] = 'Year'
+        params['units'] = 'year'
+        return SimSeries(data=realYear(date.to_Pandas()), **params)
+    
+    if isinstance(date,Series):
+        return Series(data=np.array([ Y.year + dt.date(Y.year, Y.month, Y.day).timetuple().tm_yday / dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in date ], dtype=float), index=date.index)
 
 def _MergeIndex(left,right,how='outer'):
+    """
+    returns an left and right Frames or Series reindexed with a common index.
+
+    Parameters
+    ----------
+    left : Series, SimSeries, DataFrame or SimDataFrame
+        The left frame to merge
+    right : Series, SimSeries, DataFrame or SimDataFrame
+        The right frame to merge
+    how : str, optional
+        The merge method to be used. 
+        The default is 'outer'.
+
+    Raises
+    ------
+    ValueError
+        If how parameter is not valir.
+
+    Returns
+    -------
+    Series, SimSeries, DataFrame or SimDataFrame
+        Reindexed to the merged index.
+    Series, SimSeries, DataFrame or SimDataFrame
+        Reindexed to the merged index.
+
+    """
     if how not in ('outer','inner','left','right','cross'):
         raise ValueError("how must be 'outer', 'iner', 'left', 'right' or 'cross'")
     
