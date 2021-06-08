@@ -221,10 +221,14 @@ class SimSeries(Series) :
         elif type(units) is str :
             self.units = units
         elif units is None and type(data) is SimSeries :
-                units = data.units
+            if type(data.units) is str:
+                units = data.units 
+            elif type(data.units) is dict :
+                units = data.units.copy() 
 
         # remove arguments not known by Pandas
         kwargsB = kwargs.copy()
+        kwargs.pop('columns',None)
         kwargs.pop('indexName', None)
         kwargs.pop('indexUnits', None)
         kwargs.pop('nameSeparator', None)
@@ -299,7 +303,11 @@ class SimSeries(Series) :
             
         # set the provided name
         if self.name is None and name is not None:
-            self.name = name    
+            self.name = name
+        if self.name is None and 'columns' in kwargsB['columns'] and type(kwargsB['columns']) is list and len(kwargsB['columns']) == 1:
+            self.name = kwargsB['columns'][0]
+        if self.name is None and 'columns' in kwargsB['columns'] and type(kwargsB['columns']) is str and len(kwargsB['columns'].strip()) > 0:
+            self.name = kwargsB['columns'].strip()
     
     @property
     def _constructor(self):
