@@ -321,7 +321,7 @@ class SimSeries(Series) :
     
     @property
     def _SimParameters(self) :
-        return {'units':self.units,
+        return {'units':self.units.copy() if type(self.units) is dict else self.units,
                 'name':self.name,
                 'speak':self.speak,
                 'indexName':self.index.name,
@@ -1879,7 +1879,7 @@ class SimDataFrame(DataFrame) :
 
     @property
     def _SimParameters(self) :
-        return {'units':self.units,
+        return {'units':self.units.copy() if type(self.units) is dict else self.units,
                 'speak':self.speak,
                 'indexName':self.index.name,
                 'indexUnits':self.indexUnits,
