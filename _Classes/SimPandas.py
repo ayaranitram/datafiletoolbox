@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.58.2'
-__release__ = 210608
+__version__ = '0.58.3'
+__release__ = 210609
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -304,9 +304,9 @@ class SimSeries(Series) :
         # set the provided name
         if self.name is None and name is not None:
             self.name = name
-        if self.name is None and 'columns' in kwargsB['columns'] and type(kwargsB['columns']) is list and len(kwargsB['columns']) == 1:
+        if self.name is None and 'columns' in kwargsB and type(kwargsB['columns']) is list and len(kwargsB['columns']) == 1:
             self.name = kwargsB['columns'][0]
-        if self.name is None and 'columns' in kwargsB['columns'] and type(kwargsB['columns']) is str and len(kwargsB['columns'].strip()) > 0:
+        if self.name is None and 'columns' in kwargsB and type(kwargsB['columns']) is str and len(kwargsB['columns'].strip()) > 0:
             self.name = kwargsB['columns'].strip()
     
     @property
