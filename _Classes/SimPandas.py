@@ -2299,30 +2299,30 @@ class SimDataFrame(DataFrame) :
 
     def dropna(self, axis='index', how='all', thresh=None, subset=None, inplace=False) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace), **self._SimParameters ) 
 
     def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise') :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors), **self._SimParameters ) 
 
     def drop_duplicates(self, subset=None, keep='first', inplace=False, ignore_index=False) :
-        return SimDataFrame(data=self.DF.drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=self.DF.drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index), **self._SimParameters )
 
     def fillna(self, value=None, method=None, axis='index', inplace=False, limit=None, downcast=None) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
-
+        return SimDataFrame(data=self.DF.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast), **self._SimParameters ) 
+    
     def interpolate(self, method='slinear', axis='index', limit=None, inplace=False, limit_direction=None, limit_area=None, downcast=None, **kwargs) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.interpolate(method=method, axis=axis, limit=limit, inplace=inplace, limit_direction=limit_direction, limit_area=limit_area, downcast=downcast, **kwargs), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=self.DF.interpolate(method=method, axis=axis, limit=limit, inplace=inplace, limit_direction=limit_direction, limit_area=limit_area, downcast=downcast, **kwargs), **self._SimParameters ) 
 
     def replace(self, to_replace=None, value=None, inplace=False, limit=None, regex=False, method='pad') :
-        return SimDataFrame(data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method), **self._SimParameters ) 
 
     def groupby(self, by=None, axis=0, level=None, as_index=True, sort=True, group_keys=True, squeeze=False, observed=False, dropna=True) :
         axis = _cleanAxis(axis)
         selfGrouped = self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna)
-        return SimDataFrame(data=selfGrouped, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=selfGrouped, **self._SimParameters ) 
 
     def daily(self, outBy='mean') :
         """
@@ -2376,7 +2376,7 @@ class SimDataFrame(DataFrame) :
         else :
             raise ValueError(" outBy parameter is not valid.")
 
-        output = SimDataFrame(data=result, **self._SimParameters)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+        output = SimDataFrame(data=result, **self._SimParameters)
         output.index.names = ['YEAR', 'MONTH', 'DAY']
         output.index.name = 'YEAR_MONTH_DAY'
         # output.indexUnits = ('year','month','day')
@@ -2434,7 +2434,7 @@ class SimDataFrame(DataFrame) :
         else :
             raise ValueError(" outBy parameter is not valid.")
 
-        output = SimDataFrame(data=result, **self._SimParameters)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+        output = SimDataFrame(data=result, **self._SimParameters) 
         output.index.names = ['YEAR', 'MONTH']
         output.index.name = 'YEAR_MONTH'
         # output.indexUnits = ('year','month')
@@ -2492,7 +2492,7 @@ class SimDataFrame(DataFrame) :
         else :
             raise ValueError(" outBy parameter is not valid.")
 
-        output = SimDataFrame(data=result, **self._SimParameters)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+        output = SimDataFrame(data=result, **self._SimParameters)  
         output.index.names = ['YEAR']
         output.index.name = 'YEAR'
         output.indexUnits = 'year'
@@ -2500,11 +2500,11 @@ class SimDataFrame(DataFrame) :
 
     def aggregate(self, func=None, axis=0, *args, **kwargs) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.aggregate(func=func, axis=axis, *args, **kwargs), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=self.DF.aggregate(func=func, axis=axis, *args, **kwargs), **self._SimParameters )
 
     def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )
 
     def reindex(self, labels=None, index=None, columns=None, axis=None, **kwargs) :
         """
@@ -2531,7 +2531,7 @@ class SimDataFrame(DataFrame) :
             else :
                 raise TypeError("labels does not match neither len(index) or len(columns).")
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.reindex(labels=labels, axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=self.DF.reindex(labels=labels, axis=axis, **kwargs), **self._SimParameters ) 
 
     def rename(self, **kwargs) :
         """
@@ -2735,7 +2735,7 @@ class SimDataFrame(DataFrame) :
 
     def __neg__(self) :
         result = -self.as_DataFrame()
-        return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=result, **self._SimParameters )
 
     def __add__(self, other) :
         # both are SimDataFrame
@@ -2793,14 +2793,14 @@ class SimDataFrame(DataFrame) :
         # other is Pandas DataFrame
         elif isinstance(other, DataFrame) :
             result = self.DF.add(other, fill_value=0)
-            selfC, otherC, newNames = self._CommonRename(SimDataFrame(other,**self._SimParameters))
+            selfC, otherC, newNames = self._CommonRename(SimDataFrame(other, **self._SimParameters))
             result = selfC + otherC
             return result if newNames is None else result.rename(columns=newNames)
 
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() + other
-            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=result, **self._SimParameters)
 
     def __radd(self, other) :
         return self.__add__(other)
@@ -2858,14 +2858,14 @@ class SimDataFrame(DataFrame) :
         # other is Pandas DataFrame
         elif isinstance(other, DataFrame) :
             result = self.DF.sub(other, fill_value=0)
-            selfC, otherC, newNames = self._CommonRename(SimDataFrame(other,**self._SimParameters))
+            selfC, otherC, newNames = self._CommonRename(SimDataFrame(other, **self._SimParameters))
             result = selfC + otherC
             return result if newNames is None else result.rename(columns=newNames)
 
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() - other
-            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=result, **self._SimParameters) 
 
     def __rsub__(self, other) :
         return self.__neg__().__add__(other)
@@ -2922,7 +2922,7 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() * other
-            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=result, **self._SimParameters)
 
     def __rmul__(self, other) :
         return self.__mul__(other)
@@ -2978,7 +2978,7 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() / other
-            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=result, **self._SimParameters)
 
     def __rtruediv__(self, other) :
         return self.__pow__(-1).__mul__(other)
@@ -3034,7 +3034,7 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() // other
-            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=result, **self._SimParameters)
 
     def __rfloordiv__(self, other) :
         return self.__pow__(-1).__mul__(other).__int__()
@@ -3091,7 +3091,7 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() % other
-            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=result, **self._SimParameters )
 
     def __pow__(self, other) :
         # both are SimDataFrame
@@ -3145,15 +3145,15 @@ class SimDataFrame(DataFrame) :
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() ** other
-            return SimDataFrame(data=result, **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=result, **self._SimParameters)
 
     def __int__(self) :
-        return SimDataFrame(data=self.DF.astype(int), **self._SimParameters )  # units=self.units, indexName=self.index.name, nameSeparator=self.nameSeparator, autoAppend=self.autoAppend )
+        return SimDataFrame(data=self.DF.astype(int), **self._SimParameters) 
 
     def mode(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.mode(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=self.DF.mode(axis=axis, **kwargs), **self._SimParameters) 
         if axis == 1 :
             newName = '.mode'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -3169,12 +3169,14 @@ class SimDataFrame(DataFrame) :
             data=self.DF.mode(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
     
     def median(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.median(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=self.DF.median(axis=axis, **kwargs), **self._SimParameters)
         if axis == 1 :
             newName = '.median'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -3190,7 +3192,9 @@ class SimDataFrame(DataFrame) :
             data=self.DF.median(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
 
     def avg(self, axis=0, **kwargs) :
         return self.mean(axis=axis, **kwargs)
@@ -3201,7 +3205,7 @@ class SimDataFrame(DataFrame) :
     def mean(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.mean(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, nameSeparator=self.nameSeparator, speak=self.speak )
+            return SimDataFrame(data=self.DF.mean(axis=axis, **kwargs), **self._SimParameters)
         if axis == 1 :
             newName = '.mean'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -3217,12 +3221,14 @@ class SimDataFrame(DataFrame) :
             data=self.DF.mean(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
 
     def max(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.max(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=self.DF.max(axis=axis, **kwargs), **self._SimParameters )
         if axis == 1 :
             newName = '.max'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -3238,12 +3244,14 @@ class SimDataFrame(DataFrame) :
             data=self.DF.max(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
 
     def min(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.min(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=self.DF.min(axis=axis, **kwargs), **self._SimParameters)
         if axis == 1 :
             newName = '.min'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -3259,7 +3267,9 @@ class SimDataFrame(DataFrame) :
             data=self.DF.min(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
 
     def sum(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
@@ -3267,7 +3277,7 @@ class SimDataFrame(DataFrame) :
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 params = self._SimParameters
                 params['units'] = list(set(self.get_Units(self.columns).values()))[0]
-                return SimDataFrame(data=self.DF.sum(axis=axis, **kwargs).rename('.sum'), **params)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+                return SimDataFrame(data=self.DF.sum(axis=axis, **kwargs).rename('.sum'), **params)
             else :
                 params = self._SimParameters
                 if type(params['units']) is dict:
@@ -3294,7 +3304,7 @@ class SimDataFrame(DataFrame) :
                 else :
                     newName = commonR + newName
             if len(set(self.get_Units(self.columns).values())) == 1 :
-                data = self.DF.sum(axis=axis, **kwargs)  # SimDataFrame(data=self.DF.sum(axis=axis, **kwargs).rename('.sum'), **params)  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+                data = self.DF.sum(axis=axis, **kwargs)
             else :
                 result = self[self.columns[0]]
                 units = self.units[self.columns[0]]
@@ -3302,7 +3312,9 @@ class SimDataFrame(DataFrame) :
                     result = result + self[self.columns[col]]
                 data = result
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend)
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
         
         if axis == 2 :
             return self.sum(axis=1).sum(axis=0)
@@ -3310,7 +3322,7 @@ class SimDataFrame(DataFrame) :
     def std(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.std(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=self.DF.std(axis=axis, **kwargs), **self._SimParameters)
         if axis == 1 :
             newName = '.std'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -3326,12 +3338,14 @@ class SimDataFrame(DataFrame) :
             data=self.DF.std(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
     
     def prod(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.prod(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=self.DF.prod(axis=axis, **kwargs), **self._SimParameters)
         if axis == 1 :
             newName = '.prod'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -3347,12 +3361,14 @@ class SimDataFrame(DataFrame) :
             data=self.DF.prod(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
    
     def var(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.var(axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=self.DF.var(axis=axis, **kwargs), **self._SimParameters)
         if axis == 1 :
             newName = '.var'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -3368,12 +3384,14 @@ class SimDataFrame(DataFrame) :
             data=self.DF.var(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
 
     def quantile(self, q=0.5, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.quantile(q=q, axis=axis, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+            return SimDataFrame(data=self.DF.quantile(q=q, axis=axis, **kwargs), **self._SimParameters)
         if axis == 1 :
             newName = '.Q'+str(q*100)
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -3389,10 +3407,12 @@ class SimDataFrame(DataFrame) :
             data=self.DF.quantile(q=q, axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
-            return SimDataFrame(data=data, units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
 
     def round(self, decimals=0, **kwargs):
-        return SimDataFrame(data=self.DF.round(decimals=decimals, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, nameSeparator=self.nameSeparator )
+        return SimDataFrame(data=self.DF.round(decimals=decimals, **kwargs), **self._SimParameters)
 
     def diff(self,periods=1, axis=0, forward=False):
         axis = _cleanAxis(axis)
@@ -3400,9 +3420,9 @@ class SimDataFrame(DataFrame) :
             periods, forward = 1, periods
         if axis == 0 :
             if forward:
-                return SimDataFrame(data=-1*self.DF.diff(periods=-1*periods, axis=axis), **self._SimParameters )  # units=self.units, nameSeparator=self.nameSeparator, speak=self.speak )
+                return SimDataFrame(data=-1*self.DF.diff(periods=-1*periods, axis=axis), **self._SimParameters)
             else:
-                return SimDataFrame(data=self.DF.diff(periods=periods, axis=axis), **self._SimParameters )  # units=self.units, nameSeparator=self.nameSeparator, speak=self.speak )
+                return SimDataFrame(data=self.DF.diff(periods=periods, axis=axis), **self._SimParameters)
         if axis == 1 :
             newName = '.diff'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -3426,7 +3446,7 @@ class SimDataFrame(DataFrame) :
             return SimDataFrame(data=data, **params)
 
     def copy(self, **kwargs) :
-        return SimDataFrame(data=self.as_DataFrame().copy(True), units=self.units.copy(), speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+        return SimDataFrame(data=self.as_DataFrame().copy(True), **self._SimParameters)
 
     def __call__(self, key=None) :
         if key is None :
@@ -3584,9 +3604,11 @@ class SimDataFrame(DataFrame) :
         ### convert returned object to SimDataFrame or SimSeries accordingly
         if type(result) is DataFrame :
             resultUnits = self.get_Units(result.columns)
-            result = SimDataFrame(data=result, units=resultUnits, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend)
+            params = self._SimParameters
+            params['units'] = resultUnits
+            result = SimDataFrame(data=result, **params)
         elif type(result) is Series :
-            if result.name is None or result.name not in self.get_Units():  # type(result.name) is not str :
+            if result.name is None or result.name not in self.get_Units():
                 # this Series is one index for multiple columns
                 resultUnits = self.get_Units(result.index)
             else :
@@ -4479,7 +4501,9 @@ class SimDataFrame(DataFrame) :
                 newUnits[C]=U+'*'+dtUnits
 
         firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]) )
-        return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative ) ), units=newUnits, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator,  intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+        params = self._SimParameters
+        params['units'] = newUnits
+        return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative ) ), **params)
     
     def sort_values(self,by=None, axis='--auto', ascending=True, inplace=False, kind='quicksort', na_position='last', ignore_index=False, key=None) :
         if by is None and axis == '--auto' :
