@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.58.3'
+__version__ = '0.58.4'
 __release__ = 210609
 __all__ = ['SimSeries', 'SimDataFrame']
 
@@ -228,6 +228,8 @@ class SimSeries(Series) :
 
         # remove arguments not known by Pandas
         kwargsB = kwargs.copy()
+        if name is not None and 'name' in kwargs:
+            kwargs.pop('name',None)
         kwargs.pop('columns',None)
         kwargs.pop('indexName', None)
         kwargs.pop('indexUnits', None)
@@ -865,7 +867,8 @@ class SimSeries(Series) :
                     params['units'] = self.units+'+'+other.units
                     #return SimSeries(data=result, units=self.units+'+'+other.units, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-                return SimSeries(data=result, name=newName, **params)
+                params['name'] = newName
+                return SimSeries(data=result, **params)
             else :
                 raise NotImplementedError
 
@@ -874,12 +877,13 @@ class SimSeries(Series) :
             result = self.S.add(other, fill_value=0)
             newName = _stringNewName(self._CommonRename(SimSeries(other,**self._SimParameters))[2])
             params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-            return SimSeries(data=result, name=newName, **params)
+            params['name'] = newName
+            return SimSeries(data=result, **params)
             
         # let's Pandas deal with other types, maintain units, dtype and name
         result = self.as_Series() + other
         params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-        return SimSeries(data=result, name=self.name, **params)
+        return SimSeries(data=result, **params)
 
     def __radd__(self, other) :
         return self.__add__(other)
@@ -909,21 +913,23 @@ class SimSeries(Series) :
                     params['units'] = self.units+'-'+other.units
                     #return SimSeries(data=result, units=self.units+'-'+other.units, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-                return SimSeries(data=result, name=newName, **params)
+                params['name'] = newName
+                return SimSeries(data=result, **params)
             else :
                 raise NotImplementedError
 
         # other is Pandas Series
         elif isinstance(other, Series) :
             result = self.S.sub(other, fill_value=0)
-            newName = _stringNewName(self._CommonRename(SimSeries(other,**self._SimParameters))[2])
+            newName = _stringNewName(self._CommonRename(SimSeries(other, **self._SimParameters))[2])
             params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-            return SimSeries(data=result, name=newName, **params)
+            params['name'] = newName
+            return SimSeries(data=result, **params)
         
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() - other
         params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-        return SimSeries(data=result, name=self.name, **params)
+        return SimSeries(data=result, **params)
 
     def __rsub__(self, other) :
         return self.__neg__().__add__(other)
@@ -966,14 +972,15 @@ class SimSeries(Series) :
                     params['units'] = self.units + '*' + other.units
                     #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-                return SimSeries(data=result, name=newName, **params)
+                params['name'] = newName
+                return SimSeries(data=result, **params)
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() * other
         params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-        return SimSeries(data=result, name=self.name, **params )
+        return SimSeries(data=result, **params )
 
     def __rmul__(self, other) :
         return self.__mul__(other)
@@ -1016,14 +1023,15 @@ class SimSeries(Series) :
                     params['units'] = self.units + '/' + other.units
                     #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=result.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-                return SimSeries(data=result, name=newName, **params)
+                params['name'] = newName
+                return SimSeries(data=result, **params)
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() / other
         params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-        return SimSeries(data=result, name=self.name, **params )
+        return SimSeries(data=result, **params )
 
     def __rtruediv__(self, other) :
         return self.__pow__(-1).__mul__(other)
@@ -1066,14 +1074,15 @@ class SimSeries(Series) :
                     params['units'] = self.units + '/' + other.units
                     #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 params['dtype'] = result.dtype  # self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-                return SimSeries(data=result, name=newName, **params)
+                params['name'] = newName
+                return SimSeries(data=result, **params)
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() // other
         params['dtype'] = result.dtype
-        return SimSeries(data=result, name=self.name, **params )
+        return SimSeries(data=result, **params )
 
     def __rfloordiv__(self, other) :
         return self.__pow__(-1).__mul__(other).__int__()
@@ -1102,14 +1111,15 @@ class SimSeries(Series) :
                     result = self.mod(other)
                     #return SimSeries(data=result, name=newName, **self._SimParameters )
                 params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-                return SimSeries(data=result, name=newName, **params )
+                params['name'] = newName
+                return SimSeries(data=result, **params )
             else :
                 raise NotImplementedError
 
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() % other
         params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-        return SimSeries(data=result, name=self.name, **params )
+        return SimSeries(data=result, **params )
 
     def __pow__(self, other) :
         params = self._SimParameters
@@ -1139,7 +1149,8 @@ class SimSeries(Series) :
                     #params['units'] = self.units+'^'+other.units
                     #return SimSeries(data=result, units=unitsResult, name=newName, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
                 params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-                return SimSeries(data=result, name=newName, **params )
+                params['name'] = newName
+                return SimSeries(data=result, **params )
             else :
                 raise NotImplementedError
 
