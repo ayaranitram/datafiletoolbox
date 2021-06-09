@@ -1236,6 +1236,10 @@ class SimSeries(Series) :
                     uDic[each] = self.units[each]
                 else :
                     uDic[each] = 'UNITLESS'
+        elif self.units is None:
+            return 'UNITLESS'
+        else:
+            return self.units
         return uDic
     
     def set_units(self,units,item=None):
