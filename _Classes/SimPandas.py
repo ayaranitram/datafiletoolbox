@@ -636,7 +636,9 @@ class SimSeries(Series) :
                 params['units'] = units
                 return SimSeries(data=convertUnit(self.S, self.units, units, self.speak ), **params)
         if type(units) is str and len(set(self.units.values())) == 1 :
-            return SimSeries(data=convertUnit(self.S, list(set(self.units.values()))[0], units, self.speak ), units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+            params = self._SimParameters
+            params['units'] = units
+            return SimSeries(data=convertUnit(self.S, list(set(self.units.values()))[0], units, self.speak ), **params )
 
     def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
         axis = _cleanAxis(axis)
@@ -877,7 +879,7 @@ class SimSeries(Series) :
         # other is Pandas Series
         elif isinstance(other, Series) :
             result = self.S.add(other, fill_value=0)
-            newName = _stringNewName(self._CommonRename(SimSeries(other,**self._SimParameters))[2])
+            newName = _stringNewName(self._CommonRename(SimSeries(other, **self._SimParameters))[2])
             params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
             params['name'] = newName
             return SimSeries(data=result, **params)
@@ -1033,7 +1035,7 @@ class SimSeries(Series) :
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() / other
         params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
-        return SimSeries(data=result, **params )
+        return SimSeries(data=result, **params)
 
     def __rtruediv__(self, other) :
         return self.__pow__(-1).__mul__(other)
@@ -1084,7 +1086,7 @@ class SimSeries(Series) :
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() // other
         params['dtype'] = result.dtype
-        return SimSeries(data=result, **params )
+        return SimSeries(data=result, **params)
 
     def __rfloordiv__(self, other) :
         return self.__pow__(-1).__mul__(other).__int__()
@@ -1345,7 +1347,9 @@ class SimSeries(Series) :
 
     def copy(self) :
         if type(self.units) is dict :
-            return SimSeries(data=self.as_Series().copy(True), units=self.units.copy(), speak=self.speak, name=self.name, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+            params = self._SimParameters
+            params['units'] = self.units.copy()
+            return SimSeries(data=self.as_Series().copy(True), **params)
         return SimSeries(data=self.as_Series().copy(True), **self._SimParameters )
 
     def filter(self, conditions=None, **kwargs) :
@@ -3632,7 +3636,9 @@ class SimDataFrame(DataFrame) :
                 resultUnits = self.get_Units(result.index)
             else :
                 resultUnits = self.get_Units(result.name)
-            result = SimSeries(data=result, units=resultUnits, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend)
+                params = self._SimParameters
+                params['units'] = resultUnits
+            result = SimSeries(data=result, **params)
 
         ### apply filter array if applicable
         if indexFilter is not None :
