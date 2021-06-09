@@ -4020,6 +4020,8 @@ class SimDataFrame(DataFrame) :
         return self.get_Units(items)
 
     def get_Units(self, items=None) :
+        if self.units is None:
+            self.units = {}
         if items is None :
             return self.units
         uDic = {}
