@@ -632,7 +632,9 @@ class SimSeries(Series) :
         """
         if type(units) is str and type(self.units) is str :
             if convertibleUnits(self.units, units) :
-                return SimSeries(data=convertUnit(self.S, self.units, units, self.speak ), units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
+                params = self._SimParameters
+                params['units'] = units
+                return SimSeries(data=convertUnit(self.S, self.units, units, self.speak ), **params)
         if type(units) is str and len(set(self.units.values())) == 1 :
             return SimSeries(data=convertUnit(self.S, list(set(self.units.values()))[0], units, self.speak ), units=units, speak=self.speak, indexName=self.index.name, indexUnits=self.indexUnits, dtype=self.dtype, nameSeparator=self.nameSeparator, intersectionCharacter=self.intersectionCharacter, autoAppend=self.autoAppend )
 
