@@ -1625,9 +1625,9 @@ class SimSeries(Series) :
         if column is not None:
             if type(column) is str and column in self.columns:
                 if self[column].dtype in ('int','int64') and self[column].min() > 0 :
-                    return daysInYear(self[column])  # SimSeries( data=[ dt.date(Y, 12, 31).timetuple().tm_yday for Y in self[column] ], **params )
+                    return daysInYear(self[column])
                 elif 'datetime' in str(self[column].dtype):
-                    return daysInYear(self[column])  # SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self[column] ], **params )
+                    return daysInYear(self[column])
                 else:
                     raise ValueError('selected column is not a valid date or year integer')
             elif type(column) is str and column not in self.columns:
@@ -1640,9 +1640,9 @@ class SimSeries(Series) :
                 return result
         else:
             if self.index.dtype in ('int','int64') and self.index.min() > 0 :
-                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )  # [ dt.date(Y, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
+                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
             elif 'datetime' in str(self.index.dtype):
-                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )  # SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
+                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
             else:
                 raise ValueError('index is not a valid date or year integer')
 
@@ -3281,7 +3281,7 @@ class SimDataFrame(DataFrame) :
             else :
                 params = self._SimParameters
                 if type(params['units']) is dict:
-                    params['units']['.sum'] = '*per row'
+                    params['units']['.sum'] = '*units per row'
                 return SimDataFrame(data=self.DF.sum(axis=axis, **kwargs).rename('.sum'), **params)
 
         if axis == 1 :
@@ -4573,9 +4573,9 @@ class SimDataFrame(DataFrame) :
         if column is not None:
             if type(column) is str and column in self.columns:
                 if self[column].dtype in ('int','int64') and self[column].min() > 0 :
-                    return daysInYear(self[column])  # SimSeries( data=[ dt.date(Y, 12, 31).timetuple().tm_yday for Y in self[column] ], **params )
+                    return daysInYear(self[column])
                 elif 'datetime' in str(self[column].dtype):
-                    return daysInYear(self[column])  # SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self[column] ], **params )
+                    return daysInYear(self[column])
                 else:
                     raise ValueError('selected column is not a valid date or year integer')
             elif type(column) is str and column not in self.columns:
@@ -4588,9 +4588,9 @@ class SimDataFrame(DataFrame) :
                 return result
         else:
             if self.index.dtype in ('int','int64') and self.index.min() > 0 :
-                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )  # [ dt.date(Y, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
+                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
             elif 'datetime' in str(self.index.dtype):
-                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )  # SimSeries( data=[ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in self.index ], **params )
+                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
             else:
                 raise ValueError('index is not a valid date or year integer')
 
