@@ -278,7 +278,7 @@ class SimSeries(Series) :
         elif 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is dict and len(kwargsB['indexUnits'])>0 :
             self.indexUnits = kwargsB['indexUnits'].copy()
         if self.indexUnits is not None and self.index.name is not None and len(self.index.name) > 0 and type(self.units) is dict and self.index.name not in self.units:
-            self.units[self.index.name] = self.unidexUnits
+            self.units[self.index.name] = self.indexUnits
 
         # get separator for the column names, 'partA'+'separator'+'partB'
         if nameSeparator is not None and type(nameSeparator) is str and len(nameSeparator.strip())>0 :
@@ -1762,7 +1762,7 @@ class SimDataFrame(DataFrame) :
         elif 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is str and len(kwargsB['indexUnits'].strip())>0 :
             self.set_indexUnits(kwargsB['indexUnits'])
         if self.indexUnits is not None and self.index.name is not None and len(self.index.name) > 0 and type(self.units) is dict and self.index.name not in self.units:
-            self.units[self.index.name] = self.unidexUnits
+            self.units[self.index.name] = self.indexUnits
         
         # set the units
         if type(units) is str :
