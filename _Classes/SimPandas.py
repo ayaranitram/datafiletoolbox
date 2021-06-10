@@ -3613,8 +3613,8 @@ class SimDataFrame(DataFrame) :
                 resultUnits = self.get_Units(result.index)
             else :
                 resultUnits = self.get_Units(result.name)
-                params = self._SimParameters
-                params['units'] = resultUnits
+            params = self._SimParameters
+            params['units'] = resultUnits
             result = SimSeries(data=result, **params)
 
         ### apply filter array if applicable
