@@ -4497,6 +4497,10 @@ class SimDataFrame(DataFrame) :
         """
         method=method.lower().strip()
 
+        if len(self) < 2 :
+            print("less than two rows, nothing to integrate.")
+            return None
+
         dt = np.diff(self.index )
         dtUnits = self.indexUnits
         if str(dt.dtype).startswith('timedelta') :
