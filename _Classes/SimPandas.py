@@ -3673,7 +3673,7 @@ class SimDataFrame(DataFrame) :
             if str(key.dtype) != 'bool' :
                 raise TypeError("Filter dtype must be 'bool'" )
 
-        return super().loc[key]
+        return self.DF.loc[key]
 
     def _getbyCriteria(self, key) :
         """
@@ -3689,7 +3689,7 @@ class SimDataFrame(DataFrame) :
 
         try to get a column by column name(.__getitem__[key] )
         """
-        return super().__getitem__(key)
+        return self.DF.__getitem__(key)
 
 
     def _getbyIndex(self, key) :
@@ -3707,17 +3707,17 @@ class SimDataFrame(DataFrame) :
 
         # try to find key by index value using .loc
         try :
-            return self.loc[key]
+            return self.DF.loc[key]
         except :
             # try to find key by index position using .loc
             try :
-                return self.iloc[key]
+                return self.DF.iloc[key]
             except :
                 try:
-                    return self.loc[:,key]
+                    return self.DF.loc[:,key]
                 except:
                     try:
-                        return self.iloc[:,key]
+                        return self.DF.iloc[:,key]
                     except:
                         raise ValueError(' ' + str(key) + ' is not a valid index value or position.')
 
@@ -3730,16 +3730,16 @@ class SimDataFrame(DataFrame) :
         if type(self.index) is DatetimeIndex :
             if type(key) in [DatetimeIndex, Timestamp, np.datetime64, np.ndarray, dt.date] :
                 try :
-                    return self.loc[key]
+                    return self.DF.loc[key]
                 except :
                     pass
 
             if type(key) is not str and(isDate(key) or type(key) not in [DatetimeIndex, Timestamp] ) :
                 try:
-                    return self.loc[key]
+                    return self.DF.loc[key]
                 except :
                     try :
-                        return self.iloc[key]
+                        return self.DF.iloc[key]
                     except :
                         pass
 
@@ -3752,7 +3752,7 @@ class SimDataFrame(DataFrame) :
                     except :
                         raise Warning('\n Not able to undertand the key as a date.\n')
                 try :
-                    return self.loc[key]
+                    return self.DF.loc[key]
                 except :
                     pass
 
@@ -3770,10 +3770,10 @@ class SimDataFrame(DataFrame) :
                     else :
                         keySearch += ' '+keyParts[P]
                 datesFilter = temporal.filter(keySearch, returnFilter=True)
-                return self.iloc[datesFilter.array]
+                return self.DF.iloc[datesFilter.array]
 
             else :
-                return self.iloc[key]
+                return self.DF.iloc[key]
 
     def _columnsNameAndUnits2MultiIndex(self) :
         out = {}
