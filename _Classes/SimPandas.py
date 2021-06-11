@@ -2716,14 +2716,14 @@ class SimDataFrame(DataFrame) :
         
         return SDF1C, SDF2C, commonNames
     
-    def _JoinedIndex(self,other):
-        return _MergeIndex(self,other,how='outer')
+    def _JoinedIndex(self, other, *, drop_duplicates=True):
+        return _MergeIndex(self, other, how='outer', drop_duplicates=drop_duplicates)
     
-    def _CommonIndex(self,other):
-        return _MergeIndex(self,other,how='inner')
+    def _CommonIndex(self, other, *, drop_duplicates=True):
+        return _MergeIndex(self, other, how='inner', drop_duplicates=drop_duplicates)
     
-    def _MergeIndex(self,other,how='outer'):
-        return _MergeIndex(self,other,how=how)
+    def _MergeIndex(self, other, how='outer', *, drop_duplicates=True):
+        return _MergeIndex(self, other, how=how, drop_duplicates=drop_duplicates)
 
     def __contains__(self, item) :
         if item in self.columns :
@@ -4704,7 +4704,7 @@ def realYear(date):
     if isinstance(date,Series):
         return Series(data=np.array([ Y.year + dt.date(Y.year, Y.month, Y.day).timetuple().tm_yday / dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in date ], dtype=float), index=date.index)
 
-def _MergeIndex(left,right,how='outer'):
+def _MergeIndex(left, right, how='outer', *, drop_duplicates=True):
     """
     returns an left and right Frames or Series reindexed with a common index.
 
@@ -4717,6 +4717,9 @@ def _MergeIndex(left,right,how='outer'):
     how : str, optional
         The merge method to be used. 
         The default is 'outer'.
+    drop_duplicates : boo, optional
+        If True, drop duplicated lines to avoid reindexing error due to repeated rows.
+        If the index has duplicated values but the row is not entire equal reindexing will raise error.
 
     Raises
     ------
@@ -4764,6 +4767,8 @@ def _MergeIndex(left,right,how='outer'):
         
         # merge the indexes
         newIndex= pd.merge(ileft,iright,how=how,left_index=True,right_index=True).index
-        
         # return original dataframes reindexed to the merged index
-        return left.reindex(index=newIndex), right.reindex(index=newIndex)
+        if bool(drop_duplicates):
+            return left.drop_duplicates().reindex(index=newIndex), right.drop_duplicates().reindex(index=newIndex)
+        else:
+            return left.reindex(index=newIndex), right.reindex(index=newIndex)
