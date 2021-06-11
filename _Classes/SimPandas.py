@@ -1661,7 +1661,7 @@ class SimSeries(Series) :
                     raise ValueError('selected column is not a valid date format')
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
-            elif type(colum) is list:
+            elif type(column) is list:
                 result = self._class(data={},index=self.index,**self._SimParameters)
                 for col in column:
                     if col in self.columns:
@@ -1673,6 +1673,18 @@ class SimSeries(Series) :
             else:
                 raise ValueError('index is not a valid date or year integer')
 
+    def integrate(self, method='trapz') :
+        """
+        Calculates numerical integration, using trapezoidal method,
+        or constant value of the columns values over the index values.
+
+        method parameter can be: 'trapz' to use trapezoidal method
+                                 'const' to constant vale multiplied
+                                         by delta-index
+
+        Returns a new SimSeries
+        """
+        return self.SDF.integrate(method=method)
 
 class SimDataFrame(DataFrame) :
     """
@@ -4491,7 +4503,7 @@ class SimDataFrame(DataFrame) :
             Vmax = np.maximum(self.DF[:-1].set_index(self.index[1:]), self.DF[1:] )
             Cumulative =(dt * Vmin.transpose() ).transpose() +(dt *(Vmax - Vmin ).transpose() / 2.0 ).transpose()
         elif method in ['const', 'constant'] :
-            Cumulative =(dt *(self.DF[:-1]).transpose() ).transpose()
+            Cumulative = (dt *(self.DF[:-1]).transpose() ).transpose()[1:]
 
         newUnits = {}
         for C, U in self.units.items() :
