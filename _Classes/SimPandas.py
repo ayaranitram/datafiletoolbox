@@ -2331,10 +2331,10 @@ class SimDataFrame(DataFrame) :
     def replace(self, to_replace=None, value=None, inplace=False, limit=None, regex=False, method='pad') :
         return SimDataFrame(data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method), **self._SimParameters ) 
 
-    def groupby(self, by=None, axis=0, level=None, as_index=True, sort=True, group_keys=True, squeeze=False, observed=False, dropna=True) :
-        axis = _cleanAxis(axis)
-        selfGrouped = self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna)
-        return SimDataFrame(data=selfGrouped, **self._SimParameters ) 
+    # def groupby(self, by=None, axis=0, level=None, as_index=True, sort=True, group_keys=True, squeeze=False, observed=False, dropna=True) :
+    #     axis = _cleanAxis(axis)
+    #     selfGrouped = self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna)
+    #     return SimDataFrame(data=selfGrouped, **self._SimParameters ) 
 
     def daily(self, outBy='mean') :
         """
