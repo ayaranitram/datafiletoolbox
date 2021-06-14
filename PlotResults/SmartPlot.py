@@ -29,7 +29,7 @@ def savePlot(figure, FileName=''):
     figure.savefig(FileName)
 
 
-def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[], graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={}, linewidth=[], linestyle=[], markers=[], markersize=[], DoNotRepeatColors=True, ColorBySimulation=None, ColorBySeries=None, minlinewidth=0.1, minmarkersize=0.5, Xgrid=0, Ygrid=0, fig=None, num=None, show=True, hline=None, figsize=(6, 4), dpi=150, singleYaxis=False, **kwargs) :
+def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[], graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={}, linewidth=[], linestyle=[], markers=[], markersize=[], DoNotRepeatColors=True, ColorBySimulation=None, ColorBySeries=None, minlinewidth=0.1, minmarkersize=0.5, Xgrid=0, Ygrid=0, fig=None, num=None, show=True, hline=None, figsize=(6, 4), dpi=150, singleYaxis=False, legend=True, xlim=(None,None), ylim=(None,None), **kwargs) :
     """
     uses matplot lib to create graphs of the selected vectors
     for the selected SimResult objects.
@@ -195,6 +195,16 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
         del kwargs['c']
     if 'color' in kwargs:
         del kwargs['color']
+        
+    # remove show legeng argument from kwargs
+    if 'legend' in kwargs:
+        del kwargs['legend']
+    
+    # remove user limits from kwargs
+    if 'xlim' in kwargs:
+        del kwargs['xlim']
+    if 'ylim' in kwargs:
+        del kwargs['ylim']
 
     # define the figure name if not provided
     assert type(graphName) in (str,int)
@@ -772,11 +782,17 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
                 plotLabels  += [ None ]
                 LegendLines += [ None ]
 
-    Axis[0].legend( LegendLines, plotLabels, loc=legendLocation )  # LegendLines contains selected plotLines for the leggend
+    # display the legend    
+    if bool(legend):
+        Axis[0].legend( LegendLines, plotLabels, loc=legendLocation )  # LegendLines contains selected plotLines for the leggend
     
     # display horizontal line if required
     if type(hline) is dict:
         plt.hlines(hline['y'], xmin=hline['xmin'], xmax=hline['xmax'], colors=hline['colors'], linestyles=hline['linestyle'], label='')
+
+    # set the user limits
+    plt.xlim(xlim)
+    plt.ylim(ylim)
     
     if bool(show):
         plt.show()
