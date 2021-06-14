@@ -600,22 +600,27 @@ class SimSeries(Series) :
             else :
                 catch = super().rename(**kwargs)
                 cAfter = list(catch.index)
+            
             newUnits = {}
             for i in range(len(cBefore)) :
                 newUnits[cAfter[i]] = self.units[cBefore[i]]
             if 'inplace' in kwargs and kwargs['inplace'] :
                 self.units = newUnits
+                self.spdLocator = _SimLocIndexer("loc", self)
                 return None
             else :
                 catch.units = newUnits
+                catch.spdLocator = _SimLocIndexer("loc", catch)
                 return catch
         elif type(index) is str :
             if 'inplace' in kwargs and kwargs['inplace'] :
                 self.name = index.strip()
+                self.spdLocator = _SimLocIndexer("loc", self)
                 return None
             else :
                 catch = self.copy()
                 catch.name = index
+                catch.spdLocator = _SimLocIndexer("loc", catch)
                 return catch
 
     def to(self, units) :
@@ -2598,9 +2603,11 @@ class SimDataFrame(DataFrame) :
             newUnits[cAfter[i]] = self.units[cBefore[i]]
         if 'inplace' in kwargs and kwargs['inplace'] :
             self.units = newUnits
+            self.spdLocator = _SimLocIndexer("loc", self)
             return None
         else :
             catch.units = newUnits
+            catch.spdLocator = _SimLocIndexer("loc", catch)
             return catch
 
     @property
