@@ -372,6 +372,9 @@ class SimSeries(Series) :
 
     def set_index(self, name) :
         self.set_indexName(name)
+    
+    def describe(self,*args,**kwargs):
+        return self._class(data=self.to_Pandas().describe(*args,**kwargs),**self._SimParameters)
 
     def set_indexName(self, name) :
         if type(name) is str and len(name.strip())>0 :
@@ -1884,6 +1887,9 @@ class SimDataFrame(DataFrame) :
         if key not in self.columns :
             raise ValueError("The key '"+str(key)+"' is not a column name of this DataFrame.")
         return super().set_index(key, drop=drop, append=append, inplace=inplace, verify_integrity=verify_integrity, **kwargs)
+    
+    def describe(self,*args,**kwargs):
+        return self._class(data=self.to_Pandas().describe(*args,**kwargs),**self._SimParameters)
 
     def to_excel(self, excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None, header=True, units=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None, sort=None) :
         """
