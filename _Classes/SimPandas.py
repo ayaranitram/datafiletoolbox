@@ -3790,7 +3790,7 @@ class SimDataFrame(DataFrame) :
     def _columnsNameAndUnits2MultiIndex(self) :
         out = {}
         units = self.get_units()
-        if units is None:
+        if units is None or len(units) == 0:
             return self.columns  # there are not units, return column names as they are
         for col in self.columns :
             if col in units :
