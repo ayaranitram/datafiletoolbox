@@ -165,7 +165,10 @@ class VIP(_SimResult):
             self.get_Regions(reload=True)
             self.get_Keys(reload=True)
             self.units = self.get_Unit(self.keys)
-            _verbose( self.speak, 1, 'simulation runs from ' +  str( self.get_Dates()[0] ) + ' to ' + str( self.get_Dates()[-1] ) )
+            try:
+                _verbose( self.speak, 1, 'simulation runs from ' +  str( self.get_Dates()[0] ) + ' to ' + str( self.get_Dates()[-1] ) )
+            except:
+                pass
         else :
             print("SummaryFilePath must be a string")
 
@@ -827,10 +830,38 @@ class VIP(_SimResult):
             self.fieldtime = ( min(FieldTime), max(FieldTime), FieldTime )
 
     def get_Dates(self) :
-        try :
-            DateVector = _strDate( list( self.loadVector('DATE', 'FIELD', True) ), speak=(self.speak==1))
-        except :
-            DateVector = _strDate( list( self.loadVector('DATE', 'FIELD', True) ), formatIN='DD-MM-YYYY', speak=(self.speak==1))
+        for sss in self.results :
+            if self.results[sss][0] == 'FIELD' :
+                try :
+                    DateVector = _strDate( list( self.loadVector('DATE', 'FIELD', True) ), speak=(self.speak==1))
+                    _verbose( self.speak, 2, "'DATE' extracted from FIELD")
+                    break
+                except :
+                    try:
+                        DateVector = _strDate( list( self.loadVector('DATE', 'FIELD', True) ), formatIN='DD-MM-YYYY', speak=(self.speak==1))
+                        _verbose( self.speak, 2, "'DATE' extracted from FIELD")
+                        break
+                    except:
+                        DateVector = None
+                        break
+        
+        if DateVector is None:
+            for sss in self.results :
+                if self.results[sss][0] != 'FIELD' :
+                    try :
+                        DateVector = _strDate( list( self.loadVector('DATE', sss, True) ), speak=(self.speak==1))
+                        _verbose( self.speak, 2, "'DATE' extracted from " + sss)
+                        break
+                    except :
+                        try:
+                            DateVector = _strDate( list( self.loadVector('DATE', sss, True) ), formatIN='DD-MM-YYYY', speak=(self.speak==1))
+                            _verbose( self.speak, 2, "'DATE' extracted from " + sss)
+                            break
+                        except:
+                            pass
+            if DateVector is not None:
+                DateVector = list(set(DateVector))
+            
         self.set_Vector( 'DATES', np.array( pd.to_datetime( DateVector ), dtype='datetime64[s]'), self.get_Unit('DATE'), DataType='datetime64', overwrite=True )
         #self.set_Vector( 'DATES', np.array( pd.to_datetime( self.get_Vector('DATE')['DATE'] ), dtype='datetime64[s]'), self.get_Unit('DATE'), DataType='datetime64', overwrite=True )
         self.set_Vector( 'DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), overwrite=True )
