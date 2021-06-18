@@ -1204,7 +1204,7 @@ class SimSeries(Series) :
         elif self.units is None:
             return 'UNITLESS'
         else:
-            return self.units
+            return self.units.copy() if type(self.units) is dict else self.units
         return uDic
     
     def set_units(self,units,item=None):
@@ -4122,7 +4122,7 @@ Copy of input object, shifted.
         if self.units is None:
             self.units = {}
         if items is None :
-            return self.units
+            return self.units.copy()
         uDic = {}
         if not isinstance(items,(list,tuple,dict,set,Index)):
             items = [items]
