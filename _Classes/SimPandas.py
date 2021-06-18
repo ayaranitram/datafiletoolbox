@@ -665,11 +665,19 @@ class SimSeries(Series) :
 
     def dropna(self, axis=0, inplace=False, how=None) :
         axis = _cleanAxis(axis)
-        return SimSeries(data=self.S.dropna(axis=axis, inplace=inplace, how=how), **self._SimParameters )
+        if inplace:
+            self.S.dropna(axis=axis, inplace=inplace, how=how)
+            return None
+        else:
+            return SimSeries(data=self.S.dropna(axis=axis, inplace=inplace, how=how), **self._SimParameters )
 
     def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise') :
         axis = _cleanAxis(axis)
-        return SimSeries(data=self.S.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors='errors'), **self._SimParameters )
+        if inplace:
+            self.S.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors='errors')
+            return None
+        else:
+            return SimSeries(data=self.S.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors='errors'), **self._SimParameters )
 
     @property
     def wells(self) :
@@ -2380,7 +2388,7 @@ Copy of input object, shifted.
         """
         return self.drop_zeros(axis=axis)
 
-    def drop_zeros(self, axis='both'):
+    def drop_zeros(self, axis='both', inplace=False):
         """
         drop the axis(rows or columns) where all the values are zeross.
 
@@ -2390,23 +2398,49 @@ Copy of input object, shifted.
             'both' or 2 : removes all the rows and columns fill with zeroes
         """
         axis = _cleanAxis(axis)
-        if axis in ['both', 2] :
-            return self.replace(0, np.nan).dropna(axis='columns', how='all').dropna(axis='index', how='all').dropna(axis='columns', how='all').replace(np.nan, 0)
-        elif axis in ['rows', 'row', 'index', 0] :
-            return self.replace(0, np.nan).dropna(axis='index', how='all').replace(np.nan, 0)
-        elif axis in ['columns', 'column', 'col', 'cols', 1] :
-            return self.replace(0, np.nan).dropna(axis='columns', how='all').replace(np.nan, 0)
-        else :
-            raise ValueError(" valid `axis´ argument are 'index', 'columns' or 'both'.")
+        if inplace:
+            if axis in ['both', 2] :
+                self.replace(0, np.nan, inplace=True)
+                self.dropna(axis='columns', how='all', inplace=True)
+                self.dropna(axis='index', how='all', inplace=True)
+                self.dropna(axis='columns', how='all', inplace=True)
+                self.replace(np.nan, 0, inplace=True)
+            elif axis in ['rows', 'row', 'index', 0] :
+                self.replace(0, np.nan, inplace=True)
+                self.dropna(axis='index', how='all', inplace=True)
+                self.replace(np.nan, 0, inplace=True)
+            elif axis in ['columns', 'column', 'col', 'cols', 1] :
+                self.replace(0, np.nan, inplace=True)
+                self.dropna(axis='columns', how='all', inplace=True)
+                self.replace(np.nan, 0, inplace=True)
+            else :
+                raise ValueError(" valid `axis´ argument are 'index', 'columns' or 'both'.")
+        else:
+            if axis in ['both', 2] :
+                return self.replace(0, np.nan).dropna(axis='columns', how='all').dropna(axis='index', how='all').dropna(axis='columns', how='all').replace(np.nan, 0)
+            elif axis in ['rows', 'row', 'index', 0] :
+                return self.replace(0, np.nan).dropna(axis='index', how='all').replace(np.nan, 0)
+            elif axis in ['columns', 'column', 'col', 'cols', 1] :
+                return self.replace(0, np.nan).dropna(axis='columns', how='all').replace(np.nan, 0)
+            else :
+                raise ValueError(" valid `axis´ argument are 'index', 'columns' or 'both'.")
 
 
     def dropna(self, axis='index', how='all', thresh=None, subset=None, inplace=False) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace), **self._SimParameters ) 
+        if inplace:
+            self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace)
+            return None
+        else:
+            return SimDataFrame(data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace), **self._SimParameters ) 
 
     def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise') :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors), **self._SimParameters ) 
+        if inplace:
+            self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors)
+            return None
+        else:
+            return SimDataFrame(data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors), **self._SimParameters ) 
 
     def drop_duplicates(self, subset=None, keep='first', inplace=False, ignore_index=False) :
         return SimDataFrame(data=self.DF.drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index), **self._SimParameters )
@@ -4702,9 +4736,9 @@ Copy of input object, shifted.
                 return result
         else:
             if self.index.dtype in ('int','int64') and self.index.min() > 0 :
-                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
+                return self._class( data=self.DF, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
             elif 'datetime' in str(self.index.dtype):
-                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
+                return self._class( data=self.DF, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
             else:
                 raise ValueError('index is not a valid date or year integer')
 
