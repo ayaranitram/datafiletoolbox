@@ -2287,6 +2287,54 @@ Copy of input object, shifted.
                 result.set_Units(self.indexUnits,item=self.index.name)
             result.index.name = None
             return result
+        
+    def append(self, other, ignore_index=False, verify_integrity=False, sort=False):
+        """
+        wrapper of Pandas.DataFrame append method considering the units of both Frames
+        
+        Append rows of other to the end of caller, returning a new object.
+
+        Parameters
+        ----------
+        other : SimDataFrame, SimSeries or DataFrame, Series/dict-like object, or list of these
+            The data to append.
+            
+        ignore_index : bool, default False
+            If True, the resulting axis will be labeled 0, 1, …, n - 1.
+
+        verify_integrity: bool, default False
+            If True, raise ValueError on creating index with duplicates.
+
+        sort : bool, default False
+            Sort columns if the columns of self and other are not aligned.
+
+        Changed in version 1.0.0: Changed to not sort by default.
+
+        Returns
+        -------
+            SimDataFrame
+        """
+        
+        if type(other) in (SimDataFrame,SimSeries):
+            otherC = other.copy()
+            newUnits = self.get_units(self.columns).copy()
+            for col, unit in self.get_units(self.columns).items():
+                if col in otherC.columns:
+                    if unit != otherC.get_units(col)[col]:
+                        if convertibleUnits(otherC.get_units(col)[col], unit) :
+                            otherC[col] = otherC[col].to(unit)
+                        else:
+                            newUnits[col+'_2nd'] = otherC.get_units(col)[col]
+                            otherC.rename(columns={col:col+'_2nd'},inplace=True)
+            for col in otherC.columns:
+                if col not in newUnits:
+                    newUnits[col] = otherC.get_units(col)[col]
+            params = self._SimParameters
+            params['units'] = newUnits
+            return SimDataFrame(data=self.DF.append(otherC), **params)
+        else:
+            # append and return SimDataFrame
+            return SimDataFrame(data=self.DF.append(other), **self._SimParameters)
 
     def convert(self, units) :
         """
