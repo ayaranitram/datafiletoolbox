@@ -1890,6 +1890,38 @@ class SimDataFrame(DataFrame) :
     
     def describe(self,*args,**kwargs):
         return self._class(data=self.to_Pandas().describe(*args,**kwargs),**self._SimParameters)
+    
+    def shift(self, periods=1, freq=None, axis=0, fill_value=None):
+        """
+        wrapper for Pandas shift method
+        
+        Shift index by desired number of periods with an optional time freq.
+
+        When freq is not passed, shift the index without realigning the data.
+        If freq is passed (in this case, the index must be date or datetime, 
+        or it will raise a NotImplementedError), the index will be increased using the periods and the freq. freq can be inferred when specified as “infer” as long as either freq or inferred_freq attribute is set in the index.
+        
+        Parameters
+periodsint
+Number of periods to shift. Can be positive or negative.
+
+freqDateOffset, tseries.offsets, timedelta, or str, optional
+Offset to use from the tseries module or time rule (e.g. ‘EOM’). If freq is specified then the index values are shifted but the data is not realigned. That is, use freq if you would like to extend the index when shifting and preserve the original data. If freq is specified as “infer” then it will be inferred from the freq or inferred_freq attributes of the index. If neither of those attributes exist, a ValueError is thrown.
+
+axis{0 or ‘index’, 1 or ‘columns’, None}, default None
+Shift direction.
+
+fill_valueobject, optional
+The scalar value to use for newly introduced missing values. the default depends on the dtype of self. For numeric data, np.nan is used. For datetime, timedelta, or period data, etc. NaT is used. For extension dtypes, self.dtype.na_value is used.
+
+Changed in version 1.1.0.
+
+Returns
+SimDataFrame
+Copy of input object, shifted.
+        
+        """
+        return SimDataFrame(data=self.DF.shift(periods=periods, freq=freq, axis=axis, fill_value=fill_value), **self._SimParameters)
 
     def to_excel(self, excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None, header=True, units=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None, sort=None) :
         """
