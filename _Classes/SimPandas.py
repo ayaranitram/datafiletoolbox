@@ -2516,6 +2516,12 @@ Copy of input object, shifted.
         output = SimDataFrame(data=result, **self._SimParameters)
         output.index.names = ['YEAR', 'MONTH', 'DAY']
         output.index.name = 'YEAR_MONTH_DAY'
+        if 'YEAR' not in output.units:
+            output.set_Units('year','YEAR')
+        if 'MONTH' not in output.units:
+            output.set_Units('month','MONTH')
+        if 'DAY' not in output.units:
+            output.set_Units('day','DAY')
         # output.indexUnits = ('year','month','day')
         return output
 
@@ -2562,18 +2568,22 @@ Copy of input object, shifted.
             result = result.DF.groupby([self.index.year, self.index.month])
             index = DataFrame(data=self.index, index=self.index ).groupby([self.index.year, self.index.month])
             index = np.append(index.first().to_numpy(), index.last().to_numpy()[-1] )
-            deltaindex = np.diff(index )
+            deltaindex = np.diff(index)
             if isinstance(self.index, DatetimeIndex) :
                 deltaindex = deltaindex.astype('timedelta64[s]').astype('float64')/60/60/24
-            values = result.first().append(result.last().iloc[-1] )
+            values = result.first().append(result.last().iloc[-1])
             deltavalues = np.diff(values.transpose())
-            result = DataFrame(data=(deltavalues/deltaindex).transpose(), index=result.first().index, columns=self.columns )
+            result = DataFrame(data=(deltavalues/deltaindex).transpose(), index=result.first().index, columns=self.columns)
         else :
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters) 
         output.index.names = ['YEAR', 'MONTH']
         output.index.name = 'YEAR_MONTH'
+        if 'YEAR' not in output.units:
+            output.set_Units('year','YEAR')
+        if 'MONTH' not in output.units:
+            output.set_Units('month','MONTH')
         # output.indexUnits = ('year','month')
         return output
 
@@ -2618,20 +2628,22 @@ Copy of input object, shifted.
         elif outBy in ['int', 'integrate', 'integral', 'cum', 'cumulative', 'representative'] :
             result = self.integrate()
             result = result.DF.groupby(self.index.year)
-            index = DataFrame(data=self.index, index=self.index ).groupby(self.index.year)
-            index = np.append(index.first().to_numpy(), index.last().to_numpy()[-1] )
+            index = DataFrame(data=self.index, index=self.index).groupby(self.index.year)
+            index = np.append(index.first().to_numpy(), index.last().to_numpy()[-1])
             deltaindex = np.diff(index )
             if isinstance(self.index, DatetimeIndex) :
                 deltaindex = deltaindex.astype('timedelta64[s]').astype('float64')/60/60/24
             values = result.first().append(result.last().iloc[-1] )
             deltavalues = np.diff(values.transpose())
-            result = DataFrame(data=(deltavalues/deltaindex).transpose(), index=result.first().index, columns=self.columns )
+            result = DataFrame(data=(deltavalues/deltaindex).transpose(), index=result.first().index, columns=self.columns)
         else :
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)  
         output.index.names = ['YEAR']
         output.index.name = 'YEAR'
+        if 'YEAR' not in output.units:
+            output.set_Units('year','YEAR')
         output.indexUnits = 'year'
         return output
 
