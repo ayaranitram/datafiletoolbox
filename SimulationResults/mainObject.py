@@ -470,6 +470,8 @@ class SimResult(object):
             if len(self.find_Keys(item)) > 0 :
                 keys = list(self.find_Keys(item))
                 return self.__getitem__(keys)
+            if len(self.get_Vector(item)) == 1 and self.get_Vector(item)[item] is not None:
+                return self.__call__([item])[item]
             else :
                 meti = self.__getitem__([item])
                 if meti is None :
