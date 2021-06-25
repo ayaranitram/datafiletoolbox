@@ -437,7 +437,7 @@ class SimResult(object):
             if len(item)==0 :
                 return None
             else :
-                keys, indexes = _tamiz(item )
+                keys, indexes = _tamiz(item)
                 meti = self.__getitem__(keys)
                 if meti is None :
                     return None
@@ -452,7 +452,7 @@ class SimResult(object):
         if type(item) is str :
             if self.is_Key(item) :
                 return self.__call__([item])[item]
-            if item in self.wells or item in self.groups or item in self.regions :
+            if item in self.wells or item in self.groups or item in self.regions:
                 keys = list(self.get_Keys('*:'+item))
                 return self.__getitem__(keys)
             if item in ['FIELD', 'ROOT'] :
@@ -5204,7 +5204,7 @@ class SimResult(object):
             if len(Index) > 1 :
                 _verbose(self.speak, -1, '< get_DataFrame > more than value passed in Index argument, only the first one will be used')
             Index = Index[0]
-        return DataFrame(data=self.get_Vector(Keys ), index=self.get_Vector(Index )[ Index ] )
+        return DataFrame(data=self.get_Vector(Keys), index=self.get_Vector(Index)[ Index ] )
 
     def get_ConvertedDataFrame(self, Keys=None, Index='TIME', OtherObject_or_NewUnits=None) :
         """

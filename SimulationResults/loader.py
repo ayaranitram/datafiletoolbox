@@ -6,7 +6,7 @@ Created on Wed May 13 00:45:52 2020
 """
 
 __version__ = '0.52.0'
-__release__ = 210519
+__release__ = 210624
 __all__ = ['loadSimulationResults']
 
 from .._common.inout import _extension
