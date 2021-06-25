@@ -226,6 +226,7 @@ class SimResult(object):
         self.kind = None
         self.results = None
         self.name = None
+        self.nameSeparator=':'
         self.path = None
         self.start = None
         self.end = None
