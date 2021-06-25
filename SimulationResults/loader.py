@@ -33,13 +33,16 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
         .SSS files from VIP simulator
         .SMSPEC files from Eclipse, Intersect or tNavigator
     """
-    if 'speak' in kwargs and type(kwargs['speak']) in [bool,int,float] :
-        if Verbosity is None :
-            Verbosity = kwargs['speak']
-            del kwargs['speak']
+    for verbKey in  ['speak','verbosity','verbose'] :
+        if verbKey in kwargs and type(kwargs[verbKey]) in [bool,int,float] :
+            if Verbosity is None :
+                Verbosity = kwargs[verbKey]
+                del kwargs[verbKey]
 
     if Verbosity is None :
         Verbosity = 2
+    elif type(Verbosity) in [int] :
+        pass
     elif type(Verbosity) in [bool,float] :
         Verbosity = int(Verbosity)
     else :
