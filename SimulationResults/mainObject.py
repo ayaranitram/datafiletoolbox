@@ -6,7 +6,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = '0.53.0'
-__release__ = 210520
+__release__ = 210624
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -416,20 +416,25 @@ class SimResult(object):
         return self[[ self.keys[0] ]].index
 
     def __call__(self, Key=None, Index=None) :
-        if Index is None :
-            Index = self.DTindex
-        if Key is not None :
-            if type(Key) is list and len(Key) > 0:
-                if self.useSimPandas :
-                    data=self.get_DataFrame(Key, Index)
-                    units=self.get_Units(Key)
-                    unitsIndex=self.get_Units(Index)
-                    units[Index] = unitsIndex
-                    return SimDataFrame(data=data, units=units, indexName=Index, indexUnits=unitsIndex, nameSeparator=':')
-                else :
-                    return self.get_DataFrame(Key, Index)
-            elif type(Key) is str and len(Key) > 0 :
-                return self.get_Vector(Key)[Key]
+        if Key is None:
+            print(SimResult.__doc__)
+        elif type(Key) is str and len(Key) > 0 and Index is None:
+            return self.get_Vector(Key)[Key]
+        elif type(Key) in (list,tuple) and len(Key) > 0 or Index is not None:
+            if Index is None :
+                Index = self.DTindex
+            if self.useSimPandas :
+                data = self.get_DataFrame(Key, Index)
+                units = self.get_Units(Key)
+                if type(units) is str:
+                    units = {Key:units}
+                if units is None:
+                    units = {Key:None}
+                unitsIndex = self.get_Units(Index)
+                units[Index] = unitsIndex
+                return SimDataFrame(data=data, units=units, indexName=Index, indexUnits=unitsIndex, nameSeparator=':')
+            else :
+                return self.get_DataFrame(Key, Index)
         else :
             print(SimResult.__doc__)
 
