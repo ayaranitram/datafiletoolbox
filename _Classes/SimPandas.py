@@ -4728,29 +4728,35 @@ Copy of input object, shifted.
     def daysInYear(self,column=None):
         params = self._SimParameters
         params['index'] = self.index
-        params['name'] = 'DaysInYear'
-        params['units'] = 'days'
         if column is not None:
             if type(column) is str and column in self.columns:
                 if self[column].dtype in ('int','int64') and self[column].min() > 0 :
-                    return daysInYear(self[column])
+                    params['name'] = 'DaysInYear'
+                    params['units'] = 'days'
+                    return SimSeries( data=daysInYear(self[column].to_numpy()), **params )
                 elif 'datetime' in str(self[column].dtype):
                     return daysInYear(self[column])
                 else:
                     raise ValueError('selected column is not a valid date or year integer')
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
-            elif type(colum) is list:
-                result = self._class(data={},index=self.index,**self._SimParameters)
+            elif type(column) is list:
+                result = self._class(data={}, index=self.index, **self._SimParameters)
                 for col in column:
                     if col in self.columns:
                         result[col] = daysInYear(self[col])
+                        result.set_Units('days',col)
                 return result
         else:
             if self.index.dtype in ('int','int64') and self.index.min() > 0 :
-                return self._class( data=self.DF, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
+                params['indexName'] = 'DaysInYear'
+                params['indexUnits'] = 'days'
+                params['index'] = list(daysInYear(self.index.to_numpy()))
+                params['columns'] = self.columns
+                params['units'] = self.units.copy()
+                return self._class( data=self.DF.values, **params )
             elif 'datetime' in str(self.index.dtype):
-                return self._class( data=self.DF, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
+                return self._class( data=self.DF.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
             else:
                 raise ValueError('index is not a valid date or year integer')
 
