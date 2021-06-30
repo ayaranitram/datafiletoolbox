@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.59.0'
-__release__ = 210622
+__version__ = '0.59.1'
+__release__ = 210630
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -1634,14 +1634,19 @@ class SimSeries(Series) :
         return self.daysInYear(column=column)
     
     def daysInYear(self,column=None):
-        # params = self._SimParameters
-        # params['index'] = self.index
-        # params['name'] = 'DaysInYear'
-        # params['units'] = 'days'
+        params = self._SimParameters
+        if 'units' in params:
+            if type(params['units']) is str:
+                params['units'] = 'days'
+            else:
+                params['units']['DaysInYear'] = 'days'
+        else:
+            params['units'] = 'days'
+        params['name'] = 'DaysInYear'
         if column is not None:
             if type(column) is str and column in self.columns:
                 if self[column].dtype in ('int','int64') and self[column].min() > 0 :
-                    return daysInYear(self[column])
+                    return self._class( data=daysInYear(self[column].values), index=self.index, **params)
                 elif 'datetime' in str(self[column].dtype):
                     return daysInYear(self[column])
                 else:
@@ -1649,16 +1654,28 @@ class SimSeries(Series) :
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
             elif type(colum) is list:
-                result = self._class(data={},index=self.index,**self._SimParameters)
+                result = self._class(data={}, index=self.index, **self._SimParameters)
                 for col in column:
                     if col in self.columns:
                         result[col] = daysInYear(self[col])
                 return result
         else:
-            if self.index.dtype in ('int','int64') and self.index.min() > 0 :
-                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
+            if self.dtype in ('int','int64') and self.min() > 0 :
+                return self._class( data=list(daysInYear(self.values)), index=self.index, **params )
+            elif 'datetime' in str(self.dtype):
+                return daysInYear(self)
+            elif self.index.dtype in ('int','int64') and self.index.min() > 0 :
+                params['units'] = self.units.copy() if type(self.units) is dict else self.units
+                params['name'] = self.name
+                params['indexName'] = 'DaysInYear'
+                params['indexUnits'] = 'days'
+                return self._class( data=self.values, index=list(daysInYear(self.index.to_numpy())), columns=self.columns, **params )
             elif 'datetime' in str(self.index.dtype):
-                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
+                params['units'] = self.units.copy() if type(self.units) is dict else self.units
+                params['name'] = self.name
+                params['indexName'] = 'DaysInYear'
+                params['indexUnits'] = 'days'
+                return self._class( data=self.values, index=list(daysInYear(self.index)), columns=self.columns, **params )
             else:
                 raise ValueError('index is not a valid date or year integer')
 
