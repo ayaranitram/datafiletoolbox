@@ -1763,6 +1763,7 @@ class SimDataFrame(DataFrame) :
 
         # remove arguments not known by Pandas
         kwargsB = kwargs.copy()
+        kwargs.pop('name', None)
         kwargs.pop('indexName', None)
         kwargs.pop('indexUnits', None)
         kwargs.pop('nameSeparator', None)
