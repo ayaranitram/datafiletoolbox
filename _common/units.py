@@ -847,6 +847,10 @@ def UnitConversions():
     # viscosity conversions
     UC.addEdge(conversion(UC.getNode('Pa*s'), UC.getNode('Poise'), lambda v: v*10 ))
     
+    # data conversions
+    UC.addEdge(conversion(UC.getNode('byte'), UC.getNode('bit'), lambda d: d*8 ))
+    UC.addEdge(conversion(UC.getNode('bit'), UC.getNode('byte'), lambda d: d/8 ))
+    
     for unitKind in list(unit.dictionary.keys()):
         if '_REVERSE' in unitKind :
             if type(unit.dictionary[unitKind]) == dict :
