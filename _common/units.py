@@ -37,28 +37,28 @@ class unit(object) :
 
 
     # Sistema Internacional
-    SI = {
-        'Y' : (lambda X: X*1.0E+24, lambda X: X*1.0E+24**2, lambda X: X*1.0E+24), # yotta
-        'Z' : (lambda X: X*1.0E+21, lambda X: X*1.0E+21**2, lambda X: X*1.0E+21), # zetta
-        'E' : (lambda X: X*1.0E+18, lambda X: X*1.0E+18**2, lambda X: X*1.0E+18), # exa
-        'P' : (lambda X: X*1.0E+15, lambda X: X*1.0E+15**2, lambda X: X*1.0E+15), # peta
-        'T' : (lambda X: X*1.0E+12, lambda X: X*1.0E+12**2, lambda X: X*1.0E+12), # tera
-        'G' : (lambda X: X*1.0E+09, lambda X: X*1.0E+09**2, lambda X: X*1.0E+09), # giga
-        'M' : (lambda X: X*1.0E+06, lambda X: X*1.0E+06**2, lambda X: X*1.0E+06), # mega
-        'K' : (lambda X: X*1.0E+03, lambda X: X*1.0E+03**2, lambda X: X*1.0E+03), # kilo with uppercase K because it is very common
-        'k' : (lambda X: X*1.0E+03, lambda X: X*1.0E+03**2, lambda X: X*1.0E+03), # kilo
-        'h' : (lambda X: X*1.0E+02, lambda X: X*1.0E+02**2, lambda X: X*1.0E+02), # hecto
-        'd' : (lambda X: X*1.0E-01, lambda X: X*1.0E-01**2, lambda X: X*1.0E-01), # deci
-        'c' : (lambda X: X*1.0E-02, lambda X: X*1.0E-02**2, lambda X: X*1.0E-02), # centi
-        'm' : (lambda X: X*1.0E-03, lambda X: X*1.0E-03**2, lambda X: X*1.0E-03), # mili
-        'µ' : (lambda X: X*1.0E-06, lambda X: X*1.0E-06**2, lambda X: X*1.0E-06), # micro
-        'u' : (lambda X: X*1.0E-06, lambda X: X*1.0E-06**2, lambda X: X*1.0E-06), # micro
-        'n' : (lambda X: X*1.0E-09, lambda X: X*1.0E-09**2, lambda X: X*1.0E-09), # nano
-        'p' : (lambda X: X*1.0E-12, lambda X: X*1.0E-12**2, lambda X: X*1.0E-12), # pico
-        'f' : (lambda X: X*1.0E-15, lambda X: X*1.0E-15**2, lambda X: X*1.0E-15), # femto
-        'a' : (lambda X: X*1.0E-18, lambda X: X*1.0E-18**2, lambda X: X*1.0E-18), # atto
-        'z' : (lambda X: X*1.0E-21, lambda X: X*1.0E-21**2, lambda X: X*1.0E-21), # zepto
-        'y' : (lambda X: X*1.0E-24, lambda X: X*1.0E-24**2, lambda X: X*1.0E-24), # yocto
+    SI = {          
+        'Y' : (lambda X: X*1.0E+24,lambda X: X*1.0E+48,lambda X: X*1.0E+72) , # yotta
+        'Z' : (lambda X: X*1.0E+21,lambda X: X*1.0E+42,lambda X: X*1.0E+63) , # zetta
+        'E' : (lambda X: X*1.0E+18,lambda X: X*1.0E+36,lambda X: X*1.0E+54) , # exa
+        'P' : (lambda X: X*1.0E+15,lambda X: X*1.0E+30,lambda X: X*1.0E+46) , # peta
+        'T' : (lambda X: X*1.0E+12,lambda X: X*1.0E+24,lambda X: X*1.0E+36) , # tera
+        'G' : (lambda X: X*1.0E+09,lambda X: X*1.0E+18,lambda X: X*1.0E+27) , # giga
+        'M' : (lambda X: X*1.0E+06,lambda X: X*1.0E+12,lambda X: X*1.0E+18) , # mega
+        'K' : (lambda X: X*1.0E+03,lambda X: X*1.0E+06,lambda X: X*1.0E+09) , # kilo with uppercase K because it is very common
+        'k' : (lambda X: X*1.0E+03,lambda X: X*1.0E+06,lambda X: X*1.0E+09) , # kilo
+        'h' : (lambda X: X*1.0E+02,lambda X: X*1.0E+04,lambda X: X*1.0E+06) , # hecto
+        'd' : (lambda X: X*1.0E-01,lambda X: X*1.0E-02,lambda X: X*1.0E-03) , # deci
+        'c' : (lambda X: X*1.0E-02,lambda X: X*1.0E-04,lambda X: X*1.0E-06) , # centi
+        'm' : (lambda X: X*1.0E-03,lambda X: X*1.0E-06,lambda X: X*1.0E-09) , # mili
+        'µ' : (lambda X: X*1.0E-06,lambda X: X*1.0E-12,lambda X: X*1.0E-18) , # micro
+        'u' : (lambda X: X*1.0E-06,lambda X: X*1.0E-12,lambda X: X*1.0E-18) , # micro
+        'n' : (lambda X: X*1.0E-09,lambda X: X*1.0E-18,lambda X: X*1.0E-27) , # nano
+        'p' : (lambda X: X*1.0E-12,lambda X: X*1.0E-24,lambda X: X*1.0E-36) , # pico
+        'f' : (lambda X: X*1.0E-15,lambda X: X*1.0E-30,lambda X: X*1.0E-45) , # femto
+        'a' : (lambda X: X*1.0E-18,lambda X: X*1.0E-36,lambda X: X*1.0E-54) , # atto
+        'z' : (lambda X: X*1.0E-21,lambda X: X*1.0E-42,lambda X: X*1.0E-63) , # zepto
+        'y' : (lambda X: X*1.0E-24,lambda X: X*1.0E-48,lambda X: X*1.0E-72) , # yocto
         }
     SI_order = (('lenght', 'pressure', 'weight', 'mass', 'time', 'dataBIT', ), ('area', ), ('rate', 'volume', ), ('dataBYTE', ))
     DATA = {
@@ -109,7 +109,7 @@ class unit(object) :
 
     dictionary['lenght'] = []
     dictionary['lenght_NAMES_UPPER_REVERSE'] = {'meter': ('m', 'meter')}
-    dictionary['lenght_SI'] = ('m', )
+    dictionary['length_SI'] = ('m', 'l')  # litre is volumen but the conversion of SI prefixes is linear
     dictionary['lenght_UK_NAMES_UPPER_REVERSE'] = {'thou' : ('th', ),
                  'inch' : ('in', '"'),
                  'foot' : ('feet', 'ft', "'"),
@@ -133,7 +133,7 @@ class unit(object) :
                              }
 
     dictionary['volume'] = []
-    dictionary['volume_SI_UPPER_REVERSE'] = ('m3', 'l', 'sm3', 'stm3', 'rm3')
+    dictionary['volume_SI_UPPER_REVERSE'] = ('m3', 'sm3', 'stm3', 'rm3')  # 'l' # litre is volumen but the conversion of SI prefixes is linear
     dictionary['volume_UK_NAMES_UPPER_REVERSE_PLURALwS'] = { 'fuild ounce' : ('fl oz', 'oz', 'ounce'),
                                            'gill' : ('gi', ),
                                            'pint' : ('pt', ),
