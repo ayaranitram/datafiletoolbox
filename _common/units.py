@@ -793,6 +793,7 @@ def UnitConversions():
     UC.addEdge(conversion(UC.getNode('standard cubic foot'), UC.getNode('standard cubic meter'), lambda v: v*(3048**3)/(10000**3))) 
     UC.addEdge(conversion(UC.getNode('standard barrel'), UC.getNode('USgal'), lambda v: v*42))
     UC.addEdge(conversion(UC.getNode('standard cubic meter'), UC.getNode('standard barrel'), lambda v: v*6.289814))
+    UC.addEdge(conversion(UC.getNode('standard cubic meter'), UC.getNode('litre'), lambda v: v*1000))
     UC.addEdge(conversion(UC.getNode('standard barrel'), UC.getNode('standard cubic foot'), lambda v: v*5.614584))
     UC.addEdge(conversion(UC.getNode('reservoir cubic meter'), UC.getNode('reservoir barrel'), lambda v: v*6.289814))
     UC.addEdge(conversion(UC.getNode('reservoir cubic meter'), UC.getNode('standard cubic meter'), lambda v: v / get_fvf()))
