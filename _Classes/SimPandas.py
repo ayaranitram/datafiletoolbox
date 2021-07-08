@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.60.2'
+__version__ = '0.61.2'
 __release__ = 210708
 __all__ = ['SimSeries', 'SimDataFrame']
 
@@ -4735,10 +4735,10 @@ Copy of input object, shifted.
 
         newUnits = {}
         for C, U in self.units.items() :
-            if len(U.split('/'))==2 and(U.split('/')[-1].upper() == dtUnits or(U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits == 'DAYS' ) ) :
-                newUnits[C]=U.split('/')[0]
+            if len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits == 'DAYS' ) ) :
+                newUnits[C] = U.split('/')[0] 
             else :
-                newUnits[C]=U+'*'+dtUnits
+                newUnits[C] = U + '*' + dtUnits
         
         if str(dt.dtype).startswith('timedelta') :
             firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]))
@@ -4747,6 +4747,55 @@ Copy of input object, shifted.
         params = self._SimParameters
         params['units'] = newUnits
         return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative)), **params)
+    
+    def differenciate(self, na_position='last'):  #, method='trapz') :
+        """
+        Calculates numerical differentiation of the columns values over the index values.
+
+        Returns a new SimDataFrame
+        """
+        # method=method.lower().strip()
+
+        if len(self) < 2 :
+            print("less than two rows, nothing to differenciate.")
+            return None
+
+        dt = np.diff(self.index)
+        dtUnits = self.indexUnits
+        if str(dt.dtype).startswith('timedelta') :
+            dt = dt.astype('timedelta64[s]').astype('float64')/60/60/24
+            dtUnits = 'DAYS'
+
+        diff = np.diff(self.DF.to_numpy(),axis=0)
+        diff = diff / dt.reshape(-1,1)
+
+        newUnits = {}
+        for C, U in self.units.items() :
+            if len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits == 'DAYS' ) ) :
+                newUnits[C] = U + '/' + U.split('/')[-1]
+            elif len(U.split('*'))==2 and (U.split('*')[-1].upper() == dtUnits or (U.split('*')[-1].upper() in ['DAY', 'DAYS'] and dtUnits == 'DAYS' ) ) :
+                newUnits[C] = U.split('*')[0]
+            else :
+                newUnits[C]=U + '/' + dtUnits
+        
+        if na_position == 'first':
+            if str(dt.dtype).startswith('timedelta') :    
+                NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]))
+            else:
+                NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=[self.index[0]])
+            diff = DataFrame(data=diff, index=self.index[1:], columns=self.columns)
+            diff = NaNRow.append(diff)
+        else:
+            if str(dt.dtype).startswith('timedelta') :    
+                NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[-1]]))
+            else:
+                NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=[self.index[-1]])
+            diff = DataFrame(data=diff, index=self.index[:-1], columns=self.columns)
+            diff = diff.append(NaNRow)
+            
+        params = self._SimParameters
+        params['units'] = newUnits
+        return SimDataFrame(data=diff, **params)
     
     def sort_values(self,by=None, axis='--auto', ascending=True, inplace=False, kind='quicksort', na_position='last', ignore_index=False, key=None) :
         if by is None and axis == '--auto' :
