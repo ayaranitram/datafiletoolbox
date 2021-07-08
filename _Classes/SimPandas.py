@@ -417,7 +417,10 @@ class SimSeries(Series) :
         return Series(self)
     
     def to_SimDataFrame(self):
-        return SimDataFrame(data=self)
+        if type(self.units) is str:
+            return SimDataFrame(data=self)
+        elif type(self.units) is dict:
+            return SimDataFrame(data=self.values.reshape(1,self.values.size), index=[self.name], columns=self.index, **self._SimParameters)
 
     @property
     def sdf(self) :
