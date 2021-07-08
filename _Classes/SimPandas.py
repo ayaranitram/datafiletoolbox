@@ -3942,12 +3942,14 @@ Copy of input object, shifted.
         units = self.get_units()
         if units is None or len(units) == 0:
             return self.columns  # there are not units, return column names as they are
+        if len(self.columns) == 0:
+            return self.columns  # is an empty DataFrame
         for col in self.columns :
             if col in units :
                 out[col] = units[col]
             else :
                 out[col] = None
-        out = pd.MultiIndex.from_tuples(out.items() )
+        out = pd.MultiIndex.from_tuples(out.items())
         return out
 
     def _DataFrameWithMultiIndex(self) :
