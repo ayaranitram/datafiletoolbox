@@ -1745,9 +1745,9 @@ class SimDataFrame(DataFrame) :
     pandas.DataFrame
 
     """
-    _metadata = ["units", "speak", "indexUnits", "nameSeparator", "intersectionCharacter", "autoAppend", "spdLocator"]  #, "spdiLocator"]
+    _metadata = ["units", "speak", "indexUnits", "nameSeparator", "intersectionCharacter", "autoAppend", "spdLocator", "transposed"]  #, "spdiLocator"]
 
-    def __init__(self, data=None, units=None, index=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩', autoAppend=False, *args, **kwargs) :
+    def __init__(self, data=None, units=None, index=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩', autoAppend=False, transposed=False, *args, **kwargs) :
         self.units = None
         self.speak = bool(speak)
         self.indexUnits = None
@@ -1755,6 +1755,7 @@ class SimDataFrame(DataFrame) :
         self.intersectionCharacter = '∩'
         self.autoAppend = False
         self.spdLocator = _SimLocIndexer("loc", self)
+        self.transposed = bool(transposed)
         # self.spdiLocator = _SimLocIndexer("iloc", self)
 
 
