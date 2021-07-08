@@ -653,10 +653,12 @@ class SimSeries(Series) :
                 params = self._SimParameters
                 params['units'] = units
                 return SimSeries(data=convertUnit(self.S, self.units, units, self.speak ), **params)
-        if type(units) is str and len(set(self.units.values())) == 1 :
+        if type(units) is str and type(self.units) is dict and len(set(self.units.values())) == 1 :
             params = self._SimParameters
             params['units'] = units
             return SimSeries(data=convertUnit(self.S, list(set(self.units.values()))[0], units, self.speak ), **params )
+        if type(units) is dict and type(self.units) is dict:
+            return self.to_SimDataFrame().convert(units)
 
     def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
         axis = _cleanAxis(axis)
@@ -2413,7 +2415,7 @@ Copy of input object, shifted.
                     valid = True
             if valid :
                 return result
-        if type(units) in [list, tuple] :
+        if type(units) in [list, tuple, Index] :
             result = self.copy()
             valid = False
             for col in self.columns :
