@@ -4720,7 +4720,7 @@ Copy of input object, shifted.
             print("less than two rows, nothing to integrate.")
             return None
 
-        dt = np.diff(self.index )
+        dt = np.diff(self.index)
         dtUnits = self.indexUnits
         if str(dt.dtype).startswith('timedelta') :
             dt = dt.astype('timedelta64[s]').astype('float64')/60/60/24
@@ -4739,11 +4739,14 @@ Copy of input object, shifted.
                 newUnits[C]=U.split('/')[0]
             else :
                 newUnits[C]=U+'*'+dtUnits
-
-        firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]) )
+        
+        if str(dt.dtype).startswith('timedelta') :
+            firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]))
+        else:
+            firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=[self.index[0]])
         params = self._SimParameters
         params['units'] = newUnits
-        return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative ) ), **params)
+        return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative)), **params)
     
     def sort_values(self,by=None, axis='--auto', ascending=True, inplace=False, kind='quicksort', na_position='last', ignore_index=False, key=None) :
         if by is None and axis == '--auto' :
