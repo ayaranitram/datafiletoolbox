@@ -276,7 +276,7 @@ class unit(object) :
     # dictionary['rate_FROMvolume'] = dictionary['rate_SI']
 
     dictionary['dataBYTE'] = []
-    dictionary['dataBYTE_UPPER_PLURALwS_DATA_NAME'] = {'B':('Byte', 'byte')}
+    dictionary['dataBYTE_UPPER_PLURALwS_DATA_NAME_REVERSE'] = {'B':('Byte', 'byte')}
     dictionary['dataBIT'] = []
     dictionary['dataBIT_UPPER_PLURALwS_DATA'] = ('bit', )
 
@@ -287,7 +287,7 @@ class unit(object) :
                                            }
 
     dictionary['permeability'] = []
-    dictionary['permeability_UPPER'] = ('mD', 'Darcy', )
+    dictionary['permeability_UPPER_REVERSE'] = ('mD', 'Darcy', )
 
     dictionary['force'] = []
     dictionary['force_NAMES_SPACES_RECURSIVE_UPPER_REVERSE'] = {'Newton':('N', 'newton', 'kg*m/s2'),
@@ -771,6 +771,7 @@ def UnitConversions():
     UC.addEdge(conversion(UC.getNode('square foot'), UC.getNode('square inch'), lambda d: d*144))
     UC.addEdge(conversion(UC.getNode('square foot'), UC.getNode('square meter'), lambda d: d*(3048**2)/(10000**2)))
     UC.addEdge(conversion(UC.getNode('Darcy'), UC.getNode('mD'), lambda d: d*1000 ))
+    UC.addEdge(conversion(UC.getNode('Darcy'), UC.getNode('µm2'), lambda d: d*0.9869233))
     # UC.addEdge(conversion(UC.getNode('m*m'), UC.getNode('m'), lambda d: d**0.5 ))
     # UC.addEdge(conversion(UC.getNode('m'), UC.getNode('m*m'), lambda d: d**2 ))
     # UC.addEdge(conversion(UC.getNode('rd*rd'), UC.getNode('rd'), lambda d: d**0.5 ))
