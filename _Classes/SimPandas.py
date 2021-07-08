@@ -396,6 +396,13 @@ class SimSeries(Series) :
             return ''
         else :
             return self.nameSeparator
+    
+    def transpose(self):
+        return self
+    
+    @property
+    def T(self):
+        return self.transpose()
 
     def to_Pandas(self) :
         return self.to_Series()
@@ -1812,20 +1819,33 @@ class SimDataFrame(DataFrame) :
         
         # set the units
         if type(units) is str :
+            if self.transposed:
+                self.transposed = False
             # self.units = {}
             # for key in list(self.columns) :
             #     self.units[ key ] = units
             self.units = dict(zip(list(self.columns), [units]*len(list(self.columns))))
         elif type(units) is list or type(units) is tuple :
-            if len(units) == len(self.columns) :
-                self.units = dict(zip(list(self.columns), units))
+            if self.transposed:
+                if len(units) == len(self.index) :
+                    self.units = dict(zip(list(self.index), units))
+            elif not self.transposed:
+                if len(units) == len(self.columns) :
+                    self.units = dict(zip(list(self.columns), units))
         elif type(units) is dict and len(units)>0 :
             self.units = {}
-            for key in list(self.columns):
-                if key is not None and key in units :
-                    self.units[key] = units[key]
-                else :
-                    self.units[key] = 'UNITLESS'
+            if self.transposed:
+                for key in list(self.index):
+                    if key is not None and key in units :
+                        self.units[key] = units[key]
+                    else :
+                        self.units[key] = 'UNITLESS'
+            elif not self.transposed:
+                for key in list(self.columns):
+                    if key is not None and key in units :
+                        self.units[key] = units[key]
+                    else :
+                        self.units[key] = 'UNITLESS'
             if self.index.name in units:
                 self.units[self.index.name] = units[self.index.name]
             for key in self.index.names:
@@ -2222,6 +2242,13 @@ Copy of input object, shifted.
         elif type(excel_writer) is str :
             SDFwriter.save()
 
+    def transpose(self):
+        return SimDataFrame(data=self.DF.T, **self._SimParameters, transposed=(not self.transposed))
+    
+    @property
+    def T(self):
+        return self.transpose()
+
     def as_Pandas(self) :
         return self.to_DataFrame()
 
@@ -2367,6 +2394,12 @@ Copy of input object, shifted.
         returns the dataframe converted to the requested units if possible,
         else returns None
         """
+        if self.transposed:
+            result = self.transpose().convert(units)
+            if result is not None:
+                return result.transpose()
+            else:
+                return None
         if type(units) is str :
             result = self.copy()
             valid = False
@@ -3953,10 +3986,28 @@ Copy of input object, shifted.
         return out
 
     def _DataFrameWithMultiIndex(self) :
-        result = self.DF.copy()
-        newName = self._columnsNameAndUnits2MultiIndex()
-        result.columns=newName
-        return result
+        if self.transposed:
+            result = self.DF.copy()
+            units = []
+            for i in result.index:
+                if i in self.units:
+                    units.append(self.units[i])
+                else:
+                    units.append('UNITLESS')
+            joker = ('*','@','$','-','%','_',' ')
+            for unitsCol in [s + 'units' for s in joker ] + [s + 'units' + s for s in joker ] + [s + 'UNITS' for s in joker ] + [s + 'UNITS' + s for s in joker ]:
+                if unitsCol not in result.columns:
+                    result[unitsCol] = units
+                    break
+                elif list(result[unitsCol]) == units:
+                    break
+            result.index.name = None
+            return result
+        else:
+            result = self.DF.copy()
+            newName = self._columnsNameAndUnits2MultiIndex()
+            result.columns=newName
+            return result
 
     def _repr_html_(self) :
         """
