@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.61.2'
-__release__ = 210708
+__version__ = '0.61.3'
+__release__ = 210703
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -4735,7 +4735,8 @@ Copy of input object, shifted.
 
         newUnits = {}
         for C, U in self.units.items() :
-            if len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits == 'DAYS' ) ) :
+            print(C,U, U.split('/')[-1].upper() , dtUnits, U.split('/')[-1].upper() == dtUnits)
+            if len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
                 newUnits[C] = U.split('/')[0] 
             else :
                 newUnits[C] = U + '*' + dtUnits
@@ -4771,9 +4772,9 @@ Copy of input object, shifted.
 
         newUnits = {}
         for C, U in self.units.items() :
-            if len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits == 'DAYS' ) ) :
+            if len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
                 newUnits[C] = U + '/' + U.split('/')[-1]
-            elif len(U.split('*'))==2 and (U.split('*')[-1].upper() == dtUnits or (U.split('*')[-1].upper() in ['DAY', 'DAYS'] and dtUnits == 'DAYS' ) ) :
+            elif len(U.split('*')) == 2 and (U.split('*')[-1].upper() == dtUnits.upper() or (U.split('*')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
                 newUnits[C] = U.split('*')[0]
             else :
                 newUnits[C]=U + '/' + dtUnits
