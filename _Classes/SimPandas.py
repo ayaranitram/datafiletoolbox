@@ -2426,6 +2426,9 @@ Copy of input object, shifted.
                         break
             if valid :
                 return result
+            else:
+                print('no columns could be to converted to the requested units.')
+                return self
         if type(units) is dict :
             unitsDict = {}
             for k, v in units.items() :
