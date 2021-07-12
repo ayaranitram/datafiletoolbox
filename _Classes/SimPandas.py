@@ -1640,12 +1640,51 @@ class SimSeries(Series) :
         return self.to_SimDataFrame().yearly(outBy=outBy).to_SimSeries()
 
     def DaysInYear(self,column=None):
+        """
+        returns a SimSeries with the number of days in a particular year
+    
+        Parameters
+        ----------
+        column : str
+            The selected column must be an of dtype integer, date, datetime containing 
+            the year to calculate the number of day.
+            
+        Returns
+        -------
+        a new SimSeries with the resulting array and same index as the input.
+        """
         return self.daysInYear(column=column)
     
     def daysinyear(self,column=None):
+        """
+        returns a SimSeries with the number of days in a particular year
+    
+        Parameters
+        ----------
+        column : str
+            The selected column must be an of dtype integer, date, datetime containing 
+            the year to calculate the number of day.
+            
+        Returns
+        -------
+        a new SimSeries with the resulting array and same index as the input.
+        """
         return self.daysInYear(column=column)
     
     def daysInYear(self,column=None):
+        """
+        returns a SimSeries with the number of days in a particular year
+    
+        Parameters
+        ----------
+        column : str
+            The selected column must be an of dtype integer, date, datetime containing 
+            the year to calculate the number of day.
+            
+        Returns
+        -------
+        a new SimSeries with the resulting array and same index as the input.
+        """
         params = self._SimParameters
         if 'units' in params:
             if type(params['units']) is str:
@@ -4909,12 +4948,51 @@ Copy of input object, shifted.
         return _meltDF(self,FullOutput=False)
 
     def DaysInYear(self,column=None):
+        """
+        returns a SimSeries with the number of days in a particular year
+    
+        Parameters
+        ----------
+        column : str
+            The selected column must be an of dtype integer, date, datetime containing 
+            the year to calculate the number of day.
+            
+        Returns
+        -------
+        a new SimSeries with the resulting array and same index as the input.
+        """
         return self.daysInYear(column=column)
     
     def daysinyear(self,column=None):
+        """
+        returns a SimSeries with the number of days in a particular year
+    
+        Parameters
+        ----------
+        column : str
+            The selected column must be an of dtype integer, date, datetime containing 
+            the year to calculate the number of day.
+            
+        Returns
+        -------
+        a new SimSeries with the resulting array and same index as the input.
+        """
         return self.daysInYear(column=column)
     
     def daysInYear(self,column=None):
+        """
+        returns a SimSeries with the number of days in a particular year
+    
+        Parameters
+        ----------
+        column : str
+            The selected column must be an of dtype integer, date, datetime containing 
+            the year to calculate the number of day.
+            
+        Returns
+        -------
+        a new SimSeries with the resulting array and same index as the input.
+        """
         params = self._SimParameters
         params['index'] = self.index
         if column is not None:
@@ -4938,14 +5016,18 @@ Copy of input object, shifted.
                 return result
         else:
             if self.index.dtype in ('int','int64') and self.index.min() > 0 :
-                params['indexName'] = 'DaysInYear'
-                params['indexUnits'] = 'days'
-                params['index'] = list(daysInYear(self.index.to_numpy()))
-                params['columns'] = self.columns
-                params['units'] = self.units.copy()
-                return self._class( data=self.DF.values, **params )
+                params['name'] = 'DaysInYear'  # params['indexName'] = 'DaysInYear'
+                params['indexUnits'] = self.indexUnits
+                params['index'] = self.index  # params['index'] = list(daysInYear(self.index.to_numpy()))
+                # params['columns'] = self.columns
+                params['units'] = 'days'  # params['units'] = self.units.copy()
+                return SimSeries( data=list(daysInYear(self.index.to_numpy())), **params )  # self._class( data=self.DF.values, **params )
             elif 'datetime' in str(self.index.dtype):
-                return self._class( data=self.DF.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
+                params['name'] = 'DaysInYear'
+                params['units'] = 'days'
+                params['indexUnits'] = self.indexUnits
+                params['index'] = self.index
+                return SimSeries( data=list(daysInYear(self.index)), **params ) # self._class( data=self.DF.values, index=list(daysInYear(self.index)), columns=self.columns, **self._SimParameters )
             else:
                 raise ValueError('index is not a valid date or year integer')
 
