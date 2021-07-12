@@ -4842,6 +4842,28 @@ Copy of input object, shifted.
     def tail(self,n=5):
         return SimDataFrame(data=self.DF.head(n),**self._SimParameters)
 
+    def cumsum(self, skipna=True, *args, **kwargs):
+        """
+        Return cumulative sum over a SimDataFrame.
+    
+        Returns a SimDataFrame or SimSeries of the same size containing the cumulative sum.
+    
+        Parameters:
+            axis : {0 or ‘index’, 1 or ‘columns’}, default 0
+                The index or the name of the axis. 0 is equivalent to None or ‘index’.
+    
+        skipna: bool, default True
+            Exclude NA/null values. If an entire row/column is NA, the result will be NA.
+    
+        *args, **kwargs
+            Additional keywords have no effect but might be accepted for compatibility with NumPy.
+    
+        Returns
+            SimSeries or SimDataFrame
+            Return cumulative sum of Series or DataFrame.
+        """
+        return SimDataFrame(data=self.DF.cumsum(skipna=skipna, *args, **kwargs),**self._SimParameters)
+
     def jitter(self,std=0.10) :
         """
         add jitter the values of the SimDataFrame
