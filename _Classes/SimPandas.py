@@ -4837,9 +4837,43 @@ Copy of input object, shifted.
                 return SimDataFrame(data=self.DF.sort_values(by=by, axis=axis, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
 
     def head(self,n=5):
+        """
+        Return the first n rows.
+
+        This function returns first n rows from the object based on position. It is useful for quickly verifying data, for example, after sorting or appending rows.
+        
+        For negative values of n, this function returns all rows except the last n rows, equivalent to df[n:].
+        
+        Parameters:
+        ----------
+            n : int, default 5
+            Number of rows to select.
+        
+        Returns
+        -------
+            type of caller
+            The first n rows of the caller object.
+        """
         return SimDataFrame(data=self.DF.head(n),**self._SimParameters)
     
     def tail(self,n=5):
+        """
+        Return the last n rows.
+
+        This function returns last n rows from the object based on position. It is useful for quickly verifying data, for example, after sorting or appending rows.
+        
+        For negative values of n, this function returns all rows except the first n rows, equivalent to df[n:].
+        
+        Parameters:
+        ----------
+            n : int, default 5
+            Number of rows to select.
+        
+        Returns
+        -------
+            type of caller
+            The last n rows of the caller object.
+        """
         return SimDataFrame(data=self.DF.head(n),**self._SimParameters)
 
     def cumsum(self, skipna=True, *args, **kwargs):
