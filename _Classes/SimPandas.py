@@ -2701,6 +2701,9 @@ Copy of input object, shifted.
             std : returns the standard deviation per year
             sum : returns the summation of all the values per year
             count : returns the number of rows per year
+            int or integrate : calculates the numerical integration over the index (a datetime-index) and returns 
+            repr or representative : calculates the numerical integration of the column over the index (a datetime-index) and then divide it by the elapsed time on between each pair of rows
+            cum or cumulative : first run cumsum over the columns and then return the last value of each year
         """
         try :
             result = self.DF.groupby(self.index.year)
@@ -2724,12 +2727,12 @@ Copy of input object, shifted.
             result = result.sum()
         elif outBy == 'count' :
             result = result.count()
-        elif outBy in ['int', 'integrate', 'integral', 'cum', 'cumulative', 'representative'] :
+        elif outBy in ['int', 'integrate', 'integral', 'cum', 'cumulative', 'representative','rep'] :
             result = self.integrate()
             result = result.DF.groupby(self.index.year)
             index = DataFrame(data=self.index, index=self.index).groupby(self.index.year)
             index = np.append(index.first().to_numpy(), index.last().to_numpy()[-1])
-            deltaindex = np.diff(index )
+            deltaindex = np.diff(index)
             if isinstance(self.index, DatetimeIndex) :
                 deltaindex = deltaindex.astype('timedelta64[s]').astype('float64')/60/60/24
             values = result.first().append(result.last().iloc[-1] )
