@@ -4013,6 +4013,15 @@ class SimResult(object):
                     _verbose(self.speak, 1, Key + ' <set_Vector> vector detected as numpy.array of dtype ' + DataType + '.' )
             if VectorData.size == 0 :
                 raise TypeError(' <set_Vector> VectorData must not be empty')
+            if len(VectorData.shape) == 1:
+                pass  # OK
+            elif len(VectorData.shape) == 2:
+                if VectorData.shape[0] == 1 or VectorData.shape[1] == 1 :
+                    VectorData = VectorData.reshape(-1,)
+                else:
+                    pass  # is a matrix
+            else:
+                pass  # is a multidimensional matrix!!!
         elif isinstance(VectorData, (Series)) :
             if DataType == 'auto' :
                 if 'int' in str(VectorData.dtype) :
