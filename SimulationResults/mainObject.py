@@ -860,9 +860,26 @@ class SimResult(object):
                 self.wellsLists['WaterInjectors'] = list(_wellFromAttribute((self[['WWIR']].replace(0, np.nan).dropna(axis=1, how='all')).columns ).values() )
             else :
                 self.wellsLists['WaterInjectors'] = []
+                
+            _ = self.get_WaterInjectorsHistory(reload=True)
+            
+        return self.wellsLists['WaterInjectors']
+    
+    def get_WaterInjectorsHistory(self, reload=False):
+        """
+        returns a list of the wells that inject water at any time in the simulation with history keyword.
+        """
+        if 'WaterInjectors' not in self.wellsLists:
+            self.wellsLists['WaterInjectors'] = []
+        if reload is True :
+            _verbose(self.printMessages, 1, '# extrating data to count water injection wells' )
+            if self.is_Attribute('WWIRH') :
+                self.wellsLists['WaterInjectors'] += list(_wellFromAttribute((self[['WWIRH']].replace(0, np.nan).dropna(axis=1, how='all')).columns ).values() )
+                if len(self.wellsLists['WaterInjectors']) > 1:
+                    self.wellsLists['WaterInjectors'] = list(set(self.wellsLists['WaterInjectors']))
         return self.wellsLists['WaterInjectors']
 
-    def get_GasInjectors(self, reload=False ) :
+    def get_GasInjectors(self, reload=False):
         """
         returns a list of the wells that inject gas at any time in the simulation.
         """
@@ -872,9 +889,26 @@ class SimResult(object):
                 self.wellsLists['GasInjectors'] = list(_wellFromAttribute((self[['WGIR']].replace(0, np.nan).dropna(axis=1, how='all')).columns ).values() )
             else :
                 self.wellsLists['GasInjectors'] = []
+                
+            _ = self.get_GasInjectorsHistory(reload=True)
+            
+        return self.wellsLists['GasInjectors']
+    
+    def get_GasInjectorsHistory(self, reload=False):
+        """
+        returns a list of the wells that inject gas at any time in the simulation.
+        """
+        if 'GasInjectors' not in self.wellsLists:
+            self.wellsLists['GasInjectors'] = []
+        if reload is True :
+            _verbose(self.printMessages, 1, '# extrating data to count gas injection wells' )
+            if self.is_Attribute('WGIRH') :
+                self.wellsLists['GasInjectors'] += list(_wellFromAttribute((self[['WGIRH']].replace(0, np.nan).dropna(axis=1, how='all')).columns ).values() )
+                if len(self.wellsLists['GasInjectors']) > 1 :
+                        self.wellsLists['GasInjectors'] = list(set(self.wellsLists['GasInjectors']))
         return self.wellsLists['GasInjectors']
 
-    def get_OilInjectors(self, reload=False ) :
+    def get_OilInjectors(self, reload=False):
         """
         returns a list of the wells that inject oil at any time in the simulation.
         """
@@ -884,14 +918,31 @@ class SimResult(object):
                 self.wellsLists['OilInjectors'] = list(_wellFromAttribute((self[['WOIR']].replace(0, np.nan).dropna(axis=1, how='all')).columns ).values() )
             else :
                 self.wellsLists['OilInjectors'] = []
+                
+            _ = self.get_OilInjectorsHistory(reload=True)
+            
+        return self.wellsLists['OilInjectors']
+    
+    def get_OilInjectorsHistory(self, reload=False):
+        """
+        returns a list of the wells that inject oil at any time in the simulation.
+        """
+        if 'OilInjectors' not in self.wellsLists :
+            self.wellsLists['OilInjectors'] = []
+        if reload is True :
+            _verbose(self.printMessages, 1, '# extrating data to count oil injection wells' )
+            if self.is_Attribute('WOIRH') :
+                self.wellsLists['OilInjectors'] += list(_wellFromAttribute((self[['WOIRH']].replace(0, np.nan).dropna(axis=1, how='all')).columns ).values())
+                if len(self.wellsLists['OilInjectors']) > 1 :
+                    self.wellsLists['OilInjectors'] = list(set(self.wellsLists['OilInjectors']))
         return self.wellsLists['OilInjectors']
 
     def get_Injectors(self, reload=False ) :
         if 'Injectors' not in self.wellsLists or reload is True :
-            self.wellsLists['Injectors'] = list(set(self.get_WaterInjectors(reload ) + self.get_GasInjectors(reload ) + self.get_OilInjectors(reload ) ) )
+            self.wellsLists['Injectors'] = list(set(self.get_WaterInjectors(reload) + self.get_GasInjectors(reload) + self.get_OilInjectors(reload)))
         return self.wellsLists['Injectors']
 
-    def get_WaterProducers(self, reload=False ) :
+    def get_WaterProducers(self, reload=False):
         """
         returns a list of the wells that produces more than 99.99% water at any time in the simulation.
         """
@@ -925,10 +976,52 @@ class SimResult(object):
 
             else :
                 self.wellsLists['WaterProducers'] = []
+            
+            _ = self.get_WaterProducersHistory(reload=True)
+            
+        return self.wellsLists['WaterProducers']
+
+    def get_WaterProducersHistory(self, reload=False):
+        """
+        returns a list of the wells that produces more than 99.99% water at any time in the simulation.
+        """
+        if 'WaterProducers' not in self.wellsLists:
+            self.wellsLists['WaterProducers'] = []
+        if reload is True:
+            _verbose(self.printMessages, 1, '# extrating data to count water production wells' )
+            if self.is_Attribute('WWPRH') :
+                waterProducers = self[['WWPRH']]
+                waterProducers = waterProducers.rename(columns=_wellFromAttribute(waterProducers.columns ) )
+
+                prodCheck = waterProducers * 0
+
+                if self.is_Attribute('WOPRH') :
+                    oilProducers = self[['WOPRH']]
+                    oilProducers = oilProducers.rename(columns=_wellFromAttribute(oilProducers.columns ) )
+                    prodCheck = oilProducers + prodCheck
+
+                if self.is_Attribute('WGPRH') :
+                    gasProducers = self[['WGPRH']]
+                    gasProducers = gasProducers.rename(columns=_wellFromAttribute(gasProducers.columns ) )
+                    prodCheck = gasProducers + prodCheck
+
+                prodCheck = ((prodCheck==0) & (waterProducers>0)).replace(False, np.nan).dropna(axis=1, how='all')
+
+                self.wellsLists['WaterProducers'] += list(prodCheck.columns)
+                if len(self.wellsLists['WaterProducers']) > 1:
+                    self.wellsLists['WaterProducers'] = list(set(self.wellsLists['WaterProducers']))
+
+            elif self.is_Attribute('WWCTH') :
+                waterCheck = self[['WWPRH']]
+                waterCheck = waterCheck.rename(columns=_wellFromAttribute(waterCheck.columns ) )
+                waterCheck = (waterCheck >= self.WCcriteria ).replace(False, np.nan).dropna(axis=1, how='all')
+                self.wellsLists['WaterProducers'] += list(waterCheck.columns)
+                if len(self.wellsLists['WaterProducers']) > 1:
+                    self.wellsLists['WaterProducers'] = list(set(self.wellsLists['WaterProducers']))
 
         return self.wellsLists['WaterProducers']
 
-    def get_OilProducers(self, reload=False ) :
+    def get_OilProducers(self, reload=False):
         """
         returns a list of the wells considered oil producers at any time in the simulation.
         the GOR criteria to define the oil and gas producers can be modified by the method .set_GORcriteria()
@@ -977,13 +1070,13 @@ class SimResult(object):
 
                 GOR = GOR[rateCheck].dropna(axis=1, how='all')
 
-                GORcriteria = convertUnit(self.GORcriteria[0], self.GORcriteria[1], self.get_Unit('WGOR') )
+                GORcriteria = convertUnit(self.GORcriteria[0], self.GORcriteria[1], self.get_Unit('WGOR'))
                 self.wellsLists['OilProducers'] = list((GOR<=GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
                 self.wellsLists['GasProducers'] = list((GOR >GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
 
             elif self.is_Attribute('WOGR') and self.get_Unit('WOGR') is not None :
                 GOR = 1 / self[['WOGR']]
-                GOR = (GOR.rename(columns=_wellFromAttribute(GOR.columns ) ) ).dropna(axis=1, how='all')
+                GOR = (GOR.rename(columns=_wellFromAttribute(GOR.columns))).dropna(axis=1, how='all')
 
                 GORcriteria = convertUnit(self.GORcriteria[0], self.GORcriteria[1], self.get_Unit('WOGR') )
                 self.wellsLists['OilProducers'] = list((GOR<=GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
@@ -996,6 +1089,93 @@ class SimResult(object):
             else :
                 self.wellsLists['OilProducers'] = []
             
+            _ = self.get_OilProducersHistory(reload=True)
+            
+        return self.wellsLists['OilProducers']
+
+    def get_OilProducersHistory(self, reload=False ) :
+        """
+        returns a list of the wells considered oil producers at any time in the simulation.
+        the GOR criteria to define the oil and gas producers can be modified by the method .set_GORcriteria()
+        """
+        if 'OilProducers' not in self.wellsLists :
+            self.wellsLists['OilProducers'] = []
+        if 'GasProducers' not in self.wellsLists :
+            self.wellsLists['GasProducers'] = []
+        if reload is True:
+            _verbose(self.printMessages, 1, '# extrating data to count oil production wells' )
+            if self.is_Attribute('WOPRH') and self.is_Attribute('WGPRH') and self.get_Unit('WGPRH') is not None and self.get_Unit('WOPRH') is not None :
+                OIL = self[['WOPRH']]
+                OIL.rename(columns=_wellFromAttribute(OIL.columns ), inplace=True )
+                # OIL.replace(0, np.nan, inplace=True )
+
+                GAS = self[['WGPRH']]
+                GAS.rename(columns=_wellFromAttribute(GAS.columns ), inplace=True )
+
+                rateCheck = ((OIL>0) | (GAS>0)) # rateCheck = ((OIL>0) + (GAS>0))
+
+                GOR = GAS / OIL
+                GOR.replace(np.nan, 9E9, inplace=True)
+                GOR = GOR[rateCheck].dropna(axis=1, how='all')
+
+                # the loop is a trick to avoid memory issues when converting new
+                i = 0
+                test = False
+                while not test and i < 10 :
+                    i += 1
+                    test = convertibleUnits(self.GORcriteria[1], self.get_Unit('WGPRH').split('/')[0] + '/' + self.get_Unit('WOPRH').split('/')[0])
+                GORcriteria = convertUnit(self.GORcriteria[0], self.GORcriteria[1], self.get_Unit('WGPRH').split('/')[0] + '/' + self.get_Unit('WOPRH').split('/')[0], PrintConversionPath=False )
+
+                self.wellsLists['OilProducers'] += list((GOR<=GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
+                if len(self.wellsLists['OilProducers']) > 1:
+                    self.wellsLists['OilProducers'] = list(set(self.wellsLists['OilProducers']))
+                self.wellsLists['GasProducers'] += list((GOR >GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
+                if len(self.wellsLists['GasProducers']) > 1 :
+                    self.wellsLists['GasProducers'] = list(set(self.wellsLists['GasProducers']))
+
+            elif self.is_Attribute('WGORH') and self.get_Unit('WGORH') is not None :
+                GOR = self[['WGORH']]
+                GOR = (GOR.rename(columns=_wellFromAttribute(GOR.columns)))
+
+                rateCheck = (GOR<0) & (GOR>0)  # to generate a dataframe full of False
+
+                if self.is_Attribute('WOPRH') :
+                    OIL = self[['WOPRH']]
+                    OIL.rename(columns=_wellFromAttribute(OIL.columns ), inplace=True )
+                    rateCheck = rateCheck | (OIL>0)
+                if self.is_Attribute('WGPRH') :
+                    GAS = self[['WGPRH']]
+                    GAS.rename(columns=_wellFromAttribute(GAS.columns ), inplace=True )
+                    rateCheck = rateCheck | (GAS>0)
+
+                GOR = GOR[rateCheck].dropna(axis=1, how='all')
+
+                GORcriteria = convertUnit(self.GORcriteria[0], self.GORcriteria[1], self.get_Unit('WGORH') )
+                self.wellsLists['OilProducers'] += list((GOR<=GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
+                if len(self.wellsLists['OilProducers']) > 1:
+                    self.wellsLists['OilProducers'] = list(set(self.wellsLists['OilProducers']))
+                self.wellsLists['GasProducers'] += list((GOR >GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
+                if len(self.wellsLists['GasProducers']) > 1 :
+                    self.wellsLists['GasProducers'] = list(set(self.wellsLists['GasProducers']))
+
+            elif self.is_Attribute('WOGRH') and self.get_Unit('WOGRH') is not None :
+                GOR = 1 / self[['WOGRH']]
+                GOR = (GOR.rename(columns=_wellFromAttribute(GOR.columns))).dropna(axis=1, how='all')
+
+                GORcriteria = convertUnit(self.GORcriteria[0], self.GORcriteria[1], self.get_Unit('WOGRH') )
+                self.wellsLists['OilProducers'] += list((GOR<=GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
+                if len(self.wellsLists['OilProducers']) > 1:
+                    self.wellsLists['OilProducers'] = list(set(self.wellsLists['OilProducers']))
+                self.wellsLists['GasProducers'] += list((GOR >GORcriteria).replace(False, np.nan).dropna(axis=1, how='all').columns)
+                if len(self.wellsLists['GasProducers']) > 1 :
+                    self.wellsLists['GasProducers'] = list(set(self.wellsLists['GasProducers']))
+
+            elif self.is_Attribute('WOPRH') :
+                _verbose(self.speak, 2, "neither GOR or GAS RATE available or the data doesn't has units, every well with oil rate > 0 will be listeda as oil producer." )
+                self.wellsLists['OilProducers'] += list(_wellFromAttribute(list(self[['WOPRH']].replace(0, np.nan).dropna(axis=1, how='all').columns)))
+                if len(self.wellsLists['OilProducers']) > 1:
+                    self.wellsLists['OilProducers'] = list(set(self.wellsLists['OilProducers']))
+
         return self.wellsLists['OilProducers']
 
     def get_GasProducers(self, reload=False):
@@ -1011,6 +1191,26 @@ class SimResult(object):
                 self.wellsLists['GasProducers'] = list(_wellFromAttribute(list(self[['WGPR']].replace(0, np.nan).dropna(axis=1, how='all').columns)))
             elif 'GasProducers' not in self.wellsLists :
                 self.wellsLists['GasProducers'] = []
+                
+            _ = self.get_GasProducersHistory(reload=True)
+            
+        return self.wellsLists['GasProducers']
+    
+    def get_GasProducersHistory(self, reload=False):
+        """
+        returns a list of the wells considered gas producers at any time in the simulation.
+        the GOR criteria to define the oil and gas producers can be modified by the method .set_GORcriteria()
+        """
+        if 'GasProducers' not in self.wellsLists:
+            self.wellsLists['GasProducers'] = []
+        if reload is True :
+            _verbose(self.printMessages, 1, '# extrating data to count gas production wells')
+            _ = self.get_OilProducers(reload=True)
+            if 'GasProducers' not in self.wellsLists and self.is_Attribute('WGPRH') is True:
+                _verbose(self.speak, 2, "neither GOR or OIL RATE available or the data doesn't has units, every well with gas rate > 0 will be listeda as gas producer.")
+                self.wellsLists['GasProducers'] += list(_wellFromAttribute(list(self[['WGPRH']].replace(0, np.nan).dropna(axis=1, how='all').columns)))
+                self.wellsLists['GasProducers'] = list(set(self.wellsLists['GasProducers']))
+                
         return self.wellsLists['GasProducers']
 
     def get_Producers(self, reload=False ) :
