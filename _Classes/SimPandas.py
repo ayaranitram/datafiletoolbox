@@ -3720,6 +3720,8 @@ Copy of input object, shifted.
             key = key.strip()
         if type(value) is tuple and len(value) == 2 and type(value[1]) in [str,dict] and units is None :  # and type(value[0]) in [SimSeries, Series, list, tuple, np.ndarray,float,int,str] 
             value, units = value[0], value[1]
+        if type(value) is SimDataFrame and len(value.index) == 1:
+            value = value.to_SimSeries()
         if units is None :
             if type(value) is SimSeries :
                 if type(value.units) is str :
