@@ -149,6 +149,15 @@ class _SimLocIndexer(indexing._LocIndexer):
                 return result
         else:
             return result
+    
+    def __setitem__(self, key, value):  #, units=None):
+        # if type(key) is str :
+        #     key = key.strip()
+        # if type(value) is tuple and len(value) == 2 and type(value[1]) in [str,dict] and units is None :
+        #     value, units = value[0], value[1]
+        if type(value) is SimDataFrame and len(value.index) == 1:
+            value = value.to_SimSeries()
+        super().__setitem__(key, value)
 
 
 class SimSeries(Series) :
