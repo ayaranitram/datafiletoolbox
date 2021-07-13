@@ -4875,12 +4875,18 @@ class SimResult(object):
 
 
     def createDATES(self) :
-        if self.is_Key('TIME') is True and self.start is not None :
+        if self.is_Key('DATE') and not self.is_Key('DATES') :
+            DATE = self.get_Vector('DATE')['DATE']
+            self.set_Vector('DATES', DATE, 'DATE')
+        elif self.is_Key('DATES') and not self.is_Key('DATE') :
+            DATE = self.get_Vector('DATES')['DATES']
+            self.set_Vector('DATE', DATE, 'DATE')
+        elif self.is_Key('TIME') is True and self.start is not None :
             TIME = self.get_Vector('TIME')['TIME']
             start = self.start
             DATE = np.empty(len(TIME), dtype='datetime64[s]')
             for i in range(len(TIME)) :
-                DATE[i] = start + np.timedelta64(timedelta(days=TIME[i]) )
+                DATE[i] = start + np.timedelta64(timedelta(days=TIME[i]))
             self.set_Vector('DATES', DATE, 'DATE', overwrite=True )
             self.set_Vector('DATE', DATE, 'DATE', overwrite=True )
         elif self.is_Key('YEAR') is True and self.is_Key('MONTH') is True and self.is_Key('DAY') is True :
@@ -4889,18 +4895,18 @@ class SimResult(object):
             DAY = self.get_Vector('DAY')['DAY']
             tupleDate = lambda d : str(d).strip('()').replace(', ', '-')
             DATE = _strDate(list(map(tupleDate, zip(YEAR, MONTH, DAY))), formatIN='YYYY-MM-DD', formatOUT='DD-MMM-YYYY')
-            self.set_Start(DATE[0] )
+            self.set_Start(DATE[0])
             DATE = np.array(pd.to_datetime(DATE), dtype='datetime64[s]')
-            self.set_Vector('DATES', DATE, 'DATE', overwrite=True )
-            self.set_Vector('DATE', DATE, 'DATE', overwrite=True )
-        elif self.is_Key('DATE') :
+            self.set_Vector('DATES', DATE, 'DATE', overwrite=True)
+            self.set_Vector('DATE', DATE, 'DATE', overwrite=True)
+        if self.is_Key('DATE') :
             if not self.is_Key('DATES') :
                 DATE = self.get_Vector('DATE')['DATE']
-                self.set_Vector('DATES', DATE, 'DATE' )
-        elif self.is_Key('DATES') :
+                self.set_Vector('DATES', DATE, 'DATE')
+        if self.is_Key('DATES') :
             if not self.is_Key('DATE') :
                 DATE = self.get_Vector('DATES')['DATES']
-                self.set_Vector('DATE', DATE, 'DATE' )
+                self.set_Vector('DATE', DATE, 'DATE')
         else :
             _verbose(self.speak, 3, "Not possible to create 'DATE' key, the requiered data is not available")
             return False
