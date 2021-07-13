@@ -1234,9 +1234,14 @@ class SimResult(object):
             Unit = [Unit]*len(Key)
 
         if Unit is None and type(Key) is dict :
-            keysDict = Key.copy()
-        elif len(Key) != len(Unit) :
+            # keysDict = Key.copy()
+            Unit , Key = list(Key.keys()) , list(Key.values())
+        elif Unit is not None and len(Key) != len(Unit) :
             raise ValueError('the lists of Keys and Units must have the same length')
+        elif Unit is None and len(Key) > 0 :
+            Unit = [Unit]
+        elif Unit is None and len(Key) == 0 :
+            raise ValueError("missing 'Key' argument")
 
         keysDict = dict(zip(Key, Unit))
 
