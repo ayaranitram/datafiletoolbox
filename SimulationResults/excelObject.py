@@ -143,6 +143,16 @@ class XLSX(_SimResult):
 
         if KeyIndex :
             _verbose(self.speak, 1, "found the commong index: " + str(self.DTindex))
+            # create result vector for the common index
+            IndexVector = None
+            for frame in self.Frames:
+                if IndexVector is None:
+                    IndexVector = self.Frames[frame][self.DTindex]
+                else:
+                    IndexVector = pd.merge_ordered(IndexVector,self.Frames[frame][self.DTindex],on=self.DTindex,how='outer')
+            self.add_Key(self.DTindex)
+            self.TimeVector = self.DTindex
+            _ = self.set_Vector(Key=self.DTindex, VectorData=IndexVector.to_numpy().reshape(-1,), Units=self.get_Units(self.DTindex), DataType='auto', overwrite=True) 
             return self.DTindex
         else :
             _verbose(self.speak, 3, "not a commong index name found.")
