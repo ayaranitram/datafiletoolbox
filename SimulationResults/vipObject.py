@@ -5,8 +5,8 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.20.0'
-__release__ = 210519
+__version__ = '0.21.0'
+__release__ = 210618
 __all__ = ['VIP']
 
 from .mainObject import SimResult as _SimResult
