@@ -911,7 +911,10 @@ class SimSeries(Series) :
                 else :
                     result = self.S.add(other.S, fill_value=0)
                     params['units'] = self.units+'+'+other.units
-                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                try:
+                    params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                except ValueError:
+                    params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
             else :
@@ -921,13 +924,19 @@ class SimSeries(Series) :
         elif isinstance(other, Series) :
             result = self.S.add(other, fill_value=0)
             newName = _stringNewName(self._CommonRename(SimSeries(other, **self._SimParameters))[2])
-            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+            try:
+                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+            except ValueError:
+                params['dtype'] = result.dtype
             params['name'] = newName
             return SimSeries(data=result, **params)
             
         # let's Pandas deal with other types, maintain units, dtype and name
         result = self.as_Series() + other
-        params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        try:
+            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        except ValueError:
+            params['dtype'] = result.dtype
         return SimSeries(data=result, **params)
 
     def __radd__(self, other) :
@@ -953,7 +962,10 @@ class SimSeries(Series) :
                 else :
                     result = self.sub(other, fill_value=0)
                     params['units'] = self.units+'-'+other.units
-                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                try:
+                    params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                except ValueError:
+                    params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
             else :
@@ -963,13 +975,19 @@ class SimSeries(Series) :
         elif isinstance(other, Series) :
             result = self.S.sub(other, fill_value=0)
             newName = _stringNewName(self._CommonRename(SimSeries(other, **self._SimParameters))[2])
-            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+            try:
+                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+            except ValueError:
+                params['dtype'] = result.dtype
             params['name'] = newName
             return SimSeries(data=result, **params)
         
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() - other
-        params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        try:
+            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        except ValueError:
+            params['dtype'] = result.dtype
         return SimSeries(data=result, **params)
 
     def __rsub__(self, other) :
@@ -1003,7 +1021,10 @@ class SimSeries(Series) :
                 else :
                     result = self.mul(other)
                     params['units'] = self.units + '*' + other.units
-                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                try:
+                    params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                except ValueError:
+                    params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
             else :
@@ -1045,7 +1066,10 @@ class SimSeries(Series) :
                 else :
                     result = self.truediv(other)
                     params['units'] = self.units + '/' + other.units
-                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                try:
+                    params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                except ValueError:
+                    params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
             else :
@@ -1053,7 +1077,10 @@ class SimSeries(Series) :
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() / other
-        params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        try:
+            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        except ValueError:
+            params['dtype'] = result.dtype
         return SimSeries(data=result, **params)
 
     def __rtruediv__(self, other) :
@@ -1120,7 +1147,10 @@ class SimSeries(Series) :
                     params['units'] = other.units
                 else :
                     result = self.mod(other)
-                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                try:
+                    params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                except ValueError:
+                    params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
             else :
@@ -1128,7 +1158,10 @@ class SimSeries(Series) :
 
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() % other
-        params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        try:
+            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        except ValueError:
+            params['dtype'] = result.dtype
         return SimSeries(data=result, **params)
 
     def __pow__(self, other) :
@@ -1152,7 +1185,10 @@ class SimSeries(Series) :
                     params['units'] = other.units+'^'+other.units
                 else :
                     result = self.pow(other)
-                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                try:
+                    params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                except ValueError:
+                    params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params )
             else :
@@ -1160,11 +1196,19 @@ class SimSeries(Series) :
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() ** other
-        params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        try:
+            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        except ValueError:
+            params['dtype'] = result.dtype
         return SimSeries(data=result, **params)
 
     def __int__(self) :
-        return SimSeries(data=self.S.astype(int), **self._SimParameters)
+        if self.isna().any():
+            notNA = ~self.isna()
+            NA = self.isna()
+            return (self[notNA].append(self[NA])).sort_index()
+        else:
+            return SimSeries(data=self.S.astype(int), **self._SimParameters)
     
     def __abs__(self) :
         return SimSeries(data=abs(self.S), **self._SimParameters)
