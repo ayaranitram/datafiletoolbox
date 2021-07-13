@@ -4502,7 +4502,7 @@ class SimResult(object):
     def fill_WellBasics(self) :
         np.seterr(divide='ignore', invalid='ignore')
 
-        for well in list(self.get_Wells()) :
+        for well in self.get_Wells():
             if type(well) is str and len(well.strip()) > 0 :
                 well = well.strip()
                 _verbose(self.speak, 2, ' calculating basic ratios for the well ' + well )
@@ -4601,6 +4601,8 @@ class SimResult(object):
 
         if type(ItemsNames) is str :
             ItemsNames = [ ItemsNames ]
+        elif ItemsNames == [] :
+            ItemsNames = self.get_Wells() + self.get_Groups() + ('FIELD',)
 
 
         for item in ItemsNames :
@@ -4840,7 +4842,7 @@ class SimResult(object):
         # convert string to calculation tuple
         if type(CalculationTuple) is str :
             _verbose (self.speak, 1, ' the received string for CalculatedTuple was converted to tuple, \n  received: ' + CalculationTuple + '\n  converted to: ' + str(tuple(_multisplit(CalculationTuple, operators ) ) ) )
-            CalculationTuple = tuple (_multisplit(' ' + CalculationTuple + ' ', operators))
+            CalculationTuple = tuple(_multisplit(' ' + CalculationTuple + ' ', operators))
         elif type(CalculationTuple ) is list :
             CalculationTuple = tuple(CalculationTuple )
         if ResultName is None :
@@ -4883,7 +4885,7 @@ class SimResult(object):
             elif (where+1) <= len(CalculationTuple) :
                 CalculationTuple = CalculationTuple[:where] + [ CalculationTuple[where] ] + [ '-' + CalculationTuple[where+1] ]
 
-        while CalculationTuple[0] == '-' :
+        while CalculationTuple[0] in ['-',' -'] :
             if len(CalculationTuple) > 2 :
                 CalculationTuple = [ '-' + CalculationTuple[1] ] + CalculationTuple[2:]
             else :
@@ -4894,8 +4896,8 @@ class SimResult(object):
 
         # convert numbers to float or int
         for i in range(len(CalculationTuple)) :
-            if _isnumeric(CalculationTuple[i] ) :
-                CalculationTuple[i] = _getnumber(CalculationTuple[i] )
+            if _isnumeric(CalculationTuple[i]) :
+                CalculationTuple[i] = _getnumber(CalculationTuple[i])
 
         CalculationTuple = tuple(CalculationTuple)
         _verbose (self.speak, 1, "calculation simplified to " + str(CalculationTuple))
@@ -4954,7 +4956,7 @@ class SimResult(object):
                _getValues(CalculationTuple[i])
 
             # string operator
-            elif type(CalculationTuple[i] ) is str and CalculationTuple[i] in operators:
+            elif type(CalculationTuple[i]) is str and CalculationTuple[i] in operators:
                 if i == 0 and CalculationTuple[i] == '-' :
                     CalcData.append(-1 )
                     CalcUnits.append(None)
@@ -4991,10 +4993,10 @@ class SimResult(object):
                 continue
 
             else :
-                if len(Stack ) >= 2 :
+                if len(Stack) >= 2 :
                     operandB = Stack.pop()
                     operandA = Stack.pop()
-                elif len(Stack ) == 1 :
+                elif len(Stack) == 1 :
                     operandB = Stack.pop()
                     operandA = 0
                 else :
@@ -5023,19 +5025,19 @@ class SimResult(object):
                         if CalculationTuple[i] in ['.sum', '.sum0'] :
                             Stack.append(operandB.sum(axis=1) )
                         elif CalculationTuple[i] in ['.avg', '.mean', '.avg0', '.mean0'] :
-                            Stack.append(operandB.mean(axis=1) )
+                            Stack.append(operandB.mean(axis=1))
                         elif CalculationTuple[i] in ['.min', '.min0'] :
-                            Stack.append(operandB.min(axis=1) )
+                            Stack.append(operandB.min(axis=1))
                         elif CalculationTuple[i] in ['.max', '.max0'] :
-                            Stack.append(operandB.max(axis=1) )
+                            Stack.append(operandB.max(axis=1))
                         elif CalculationTuple[i] == ['.mode', '.mode0'] :
-                            Stack.append(operandB.mode(axis=1) )
+                            Stack.append(operandB.mode(axis=1))
                         elif CalculationTuple[i] == ['.std', '.std0'] :
-                            Stack.append(operandB.std(axis=1) )
+                            Stack.append(operandB.std(axis=1))
                         elif CalculationTuple[i] == ['.prod', '.prod0'] :
-                            Stack.append(operandB.prod(axis=1) )
+                            Stack.append(operandB.prod(axis=1))
                         elif CalculationTuple[i] == ['.var', '.var0'] :
-                            Stack.append(operandB.var(axis=1) )
+                            Stack.append(operandB.var(axis=1))
 
 
                         if CalculationTuple[i].endswith('0') :
@@ -5044,7 +5046,7 @@ class SimResult(object):
         Result = Stack[-1]
 
         # save the result
-        self.set_Vector(str(CalculationTuple ), Result, Result.get_units(), 'auto', True )
+        self.set_Vector(str(CalculationTuple), Result, Result.get_units(), 'auto', True )
 
         # if a name was given, link the data to the new name
         if ResultName != str(CalculationTuple ) :
