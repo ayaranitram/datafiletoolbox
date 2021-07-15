@@ -1846,7 +1846,15 @@ class SimSeries(Series) :
 
         Returns a new SimSeries
         """
-        return self.SDF.integrate(method=method)
+        return self.SDF.integrate(method=method).to_SimSeries()
+
+    def differenciate(self, na_position='last'):
+        """
+        Calculates numerical differentiation of the columns values over the index values.
+
+        Returns a new SimDataFrame
+        """
+        return self.SDF.differenciate(na_position=na_position).to_SimSeries()
 
 class SimDataFrame(DataFrame) :
     """
