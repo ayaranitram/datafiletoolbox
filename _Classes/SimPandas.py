@@ -669,13 +669,13 @@ class SimSeries(Series) :
             if convertibleUnits(self.units, units) :
                 params = self._SimParameters
                 params['units'] = units
-                return SimSeries(data=convertUnit(self.S, self.units, units, self.speak ), **params)
+                return SimSeries(data=convertUnit(self.S, self.units, units, self.speak), **params)
         if type(units) is str and type(self.units) is dict and len(set(self.units.values())) == 1 :
             params = self._SimParameters
             params['units'] = units
             return SimSeries(data=convertUnit(self.S, list(set(self.units.values()))[0], units, self.speak ), **params )
-        if type(units) is dict and type(self.units) is dict:
-            return self.to_SimDataFrame().convert(units)
+        if type(units) is dict :  # and type(self.units) is dict:
+            return self.to_SimDataFrame().convert(units).to_SimSeries()
 
     def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
         axis = _cleanAxis(axis)
