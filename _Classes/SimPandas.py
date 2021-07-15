@@ -1646,7 +1646,7 @@ class SimSeries(Series) :
         """
         return jitter(self,std)
     
-    def daily(self, outBy='mean') :
+    def daily(self, outBy='mean', datetimeIndex=False) :
         """
         return a Series with a single row per day.
         index must be a date type.
@@ -1662,9 +1662,9 @@ class SimSeries(Series) :
             sum : returns the summation of all the values per year
             count : returns the number of rows per year
         """
-        return self.to_SimDataFrame().daily(outBy=outBy).to_SimSeries()
+        return self.to_SimDataFrame().daily(outBy=outBy, datetimeIndex=datetimeIndex).to_SimSeries()
 
-    def monthly(self, outBy='mean') :
+    def monthly(self, outBy='mean', datetimeIndex=False) :
         """
         return a dataframe with a single row per month.
         index must be a date type.
@@ -1680,7 +1680,7 @@ class SimSeries(Series) :
             sum : returns the summation of all the values per month
             count : returns the number of rows per month
         """
-        return self.to_SimDataFrame().monthly(outBy=outBy).to_SimSeries()
+        return self.to_SimDataFrame().monthly(outBy=outBy, datetimeIndex=datetimeIndex).to_SimSeries()
 
     def yearly(self, outBy='mean') :
         """
@@ -2638,7 +2638,7 @@ Copy of input object, shifted.
     #     selfGrouped = self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna)
     #     return SimDataFrame(data=selfGrouped, **self._SimParameters ) 
 
-    def daily(self, outBy='mean') :
+    def daily(self, outBy='mean', datetimeIndex=False) :
         """
         return a dataframe with a single row per day.
         index must be a date type.
@@ -2691,18 +2691,26 @@ Copy of input object, shifted.
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)
-        output.index.names = ['YEAR', 'MONTH', 'DAY']
-        output.index.name = 'YEAR_MONTH_DAY'
-        if 'YEAR' not in output.units:
-            output.set_Units('year','YEAR')
-        if 'MONTH' not in output.units:
-            output.set_Units('month','MONTH')
-        if 'DAY' not in output.units:
-            output.set_Units('day','DAY')
-        # output.indexUnits = ('year','month','day')
+        
+        if datetimeIndex:
+            output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-'+str(DD).zfill(2) for YYYY,MM,DD in output.index ] )
+            output.index.names = ['DATE']
+            output.index.name = 'DATE'
+            if 'DATE' not in output.units:
+                output.set_Units('date','DATE')
+        else:
+            output.index.names = ['YEAR', 'MONTH', 'DAY']
+            output.index.name = 'YEAR_MONTH_DAY'
+            if 'YEAR' not in output.units:
+                output.set_Units('year','YEAR')
+            if 'MONTH' not in output.units:
+                output.set_Units('month','MONTH')
+            if 'DAY' not in output.units:
+                output.set_Units('day','DAY')
+            # output.indexUnits = ('year','month','day')
         return output
 
-    def monthly(self, outBy='mean') :
+    def monthly(self, outBy='mean', datetimeIndex=False) :
         """
         return a dataframe with a single row per month.
         index must be a date type.
@@ -2755,13 +2763,21 @@ Copy of input object, shifted.
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters) 
-        output.index.names = ['YEAR', 'MONTH']
-        output.index.name = 'YEAR_MONTH'
-        if 'YEAR' not in output.units:
-            output.set_Units('year','YEAR')
-        if 'MONTH' not in output.units:
-            output.set_Units('month','MONTH')
-        # output.indexUnits = ('year','month')
+        
+        if datetimeIndex:
+            output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-01' for YYYY,MM in output.index ] )
+            output.index.names = ['DATE']
+            output.index.name = 'DATE'
+            if 'DATE' not in output.units:
+                output.set_Units('date','DATE')
+        else:
+            output.index.names = ['YEAR', 'MONTH']
+            output.index.name = 'YEAR_MONTH'
+            if 'YEAR' not in output.units:
+                output.set_Units('year','YEAR')
+            if 'MONTH' not in output.units:
+                output.set_Units('month','MONTH')
+            # output.indexUnits = ('year','month')
         return output
 
     def yearly(self, outBy='mean') :
