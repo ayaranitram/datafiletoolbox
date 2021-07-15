@@ -240,8 +240,13 @@ class SimSeries(Series) :
         elif units is None and type(data) is SimSeries :
             if type(data.units) is str:
                 units = data.units 
+                if indexUnits is None:
+                    indexUnits = data.indexUnits
+                    self.indexUnits = indexUnits 
             elif type(data.units) is dict :
                 units = data.units.copy() 
+                if data.index.name not in units:
+                        units[data.index.name] = data.indexUnits
 
         # remove arguments not known by Pandas
         kwargsB = kwargs.copy()
@@ -1913,8 +1918,10 @@ class SimDataFrame(DataFrame) :
             elif type(data) is SimSeries :
                 if type(data.units) is dict :
                     units = data.units.copy()
+                    if data.index.name not in units:
+                        units[data.index.name] = data.indexUnits
                 elif type(data.name) is str and type(data.units) is str :
-                    units = { data.name : data.units }
+                    units = { data.name : data.units , data.index.name : data.indexUnits }
 
         # remove arguments not known by Pandas
         kwargsB = kwargs.copy()
@@ -2846,8 +2853,7 @@ Copy of input object, shifted.
         output = SimDataFrame(data=result, **self._SimParameters)  
         output.index.names = ['YEAR']
         output.index.name = 'YEAR'
-        if 'YEAR' not in output.units:
-            output.set_Units('year','YEAR')
+        output.set_Units('year','YEAR')
         output.indexUnits = 'year'
         return output
 
@@ -3831,6 +3837,8 @@ Copy of input object, shifted.
                     uDic = { str(key) : value.units }
                 elif type(value.units) is dict :
                     uDic = value.units
+                if self.indexUnits is None and value.indexUnits is not None:
+                    self.indexUnits = value.indexUnits
             elif isinstance(value, SimDataFrame) :
                 if len(value.columns) == 1 :
                     if value.columns[0] in value.units:
@@ -3843,6 +3851,17 @@ Copy of input object, shifted.
                         del uDic[value.index.name]
                     if key not in uDic and len(set(uDic.values())) == 1:
                         uDic[str(key)] = list(set(uDic.values()))[0]
+                    if self.indexUnits is None and value.indexUnits is not None:
+                        self.indexUnits = value.indexUnits
+                    elif self.indexUnits is not None and value.indexUnits is not None and self.indexUnits != value.indexUnits:
+                        if convertibleUnits(value.indexUnits, self.indexUnits) :
+                            try:
+                                value.index = convertUnit(value.index, value.indexUnits, self.indexUnits)
+                            except:
+                                print("WARNING: failed to convert the provided index to the units of this SimDataFrame index.")
+                        else:
+                            print("WARNING: not able to convert the provided index to the units of this SimDataFrame index.")
+   
             else :
                 uDic = { str(key) : 'UNITLESS' }
         elif type(units) is str :
@@ -3851,7 +3870,15 @@ Copy of input object, shifted.
             raise NotImplementedError
         else :
             raise NotImplementedError
-
+        
+        if isinstance(value, SimDataFrame) :
+            if len(value.columns) == 1 :
+                value = value.to_SimSeries()
+            elif len(value.columns) > 2 :
+                for col in value.columns:
+                    self.__setitem__(col,value[col])
+                return None
+            
         before = len(self.columns)
         super().__setitem__(key, value)
         after = len(self.columns)
@@ -4913,18 +4940,20 @@ Copy of input object, shifted.
         if str(dt.dtype).startswith('timedelta') :
             dt = dt.astype('timedelta64[s]').astype('float64')/60/60/24
             dtUnits = 'DAYS'
-
+        
         diff = np.diff(self.DF.to_numpy(),axis=0)
         diff = diff / dt.reshape(-1,1)
 
         newUnits = {}
         for C, U in self.units.items() :
-            if len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
+            if U is None:
+                newUnits[C] = str(U) + '/' + str(dtUnits)
+            elif len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
                 newUnits[C] = U + '/' + U.split('/')[-1]
             elif len(U.split('*')) == 2 and (U.split('*')[-1].upper() == dtUnits.upper() or (U.split('*')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
                 newUnits[C] = U.split('*')[0]
             else :
-                newUnits[C]=U + '/' + dtUnits
+                newUnits[C] = str(U) + '/' + str(dtUnits)
         
         if na_position == 'first':
             if str(dt.dtype).startswith('timedelta') :    
@@ -4943,6 +4972,7 @@ Copy of input object, shifted.
             
         params = self._SimParameters
         params['units'] = newUnits
+        params['indexUnits'] = self.indexUnits
         return SimDataFrame(data=diff, **params)
     
     def sort_values(self,by=None, axis='--auto', ascending=True, inplace=False, kind='quicksort', na_position='last', ignore_index=False, key=None) :
