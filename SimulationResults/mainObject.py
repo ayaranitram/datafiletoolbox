@@ -1937,6 +1937,17 @@ class SimResult(object):
         if sort in ['item'] :
             df = df.sort_values(by=itemLabel, axis=0, ascending=bool(ascending))
         
+        if otherSims is not None:
+            df['Simulation'] = str(self.name)
+            if _is_SimulationResult(otherSims):
+                otherSims = [otherSims]
+            for os in otherSims:
+                other = os._common_dataprep_for_seaborn(Keys=Keys, objects=None, otherSims=None, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, sort=sort, ascending=ascending, resample=resample)
+                other = other[0].rename(columns={'value':values})
+                other['Simulation'] = str(os.name)
+                df = df.append(other)
+            hue = 'Simulation'
+        
         return df, hue, label, itemLabel, values
 
     def box(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, resample='daily', row=None, col=None, returnFig=True, returnDF=False, logY=False,logX=False,**kwargs) :
