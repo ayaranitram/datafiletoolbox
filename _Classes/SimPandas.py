@@ -5194,7 +5194,7 @@ Copy of input object, shifted.
                 return result
         else:
             if 'datetime' in str(self.index.dtype):
-                return self.SimSeries(data=list(realYear(self.index)), **params)
+                return SimSeries(data=list(realYear(self.index)), **params)
             else:
                 raise ValueError('index is not a valid date or year integer')
 
