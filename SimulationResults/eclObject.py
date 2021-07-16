@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.25.0'
-__release__ = 210519
+__version__ = '0.25.1'
+__release__ = 210716
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
@@ -69,7 +69,7 @@ class ECL(_SimResult):
             else :
                 # print("\n ERROR the file doesn't exists:\n  -> " + SummaryFilePath)
                 if not os.path.isfile(SummaryFilePath[:-6]+"UNSMRY"):
-                    raise FileNotFoundError( "the files doesn't exist:\n  -> " + SummaryFilePath[:-6]+"UNSMRY\n  -> " + SummaryFilePath )
+                    raise FileNotFoundError( "the files doesn't exist:\n  -> " + SummaryFilePath[:-5]+".UNSMRY\n  -> " + SummaryFilePath )
                 raise FileNotFoundError( "the file doesn't exist:\n  -> " + SummaryFilePath )
         else :
             print("SummaryFilePath must be a string")
