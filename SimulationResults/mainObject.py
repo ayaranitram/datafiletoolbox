@@ -2064,6 +2064,10 @@ class SimResult(object):
         if inner not in ('box','quartile', 'point', 'stick', None) :
             inner = None
         
+        if split and len(df[hue].unique()) > 2 :
+            split = False
+            _verbose(2, self.speak, "There must be exactly two hue levels to use 'split', thus it will be ignored.")
+                
         fig = plt.figure(figsize=figsize, dpi=dpi)
         # Draw a nested boxplot to show bills by day and time
         # ax = sns.catplot(kind='violin',
