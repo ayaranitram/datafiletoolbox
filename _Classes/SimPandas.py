@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.63.4'
+__version__ = '0.63.5'
 __release__ = 210713
 __all__ = ['SimSeries', 'SimDataFrame']
 
