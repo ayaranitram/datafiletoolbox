@@ -3514,7 +3514,7 @@ class SimResult(object):
         """
         self.set_Filter()
 
-    def set_Filter(self, Key=None, Condition=None, Min=None, Max=None, Filter=None, IncrementalFilter=True, FilterOperation=None) :
+    def set_Filter(self, Key=None, Condition=None, Min=None, Max=None, Filter=None, IncrementalFilter=True, FilterOperation=None, UnDo=True) :
         # support function to validate date string
         def MightBeDate(string) :
             if _isDate(string) :
@@ -3546,11 +3546,16 @@ class SimResult(object):
                 return self.set_Filter(Key=Key, Condition=Condition, Min=Min, Max=Max, Filter=Filter, IncrementalFilter=True, FilterOperation=Operation)
 
         # apply the Filter
-        def applyFilter(NewFilter, CurrentFilter=None ) :
+        def applyFilter(NewFilter, CurrentFilter=None, UnDo=True) :
             if CurrentFilter is not None :
                 self.filter['filter'] = CurrentFilter
-                self.filterUndo = CurrentFilter.copy()
-            if Incremental :
+                if UnDo is None:
+                    self.filterUndo = CurrentFilter.copy()
+                    UnDo = False
+                elif UnDo :
+                    self.filterUndo = CurrentFilter.copy()
+                # self.filterUndo = CurrentFilter.copy()
+            if Incremental and len(self.filter['filter']) > 0:
                 if Operation == '*' :
                     self.filter['filter'] = NewFilter * self.filter['filter']
                 else :
@@ -3620,6 +3625,14 @@ class SimResult(object):
                     return Left < Right
 
 
+        # validate Key
+        if not self.is_Key(Key) and (Condition is not None or Min is not None or Max is not None or Filter is not None):
+            if len(self.find_Keys(Key)) > 0:
+                _verbose( self.speak, 1, "applying filter for each Key matching the pattern of " + str(Key) + ":\n " + ', '.join(map(str,self.find_Keys(Key))) )
+                for K in self.find_Keys(Key):
+                    self.set_Filter(K, Condition=Condition, Min=Min, Max=Max, Filter=Filter, IncrementalFilter=IncrementalFilter, FilterOperation=FilterOperation, UnDo=None)
+                return None
+            
         # start of main function, setting parameters
         DateFormat = '' # set default date string format
 
@@ -3641,7 +3654,7 @@ class SimResult(object):
             if type(Filter) is np.ndarray :
                 if len(Filter) == len(self.fieldtime[2]) : # check Filter has the proper length
                     if Filter.dtype == 'bool' : # check it has the correct dtype
-                        applyFilter(Filter )
+                        applyFilter(Filter, UnDo=UnDo)
                         self.filter['key'].append(None)
                         self.filter['min'].append(None)
                         self.filter['max'].append(None)
@@ -3741,7 +3754,7 @@ class SimResult(object):
 
                     # calculate and apply filter
                     KeyArray = self.get_Vector(Key)[Key]
-                    applyFilter(KeyArray >= Min, FilterArray )
+                    applyFilter(KeyArray >= Min, FilterArray, UnDo=UnDo)
                     self.filter['key'].append(Key)
                     self.filter['min'].append(Min)
                     self.filter['max'].append(None)
@@ -3789,7 +3802,7 @@ class SimResult(object):
 
                     # calculate and apply filter
                     KeyArray = self.get_Vector(Key)[Key]
-                    applyFilter(KeyArray >= Min, FilterArray )
+                    applyFilter(KeyArray >= Min, FilterArray, UnDo=UnDo)
                     self.filter['key'].append(Key)
                     self.filter['min'].append(Min)
                     self.filter['max'].append(None)
@@ -3813,7 +3826,7 @@ class SimResult(object):
 
                     # calculate and apply filter
                     KeyArray = self.get_Vector(Key)[Key]
-                    applyFilter(KeyArray <= Max, FilterArray )
+                    applyFilter(KeyArray <= Max, FilterArray, UnDo=UnDo)
 
                     self.filter['key'].append(Key)
                     self.filter['min'].append(None)
@@ -3840,7 +3853,7 @@ class SimResult(object):
 
                     # calculate and apply filter
                     KeyArray = self.get_Vector(Key)[Key]
-                    applyFilter(KeyArray <= Max, FilterArray )
+                    applyFilter(KeyArray <= Max, FilterArray, UnDo=UnDo)
                     self.filter['key'].append(Key)
                     self.filter['min'].append(None)
                     self.filter['max'].append(Max)
@@ -3897,7 +3910,7 @@ class SimResult(object):
                         return False
                     if len(CondList) == 2 :
                         CondFilter = applyCondition(CondList[0], CondList[1], None )
-                        applyFilter(CondFilter, FilterArray )
+                        applyFilter(CondFilter, FilterArray, UnDo=UnDo)
                         self.filter['key'].append(Key)
                         self.filter['min'].append(None)
                         self.filter['max'].append(None)
@@ -3909,7 +3922,7 @@ class SimResult(object):
                         return True
                     if len(CondList) == 3 :
                         CondFilter = applyCondition(CondList[0], CondList[1], CondList[2] )
-                        applyFilter(CondFilter, FilterArray )
+                        applyFilter(CondFilter, FilterArray, UnDo=UnDo)
                         self.filter['key'].append(Key)
                         self.filter['min'].append(None)
                         self.filter['max'].append(None)
@@ -3938,7 +3951,7 @@ class SimResult(object):
                                 CondFilter = CondFilter1 + CondFilter2
                             else :
                                 CondFilter = CondFilter1 * CondFilter2
-                            applyFilter(CondFilter, FilterArray )
+                            applyFilter(CondFilter, FilterArray, UnDo=UnDo)
                             self.filter['key'].append(Key)
                             self.filter['min'].append(None)
                             self.filter['max'].append(None)
