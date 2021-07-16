@@ -1909,6 +1909,7 @@ class SimDataFrame(DataFrame) :
         # if index is None and data is SimSeries or SimDataFrame get the name
         elif type(data) in [SimSeries, SimDataFrame] and type(data.index.name) is str and len(data.index.name)>0 :
             indexInput = data.index.name
+            self.indexUnits = data.indexUnits.copy() if type(data.indexUnits) is dict else data.indexUnits
 
         # if units is None data is SimDataFrame or SimSeries get the units
         if units is None :
@@ -1992,6 +1993,8 @@ class SimDataFrame(DataFrame) :
         if self.indexUnits is None and self.index.name is not None and units is not None:
             if self.index.name in units:
                 self.indexUnits = units[self.index.name]
+        if self.indexUnits is None and indexUnits is not None:
+            self.indexUnits = indexUnits.strip() if type(indexUnits) is str else indexUnits
 
         if self.index.name is not None and type(self.units) is dict and self.index.name not in self.units :
             self.units[self.index.name] = '' if self.indexUnits is None else self.indexUnits
