@@ -478,7 +478,7 @@ class SimResult(object):
                     return None
                 elif len(meti.columns) == 1 :
                     _verbose(self.speak, 2, " a single item match the pattern, \n return the series for the item '" + meti.columns[0] + "':")
-                    if type(self.null) is type(None) :
+                    if self.null is None :
                         return meti[meti.columns[0]]
                     return meti.replace(self.null, 0)[meti.columns[0]]
                 else :
@@ -1941,6 +1941,8 @@ class SimResult(object):
             df['Simulation'] = str(self.name)
             if _is_SimulationResult(otherSims):
                 otherSims = [otherSims]
+            
+            
             for os in otherSims:
                 other = os._common_dataprep_for_seaborn(Keys=Keys, objects=None, otherSims=None, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, sort=sort, ascending=ascending, resample=resample)
                 other = other[0].rename(columns={'value':values})
