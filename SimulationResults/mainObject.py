@@ -1545,10 +1545,21 @@ class SimResult(object):
         """
         if type(Keys) not in [list, tuple, set, str] :
             raise TypeError(" Keys must be a list of keys or a string.")
+        
         if type(Keys) is str :
             Keys = [Keys]
+            
         if _is_SimulationResult(objects) and otherSims is None :
             objects, otherSims = None, objects
+        elif otherSims is None and type(objects) in (list,tuple,set) and len(objects) > 0:
+            sims = sum([ _is_SimulationResult(ob) for ob in objects ])
+            if sims == 0:
+                pass  # none of them are SimulationResults, should be objects (wells, regions, etc)
+            elif sims == len(objects):
+                objects , otherSims = None , objects  # all of them are Simulation Results
+            else:
+                raise TypeError("some of the 'otherSims' provided are not SimulationResults instances.")
+                    
         if objects is not None :
             if type(objects) not in [str, list, tuple, set] :
                 raise TypeError(" objects must be list of wells, groups or regions or one of the magic words 'wells', 'groups', 'regions'.")
