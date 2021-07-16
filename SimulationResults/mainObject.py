@@ -416,8 +416,10 @@ class SimResult(object):
         return self[[ self.keys[0] ]].index
 
     def __call__(self, Key=None, Index=None) :
-        if Key is None:
+        if Key is None and Index is None:
             print(SimResult.__doc__)
+        elif Key is None and Index is not None:
+            return pd.Index( self.get_Vector(Index)[Index] )
         elif type(Key) is str and len(Key) > 0 and Index is None:
             return self.get_Vector(Key)[Key]
         elif type(Key) in (list,tuple) and len(Key) > 0 or Index is not None:
@@ -435,8 +437,6 @@ class SimResult(object):
                 return SimDataFrame(data=data, units=units, indexName=Index, indexUnits=unitsIndex, nameSeparator=':')
             else :
                 return self.get_DataFrame(Key, Index)
-        else :
-            print(SimResult.__doc__)
 
     def __getitem__(self, item) :
         if type(item) is tuple :
