@@ -2556,7 +2556,7 @@ class SimResult(object):
             if self.get_Vector(TimeVector)[TimeVector] is not None :
                 FieldTime = self.get_Vector(TimeVector)[TimeVector]
         if FieldTime is not None :
-            self.fieldtime = (min(FieldTime), max(FieldTime), FieldTime )
+            self.fieldtime = (min(FieldTime) if len(FieldTime) > 0 else None, max(FieldTime) if len(FieldTime) > 0 else None, FieldTime )
 
     def set_Name(self, name):
         if type(name) is list or type(name) is tuple :
