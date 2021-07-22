@@ -3087,14 +3087,14 @@ Copy of input object, shifted.
         
         return SDF1C, SDF2C, commonNames
     
-    def _JoinedIndex(self, other, *, drop_duplicates=True):
-        return _MergeIndex(self, other, how='outer', drop_duplicates=drop_duplicates)
+    def _JoinedIndex(self, other, *, drop_duplicates=False, keep='first'):
+        return _MergeIndex(self, other, how='outer', drop_duplicates=drop_duplicates, keep=keep)
     
-    def _CommonIndex(self, other, *, drop_duplicates=True):
-        return _MergeIndex(self, other, how='inner', drop_duplicates=drop_duplicates)
+    def _CommonIndex(self, other, *, drop_duplicates=True, keep='first'):
+        return _MergeIndex(self, other, how='inner', drop_duplicates=drop_duplicates, keep=keep)
     
-    def _MergeIndex(self, other, how='outer', *, drop_duplicates=True):
-        return _MergeIndex(self, other, how=how, drop_duplicates=drop_duplicates)
+    def _MergeIndex(self, other, how='outer', *, drop_duplicates=True, keep='first'):
+        return _MergeIndex(self, other, how=how, drop_duplicates=drop_duplicates, keep=keep)
 
     def __contains__(self, item) :
         if item in self.columns :
@@ -5349,7 +5349,7 @@ def realYear(date):
     if isinstance(date,Series):
         return Series(data=np.array([ Y.year + dt.date(Y.year, Y.month, Y.day).timetuple().tm_yday / dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in date ], dtype=float), index=date.index)
 
-def _MergeIndex(left, right, how='outer', *, drop_duplicates=True):
+def _MergeIndex(left, right, how='outer', *, drop_duplicates=True, keep='first'):
     """
     returns an left and right Frames or Series reindexed with a common index.
 
@@ -5378,6 +5378,26 @@ def _MergeIndex(left, right, how='outer', *, drop_duplicates=True):
         Reindexed to the merged index.
 
     """
+    
+    def mergeAppend(frame, newIndex):
+        if type(frame) is SimSeries:
+            frame = frame.sdf
+        elif type(frame) is Series:
+            frame = SimDataFrame(frame)
+        if frame.index.duplicated('first').sum() > 0:
+            dupframe = frame[frame.index.duplicated('first')]
+            temp = frame[~frame.index.duplicated('first')].reindex(index=newIndex)
+            newframe = None
+            for dup in range(len(dupframe.index)):
+                if newframe is None:
+                    newframe = temp.iloc[0:list(temp.index).index(dupframe.index[dup])+1].append(dupframe.iloc[dup])
+                else:
+                    newframe = newframe.append([ temp.iloc[list(temp.index).index(dup-1):list(temp.index).index(dup)] , dupframe.iloc[dup] ])
+            newframe = newframe.append( temp.iloc[list(temp.index).index(dupframe.index[dup])+1: ] )
+        else:
+            newframe = frame.reindex(index=newIndex)
+        return SimDataFrame(newframe, **frame._SimParameters)
+                
     if how not in ('outer','inner','left','right','cross'):
         raise ValueError("how must be 'outer', 'iner', 'left', 'right' or 'cross'")
     
@@ -5413,9 +5433,11 @@ def _MergeIndex(left, right, how='outer', *, drop_duplicates=True):
         newIndex= pd.merge(ileft,iright,how=how,left_index=True,right_index=True).index
         # return original dataframes reindexed to the merged index
         if bool(drop_duplicates):
-            return left.drop_duplicates().reindex(index=newIndex), right.drop_duplicates().reindex(index=newIndex)
+            return left[~left.index.duplicated(keep)].reindex(index=newIndex), right[~right.index.duplicated(keep)].reindex(index=newIndex)
+            # return left.drop_duplicates().reindex(index=newIndex), right.drop_duplicates().reindex(index=newIndex)
         else:
-            return left.reindex(index=newIndex), right.reindex(index=newIndex)
+            return mergeAppend(left, newIndex), mergeAppend(right, newIndex)
+
     
 def merge_units(left, right, suffixes=('_x', '_y')):
     """
