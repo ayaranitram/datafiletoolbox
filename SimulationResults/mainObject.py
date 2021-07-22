@@ -4955,16 +4955,16 @@ class SimResult(object):
                     pass
                 elif len(self.find_Keys(Req)) > 0 :
                     # is a vector or table with values... OK
-                    for R in self.find_Keys(Req ) :
-                        if not self.checkVectorLength(R ) :
+                    for R in self.find_Keys(Req) :
+                        if not self.checkVectorLength(R) :
                             WrongLen.append(R)
                             OK = False
                 elif Req[0] == '-' and Req != '-' :
                     Req = Req[1:]
-                    if len(self.find_Keys(Req )) > 0 :
+                    if len(self.find_Keys(Req)) > 0 :
                         # is a vector or table with values... OK
                         for R in self.find_Keys(Req ) :
-                            if not self.checkVectorLength(R ) :
+                            if not self.checkVectorLength(R) :
                                 WrongLen.append(R)
                                 OK = False
                 else :
