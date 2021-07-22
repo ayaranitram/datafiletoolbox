@@ -3221,9 +3221,9 @@ Copy of input object, shifted.
 
         # other is Pandas DataFrame
         elif isinstance(other, DataFrame) :
-            result = self.DF.sub(other, fill_value=0)
+            # result = self.DF.sub(other, fill_value=0)
             selfC, otherC, newNames = self._CommonRename(SimDataFrame(other, **self._SimParameters))
-            result = selfC + otherC
+            result = selfC - otherC
             return result if newNames is None else result.rename(columns=newNames)
 
         # let's Pandas deal with other types, maintain units and dtype
