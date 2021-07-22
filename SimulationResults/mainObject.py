@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.56.0'
-__release__ = 210715
+__version__ = '0.57.0'
+__release__ = 210722
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -4401,9 +4401,9 @@ class SimResult(object):
             elif len(VectorData[self.get_vectorTemplate() == 0]) < len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
                 # a filter is applied
                 filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate()==0]
-                filteredDF = DataFrame({'SelfTime':filteredTime, Key:VectorData[self.get_vectorTemplate()==0]}).set_index('SelfTime')
+                filteredDF = SimDataFrame({'SelfTime':filteredTime, Key:VectorData[self.get_vectorTemplate()==0]}).set_index('SelfTime')
                 rawTime = self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]
-                rawDF = DataFrame({'SelfTime':rawTime}).set_index('SelfTime')
+                rawDF = SimDataFrame({'SelfTime':rawTime}).set_index('SelfTime')
                 rawDF[Key] = filteredDF[Key]
                 rawDF = rawDF.replace(np.nan, self.null)
                 newRawVector = rawDF[Key].to_numpy()
