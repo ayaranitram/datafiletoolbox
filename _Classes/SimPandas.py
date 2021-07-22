@@ -3283,6 +3283,10 @@ Copy of input object, shifted.
                     result[col] = selfI[col] * otherI
             return result
 
+        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with 
+        elif isinstance(other, DataFrame):
+            return self.__mul__(SimDataFrame(data=other, **self._SimParameters))
+        
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() * other
@@ -3339,6 +3343,10 @@ Copy of input object, shifted.
                     result[col] = selfI[col] / otherI
             return result
 
+        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with 
+        elif isinstance(other, DataFrame):
+            return self.__truediv__(SimDataFrame(data=other, **self._SimParameters))
+
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() / other
@@ -3394,6 +3402,10 @@ Copy of input object, shifted.
                 for col in self.columns :
                     result[col] = self[col] // other
             return result
+
+        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with 
+        elif isinstance(other, DataFrame):
+            return self.__floordiv__(SimDataFrame(data=other, **self._SimParameters))
 
         # let's Pandas deal with other types, maintain units and dtype
         else :
@@ -3452,6 +3464,10 @@ Copy of input object, shifted.
                     result[col] = selfI[col] % otherI
             return result
 
+        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with 
+        elif isinstance(other, DataFrame):
+            return self.__mod__(SimDataFrame(data=other, **self._SimParameters))
+
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() % other
@@ -3505,6 +3521,10 @@ Copy of input object, shifted.
                 for col in selfI.columns :
                     result[col] = selfI[col] ** otherI
             return result
+
+        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with 
+        elif isinstance(other, DataFrame):
+            return self.__pow__(SimDataFrame(data=other, **self._SimParameters))
 
         # let's Pandas deal with other types, maintain units and dtype
         else :
