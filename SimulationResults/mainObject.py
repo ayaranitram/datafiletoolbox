@@ -570,17 +570,17 @@ class SimResult(object):
                 else :
                     calcStr = Key + '=' + Value
                 try :
-                    return self.RPNcalculator(calcStr )
+                    return self.RPNcalculator(calcStr)
                 except :
                     _verbose(self.speak, 2, "failed to treat '" + Value + "' as a calculation string." )
                     return None
 
-        elif type(Value) is list or type(Value) is tuple :
+        elif type(Value) in (list,tuple) :
             if self.is_Attribute(Key) and not self.is_Key(Key) :
                 raise TypeError("The key '" + Key + "' is an attribute! Value must be a DataFrame")
             Value = np.array(Value)
 
-        elif type(Value) is int or type(Value) is float :
+        elif type(Value) in (int,float) :
             if self.is_Attribute(Key) and not self.is_Key(Key) :
                 raise TypeError("The key '" + Key + "' is an attribute! Value must be a DataFrame")
             Value, Units = [ Value ] * len(self.fieldtime[2]), 'DIMENSIONLESS'
@@ -666,7 +666,7 @@ class SimResult(object):
             else :
                 raise ValueError("the lengh of the Series must coincide with the number of steps of this simulation results.")
 
-        elif type(Value) in [ SimSeries, SimDataFrame ] :
+        elif type(Value) in (SimSeries, SimDataFrame) :
             if len(Value) == len(self.fieldtime[2]) :
                 for Col in Value.columns :
                     if Value.get_Units(Col) is not None :
@@ -3841,7 +3841,7 @@ class SimResult(object):
                     # Max a string, might be a date
                     DateFormat = str(MightBeDate(Max))
                     try :
-                        Max = np.datetime64(pd.to_datetime(_strDate(Max, DateFormat, speak=(self.speak==1 or DateFormat=='') ) ) )
+                        Max = np.datetime64(pd.to_datetime(_strDate(Max, DateFormat, speak=(self.speak==1 or DateFormat==''))))
                         if DateFormat != '' :
                             _verbose(self.speak, 2, " the 'Max' date format is " + DateFormat)
                     except :
@@ -4220,7 +4220,7 @@ class SimResult(object):
 
         if overwrite is None :
             overwrite = self.overwrite
-        elif (type(overwrite) is int or type(overwrite) is float ) :
+        elif type(overwrite) in (int,float) :
             overwrite = bool(overwrite)
         elif type(overwrite) is bool :
             pass
@@ -4237,7 +4237,7 @@ class SimResult(object):
             raise OverwrittingError(' <set_Vector> the Key ' + Key + ' already exists in the dataset and overwrite parameter is set to False. Set overwrite=True to avoid this message and change the DataVector.')
 
         # validating VectorData
-        if type(VectorData) is list or type(VectorData) is tuple :
+        if type(VectorData) in (list,tuple) :
             if len(VectorData) == 0 :
                 raise TypeError(' <set_Vector> VectorData must not be empty')
             VectorData = np.array(VectorData)
@@ -5090,16 +5090,16 @@ class SimResult(object):
         self.set_Vector(str(CalculationTuple), Result, Result.get_units(), 'auto', True )
 
         # if a name was given, link the data to the new name
-        if ResultName != str(CalculationTuple ) :
-            if isinstance(Result, Series) or (isinstance(Result, DataFrame) and len(Result.columns)==1 ):
+        if ResultName != str(CalculationTuple) :
+            if isinstance(Result, Series) or (isinstance(Result, DataFrame) and len(Result.columns)==1):
                 if str(CalculationTuple ) in self.vectors :
-                    self.vectors[ResultName] = self.vectors[ str(CalculationTuple ) ]
-                    self.units[ResultName] = self.units[ str(CalculationTuple ) ]
+                    self.vectors[ResultName] = self.vectors[ str(CalculationTuple) ]
+                    self.units[ResultName] = self.units[ str(CalculationTuple) ]
                 else :
                     item = ':'+str(list(Result.columns)[0].split(':')[-1])
                     if str(CalculationTuple )+item in self.vectors :
-                        self.vectors[ResultName] = self.vectors[ str(CalculationTuple )+item ]
-                        self.units[ResultName] = self.units[ str(CalculationTuple )+item ]
+                        self.vectors[ResultName] = self.vectors[ str(CalculationTuple)+item ]
+                        self.units[ResultName] = self.units[ str(CalculationTuple)+item ]
                     else :
                         self.set_Vector(ResultName, Result.to_numpy(), Result.get_UnitsString(), 'auto', True )
                 if not self.is_Key(ResultName) :
