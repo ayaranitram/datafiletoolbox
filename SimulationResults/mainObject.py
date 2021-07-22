@@ -4873,7 +4873,7 @@ class SimResult(object):
                 CalcUnits.append(self.get_Unit(Key ) )
 
         # supported operators:
-        operators = [' ', '**', '--', '+-', '-+', '++', '*-', '/-', '//', '=', '+', '*', '/', '^', '.sum', '.avg', '.mean', '.min', '.max', '.mode', '.prod', '.var', '.std', '.sum0', '.avg0', '.mean0', '.min0', '.max0', '.std0', '.mode0', '.prod0', '.var0']
+        operators = [' ', '**', '--', '+-', '-+', '++', '*-', '/-', '//', '=', '+', '*', '/', '^', '.sum', '.avg', '.mean', '.median', '.min', '.max', '.mode', '.prod', '.var', '.std', '.sum0', '.avg0', '.mean0', '.median0', '.min0', '.max0', '.std0', '.mode0', '.prod0', '.var0', '>', '<', '>=', '<=', '!=', '==', '<>', '><', '=>', '=<']
         if '-' in (' '.join(map(str,self.wells)) + ' '.join(map(str,self.groups)) + ' '.join(map(str,self.regions))) :
             substractionSign = ' -'
         else :
@@ -4925,6 +4925,16 @@ class SimResult(object):
                 CalculationTuple = CalculationTuple[:where] + [ CalculationTuple[where] ] + [ '-' + CalculationTuple[where+1] ] + CalculationTuple[where+2:]
             elif (where+1) <= len(CalculationTuple) :
                 CalculationTuple = CalculationTuple[:where] + [ CalculationTuple[where] ] + [ '-' + CalculationTuple[where+1] ]
+        for notequal in ('><','<>'):
+            while notequal in CalculationTuple :
+                where = CalculationTuple.index(notequal)
+                CalculationTuple[where] = '!='
+        while '=>' in CalculationTuple :
+            where = CalculationTuple.index('=>')
+            CalculationTuple[where] = '>='
+        while '=<' in CalculationTuple :
+            where = CalculationTuple.index('=<')
+            CalculationTuple[where] = '<='
 
         while CalculationTuple[0] in ['-',' -'] :
             if len(CalculationTuple) > 2 :
@@ -4944,7 +4954,7 @@ class SimResult(object):
         _verbose (self.speak, 1, "calculation simplified to " + str(CalculationTuple))
 
 
-        operators = [substractionSign] + ['+', '*', '//', '/', '^', '.sum', '.avg', '.mean', '.min', '.max', '.mode', '.prod', '.std', '.var', '.sum0', '.avg0', '.mean0', '.min0', '.max0', '.mode0', '.prod0', '.std0', '.var0']
+        operators = [substractionSign] + ['+', '*', '//', '/', '^', '.sum', '.avg', '.mean', '.median', '.min', '.max', '.mode', '.prod', '.std', '.var', '.sum0', '.avg0', '.mean0', '.median0', '.min0', '.max0', '.mode0', '.prod0', '.std0', '.var0', '>', '<', '>=', '<=','!=']
         OK = True
         Missing = []
         WrongLen = []
@@ -5056,6 +5066,18 @@ class SimResult(object):
                     Stack.append(operandA // operandB)
                 elif CalculationTuple[i] == '^' :
                     Stack.append(operandA ** operandB)
+                elif CalculationTuple[i] == '>' :
+                    Stack.append(operandA > operandB)
+                elif CalculationTuple[i] == '<' :
+                    Stack.append(operandA < operandB)
+                elif CalculationTuple[i] == '>=' :
+                    Stack.append(operandA >= operandB)
+                elif CalculationTuple[i] == '<=' :
+                    Stack.append(operandA <= operandB)
+                elif CalculationTuple[i] == '!=' :
+                    Stack.append(operandA != operandB)
+                elif CalculationTuple[i] == '==' :
+                    Stack.append(operandA == operandB)
                 elif CalculationTuple[i] in ['.sum', '.avg', '.mean', '.min', '.max', '.mode', '.prod', '.std', '.var', '.sum0', '.avg0', '.mean0', '.min0', '.max0', '.mode0', '.prod0', '.std0', '.var0'] :
                     if isinstance(operandB, (DataFrame, Series)) :
                         Stack.append(operandA)
@@ -5067,6 +5089,8 @@ class SimResult(object):
                             Stack.append(operandB.sum(axis=1) )
                         elif CalculationTuple[i] in ['.avg', '.mean', '.avg0', '.mean0'] :
                             Stack.append(operandB.mean(axis=1))
+                        elif CalculationTuple[i] in ['.median', '.median0'] :
+                            Stack.append(operandB.median(axis=1))
                         elif CalculationTuple[i] in ['.min', '.min0'] :
                             Stack.append(operandB.min(axis=1))
                         elif CalculationTuple[i] in ['.max', '.max0'] :
