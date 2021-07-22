@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.63.5'
-__release__ = 210713
+__version__ = '0.64.2'
+__release__ = 210722
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -3909,7 +3909,12 @@ Copy of input object, shifted.
                     self.__setitem__(col,value[col])
                 return None
             
+        
         before = len(self.columns)
+        # if len(self.index) == len(value.index) and (self.index == value.index).all() :
+        #     pass
+        # elif self.index.duplicated().sum() > 0 or value.index.duplicated().sum() > 0 :
+        #     value = value.reindex(self.index)
         super().__setitem__(key, value)
         after = len(self.columns)
 
