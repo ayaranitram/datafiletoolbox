@@ -2072,8 +2072,15 @@ class SimDataFrame(DataFrame) :
 
     def set_index(self, key, drop=False, append=False, inplace=False, verify_integrity=False, **kwargs) :
         if key not in self.columns :
-            raise ValueError("The key '"+str(key)+"' is not a column name of this DataFrame.")
-        return super().set_index(key, drop=drop, append=append, inplace=inplace, verify_integrity=verify_integrity, **kwargs)
+            raise ValueError("The key '"+str(key)+"' is not a column name of this SimDataFrame.")
+        if inplace:
+            indexUnits = self.get_Units(key) 
+            super().set_index(key, drop=drop, append=append, inplace=inplace, verify_integrity=verify_integrity, **kwargs)
+            self.set_indexUnits(indexUnits)
+        else:
+            params = self._SimParameters
+            params['indexUnits'] = self.get_Units(key)[key]
+            return SimDataFrame(data=self.DF.set_index(key, drop=drop, append=append, inplace=inplace, verify_integrity=verify_integrity, **kwargs), **params)
     
     def describe(self,*args,**kwargs):
         return self._class(data=self.to_Pandas().describe(*args,**kwargs),**self._SimParameters)
