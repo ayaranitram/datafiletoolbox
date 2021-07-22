@@ -818,7 +818,7 @@ class SimSeries(Series) :
     @property
     def attributes(self) :
         if self.nameSeparator in [None, '', False] :
-            return tuple(self.columns )
+            return { col:[] for col in self.columns }
         atts = {}
         for each in list(self.get_Keys() ) :
             if self.nameSeparator in each :
