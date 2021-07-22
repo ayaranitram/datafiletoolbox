@@ -3163,7 +3163,7 @@ Copy of input object, shifted.
 
         # other is Pandas DataFrame
         elif isinstance(other, DataFrame) :
-            result = self.DF.add(other, fill_value=0)
+            # result = self.DF.add(other, fill_value=0)
             selfC, otherC, newNames = self._CommonRename(SimDataFrame(other, **self._SimParameters))
             result = selfC + otherC
             return result if newNames is None else result.rename(columns=newNames)
@@ -4451,6 +4451,7 @@ Copy of input object, shifted.
     def get_Units(self, items=None) :
         if self.units is None:
             self.units = {}
+            
         if items is None :
             return self.units.copy()
         uDic = {}
@@ -4463,7 +4464,7 @@ Copy of input object, shifted.
                 for Key in self.get_Keys('*'+self.nameSeparator+each) :
                     uDic[each] = self.units[each]
             elif each in self.attributes :
-                for att in self.keyGen(each, self.attributes[each] ) :
+                for att in self.keyGen(each, self.attributes[each]) :
                     if att in self.units :
                         uDic[att] = self.units[att]
                     else :
@@ -5362,13 +5363,12 @@ def _MergeIndex(left, right, how='outer', *, drop_duplicates=True):
         The merge method to be used. 
         The default is 'outer'.
     drop_duplicates : boo, optional
-        If True, drop duplicated lines to avoid reindexing error due to repeated rows.
-        If the index has duplicated values but the row is not entire equal reindexing will raise error.
-
+        If True, drop lines with duplicated indexes to avoid reindexing error due to repeated index.
+        If False, will drop the lines of duplicated indexes to avoid error and then put back line 
     Raises
     ------
     ValueError
-        If how parameter is not valir.
+        If how parameter is not valid.
 
     Returns
     -------
