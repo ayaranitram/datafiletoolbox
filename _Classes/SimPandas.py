@@ -694,7 +694,7 @@ class SimSeries(Series) :
             New labels / index to conform to, should be specified using keywords.
             Preferably an Index object to avoid duplicating data.
         """
-        return SimSeries(data=self.S.reindex(index=index, **kwargs), **self._SimParameters )  # units=self.units, speak=self.speak, indexUnits=self.indexUnits, nameSeparator=self.nameSeparator )
+        return SimSeries(data=self.S.reindex(index=index, **kwargs), **self._SimParameters )
 
 
     def dropna(self, axis=0, inplace=False, how=None) :
@@ -4301,9 +4301,9 @@ Copy of input object, shifted.
     @property
     def attributes(self) :
         if self.nameSeparator in [None, '', False] :
-            return tuple(self.columns )
+            return { col:[] for col in self.columns }
         atts = {}
-        for each in list(self.columns ) :
+        for each in list(self.columns) :
             if type(each) is str and self.nameSeparator in each :
                 if type(each) is str and each.split(self.nameSeparator )[0] in atts :
                     atts[each.split(self.nameSeparator )[0]] += [each.split(self.nameSeparator )[-1]]
