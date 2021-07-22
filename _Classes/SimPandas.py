@@ -4028,11 +4028,17 @@ Copy of input object, shifted.
             params['units'] = resultUnits
             result = SimDataFrame(data=result, **params)
         elif type(result) is Series :
-            if result.name is None or result.name not in self.get_Units():
-                # this Series is one index for multiple columns
-                resultUnits = self.get_Units(result.index)
-            else :
-                resultUnits = self.get_Units(result.name)
+            if len(self.get_Units()) > 0:
+                if result.name is None or result.name not in self.get_Units():
+                    # this Series is one index for multiple columns
+                    try:
+                        resultUnits = self.get_Units(result.index)
+                    except:
+                        resultUnits = { result.name:'UNITLESS' }
+                else :
+                    resultUnits = self.get_Units(result.name)
+            else:
+                resultUnits = { result.name:'UNITLESS' }
             params = self._SimParameters
             params['units'] = resultUnits
             result = SimSeries(data=result, **params)
