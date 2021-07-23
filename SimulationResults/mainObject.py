@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.57.0'
-__release__ = 210722
+__version__ = '0.58.1'
+__release__ = 210723
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -5095,13 +5095,13 @@ class SimResult(object):
                             Stack.append(operandB.min(axis=1))
                         elif CalculationTuple[i] in ['.max', '.max0'] :
                             Stack.append(operandB.max(axis=1))
-                        elif CalculationTuple[i] == ['.mode', '.mode0'] :
+                        elif CalculationTuple[i] in ['.mode', '.mode0'] :
                             Stack.append(operandB.mode(axis=1))
-                        elif CalculationTuple[i] == ['.std', '.std0'] :
+                        elif CalculationTuple[i] in ['.std', '.std0'] :
                             Stack.append(operandB.std(axis=1))
-                        elif CalculationTuple[i] == ['.prod', '.prod0'] :
+                        elif CalculationTuple[i] in ['.prod', '.prod0'] :
                             Stack.append(operandB.prod(axis=1))
-                        elif CalculationTuple[i] == ['.var', '.var0'] :
+                        elif CalculationTuple[i] in ['.var', '.var0'] :
                             Stack.append(operandB.var(axis=1))
                         elif CalculationTuple[i] in ['.abs'] :
                             Stack.append(operandB.abs())
