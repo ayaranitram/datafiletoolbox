@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.64.2'
-__release__ = 210722
+__version__ = '0.65.1'
+__release__ = 210723
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -1217,6 +1217,57 @@ class SimSeries(Series) :
     
     def __abs__(self) :
         return SimSeries(data=abs(self.S), **self._SimParameters)
+
+    def avg(self, axis=0, **kwargs) :
+        return self.mean(axis=axis, **kwargs)
+
+    def avg0(self, axis=0, **kwargs) :
+        return self.mean0(axis=axis, **kwargs)
+
+    def average(self, axis=0, **kwargs) :
+        return self.mean(axis=axis, **kwargs)
+    
+    def average0(self, axis=0, **kwargs) :
+        return self.mean0(axis=axis, **kwargs)
+
+    def count0(self, **kwargs) :
+        return self.replace(0,np.nan).count(**kwargs)
+    
+    def max0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).max(axis=axis, **kwargs)
+     
+    def mean0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).mean(axis=axis, **kwargs)
+    
+    def median0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).median(axis=axis, **kwargs)
+
+    def min0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).min(axis=axis, **kwargs)
+
+    def mode0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).mode(axis=axis, **kwargs)
+    
+    def prod0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).prod(axis=axis, **kwargs)
+
+    def quantile0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).quantile(axis=axis, **kwargs)
+
+    def rms(self, axis=0, **kwargs):
+        return (self**2).mean(axis=axis, **kwargs)**0.5
+    
+    def rms0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).rms(axis=axis, **kwargs)
+
+    def std0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).std(axis=axis, **kwargs)
+    
+    def sum0(self, axis=0, **kwargs) :
+        return self.sum(axis=axis, **kwargs)
+
+    def var0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).var(axis=axis, **kwargs)    
 
     def __repr__(self) -> str :
         """
@@ -3546,58 +3597,66 @@ Copy of input object, shifted.
             left_index, right_index = True, True
         return merge(self, right, how='inner', on=on, left_on=left_on, right_on=right_on, left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, copy=copy, indicator=indicator, validate=validate)
 
-    def mode(self, axis=0, **kwargs) :
-        axis = _cleanAxis(axis)
-        if axis == 0 :
-            return SimDataFrame(data=self.DF.mode(axis=axis, **kwargs), **self._SimParameters) 
-        if axis == 1 :
-            newName = '.mode'
-            if len(set(self.get_Units(self.columns).values())) == 1 :
-                units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
-                units = 'dimensionless'
-            if len(set(self.columns ) ) == 1 :
-                newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
-            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
-            data=self.DF.mode(axis=axis, **kwargs)
-            data.columns=[newName]
-            data.name = newName
-            params = self._SimParameters
-            params['units'] = units
-            return SimDataFrame(data=data, **params)
-    
-    def median(self, axis=0, **kwargs) :
-        axis = _cleanAxis(axis)
-        if axis == 0 :
-            return SimDataFrame(data=self.DF.median(axis=axis, **kwargs), **self._SimParameters)
-        if axis == 1 :
-            newName = '.median'
-            if len(set(self.get_Units(self.columns).values())) == 1 :
-                units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
-                units = 'dimensionless'
-            if len(set(self.columns ) ) == 1 :
-                newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
-            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
-            data=self.DF.median(axis=axis, **kwargs)
-            data.columns=[newName]
-            data.name = newName
-            params = self._SimParameters
-            params['units'] = units
-            return SimDataFrame(data=data, **params)
-
     def avg(self, axis=0, **kwargs) :
         return self.mean(axis=axis, **kwargs)
+
+    def avg0(self, axis=0, **kwargs) :
+        return self.mean0(axis=axis, **kwargs)
 
     def average(self, axis=0, **kwargs) :
         return self.mean(axis=axis, **kwargs)
 
+    def average0(self, axis=0, **kwargs) :
+        return self.mean0(axis=axis, **kwargs)
+
+    def count(self, axis=0, **kwargs) :
+        axis = _cleanAxis(axis)
+        if axis == 0 :
+            return SimDataFrame(data=self.DF.count(axis=axis, **kwargs), **self._SimParameters )
+        if axis == 1 :
+            newName = '.count'
+            if len(set(self.columns)) == 1 :
+                newName = list(set(self.columns))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns)) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns)) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns))[0]+newName
+            data=self.DF.count(axis=axis, **kwargs)
+            data.columns=[newName]
+            data.name = newName
+            params = self._SimParameters
+            params['units'] = 'dimensionless'
+            return SimDataFrame(data=data, **params)
+
+    def count0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).count(axis=axis, **kwargs)
+
+    def max(self, axis=0, **kwargs) :
+        axis = _cleanAxis(axis)
+        if axis == 0 :
+            return SimDataFrame(data=self.DF.max(axis=axis, **kwargs), **self._SimParameters )
+        if axis == 1 :
+            newName = '.max'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len(set(self.columns)) == 1 :
+                newName = list(set(self.columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns)) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns)) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns))[0]+newName
+            data=self.DF.max(axis=axis, **kwargs)
+            data.columns=[newName]
+            data.name = newName
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
+        
+    def max0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).max(axis=axis, **kwargs)
+    
     def mean(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
@@ -3620,13 +3679,16 @@ Copy of input object, shifted.
             params = self._SimParameters
             params['units'] = units
             return SimDataFrame(data=data, **params)
+        
+    def mean0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).mean(axis=axis, **kwargs)
 
-    def max(self, axis=0, **kwargs) :
+    def median(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.max(axis=axis, **kwargs), **self._SimParameters )
+            return SimDataFrame(data=self.DF.median(axis=axis, **kwargs), **self._SimParameters)
         if axis == 1 :
-            newName = '.max'
+            newName = '.median'
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
             else :
@@ -3637,12 +3699,15 @@ Copy of input object, shifted.
                 newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
             elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
                 newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
-            data=self.DF.max(axis=axis, **kwargs)
+            data=self.DF.median(axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
             params = self._SimParameters
             params['units'] = units
             return SimDataFrame(data=data, **params)
+    
+    def median0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).median(axis=axis, **kwargs)
 
     def min(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
@@ -3666,6 +3731,139 @@ Copy of input object, shifted.
             params = self._SimParameters
             params['units'] = units
             return SimDataFrame(data=data, **params)
+        
+    def min0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).min(axis=axis, **kwargs)
+
+    def mode(self, axis=0, **kwargs) :
+        axis = _cleanAxis(axis)
+        if axis == 0 :
+            return SimDataFrame(data=self.DF.mode(axis=axis, **kwargs), **self._SimParameters) 
+        if axis == 1 :
+            newName = '.mode'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len(set(self.columns ) ) == 1 :
+                newName = list(set(self.columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
+            data=self.DF.mode(axis=axis, **kwargs)
+            data.columns=[newName]
+            data.name = newName
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
+
+    def mode0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).mode(axis=axis, **kwargs)
+
+    def prod(self, axis=0, **kwargs) :
+        axis = _cleanAxis(axis)
+        if axis == 0 :
+            return SimDataFrame(data=self.DF.prod(axis=axis, **kwargs), **self._SimParameters)
+        if axis == 1 :
+            newName = '.prod'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len(set(self.columns ) ) == 1 :
+                newName = list(set(self.columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
+            data=self.DF.prod(axis=axis, **kwargs)
+            data.columns=[newName]
+            data.name = newName
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
+
+    def prod0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).prod(axis=axis, **kwargs)
+
+    def quantile(self, q=0.5, axis=0, **kwargs) :
+        axis = _cleanAxis(axis)
+        if axis == 0 :
+            return SimDataFrame(data=self.DF.quantile(q=q, axis=axis, **kwargs), **self._SimParameters)
+        if axis == 1 :
+            newName = '.Q'+str(q*100)
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len(set(self.columns)) == 1 :
+                newName = list(set(self.columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
+            data=self.DF.quantile(q=q, axis=axis, **kwargs)
+            data.columns=[newName]
+            data.name = newName
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
+
+    def quantile0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).quantile(axis=axis, **kwargs)
+
+    def rms(self, axis=0, **kwargs):
+        axis = _cleanAxis(axis)
+        if axis == 0 :
+            result = SimDataFrame(data=(self.DF**2), **self._SimParameters).mean(axis=axis, **kwargs)
+            return SimDataFrame(data=result.DF**0.5, **result._SimParameters)
+        if axis == 1 :
+            newName = '.rms'
+            if len(set(self.columns)) == 1 :
+                newName = list(set(self.columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
+            data = SimDataFrame(data=(self.DF**2), **self._SimParameters).mean(axis=axis, **kwargs)
+            data.rename(columns={data.columns[0]:newName}, inplace=True)
+            data.name = newName
+            params = data._SimParameters
+            params['name'] = newName
+            params['columns'] = [newName]
+            return SimDataFrame(data=data, **params)
+        
+        return (SimDataFrame(data=(self.DF**2), **self._SimParameters).mean(axis=axis, **kwargs))**0.5
+    
+    def rms0(self, axis=0, **kwargs) :       
+        return self.replace(0,np.nan).rms(axis=axis, **kwargs)
+
+    def std(self, axis=0, **kwargs) :
+        axis = _cleanAxis(axis)
+        if axis == 0 :
+            return SimDataFrame(data=self.DF.std(axis=axis, **kwargs), **self._SimParameters)
+        if axis == 1 :
+            newName = '.std'
+            if len(set(self.get_Units(self.columns).values())) == 1 :
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else :
+                units = 'dimensionless'
+            if len(set(self.columns ) ) == 1 :
+                newName = list(set(self.columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
+                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
+            data = self.DF.std(axis=axis, **kwargs)
+            data.columns = [newName]
+            data.name = newName
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
+        
+    def std0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).std(axis=axis, **kwargs)
 
     def sum(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
@@ -3679,7 +3877,6 @@ Copy of input object, shifted.
                 if type(params['units']) is dict:
                     params['units']['.sum'] = '*units per row'
                 return SimDataFrame(data=self.DF.sum(axis=axis, **kwargs).rename('.sum'), **params)
-
         if axis == 1 :
             newName = '.sum'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -3711,56 +3908,12 @@ Copy of input object, shifted.
             params = self._SimParameters
             params['units'] = units
             return SimDataFrame(data=data, **params)
-        
         if axis == 2 :
             return self.sum(axis=1).sum(axis=0)
 
-    def std(self, axis=0, **kwargs) :
-        axis = _cleanAxis(axis)
-        if axis == 0 :
-            return SimDataFrame(data=self.DF.std(axis=axis, **kwargs), **self._SimParameters)
-        if axis == 1 :
-            newName = '.std'
-            if len(set(self.get_Units(self.columns).values())) == 1 :
-                units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
-                units = 'dimensionless'
-            if len(set(self.columns ) ) == 1 :
-                newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
-            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
-            data=self.DF.std(axis=axis, **kwargs)
-            data.columns=[newName]
-            data.name = newName
-            params = self._SimParameters
-            params['units'] = units
-            return SimDataFrame(data=data, **params)
-    
-    def prod(self, axis=0, **kwargs) :
-        axis = _cleanAxis(axis)
-        if axis == 0 :
-            return SimDataFrame(data=self.DF.prod(axis=axis, **kwargs), **self._SimParameters)
-        if axis == 1 :
-            newName = '.prod'
-            if len(set(self.get_Units(self.columns).values())) == 1 :
-                units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
-                units = 'dimensionless'
-            if len(set(self.columns ) ) == 1 :
-                newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
-            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
-            data=self.DF.prod(axis=axis, **kwargs)
-            data.columns=[newName]
-            data.name = newName
-            params = self._SimParameters
-            params['units'] = units
-            return SimDataFrame(data=data, **params)
-   
+    def sum0(self, axis=0, **kwargs) :
+        return self.sum(axis=axis, **kwargs)    
+
     def var(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
@@ -3784,28 +3937,8 @@ Copy of input object, shifted.
             params['units'] = units
             return SimDataFrame(data=data, **params)
 
-    def quantile(self, q=0.5, axis=0, **kwargs) :
-        axis = _cleanAxis(axis)
-        if axis == 0 :
-            return SimDataFrame(data=self.DF.quantile(q=q, axis=axis, **kwargs), **self._SimParameters)
-        if axis == 1 :
-            newName = '.Q'+str(q*100)
-            if len(set(self.get_Units(self.columns).values())) == 1 :
-                units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
-                units = 'dimensionless'
-            if len(set(self.columns ) ) == 1 :
-                newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(inplace=False).columns ) ) == 1 :
-                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
-            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1 :
-                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
-            data=self.DF.quantile(q=q, axis=axis, **kwargs)
-            data.columns=[newName]
-            data.name = newName
-            params = self._SimParameters
-            params['units'] = units
-            return SimDataFrame(data=data, **params)
+    def var0(self, axis=0, **kwargs) :
+        return self.replace(0,np.nan).var(axis=axis, **kwargs)
 
     def round(self, decimals=0, **kwargs):
         return SimDataFrame(data=self.DF.round(decimals=decimals, **kwargs), **self._SimParameters)
