@@ -6,8 +6,8 @@ Created on Sun Oct 18 05:32:42 2020
 @author: martin
 """
 
-__version__ = '0.1.0'
-__release__ = 210225
+__version__ = '0.1.1'
+__release__ = 210723
 __all__ = ['Alternate']
 
 
@@ -53,8 +53,8 @@ class Alternate(object):
     def next(self):
         if self.loops == 0:
             return None
-        i = 0 if self.i == self.limit else self.i+1
-        return self.iterable[i]
+        self.i = 0 if self.i == self.limit else self.i+1
+        return self.iterable[self.i]
 
     @property
     def prev(self):
