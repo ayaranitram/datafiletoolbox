@@ -4873,7 +4873,7 @@ class SimResult(object):
                 CalcUnits.append(self.get_Unit(Key ) )
 
         # supported operators:
-        operators = [' ', '**', '--', '+-', '-+', '++', '*-', '/-', '//', '=', '+', '*', '/', '^', '.sum', '.avg', '.mean', '.median', '.min', '.max', '.mode', '.prod', '.var', '.std', '.sum0', '.avg0', '.mean0', '.median0', '.min0', '.max0', '.std0', '.mode0', '.prod0', '.var0', '>', '<', '>=', '<=', '!=', '==', '<>', '><', '=>', '=<']
+        operators = [' ', '**', '--', '+-', '-+', '++', '*-', '/-', '//', '=', '+', '*', '/', '^', '.abs','.sum', '.avg', '.mean', '.median', '.min', '.max', '.mode', '.prod', '.var', '.std', '.sum0', '.avg0', '.mean0', '.median0', '.min0', '.max0', '.std0', '.mode0', '.prod0', '.var0', '>', '<', '>=', '<=', '!=', '==', '<>', '><', '=>', '=<']
         if '-' in (' '.join(map(str,self.wells)) + ' '.join(map(str,self.groups)) + ' '.join(map(str,self.regions))) :
             substractionSign = ' -'
         else :
@@ -4954,7 +4954,7 @@ class SimResult(object):
         _verbose (self.speak, 1, "calculation simplified to " + str(CalculationTuple))
 
 
-        operators = [substractionSign] + ['+', '*', '//', '/', '^', '.sum', '.avg', '.mean', '.median', '.min', '.max', '.mode', '.prod', '.std', '.var', '.sum0', '.avg0', '.mean0', '.median0', '.min0', '.max0', '.mode0', '.prod0', '.std0', '.var0', '>', '<', '>=', '<=','!=']
+        operators = [substractionSign] + ['+', '*', '//', '/', '^', '.abs', '.sum', '.avg', '.mean', '.median', '.min', '.max', '.mode', '.prod', '.std', '.var', '.sum0', '.avg0', '.mean0', '.median0', '.min0', '.max0', '.mode0', '.prod0', '.std0', '.var0', '>', '<', '>=', '<=','!=']
         OK = True
         Missing = []
         WrongLen = []
@@ -5103,6 +5103,8 @@ class SimResult(object):
                             Stack.append(operandB.prod(axis=1))
                         elif CalculationTuple[i] == ['.var', '.var0'] :
                             Stack.append(operandB.var(axis=1))
+                        elif CalculationTuple[i] in ['.abs'] :
+                            Stack.append(operandB.abs())
 
 
                         if CalculationTuple[i].endswith('0') :
