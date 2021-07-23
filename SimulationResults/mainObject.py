@@ -1171,7 +1171,7 @@ class SimResult(object):
                     self.wellsLists['GasProducers'] = list(set(self.wellsLists['GasProducers']))
 
             elif self.is_Attribute('WOPRH') :
-                _verbose(self.speak, 2, "neither GOR or GAS RATE available or the data doesn't has units, every well with oil rate > 0 will be listeda as oil producer." )
+                _verbose(self.speak, 1, "neither historic GOR or GAS RATE available or the data doesn't has units, every well with oil rate > 0 will be listeda as oil producer." )
                 self.wellsLists['OilProducers'] += list(_wellFromAttribute(list(self[['WOPRH']].replace(0, np.nan).dropna(axis=1, how='all').columns)))
                 if len(self.wellsLists['OilProducers']) > 1:
                     self.wellsLists['OilProducers'] = list(set(self.wellsLists['OilProducers']))
