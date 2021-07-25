@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.65.1'
-__release__ = 210723
+__version__ = '0.65.2'
+__release__ = 210725
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -3003,7 +3003,8 @@ Copy of input object, shifted.
             cAfter = list(catch.columns)
         newUnits = {}
         for i in range(len(cBefore)) :
-            newUnits[cAfter[i]] = self.units[cBefore[i]]
+            if cBefore[i] in self.units:
+                newUnits[cAfter[i]] = self.units[cBefore[i]]
         if 'inplace' in kwargs and kwargs['inplace'] :
             self.units = newUnits
             self.spdLocator = _SimLocIndexer("loc", self)
