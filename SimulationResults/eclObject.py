@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.25.1'
-__release__ = 210716
+__version__ = '0.25.2'
+__release__ = 210725
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
@@ -29,6 +29,8 @@ class ECL(_SimResult):
         self.kind = ECL
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             self.loadSummary(inputFile, **kwargs)
+            if 'unload' in kwargs and kwargs['unload'] is True:
+                    return None
         if self.results is not None :
             self.initialize(**kwargs)
 
@@ -53,6 +55,8 @@ class ECL(_SimResult):
                 _verbose( self.speak, 1, ' > loading summary file:\n  ' + SummaryFilePath)
                 EclSummary = ECL.loadEclSum
                 self.results = EclSummary(SummaryFilePath, **kwargs) # ecl.summary.EclSum(SummaryFilePath)
+                if 'unload' in kwargs and kwargs['unload'] is True:
+                    return None
                 self.name = _extension(SummaryFilePath)[1]
                 self.set_FieldTime()
                 self.get_Wells(reload=True)

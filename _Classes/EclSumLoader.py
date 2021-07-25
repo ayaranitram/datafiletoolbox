@@ -5,8 +5,8 @@ Created on Mon Mar  8 08:56:44 2021
 @author: martin
 """
 
-__version__ = '0.12.0'
-__release__ = 210519
+__version__ = '0.12.1'
+__release__ = 210725
 __all__ = ['EclSumLoader']
 
 from .._Classes.Errors import PrototypeError, MissingDependence
@@ -76,6 +76,7 @@ class _EclSumLoader(object):
                 print("\n<EclSumLoader> unloaded file and removed data from memory.")
             else:
                 print("\n<EclSumLoader> file was not loaded.")
+            return None
         if SummaryFilePath is None:
             return None
         if not os.path.isfile(SummaryFilePath):
