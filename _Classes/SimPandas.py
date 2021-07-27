@@ -1696,6 +1696,68 @@ class SimSeries(Series) :
         else :
             return SimSeries(data=self.S.sort_values(axis=axis, ascending=ascending, inplace=False, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
 
+    def head(self,n=5):
+        """
+        Return the first n rows.
+
+        This function returns first n rows from the object based on position. It is useful for quickly verifying data, for example, after sorting or appending rows.
+        
+        For negative values of n, this function returns all rows except the last n rows, equivalent to df[n:].
+        
+        Parameters:
+        ----------
+            n : int, default 5
+            Number of rows to select.
+        
+        Returns
+        -------
+            type of caller
+            The first n rows of the caller object.
+        """
+        return SimSeries(data=self.S.head(n),**self._SimParameters)
+    
+    def tail(self,n=5):
+        """
+        Return the last n rows.
+
+        This function returns last n rows from the object based on position. It is useful for quickly verifying data, for example, after sorting or appending rows.
+        
+        For negative values of n, this function returns all rows except the first n rows, equivalent to df[n:].
+        
+        Parameters:
+        ----------
+            n : int, default 5
+            Number of rows to select.
+        
+        Returns
+        -------
+            type of caller
+            The last n rows of the caller object.
+        """
+        return SimSeries(data=self.S.head(n),**self._SimParameters)
+
+    def cumsum(self, skipna=True, *args, **kwargs):
+        """
+        Return cumulative sum over a SimDataFrame.
+    
+        Returns a SimDataFrame or SimSeries of the same size containing the cumulative sum.
+    
+        Parameters:
+            axis : {0 or ‘index’, 1 or ‘columns’}, default 0
+                The index or the name of the axis. 0 is equivalent to None or ‘index’.
+    
+        skipna: bool, default True
+            Exclude NA/null values. If an entire row/column is NA, the result will be NA.
+    
+        *args, **kwargs
+            Additional keywords have no effect but might be accepted for compatibility with NumPy.
+    
+        Returns
+            SimSeries or SimDataFrame
+            Return cumulative sum of Series or DataFrame.
+        """
+        return SimSeries(data=self.S.cumsum(skipna=skipna, *args, **kwargs),**self._SimParameters)
+
     def jitter(self,std=0.10) :
         """
         add jitter the values of the SimSeries
