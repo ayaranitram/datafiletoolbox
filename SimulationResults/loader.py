@@ -64,6 +64,8 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
             Simulator = 'SimPandasExcel'
         elif _extension(FullPath)[0].upper() in ['.TXT'] :
             Simulator = 'DataTable'
+        elif _extension(FullPath)[0].upper() in ['.PKL'] :
+            Simulator = 'Pickle'
     elif type(Simulator) is str and len(Simulator.strip()) > 0 :
         Simulator = Simulator.strip().upper()
 
@@ -85,6 +87,14 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
         OBJ = _XLSX(FullPath,verbosity=Verbosity,**kwargs)
     elif Simulator in ['DataTable'] :
         OBJ = _TABLE(FullPath,verbosity=Verbosity,**kwargs)
+    elif Simulator in ['Pickle'] :
+        import os
+        if not os.path.isfile(FullPath):
+            raise FileNotFoundError("File doesn't exists:\n  "+str(FullPath))
+        with open(FullPath, 'wb') as f:
+            OBJ = pickle.load(f)
+        if OBJ is not None:
+            OBJ.set_Verbosity(Verbosity)
 
     _loadingECLfile[0] = False
     if OBJ is not None and Verbosity != 0 :
