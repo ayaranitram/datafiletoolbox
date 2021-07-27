@@ -5183,15 +5183,16 @@ Copy of input object, shifted.
         diff = diff / dt.reshape(-1,1)
 
         newUnits = {}
-        for C, U in self.units.items() :
-            if U is None:
-                newUnits[C] = str(U) + '/' + str(dtUnits)
-            elif len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
-                newUnits[C] = U + '/' + U.split('/')[-1]
-            elif len(U.split('*')) == 2 and (U.split('*')[-1].upper() == dtUnits.upper() or (U.split('*')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
-                newUnits[C] = U.split('*')[0]
-            else :
-                newUnits[C] = str(U) + '/' + str(dtUnits)
+        if self.units is not None:
+            for C, U in self.units.items() :
+                if U is None:
+                    newUnits[C] = str(U) + '/' + str(dtUnits)
+                elif len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
+                    newUnits[C] = U + '/' + U.split('/')[-1]
+                elif len(U.split('*')) == 2 and (U.split('*')[-1].upper() == dtUnits.upper() or (U.split('*')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
+                    newUnits[C] = U.split('*')[0]
+                else :
+                    newUnits[C] = str(U) + '/' + str(dtUnits)
         
         if na_position == 'first':
             if str(dt.dtype).startswith('timedelta') :    
