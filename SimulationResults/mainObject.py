@@ -1236,7 +1236,7 @@ class SimResult(object):
         InvalidKeyError if the requested Key is not valid.
 
         """
-        self.set_Index(Key)
+        return self.set_Index(Key)
         
     def set_Index(self, Key):
         """
@@ -1258,6 +1258,7 @@ class SimResult(object):
         """
         if self.is_Key(Key):
             self.DTindex = Key
+            return self
         else:
             raise InvalidKeyError(Key,'is not a valid Key in this dataset')
             
