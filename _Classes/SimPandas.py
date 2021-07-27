@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.65.2'
-__release__ = 210725
+__version__ = '0.65.3'
+__release__ = 210727
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO

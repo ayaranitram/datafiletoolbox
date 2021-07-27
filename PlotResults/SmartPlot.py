@@ -5,8 +5,8 @@ Created on Wed May 13 00:31:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.3.0'
-__release__ = 210518
+__version__ = '0.4.0'
+__release__ = 220727
 __all__ = ['Plot']
 
 import time

@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.58.1'
-__release__ = 210723
+__version__ = '0.59.1'
+__release__ = 210727
 __all__ = ['SimResult']
 
 from .. import _dictionaries
