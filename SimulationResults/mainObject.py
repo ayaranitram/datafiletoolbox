@@ -5751,6 +5751,15 @@ class SimResult(object):
     #     with open(RestorePath + 'json/units.sro', 'r') as file:
     #         self.units = json.load(file )
 
+    def to_pickle(self, filepath=None):
+        import pickle
+        if filepath is None:
+            if self.path is not None:
+                filepath = _extension(self.path)[0] + _extension(self.path)[1] + '.pkl'
+                print('\n>>> saving current state to the file:\n   ',filepath)
+        with open(filepath, 'wb') as f:
+            pickle.dump(self, f)
+
     def to_RSM(self, Keys='--all', filepath=None, RSMleng=12, RSMcols=10, includeDATE=True, ECLkeywordsOnly=True, RegionNames=False) :
         """
         writes the selected vectors, or all the vectors by default, to an RSM format file.
