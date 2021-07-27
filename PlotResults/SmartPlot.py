@@ -12,6 +12,7 @@ __all__ = ['Plot']
 import time
 import random
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.colors import is_color_like
@@ -34,6 +35,41 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     uses matplot lib to create graphs of the selected vectors
     for the selected SimResult objects.
     """
+    
+    # validate common keyword parameters:
+    for kw in ['xMin','xMax','yMin','yMax','Xmin','Xmax','Ymin','Ymax']:
+        if kw in kwargs:
+            kwargs[kw.lower()] = kwargs[kw]
+            kwargs.pop(kw,None)
+        
+    if 'xmin' in kwargs and 'xmax' in kwargs:
+        if xlim == (None,None):
+            xlim = (kwargs['xmin'],kwargs['xmax'])
+            kwargs.pop('xmin',None)
+            kwargs.pop('xmax',None)
+    elif 'xmin' in kwargs:
+        if xlim == (None,None):
+            xlim = (kwargs['xmin'],None)
+            kwargs.pop('xmin',None)
+    elif 'xmax' in kwargs:
+        if xlim == (None,None):
+            xlim = (kwargs[None,'xmax'])
+            kwargs.pop('xmax',None)
+    
+    if 'ymin' in kwargs and 'ymax' in kwargs:
+        if ylim == (None,None):
+            ylim = (kwargs['ymin'],kwargs['ymax'])
+            kwargs.pop('ymin',None)
+            kwargs.pop('ymax',None)
+    elif 'ymin' in kwargs:
+        if ylim == (None,None):
+            ylim = (kwargs['ymin'],None)
+            kwargs.pop('ymin',None)
+    elif 'ymax' in kwargs:
+        if ylim == (None,None):
+            ylim = (kwargs[None,'ymax'])
+            kwargs.pop('ymax',None)
+                
     
     # validate pyplot figure parameters
     if fig is None and num is None:
@@ -640,7 +676,17 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
                 except :
                     print('<Plot> the X key ' + X_Key[0] + ' from simulation ' + SimResultObjects[s].get_Name() + ' is not numpy array ')
         elif Xdate :
-            X = X.astype('datetime64[D]').astype('O') # X = X.astype('O')
+            X = X.astype('datetime64[D]').astype('O')  # convert numpy date array to array of datetime objects
+            
+            if xlim != (None,None):
+                xlim = list(xlim)
+                for xl in range(2):  # try to convert date as string to datetime object
+                    if type(xlim[xl]) is str:
+                        try:
+                            xlim[xl] = pd.to_datetime(xlim[xl]).to_numpy().astype('datetime64[D]').astype('O')
+                        except:
+                            pass
+                xlim = tuple(xlim)
 
         for y in range(len(Y_Keys)) :
             time.sleep(timeout)
