@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.65.4'
+__version__ = '0.65.5'
 __release__ = 210728
 __all__ = ['SimSeries', 'SimDataFrame']
 
@@ -5147,8 +5147,10 @@ Copy of input object, shifted.
 
         newUnits = {}
         for C, U in self.units.items() :
-            print(C,U, U.split('/')[-1].upper() , dtUnits, U.split('/')[-1].upper() == dtUnits)
-            if len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
+            # print(C,U, U.split('/')[-1].upper() , dtUnits, U.split('/')[-1].upper() == dtUnits)
+            if U is None:
+                newUnits[C] = None
+            elif len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
                 newUnits[C] = U.split('/')[0] 
             else :
                 newUnits[C] = U + '*' + dtUnits
