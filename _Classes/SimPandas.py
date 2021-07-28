@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.65.3'
-__release__ = 210727
+__version__ = '0.65.4'
+__release__ = 210728
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -4391,7 +4391,7 @@ Copy of input object, shifted.
                 return self.DF.iloc[key]
 
     def _columnsNameAndUnits2MultiIndex(self) :
-        out = {}
+        out = []  # out = {}
         units = self.get_units()
         if units is None or len(units) == 0:
             return self.columns  # there are not units, return column names as they are
@@ -4399,10 +4399,10 @@ Copy of input object, shifted.
             return self.columns  # is an empty DataFrame
         for col in self.columns :
             if col in units :
-                out[col] = units[col]
+                out.append((col,units[col]))  # out[col] = units[col]
             else :
-                out[col] = None
-        out = pd.MultiIndex.from_tuples(out.items())
+                out.append((col,None))  # out[col] = None
+        out = pd.MultiIndex.from_tuples(out)  # out = pd.MultiIndex.from_tuples(out.items())
         return out
 
     def _DataFrameWithMultiIndex(self) :
