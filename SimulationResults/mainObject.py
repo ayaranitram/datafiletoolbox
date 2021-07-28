@@ -6,7 +6,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = '0.59.1'
-__release__ = 210727
+__release__ = 210728
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -425,8 +425,8 @@ class SimResult(object):
         elif type(Key) in (list,tuple) and len(Key) > 0 or Index is not None:
             if Index is None :
                 Index = self.DTindex
+            data = self.get_DataFrame(Key, Index)
             if self.useSimPandas :
-                data = self.get_DataFrame(Key, Index)
                 units = self.get_Units(Key)
                 if type(units) is str:
                     units = {Key:units}
@@ -436,7 +436,7 @@ class SimResult(object):
                 units[Index] = unitsIndex
                 return SimDataFrame(data=data, units=units, indexName=Index, indexUnits=unitsIndex, nameSeparator=':')
             else :
-                return self.get_DataFrame(Key, Index)
+                return data
 
     def __getitem__(self, item) :
         if type(item) is tuple :
