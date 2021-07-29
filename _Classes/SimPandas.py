@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.65.5'
-__release__ = 210728
+__version__ = '0.65.6'
+__release__ = 210729
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -2192,6 +2192,8 @@ class SimDataFrame(DataFrame) :
             self.set_indexUnits(indexUnits)
         else:
             params = self._SimParameters
+            params['index'] = None
+            params['indexName'] = None
             params['indexUnits'] = self.get_Units(key)[key]
             return SimDataFrame(data=self.DF.set_index(key, drop=drop, append=append, inplace=inplace, verify_integrity=verify_integrity, **kwargs), **params)
     
