@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.65.6'
+__version__ = '0.66.6'
 __release__ = 210729
 __all__ = ['SimSeries', 'SimDataFrame']
 
@@ -23,6 +23,7 @@ from pandas import Series, DataFrame, DatetimeIndex, Timestamp, Index
 import numpy as np
 import datetime as dt
 from warnings import warn
+import matplotlib.pyplot as plt
 from .._common.units import unit  # to use unit.isUnit method
 from .._common.units import convertUnit, unitProduct, unitDivision, convertible as convertibleUnits, unitBase
 
@@ -1973,6 +1974,29 @@ class SimSeries(Series) :
         Returns a new SimDataFrame
         """
         return self.SDF.differenciate(na_position=na_position).to_SimSeries()
+
+    def plot(self, y=None, x=None, others=None,**kwargs):
+        """
+        wrapper of Pandas plot method, with some superpowers
+
+        Parameters
+        ----------
+        y : string, list or index; optional
+            column name to plot. The default is None.
+        x : string, optional
+            the columns to be used for x coordinates. The default is the index.
+        others : SimDataFrame, SimSeries, DataFrame or Series; optional
+            other Frames to include in the plot, for the same selected columns. The default is None.
+        **kwargs : TYPE
+            any other keyword argument for matplolib.
+
+        Returns
+        -------
+        matplotlib AxesSubplot.
+        """
+        return self.sdf.plot(y=y, x=x, others=others, **kwargs)
+
+
 
 class SimDataFrame(DataFrame) :
     """
@@ -5478,7 +5502,62 @@ Copy of input object, shifted.
                 return SimSeries(data=list(realYear(self.index)), **params)
             else:
                 raise ValueError('index is not a valid date or year integer')
+    
+    def plot(self, y=None, x=None, others=None,**kwargs):
+        """
+        wrapper of Pandas plot method, with some superpowers
 
+        Parameters
+        ----------
+        y : string, list or index; optional
+            column name to plot. The default is None.
+        x : string, optional
+            the columns to be used for x coordinates. The default is the index.
+        others : SimDataFrame, SimSeries, DataFrame or Series; optional
+            other Frames to include in the plot, for the same selected columns. The default is None.
+        **kwargs : TYPE
+            any other keyword argument for matplolib.
+
+        Returns
+        -------
+        matplotlib AxesSubplot.
+        """
+        y = self.columns if y is None else [y] if type(y) is str else y
+        if others is None:
+            if 'ylabel' not in kwargs:
+                kwargs['ylabel'] = ('\n').join([ str(yi) + (' [' + str(self.get_units(yi)[yi]) +' ]' ) if self.get_units(yi)[yi] is not None else '' for yi in y ])
+            if x is not None:
+                if x in self.columns:
+                    fig = self.set_index(x).DF.plot(**kwargs)
+                    plt.tight_layout()
+                    return fig
+                else:
+                    raise ValueError("Required 'x', " + str(x) + " is not a column name in this SimDataFrame")
+            else:
+                fig = self[y].DF.plot(**kwargs)
+                plt.tight_layout()
+                return fig
+        else:
+            if type(others) not in (list,tuple):
+                others = [others]
+            if 'ax' in kwargs and kwargs['ax'] is not None:
+                kwargs['ax'] = self.plot(y=y, x=x, others=None, **kwargs)
+            else:
+                fig = self.plot(y=y, x=x, others=None, **kwargs)
+                kwargs['ax'] = fig
+            for oth in others:
+                if type(oth) in (SimDataFrame,SimSeries):
+                    newY = [ ny for ny in self.columns if ny in oth ]
+                    kwargs['ax'] = oth[newy].to(self.get_units()).plot(y=y, x=x, others=None, **kwargs)
+                elif isinstance(oth,DataFrame):
+                    newY = [ ny for ny in self.columns if ny in oth ]
+                    kwargs['ax'] = oth[newY].plot(**kwargs)
+                elif isinstance(oth,Series):
+                    kwargs['ax'] = oth.plot(**kwargs)
+                else:
+                    raise TypeError("others must be SimDataFrame, DataFrame, SimSeries or Series")
+            return kwargs['ax']
+                    
 
 def daysInYear(year):
     """
