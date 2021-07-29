@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.59.1'
-__release__ = 210728
+__version__ = '0.60.1'
+__release__ = 210729
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -3350,7 +3350,7 @@ class SimResult(object):
         if pattern is None :
             return self.groups
         else:
-            return tuple(fnmatch.filter(self.groups, pattern ) )
+            return tuple(fnmatch.filter(self.groups, pattern))
 
 
     def get_Keys(self, pattern=None, reload=False) :
@@ -3378,7 +3378,7 @@ class SimResult(object):
         if pattern is None :
             return self.keys
         else:
-            return tuple(fnmatch.filter(self.keys, pattern ) )
+            return tuple(fnmatch.filter(self.keys, pattern))
 
     def find_Keys(self, criteria=None, reload=False) :
         """
@@ -5495,14 +5495,14 @@ class SimResult(object):
         """
         if type(Keys) is str :
             if Keys == '--EVERYTHING--' :
-                Keys = list(self.get_Keys() )
+                Keys = list(self.get_Keys())
             else :
                 Keys = [Keys]
         if type(Index) is list or type(Index) is tuple :
             if len(Index) > 1 :
                 _verbose(self.speak, -1, '< get_DataFrame > more than value passed in Index argument, only the first one will be used')
             Index = Index[0]
-        return DataFrame(data=self.get_Vector(Keys), index=self.get_Vector(Index)[ Index ] )
+        return DataFrame(data=self.get_Vector(Keys), index=self.get_Vector(Index)[Index])[Keys]
 
     def get_ConvertedDataFrame(self, Keys=None, Index='TIME', OtherObject_or_NewUnits=None) :
         """
