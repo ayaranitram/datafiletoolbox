@@ -2940,6 +2940,17 @@ class SimResult(object):
         elif Key in self.attributes :
             return self.keyColors[Key]
 
+    def set_Thickness(self, linewidth=None, Key=None):
+        """
+        Defines the line width to use in graphs created from .plot() method,
+        must be a positive float.
+
+        The provided line width applies to all the values ploted from this instance,
+        optional parameter `Key´ could be used to assing the property to a
+        particular Key.
+        """
+        return self.set_Width(linewidth=linewidth,Key=Key)  
+
     def set_Width(self, linewidth=None, Key=None):
         """
         Defines the line width to use in graphs created from .plot() method,
