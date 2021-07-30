@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.25.2'
-__release__ = 210725
+__version__ = '0.25.3'
+__release__ = 210730
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
@@ -51,7 +51,7 @@ class ECL(_SimResult):
 
             if os.path.isfile(SummaryFilePath):
                 if not os.path.isfile(SummaryFilePath[:-6]+'UNSMRY'):
-                    raise FileNotFoundError( "the file doesn't exist:\n  -> " + SummaryFilePath[:-6]+'UNSMRY' )
+                    raise FileNotFoundError( "the file doesn't exist:\n  -> " + _extension(SummaryFilePath)[2] + _extension(SummaryFilePath)[1] +'.UNSMRY' )
                 _verbose( self.speak, 1, ' > loading summary file:\n  ' + SummaryFilePath)
                 EclSummary = ECL.loadEclSum
                 self.results = EclSummary(SummaryFilePath, **kwargs) # ecl.summary.EclSum(SummaryFilePath)
