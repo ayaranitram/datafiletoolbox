@@ -30,7 +30,7 @@ def savePlot(figure, FileName=''):
     figure.savefig(FileName)
 
 
-def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[], graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={}, linewidth=[], linestyle=[], markers=[], markersize=[], DoNotRepeatColors=True, ColorBySimulation=None, ColorBySeries=None, minlinewidth=0.1, minmarkersize=0.5, Xgrid=0, Ygrid=0, fig=None, num=None, show=True, hline=None, figsize=(6, 4), dpi=150, singleYaxis=False, legend=True, xlim=(None,None), ylim=(None,None), **kwargs) :
+def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[], graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={}, linewidth=[], linestyle=[], markers=[], markersize=[], DoNotRepeatColors=True, ColorBySimulation=None, ColorBySeries=None, minlinewidth=0.1, minmarkersize=0.5, Xgrid=0, Ygrid=0, fig=None, num=None, show=True, hline=None, figsize=(6, 4), dpi=150, singleYaxis=False, legend=True, xlim=(None,None), ylim=(None,None), tight_layout=True, **kwargs) :
     """
     uses matplot lib to create graphs of the selected vectors
     for the selected SimResult objects.
@@ -69,7 +69,9 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
         if ylim == (None,None):
             ylim = (kwargs[None,'ymax'])
             kwargs.pop('ymax',None)
-                
+    
+    # validate plt.tight_layout() argument
+    tight_layout = bool(tight_layout)
     
     # validate pyplot figure parameters
     if fig is None and num is None:
@@ -839,6 +841,9 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     # set the user limits
     plt.xlim(xlim)
     plt.ylim(ylim)
+    
+    if tight_layout:
+        plt.tight_layout()
     
     if bool(show):
         plt.show()
