@@ -5,8 +5,8 @@ Created on Wed May 13 00:31:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.4.0'
-__release__ = 220727
+__version__ = '0.4.1'
+__release__ = 220730
 __all__ = ['Plot']
 
 import time
@@ -53,7 +53,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
             kwargs.pop('xmin',None)
     elif 'xmax' in kwargs:
         if xlim == (None,None):
-            xlim = (kwargs[None,'xmax'])
+            xlim = (None,kwargs['xmax'])
             kwargs.pop('xmax',None)
     
     if 'ymin' in kwargs and 'ymax' in kwargs:
