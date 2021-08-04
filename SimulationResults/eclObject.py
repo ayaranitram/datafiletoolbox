@@ -6,7 +6,7 @@ Created on Wed May 13 15:45:12 2020
 """
 
 __version__ = '0.25.3'
-__release__ = 210730
+__release__ = 210804
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
@@ -124,7 +124,7 @@ class ECL(_SimResult):
         if pattern is None :
             return self.groups
         else:
-            return tuple( self.results.groups(pattern))
+            return tuple(self.results.groups(pattern))
 
     def list_Keys(self, pattern=None, reload=False) :
         """
@@ -183,7 +183,7 @@ class ECL(_SimResult):
             Key = Key.strip().upper()
             if Key in self.units :
                 return self.units[Key]
-            if Key == 'DATES' or Key == 'DATE' :
+            if Key in ['DATES','DATE']:
                     self.units[Key] = 'DATE'
                     return 'DATE'
             if Key in self.keys :

@@ -6,7 +6,7 @@ Created on Wed May 13 15:34:04 2020
 """
 
 __version__ = '0.21.0'
-__release__ = 210618
+__release__ = 210804
 __all__ = ['VIP']
 
 from .mainObject import SimResult as _SimResult
@@ -869,19 +869,13 @@ class VIP(_SimResult):
         self.end = max( self.get_Vector('DATE')['DATE'] )
         return self.get_Vector('DATE')['DATE']
 
-    def extract_Wells(self) : #, pattern=None) :
+    def extract_Wells(self) :
+        """
+        Will return a list of all the well names in case.
+        """
         # preparing object attribute
         wellsList = list( self.wells )
-        # if self.CSV == False :
-        #     for sss in self.results :
-        #         if self.results[sss][0] == 'WELL' :
-        #             wellsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() )
-        # else :
-        #     for CSVname in self.CSV :
-        #         for i in range( len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] ) ):
-        #             if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ) > 0 :
-        #                 if self.CSV[CSVname]['[HEADERS]']['CLASS'][i].strip().upper() == 'WELL' :
-        #                     wellsList += [ self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ]
+
         for sss in self.results :
             if self.results[sss][0] == 'WELL' :
                 wellsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() )
@@ -891,7 +885,7 @@ class VIP(_SimResult):
 
         return self.wells
 
-    def extract_Groups(self, pattern=None, reload=False) :
+    def extract_Groups(self, pattern=None, reload=False):
         """
         Will return a list of all the group names in case.
 
@@ -901,10 +895,7 @@ class VIP(_SimResult):
         """
         if len(self.groups) == 0 or reload == True :
             self.groups = tuple( self.extract_Areas(pattern) )
-        if pattern is None :
-            return self.groups
-        else:
-            return tuple( self.extract_Areas(pattern) )
+        return self.groups
 
     def extract_Areas(self, pattern=None) :
         # preparing object attribute
@@ -928,12 +919,7 @@ class VIP(_SimResult):
     def extract_Regions(self, pattern=None) :
         # preparing object attribute
         regionsList = list( self.regions )
-        # if self.CSV == False :
-        #     for sss in self.results :
-        #         if self.results[sss][0] == 'REGION' :
-        #             regionsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() )
-        # else :
-        #     pass
+
         for sss in self.results :
             if self.results[sss][0] == 'REGION' :
                 regionsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() )
@@ -1094,10 +1080,6 @@ class VIP(_SimResult):
         If pattern is None you will get all the keys of summary
         object.
         """
-        # if self.ECLstyle :
-        #     self.keys = self.keysECL
-        # else :
-        #     self.keys = self.keysVIP
 
         if len(self.keys) == 0 or reload == True :
             keys = []
@@ -1198,7 +1180,7 @@ class VIP(_SimResult):
                                 return self.units[ _mainKey(Key) ]
                             else :
                                 return self.extract_Unit(Key)
-            if Key == 'DATES' or Key == 'DATE' :
+            if Key in ['DATES','DATE']:
                     self.units[Key] = 'DATE'
                     return 'DATE'
             if Key in self.keys :

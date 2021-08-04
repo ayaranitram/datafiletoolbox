@@ -421,7 +421,7 @@ class TABLE(_SimResult):
             Key = Key.strip().upper()
             if Key in self.units :
                 return self.units[Key]
-            if Key == 'DATES' or Key == 'DATE' :
+            if Key in ['DATES','DATE'] :
                     self.units[Key] = 'DATE'
                     return 'DATE'
             if Key in self.keys :
