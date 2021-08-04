@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.21.2'
-__release__ = 210713
+__version__ = '0.21.1'
+__release__ = 210804
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -435,155 +435,199 @@ class XLSX(_SimResult):
             self.lastFrame = Frame
             return result
 
-    def extract_Wells(self) :
-        """
-        Will return a list of all the well names in case.
+    # def extract_Wells(self) :
+    #     """
+    #     Will return a list of all the well names in case.
 
-        If the pattern variable is different from None only groups
-        matching the pattern will be returned; the matching is based
-        on fnmatch(), i.e. shell style wildcards.
-        """
-        wellsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'W' and ':' in K ) ]
-        wellsList = list( set( wellsList ) )
-        wellsList.sort()
-        self.wells = tuple( wellsList )
+    #     If the pattern variable is different from None only groups
+    #     matching the pattern will be returned; the matching is based
+    #     on fnmatch(), i.e. shell style wildcards.
+    #     """
+    #     wellsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'W' and ':' in K ) ]
+    #     wellsList = list( set( wellsList ) )
+    #     wellsList.sort()
+    #     self.wells = tuple( wellsList )
 
-        return self.wells
+    #     return self.wells
 
-    def extract_Groups(self, pattern=None, reload=False) :
-        """
-        Will return a list of all the group names in case.
+    # def extract_Groups(self, pattern=None, reload=False) :
+    #     """
+    #     Will return a list of all the group names in case.
 
-        If the pattern variable is different from None only groups
-        matching the pattern will be returned; the matching is based
-        on fnmatch(), i.e. shell style wildcards.
-        """
-        groupsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
-        groupsList = list( set( groupsList ) )
-        groupsList.sort()
-        self.groups = tuple( groupsList )
-        if pattern != None :
-            results = []
-            for group in self.groups :
-                if pattern in group :
-                    results.append(group)
-            return tuple(results)
-        else :
-            return self.groups
+    #     If the pattern variable is different from None only groups
+    #     matching the pattern will be returned; the matching is based
+    #     on fnmatch(), i.e. shell style wildcards.
+    #     """
+    #     groupsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
+    #     groupsList = list( set( groupsList ) )
+    #     groupsList.sort()
+    #     self.groups = tuple( groupsList )
+    #     if pattern != None :
+    #         results = []
+    #         for group in self.groups :
+    #             if pattern in group :
+    #                 results.append(group)
+    #         return tuple(results)
+    #     else :
+    #         return self.groups
 
-    def extract_Regions(self, pattern=None) :
-        # preparing object attribute
-        regionsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
-        regionsList = list( set( regionsList ) )
-        regionsList.sort()
-        self.groups = tuple( regionsList )
-        if pattern != None :
-            results = []
-            for group in self.groups :
-                if pattern in group :
-                    results.append(group)
-            return tuple(results)
-        else :
-            return self.groups
+    # def extract_Regions(self, pattern=None) :
+    #     # preparing object attribute
+    #     regionsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
+    #     regionsList = list( set( regionsList ) )
+    #     regionsList.sort()
+    #     self.groups = tuple( regionsList )
+    #     if pattern != None :
+    #         results = []
+    #         for group in self.groups :
+    #             if pattern in group :
+    #                 results.append(group)
+    #         return tuple(results)
+    #     else :
+    #         return self.groups
 
-    def get_Unit(self, Key='--EveryType--') :
-        """
-        returns a string identifiying the unit of the requested Key
+    # def get_Unit(self, Key='--EveryType--') :
+    #     """
+    #     returns a string identifiying the unit of the requested Key
 
-        Key could be a list containing Key strings, in this case a dictionary
-        with the requested Keys and units will be returned.
-        the Key '--EveryType--' will return a dictionary Keys and units
-        for all the keys in the results file
+    #     Key could be a list containing Key strings, in this case a dictionary
+    #     with the requested Keys and units will be returned.
+    #     the Key '--EveryType--' will return a dictionary Keys and units
+    #     for all the keys in the results file
 
-        """
-        if type(Key) is str and Key.strip() != '--EveryType--' :
-            Key = Key.strip().upper()
-            if Key in self.units :
-                return self.units[Key]
-            if Key == 'DATES' or Key == 'DATE' :
-                    self.units[Key] = 'DATE'
-                    return 'DATE'
-            if Key in self.keys :
-                return None
-            else:
-                UList = None
-                if Key[0] == 'W' :
-                    UList=[]
-                    for W in self.get_Wells() :
-                        if Key+':'+W in self.units :
-                            UList.append(self.units[Key+':'+W])
-                        elif Key in self.keys :
-                            UList.append( self.results.unit(Key+':'+W) )
-                    if len(set(UList)) == 1 :
-                        self.units[Key] = UList[0]
-                        return UList[0]
-                    else :
-                        UList = None
-                elif Key[0] == 'G' :
-                    UList=[]
-                    for G in self.get_Groups() :
-                        if Key+':'+G in self.units :
-                            UList.append(self.units[Key+':'+G])
-                        elif Key in self.keys :
-                            UList.append( self.results.unit(Key+':'+G) )
-                    if len(set(UList)) == 1 :
-                        self.units[Key] = UList[0]
-                        return UList[0]
-                    else :
-                        UList = None
-                elif Key[0] == 'R' :
-                    UList=[]
-                    for R in self.get_Regions() :
-                        if Key+':'+R in self.units :
-                            UList.append(self.units[Key+':'+R])
-                        elif Key in self.keys :
-                            UList.append( self.results.unit(Key+':'+R) )
-                    if len(set(UList)) == 1 :
-                        self.units[Key] = UList[0]
-                        return UList[0]
-                    else :
-                        UList = None
-            if UList is None:
-                if ':' in Key:
-                    if Key.split(':')[0] in self.FramesIndex and Key.split(':')[-1] in self.Frames:
-                        return self.get_Unit(Key.split(':')[0]) 
-                    elif Key.split(':')[-1] in self.FramesIndex and Key.split(':')[0] in self.Frames:
-                        return self.get_Unit(Key.split(':')[-1]) 
-
-        elif type(Key) is str and Key.strip() == '--EveryType--' :
-            Key = []
-            KeyDict = {}
-            for each in self.keys :
-                if ':' in each :
-                    Key.append( _mainKey(each) )
-                    KeyDict[ _mainKey(each) ] = each
-                else :
-                    Key.append(each)
-            Key = list( set (Key) )
-            Key.sort()
-            tempUnits = {}
-            for each in Key :
-                if each in self.units :
-                    tempUnits[each] = self.units[each]
-                elif each in self.keys and ( each != 'DATES' and each != 'DATE' ) :
-                    if self.results.unit(each) is None :
-                        tempUnits[each] = self.results.unit(each)
-                    else :
-                        tempUnits[each] = self.results.unit(each).strip('( )').strip("'").strip('"')
-                elif each in self.keys and ( each == 'DATES' or each == 'DATE' ) :
-                    tempUnits[each] = 'DATE'
-                else :
-                    if KeyDict[each] in self.units :
-                        tempUnits[each] = self.units[KeyDict[each]]
-                    elif KeyDict[each] in self.keys :
-                        if self.results.unit(KeyDict[each]) is None :
-                            tempUnits[each] = self.results.unit(KeyDict[each])
-                        else :
-                            tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
-            return tempUnits
-        elif type(Key) == list or type(Key) == tuple :
-            tempUnits = {}
-            for each in Key :
-                if type(each) == str :
-                    tempUnits[each] = self.get_Unit(each)
-            return tempUnits
+    #     """
+    #     if type(Key) is str and Key.strip() != '--EveryType--' :
+    #         Key = Key.strip().upper()
+    #         if Key in self.units :
+    #             return self.units[Key]
+    #         if Key in ['DATES','DATE'] :
+    #                 self.units[Key] = 'DATE'
+    #                 return 'DATE'
+    #         # if Key in self.keys :
+    #         #     return 'unitless'
+    #         # else:
+    #         #     UList = None
+    #         #     if Key[0] == 'W' :
+    #         #         UList=[]
+    #         #         for W in self.get_Wells() :
+    #         #             if Key+':'+W in self.units :
+    #         #                 UList.append(self.units[Key+':'+W])
+    #         #             elif Key in self.keys :
+    #         #                 UList.append( self.results.unit(Key+':'+W) )
+    #         #         if len(set(UList)) == 1 :
+    #         #             self.units[Key] = UList[0]
+    #         #             return UList[0]
+    #         #         else :
+    #         #             UList = None
+    #         #     elif Key[0] == 'G' :
+    #         #         UList=[]
+    #         #         for G in self.get_Groups() :
+    #         #             if Key+':'+G in self.units :
+    #         #                 UList.append(self.units[Key+':'+G])
+    #         #             elif Key in self.keys :
+    #         #                 UList.append( self.results.unit(Key+':'+G) )
+    #         #         if len(set(UList)) == 1 :
+    #         #             self.units[Key] = UList[0]
+    #         #             return UList[0]
+    #         #         else :
+    #         #             UList = None
+    #         #     elif Key[0] == 'R' :
+    #         #         UList=[]
+    #         #         for R in self.get_Regions() :
+    #         #             if Key+':'+R in self.units :
+    #         #                 UList.append(self.units[Key+':'+R])
+    #         #             elif Key in self.keys :
+    #         #                 UList.append( self.results.unit(Key+':'+R) )
+    #         #         if len(set(UList)) == 1 :
+    #         #             self.units[Key] = UList[0]
+    #         #             return UList[0]
+    #         #         else :
+    #         #             UList = None
+    #         # if UList is None:
+    #         #     if ':' in Key:
+    #         #         if Key.split(':')[0] in self.FramesIndex and Key.split(':')[-1] in self.Frames:
+    #         #             return self.get_Unit(Key.split(':')[0]) 
+    #         #         elif Key.split(':')[-1] in self.FramesIndex and Key.split(':')[0] in self.Frames:
+    #         #             return self.get_Unit(Key.split(':')[-1]) 
+    #         if Key in self.keys :
+    #             if ':' in Key :
+    #                 if Key[0] == 'W' :
+    #                     if Key.split(':')[-1] in self.wells :
+    #                         return self.get_Unit(Key.split(':')[0])
+    #                 if Key[0] == 'G' :
+    #                     if Key.split(':')[-1] in self.groups :
+    #                         return self.get_Unit(Key.split(':')[0])
+    #                 if Key[0] == 'R' :
+    #                     if Key.split(':')[-1] in self.regions :
+    #                         return self.get_Unit(Key.split(':')[0])
+    #             return None
+    #         else:
+    #             if Key[0] == 'W' :
+    #                 UList=[]
+    #                 for W in self.get_Wells() :
+    #                     if Key+':'+W in self.units :
+    #                         UList.append(self.units[Key+':'+W])
+    #                 if len(set(UList)) == 1 :
+    #                     self.units[Key] = UList[0]
+    #                     return UList[0]
+    #                 else :
+    #                     return None
+    #             elif Key[0] == 'G' :
+    #                 UList=[]
+    #                 for G in self.get_Groups() :
+    #                     if Key+':'+G in self.units :
+    #                         UList.append(self.units[Key+':'+G])
+    #                 if len(set(UList)) == 1 :
+    #                     self.units[Key] = UList[0]
+    #                     return UList[0]
+    #                 else :
+    #                     return None
+    #             elif Key[0] == 'R' :
+    #                 UList=[]
+    #                 for R in self.get_Regions() :
+    #                     if Key+':'+R in self.units :
+    #                         UList.append(self.units[Key+':'+R])
+    #                 if len(set(UList)) == 1 :
+    #                     self.units[Key] = UList[0]
+    #                     return UList[0]
+    #                 else :
+    #                     return None
+    #             UList = None
+                
+    #     elif type(Key) is str and Key.strip() == '--EveryType--' :
+    #         Key = []
+    #         KeyDict = {}
+    #         for each in self.keys :
+    #             if ':' in each :
+    #                 Key.append( _mainKey(each) )
+    #                 KeyDict[ _mainKey(each) ] = each
+    #             else :
+    #                 Key.append(each)
+    #         Key = list( set (Key) )
+    #         Key.sort()
+    #         tempUnits = {}
+    #         for each in Key :
+    #             if each in self.units :
+    #                 tempUnits[each] = self.units[each]
+    #             elif each in self.keys and ( each != 'DATES' and each != 'DATE' ) :
+    #                 if self.results.unit(each) is None :
+    #                     tempUnits[each] = self.results.unit(each)
+    #                 else :
+    #                     tempUnits[each] = self.results.unit(each).strip('( )').strip("'").strip('"')
+    #             elif each in self.keys and ( each == 'DATES' or each == 'DATE' ) :
+    #                 tempUnits[each] = 'DATE'
+    #             else :
+    #                 if KeyDict[each] in self.units :
+    #                     tempUnits[each] = self.units[KeyDict[each]]
+    #                 elif KeyDict[each] in self.keys :
+    #                     if self.results.unit(KeyDict[each]) is None :
+    #                         tempUnits[each] = self.results.unit(KeyDict[each])
+    #                     else :
+    #                         tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
+    #         return tempUnits
+    #     elif type(Key) == list or type(Key) == tuple :
+    #         tempUnits = {}
+    #         for each in Key :
+    #             if type(each) == str :
+    #                 tempUnits[each] = self.get_Unit(each)
+    #         return tempUnits

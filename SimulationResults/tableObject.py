@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.20.0'
-__release__ = 210519
+__version__ = '0.20.1'
+__release__ = 210804
 __all__ = ['TABLE']
 
 from .mainObject import SimResult as _SimResult
@@ -276,57 +276,57 @@ class TABLE(_SimResult):
                     keysList.append(key)
             return tuple( keysList )
     
-    def extract_Wells(self) :
-        """
-        Will return a list of all the well names in case.
+    # def extract_Wells(self) :
+    #     """
+    #     Will return a list of all the well names in case.
 
-        If the pattern variable is different from None only groups
-        matching the pattern will be returned; the matching is based
-        on fnmatch(), i.e. shell style wildcards.
-        """
-        wellsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'W' and ':' in K ) ]
-        wellsList = list( set( wellsList ) )
-        wellsList.sort()
-        self.wells = tuple( wellsList )
+    #     If the pattern variable is different from None only groups
+    #     matching the pattern will be returned; the matching is based
+    #     on fnmatch(), i.e. shell style wildcards.
+    #     """
+    #     wellsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'W' and ':' in K ) ]
+    #     wellsList = list( set( wellsList ) )
+    #     wellsList.sort()
+    #     self.wells = tuple( wellsList )
 
-        return self.wells
+    #     return self.wells
 
-    def extract_Groups(self, pattern=None, reload=False) :
-        """
-        Will return a list of all the group names in case.
+    # def extract_Groups(self, pattern=None, reload=False) :
+    #     """
+    #     Will return a list of all the group names in case.
 
-        If the pattern variable is different from None only groups
-        matching the pattern will be returned; the matching is based
-        on fnmatch(), i.e. shell style wildcards.
-        """
-        groupsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
-        groupsList = list( set( groupsList ) )
-        groupsList.sort()
-        self.groups = tuple( groupsList )
-        if pattern != None :
-            results = []
-            for group in self.groups :
-                if pattern in group :
-                    results.append(group)
-            return tuple(results)
-        else :
-            return self.groups
+    #     If the pattern variable is different from None only groups
+    #     matching the pattern will be returned; the matching is based
+    #     on fnmatch(), i.e. shell style wildcards.
+    #     """
+    #     groupsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
+    #     groupsList = list( set( groupsList ) )
+    #     groupsList.sort()
+    #     self.groups = tuple( groupsList )
+    #     if pattern != None :
+    #         results = []
+    #         for group in self.groups :
+    #             if pattern in group :
+    #                 results.append(group)
+    #         return tuple(results)
+    #     else :
+    #         return self.groups
 
-    def extract_Regions(self, pattern=None) :
-        # preparing object attribute
-        regionsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
-        regionsList = list( set( regionsList ) )
-        regionsList.sort()
-        self.groups = tuple( regionsList )
-        if pattern != None :
-            results = []
-            for group in self.groups :
-                if pattern in group :
-                    results.append(group)
-            return tuple(results)
-        else :
-            return self.groups
-
+    # def extract_Regions(self, pattern=None) :
+    #     # preparing object attribute
+    #     regionsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
+    #     regionsList = list( set( regionsList ) )
+    #     regionsList.sort()
+    #     self.groups = tuple( regionsList )
+    #     if pattern != None :
+    #         results = []
+    #         for group in self.groups :
+    #             if pattern in group :
+    #                 results.append(group)
+    #         return tuple(results)
+    #     else :
+    #         return self.groups
+    
     def extractDATE(self):
         dates = []
         for frame in self.Frames:
