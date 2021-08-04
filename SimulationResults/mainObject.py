@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.1'
-__release__ = 210729
+__version__ = '0.60.2'
+__release__ = 210804
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -1390,6 +1390,90 @@ class SimResult(object):
                         for M in MM :
                             if convertibleUnits(self.get_Unit(Key), self.plotUnits[M] ) :
                                 return self.plotUnits[M]
+
+    def get_Unit(self, Key='--EveryType--') :
+        """
+        returns a string identifiying the unit of the requested Key
+
+        Key could be a list containing Key strings, in this case a dictionary
+        with the requested Keys and units will be returned.
+        the Key '--EveryType--' will return a dictionary Keys and units
+        for all the keys in the results file
+
+        """
+        if type(Key) is str and Key.strip() != '--EveryType--' :
+            Key = Key.strip().upper()
+            if Key in self.units :
+                return self.units[Key]
+            if Key in ['DATES','DATE'] :
+                    self.units[Key] = 'DATE'
+                    return 'DATE'
+            if Key in self.keys :
+                if ':' in Key :
+                    if Key[0] == 'W' :
+                        if Key.split(':')[-1] in self.wells :
+                            return self.get_Unit(Key.split(':')[0])
+                    if Key[0] == 'G' :
+                        if Key.split(':')[-1] in self.groups :
+                            return self.get_Unit(Key.split(':')[0])
+                    if Key[0] == 'R' :
+                        if Key.split(':')[-1] in self.regions :
+                            return self.get_Unit(Key.split(':')[0])
+                return None
+            else:
+                if Key[0] == 'W' :
+                    UList=[]
+                    for W in self.get_Wells() :
+                        if Key+':'+W in self.units :
+                            UList.append(self.units[Key+':'+W])
+                    if len(set(UList)) == 1 :
+                        self.units[Key] = UList[0]
+                        return UList[0]
+                    else :
+                        return None
+                elif Key[0] == 'G' :
+                    UList=[]
+                    for G in self.get_Groups() :
+                        if Key+':'+G in self.units :
+                            UList.append(self.units[Key+':'+G])
+                    if len(set(UList)) == 1 :
+                        self.units[Key] = UList[0]
+                        return UList[0]
+                    else :
+                        return None
+                elif Key[0] == 'R' :
+                    UList=[]
+                    for R in self.get_Regions() :
+                        if Key+':'+R in self.units :
+                            UList.append(self.units[Key+':'+R])
+                    if len(set(UList)) == 1 :
+                        self.units[Key] = UList[0]
+                        return UList[0]
+                    else :
+                        return None
+                UList = None
+
+        elif type(Key) is str and Key.strip() == '--EveryType--' :
+            Key = []
+            KeyDict = {}
+            for each in self.keys :
+                if ':' in each :
+                    Key.append( _mainKey(each) )
+                    KeyDict[ _mainKey(each) ] = each
+                else :
+                    Key.append(each)
+            Key = list( set (Key) )
+            Key.sort()
+            tempUnits = {}
+            for each in Key :
+                tempUnits[each] = self.get_Unit(each)
+            return tempUnits
+        elif type(Key) == list or type(Key) == tuple :
+            tempUnits = {}
+            for each in Key :
+                if type(each) == str :
+                    tempUnits[each] = self.get_Unit(each)
+            return tempUnits
 
     def get_Units(self, Key='--EveryType--') :
         if type(Key) is str :
@@ -3255,13 +3339,11 @@ class SimResult(object):
                     props.append(each.strip() )
             return tuple(set(props))
 
-
     def get_AttributesDict(self, reload=False) :
         reload = bool(reload)
         if reload is True :
             self.get_Attributes(None, True)
         return self.attributes
-
 
     def get_KeysFromAttribute(self, Attribute) :
         """
@@ -3273,7 +3355,6 @@ class SimResult(object):
             return self.attributes[ Attribute ]
         return []
 
-
     def add_Key(self, Key) :
         if type(Key) is str :
             Key = Key.strip()
@@ -3281,6 +3362,32 @@ class SimResult(object):
         else :
             raise TypeError('Key must be string')
 
+    def extract_Wells(self):
+        """
+        Will return a list of all the well names in the case.
+        """
+        wellsList = [ K.split(self.nameSeparator)[-1].strip() for K in self.keys if ( K[0] == 'W' and self.nameSeparator in K ) ]
+        wellsList = sorted(list(set(wellsList)))
+        self.wells = tuple( wellsList )
+        return self.wells
+
+    def extract_Groups(self) :
+        """
+        Will return a list of all the group names in the case.
+        """
+        groupsList = [ K.split(self.nameSeparator)[-1].strip() for K in self.keys if ( K[0] == 'G' and self.nameSeparator in K ) ]
+        groupsList = sorted(list(set(groupsList)))
+        self.groups = tuple( groupsList )
+        return self.groups
+
+    def extract_Regions(self) :
+        """
+        Will return a list of all the regions names or numbers in the case.
+        """
+        # preparing object attribute
+        regionsList = [ K.split(self.nameSeparator)[-1].strip() for K in self.keys if ( K[0] == 'G' and self.nameSeparator in K ) ]
+        regionsList = sorted(list(set(regionsList)))
+        return tuple( regionsList )
 
     def get_Regions(self, pattern=None, reload=False):
         """
@@ -3301,11 +3408,11 @@ class SimResult(object):
             raise TypeError('pattern argument must be a string.')
 
         if len(self.regions) == 0 or reload is True :
-            self.regions = tuple(self.extract_Regions() )
+            self.regions = tuple(self.extract_Regions())
         if pattern is None :
             return self.regions
         else:
-            return tuple(fnmatch.filter(self.regions, pattern ) )# return self.extract_Regions(pattern)
+            return tuple(fnmatch.filter(self.regions, pattern))
 
 
     def get_Wells(self, pattern=None, reload=False) :
@@ -3328,7 +3435,7 @@ class SimResult(object):
             raise TypeError('pattern argument must be a string.')
 
         if len(self.wells) == 0 or reload is True :
-            self.wells = self.extract_Wells()
+            self.extract_Wells()
 
         if pattern is None :
             return tuple(self.wells)
@@ -3356,7 +3463,7 @@ class SimResult(object):
             raise TypeError('pattern argument must be a string.')
 
         if len(self.groups) == 0 or reload is True :
-            self.groups = self.extract_Groups()
+            self.extract_Groups()
 
         if pattern is None :
             return self.groups
