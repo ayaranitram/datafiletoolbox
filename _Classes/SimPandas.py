@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.66.6'
-__release__ = 210729
+__version__ = '0.67.6'
+__release__ = 210805
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -5646,7 +5646,144 @@ Copy of input object, shifted.
                 else:
                     raise TypeError("others must be SimDataFrame, DataFrame, SimSeries or Series")
             return kwargs['ax']
-                    
+    
+    def to_schedule(self,units=None,ShutStop='STOP'):
+        """
+        export a eclipse style schedule file.
+
+        Parameters
+        ----------
+        units : str or dict, optional
+            a string 'FIELD', 'METRIC', LAB or PVT-M will convert the data to the corresponding eclipse simulator units system.
+            a dictionary should contain desired units for all the columns to be converted. The default is None.
+
+        Returns
+        -------
+        None.
+        """
+        
+        eclipseUnits = {'FIELD':{'OPR':'stb/day',  # Oil rate
+                                 'WPR':'stb/day',  # Water rate
+                                 'GPR':'Mscf/day',  # Gas rate
+                                 'LPR':'stb/day',  # Liquid rate
+                                 # 'RFR':'rb/day',  # Reservoir fluid volume rate
+                                 'BHP':'psia',  # BHP
+                                 'THP':'psia',  # THP
+                                 # 'WGPR': 'Mscf/day',  # Wet gas production rate
+                                 # 'TMR':'lb-M/day',  # Total molar rate 
+                                 # 'SPR': 'stb/day',  # Steam production rate
+                                 },
+                        'METRIC':{'OPR':'sm3/day',  # Oil rate
+                                 'WPR':'sm3/day',  # Water rate
+                                 'GPR':'sm3/day',  # Gas rate
+                                 'LPR':'sm3/day',  # Liquid rate
+                                 # 'RFR':'rm3/day',  # Reservoir fluid volume rate
+                                 'BHP':'barsa',  # BHP
+                                 'THP':'barsa',  # THP
+                                 # 'WGPR': 'sm3/day',  # Wet gas production rate
+                                 # 'TMR':'kg-M/day',  # Total molar rate 
+                                 # 'SPR': 'sm3/day',  # Steam production rate
+                                 },
+                        'LAB':{'OPR':'scc/hr',  # Oil rate
+                                 'WPR':'scc/hr',  # Water rate
+                                 'GPR':'scc/hr',  # Gas rate
+                                 'LPR':'scc/hr',  # Liquid rate
+                                 # 'RFR':'rcc/hr',  # Reservoir fluid volume rate
+                                 'BHP':'atma',  # BHP
+                                 'THP':'atma',  # THP
+                                 # 'WGPR': 'Mscf/day',  # Wet gas production rate
+                                 # 'TMR':'lb-M/day',  # Total molar rate 
+                                 # 'SPR': 'stb/day',  # Steam production rate
+                                 },
+                        'PVT-M':{'OPR':'sm3/day',  # Oil rate
+                                 'WPR':'sm3/day',  # Water rate
+                                 'GPR':'sm3/day',  # Gas rate
+                                 'LPR':'sm3/day',  # Liquid rate
+                                 # 'RFR':'rm3/day',  # Reservoir fluid volume rate
+                                 'BHP':'atma',  # BHP
+                                 'THP':'atma',  # THP
+                                 # 'WGPR': 'Mscf/day',  # Wet gas production rate
+                                 # 'TMR':'lb-M/day',  # Total molar rate 
+                                 # 'SPR': 'stb/day',  # Steam production rate
+                                 }}
+    
+        # create dictionary for keyword parameters
+        for sys in eclipseUnits:
+            for each in eclipseUnits[sys]:
+                for X in 'FGW':
+                    for H in ' H':
+                        eclipseUnits[sys][X+each+H.strip()] = eclipseUnits[sys][each]
+        
+        if units in eclipseUnits:
+            units = eclipseUnits[units]
+        
+        data = self.to(units).melt()
+        
+        indexName = data.index.name
+        itemName = data.columns[2]
+        
+        if indexName is not None and itemName is not None and len(indexName)>0 and len(itemName)>0:
+            data = data.reset_index().sort_values(by=[indexName,itemName,'attribute'],axis=0,ascending=True).set_index(indexName)
+        else:
+            data = data.melt().sort_index(axis=0,ascending=True)
+        
+        out = {'WCONHIST':DataFrame(index=data[itemName].unique(), columns=range(2,13)),
+               'WCONINJH':DataFrame(index=data[itemName].unique(), columns=range(2,13)),
+               'WCONPROD':DataFrame(index=data[itemName].unique(), columns=range(2,21)),
+               'WCONINJE':DataFrame(index=data[itemName].unique(), columns=range(2,16))}
+        curtime = ''
+        lastime = ''
+        i = 0
+        
+        while i in range(len(data)):
+            curtime = data.iloc[i].name
+            
+            if data.iloc[i,'attribute'] == 'WOPRH':
+                out['WCONHIST'].loc[itemName,4] = data.iloc[i,'value']
+            elif data.iloc[i,'attribute'] == 'WWPRH':
+                out['WCONHIST'].loc[itemName,5] = data.iloc[i,'value']
+            elif data.iloc[i,'attribute'] == 'WGPRH':
+                out['WCONHIST'].loc[itemName,6] = data.iloc[i,'value']
+            elif data.iloc[i,'attribute'] == 'WVFPH':
+                out['WCONHIST'].loc[itemName,7] = data.iloc[i,'value']
+                out['WCONINJH'].loc[itemName,7] = data.iloc[i,'value']
+            elif data.iloc[i,'attribute'] == 'WALQH':
+                out['WCONHIST'].loc[itemName,8] = data.iloc[i,'value']   
+            elif data.iloc[i,'attribute'] == 'WTHPH':
+                out['WCONHIST'].loc[itemName,9] = data.iloc[i,'value']  
+                out['WCONINJH'].loc[itemName,6] = data.iloc[i,'value']             
+            elif data.iloc[i,'attribute'] == 'WBHPH':
+                out['WCONHIST'].loc[itemName,10] = data.iloc[i,'value']  
+                out['WCONINJH'].loc[itemName,5] = data.iloc[i,'value']   
+            elif data.iloc[i,'attribute'] == 'WWGPRH':
+                out['WCONHIST'].loc[itemName,11] = data.iloc[i,'value']
+            elif data.iloc[i,'attribute'] == 'WNPRH':
+                out['WCONHIST'].loc[itemName,12] = data.iloc[i,'value']
+            elif data.iloc[i,'attribute'] == 'WOIRH':
+                out['WCONINJH'].loc[itemName,4] = data.iloc[i,'value']
+                out['WCONINJH'].loc[itemName,2] = 'OIL'
+            elif data.iloc[i,'attribute'] == 'WWIRH':
+                out['WCONINJH'].loc[itemName,4] = data.iloc[i,'value']
+                out['WCONINJH'].loc[itemName,2] = 'WATER'
+            elif data.iloc[i,'attribute'] == 'WGIRH':
+                out['WCONINJH'].loc[itemName,4] = data.iloc[i,'value']
+                out['WCONINJH'].loc[itemName,2] = 'GAS'
+            elif data.iloc[i,'attribute'] == 'WCTRL':
+                out['WCONHIST'].loc[itemName,3] = data.iloc[i,'value']  
+                out['WCONINJH'].loc[itemName,12] = data.iloc[i,'value']    
+                
+                
+            elif data.iloc[i,'attribute'].endswith('IRH'):
+                keyword = 'WCONINJH'
+            elif data.iloc[i,'attribute'].endswith('PR'):
+                keyword = 'WCONPROD'
+            elif data.iloc[i,'attribute'].endswith('IR'):
+                keyword = 'WCONINJE'
+    
+    
+        out['WCONHIST'].loc[itemName,2] = 'OPEN' if out['WCONHIST'].loc[itemName,4:6].sum() > 0 else ShutStop
+        out['WCONINJH'].loc[itemName,3] = 'OPEN' if out['WCONINJH'].loc[itemName,4] > 0 else ShutStop
+
 
 def daysInYear(year):
     """
