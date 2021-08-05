@@ -6,8 +6,8 @@ Created on Sat Dec  7 21:48:37 2019
 @author: martin
 """
 
-__version__ = '0.5.2'
-__release__ = 210707
+__version__ = '0.5.3'
+__release__ = 210805
 
 import numpy
 # import pandas
@@ -173,7 +173,7 @@ class unit(object) :
     dictionary['pressure_NAMES_UPPER_REVERSE_SPACES'] = {
                                                   'absolute psi' : ('psia', 'lb/in2', 'absolute pound/square inch', 'psi absolute'),
                                                   'absolute bar' : ('bara', 'barsa', 'abs bar', 'bar absolute'),
-                                                  'atmosphere' : ('atm', ),
+                                                  'atmosphere' : ('atm','atma' ),
                                                   'Pascal' : ('Pa', ),
                                                   'kPa' : ('KPa', 'kilopascal'),
                                                   'hPa' : ('hectopascal', ),
