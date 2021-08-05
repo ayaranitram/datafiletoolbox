@@ -5205,7 +5205,7 @@ class SimResult(object):
                             operandB.replace(0, np.nan, inplace=True) # ignore zeros in the data
 
                         if CalculationTuple[i] in ['.sum', '.sum0'] :
-                            Stack.append(operandB.sum(axis=1) )
+                            Stack.append(operandB.sum(axis=1))
                         elif CalculationTuple[i] in ['.avg', '.mean', '.avg0', '.mean0'] :
                             Stack.append(operandB.mean(axis=1))
                         elif CalculationTuple[i] in ['.median', '.median0'] :
