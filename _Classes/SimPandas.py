@@ -501,6 +501,95 @@ class SimSeries(Series) :
                 objs += [each]
         return tuple(set(objs))
     
+    def to_excel(self, excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None, header=True, units=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None, sort=None) :
+        """
+        Wrapper of .to_excel method from Pandas.
+        On top of Pandas method this method is able to split the data into different
+        sheets based on the column names. See paramenters `split_by´ and `sheet_name´.
+
+        Write {klass} to an Excel sheet.
+        To write a single {klass} to an Excel .xlsx file it is only necessary to
+        specify a target file name. To write to multiple sheets it is necessary to
+        create an `ExcelWriter` object with a target file name, and specify a sheet
+        in the file to write to.
+        Multiple sheets may be written to by specifying unique `sheet_name`.
+        With all data written to the file it is necessary to save the changes.
+        Note that creating an `ExcelWriter` object with a file name that already
+        exists will result in the contents of the existing file being erased.
+
+        Parameters
+        ----------
+        excel_writer : str or ExcelWriter object from Pandas.
+            File path or existing ExcelWriter.
+        split_by: None, positive or negative integer or str 'left', 'right' or 'first'. Default is None
+            If is string 'left' or 'right', creates a sheet grouping the columns by
+            the corresponding left:right part of the column name.
+            If is string 'first', creates a sheet grouping the columns by
+            the first character of the column name.
+            If None, all the columns will go into the same sheet.
+            if integer i > 0, creates a sheet grouping the columns by the 'i' firsts
+            characters of the column name indicated by the integer.
+            if integer i < 0, creates a sheet grouping the columns by the 'i' last
+            the number characters of the column name indicated by the integer.
+        sheet_name : None or str, default None
+            Name of sheet which will contain DataFrame.
+            If None:
+                the `left` or `right` part of the name will be used if is unique,
+                or 'FIELD', 'WELLS', 'GROUPS' or 'REGIONS' if all the column names
+                start with 'F', 'W', 'G' or 'R'.
+            else 'Sheet1' will be used.
+        na_rep : str, default ''
+            Missing data representation.
+        float_format : str, optional
+            Format string for floating point numbers. For example
+            ``float_format="%.2f"`` will format 0.1234 to 0.12.
+        columns : sequence or list of str, optional
+            Columns to write.
+        header : bool or list of str, default True
+            Write out the column names. If a list of string is given it is
+            assumed to be aliases for the column names.
+        units : bool, default True
+            Write the units of the column under the header name.
+        index : bool, default True
+            Write row names(index).
+        index_label : str or sequence, optional
+            Column label for index column(s) if desired. If not specified, and
+            `header` and `index` are True, then the index names are used. A
+            sequence should be given if the DataFrame uses MultiIndex.
+        startrow : int, default 0
+            Upper left cell row to dump data frame.
+        startcol : int, default 0
+            Upper left cell column to dump data frame.
+        engine : str, optional
+            Write engine to use, 'openpyxl' or 'xlsxwriter'. You can also set this
+            via the options ``io.excel.xlsx.writer``, ``io.excel.xls.writer``, and
+            ``io.excel.xlsm.writer``.
+        merge_cells : bool, default True
+            Write MultiIndex and Hierarchical Rows as merged cells.
+        encoding : str, optional
+            Encoding of the resulting excel file. Only necessary for xlwt,
+            other writers support unicode natively.
+        inf_rep : str, default 'inf'
+            Representation for infinity(there is no native representation for
+            infinity in Excel).
+        verbose : bool, default True
+            Display more information in the error logs.
+        freeze_panes : tuple of int(length 2), optional
+            Specifies the one-based bottommost row and rightmost column that
+            is to be frozen.
+        sort: None, bool or int
+            if None, default behaviour depends on split_by parameter:
+                if split_by is None will keep the current order of the columns in the SimDataFrame.
+                if split_by is not None will sort alphabetically ascending the names of the columns.
+            if True (bool) will sort the columns alphabetically ascending.
+            if False (bool) will maintain the current order.
+            if int > 0 will sort the columns alphabetically ascending.
+            if int < 0 will sort the columns alphabetically descending.
+            if int == 0 will keep the current order of the columns.
+            
+        """
+        return self.to_SimDataFrame().to_excel(excel_writer, split_by=split_by, sheet_name=sheet_name, na_rep=na_rep, float_format=float_format, columns=columns, header=header, units=units, index=index, index_label=index_label, startrow=startrow, startcol=startcol, engine=engine, merge_cells=merge_cells, encoding=encoding, inf_rep=inf_rep, verbose=verbose, freeze_panes=freeze_panes, sort=sort)
+    
     def renameRight(self, inplace=False) :
         if self.nameSeparator in [None, '', False] :
             return self  # raise ValueError("name separator must not be None")
