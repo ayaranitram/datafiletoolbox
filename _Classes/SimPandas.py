@@ -5731,58 +5731,108 @@ Copy of input object, shifted.
                'WCONINJH':DataFrame(index=data[itemName].unique(), columns=range(2,13)),
                'WCONPROD':DataFrame(index=data[itemName].unique(), columns=range(2,21)),
                'WCONINJE':DataFrame(index=data[itemName].unique(), columns=range(2,16))}
+        
+        if type(ControlMode) is str:
+            ControlMode = { item:ControlMode for item in data[itemName].unique() }
+        
+        itemCol = 2
+        valueCol = 0
+        attCol = 1
+        
         curtime = ''
-        lastime = ''
+        lastime = None
         i = 0
         
-        while i in range(len(data)):
+        GORcriteria = 10
+        
+        outstr = []
+        
+        for i in range(len(data)):
             curtime = data.iloc[i].name
+            if i == 0:
+                lastime = curtime
             
-            if data.iloc[i,'attribute'] == 'WOPRH':
-                out['WCONHIST'].loc[itemName,4] = data.iloc[i,'value']
-            elif data.iloc[i,'attribute'] == 'WWPRH':
-                out['WCONHIST'].loc[itemName,5] = data.iloc[i,'value']
-            elif data.iloc[i,'attribute'] == 'WGPRH':
-                out['WCONHIST'].loc[itemName,6] = data.iloc[i,'value']
-            elif data.iloc[i,'attribute'] == 'WVFPH':
-                out['WCONHIST'].loc[itemName,7] = data.iloc[i,'value']
-                out['WCONINJH'].loc[itemName,7] = data.iloc[i,'value']
-            elif data.iloc[i,'attribute'] == 'WALQH':
-                out['WCONHIST'].loc[itemName,8] = data.iloc[i,'value']   
-            elif data.iloc[i,'attribute'] == 'WTHPH':
-                out['WCONHIST'].loc[itemName,9] = data.iloc[i,'value']  
-                out['WCONINJH'].loc[itemName,6] = data.iloc[i,'value']             
-            elif data.iloc[i,'attribute'] == 'WBHPH':
-                out['WCONHIST'].loc[itemName,10] = data.iloc[i,'value']  
-                out['WCONINJH'].loc[itemName,5] = data.iloc[i,'value']   
-            elif data.iloc[i,'attribute'] == 'WWGPRH':
-                out['WCONHIST'].loc[itemName,11] = data.iloc[i,'value']
-            elif data.iloc[i,'attribute'] == 'WNPRH':
-                out['WCONHIST'].loc[itemName,12] = data.iloc[i,'value']
-            elif data.iloc[i,'attribute'] == 'WOIRH':
-                out['WCONINJH'].loc[itemName,4] = data.iloc[i,'value']
-                out['WCONINJH'].loc[itemName,2] = 'OIL'
-            elif data.iloc[i,'attribute'] == 'WWIRH':
-                out['WCONINJH'].loc[itemName,4] = data.iloc[i,'value']
-                out['WCONINJH'].loc[itemName,2] = 'WATER'
-            elif data.iloc[i,'attribute'] == 'WGIRH':
-                out['WCONINJH'].loc[itemName,4] = data.iloc[i,'value']
-                out['WCONINJH'].loc[itemName,2] = 'GAS'
-            elif data.iloc[i,'attribute'] == 'WCTRL':
-                out['WCONHIST'].loc[itemName,3] = data.iloc[i,'value']  
-                out['WCONINJH'].loc[itemName,12] = data.iloc[i,'value']    
+            if lastime != curtime or i == len(data)-1:
+                # prepare keywords to write
+                out['WCONHIST']['keyword'] = 'WCONHIST'
+                out['WCONINJH']['keyword'] = 'WCONINJH'
+                keywords = out['WCONHIST'].append(out['WCONINJH'])
+                keywords.dropna(axis=0, how='all',subset=range(2,13),inplace=True)
                 
+                prodh = keywords['keyword'] == 'WCONHIST'
+                keywords.loc[prodh,2] = [ 'OPEN' if each else ShutStop for each in (keywords.loc[prodh,4:6].sum(axis=1) > 0) ]
                 
-            elif data.iloc[i,'attribute'].endswith('IRH'):
-                keyword = 'WCONINJH'
-            elif data.iloc[i,'attribute'].endswith('PR'):
-                keyword = 'WCONPROD'
-            elif data.iloc[i,'attribute'].endswith('IR'):
-                keyword = 'WCONINJE'
-    
-    
-        out['WCONHIST'].loc[itemName,2] = 'OPEN' if out['WCONHIST'].loc[itemName,4:6].sum() > 0 else ShutStop
-        out['WCONINJH'].loc[itemName,3] = 'OPEN' if out['WCONINJH'].loc[itemName,4] > 0 else ShutStop
+                injeh = keywords['keyword'] == 'WCONINJH'
+                keywords.loc[injeh,2] = [ 'OPEN' if each else ShutStop for each in (keywords.loc[injeh,4] > 0) ]
+                
+                if ControlMode is None:
+                    keywords.loc[prodh,3] = keywords.loc[prodh,4:6].isna().values.astype(int) * np.array(['ORAT','WRAT','GRAT']).reshape(1,-1)
+                else:
+                    keywords.loc[:,3] = [ ControlMode[item] for item in keywords.loc[:].index ]
+                
+                # write keywords
+                for kw in keywords['keyword'].unique():
+                    outstr.append(kw)
+                    for i in range(len(keywords[keywords['keyword'] == kw])):
+                        line = ' ' + ' '.join(map(str,keywords.reset_index().iloc[0].fillna('1*').drop('keyword').to_list())) + ' /'
+                        outstr.append(line)
+                    outstr.append('/')
+                    outstr.append('\n')
+                
+                # write lastime
+                if type(lastime) in (int,float):
+                    outstr.append('TSTEP')
+                    outstr.append(' ' + str(lastime) + ' /')
+                    outstr.append('/')
+                else:    
+                    outstr.append('DATES')
+                    outstr.append(' ' + dt.datetime(lastime).strftime("%d %d %Y %H:%M:%S") + ' /')
+                    outstr.append('/')
+                outstr.append('\n')
+                
+                # reset out (keywords) dictionary
+                out = {'WCONHIST':DataFrame(index=data[itemName].unique(), columns=range(2,13)),
+                       'WCONINJH':DataFrame(index=data[itemName].unique(), columns=range(2,13)),
+                       'WCONPROD':DataFrame(index=data[itemName].unique(), columns=range(2,21)),
+                       'WCONINJE':DataFrame(index=data[itemName].unique(), columns=range(2,16))}
+            
+            # read the input table and put the values in the corresponding parameter of the keywords
+            if data.iloc[i,attCol] == 'WOPRH':
+                out['WCONHIST'].loc[data.iloc[i,itemCol],4] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WWPRH':
+                out['WCONHIST'].loc[data.iloc[i,itemCol],5] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WGPRH':
+                out['WCONHIST'].loc[data.iloc[i,itemCol],6] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WVFPH':
+                out['WCONHIST'].loc[data.iloc[i,itemCol],7] = data.iloc[i,valueCol]
+                out['WCONINJH'].loc[data.iloc[i,itemCol],7] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WALQH':
+                out['WCONHIST'].loc[data.iloc[i,itemCol],8] = data.iloc[i,valueCol]   
+            elif data.iloc[i,attCol] == 'WTHPH':
+                out['WCONHIST'].loc[data.iloc[i,itemCol],9] = data.iloc[i,valueCol]  
+                out['WCONINJH'].loc[data.iloc[i,itemCol],6] = data.iloc[i,valueCol]             
+            elif data.iloc[i,attCol] == 'WBHPH':
+                out['WCONHIST'].loc[data.iloc[i,itemCol],10] = data.iloc[i,valueCol]  
+                out['WCONINJH'].loc[data.iloc[i,itemCol],5] = data.iloc[i,valueCol]   
+            elif data.iloc[i,attCol] == 'WWGPRH':
+                out['WCONHIST'].loc[data.iloc[i,itemCol],11] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WNPRH':
+                out['WCONHIST'].loc[data.iloc[i,itemCol],12] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WOIRH':
+                out['WCONINJH'].loc[data.iloc[i,itemCol],4] = data.iloc[i,valueCol]
+                out['WCONINJH'].loc[data.iloc[i,itemCol],2] = 'OIL'
+            elif data.iloc[i,attCol] == 'WWIRH':
+                out['WCONINJH'].loc[data.iloc[i,itemCol],4] = data.iloc[i,valueCol]
+                out['WCONINJH'].loc[data.iloc[i,itemCol],2] = 'WATER'
+            elif data.iloc[i,attCol] == 'WGIRH':
+                out['WCONINJH'].loc[data.iloc[i,itemCol],4] = data.iloc[i,valueCol]
+                out['WCONINJH'].loc[data.iloc[i,itemCol],2] = 'GAS'
+            elif data.iloc[i,attCol] == 'WCTRL':
+                out['WCONHIST'].loc[data.iloc[i,itemCol],3] = data.iloc[i,valueCol]  
+                out['WCONINJH'].loc[data.iloc[i,itemCol],12] = data.iloc[i,valueCol]    
+                  
+            lastime = curtime
+
 
 
 def daysInYear(year):
