@@ -30,7 +30,7 @@ def savePlot(figure, FileName=''):
     figure.savefig(FileName)
 
 
-def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[], graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={}, linewidth=[], linestyle=[], markers=[], markersize=[], DoNotRepeatColors=True, ColorBySimulation=None, ColorBySeries=None, minlinewidth=0.1, minmarkersize=0.5, Xgrid=0, Ygrid=0, fig=None, num=None, show=True, hline=None, figsize=(6, 4), dpi=150, singleYaxis=False, legend=True, xlim=(None,None), ylim=(None,None), tight_layout=True, **kwargs) :
+def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[], graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={}, linewidth=[], linestyle=[], markers=[], markersize=[], DoNotRepeatColors=True, ColorBySimulation=None, ColorBySeries=None, DropZeros=False, minlinewidth=0.1, minmarkersize=0.5, Xgrid=0, Ygrid=0, fig=None, num=None, show=True, hline=None, figsize=(6, 4), dpi=150, singleYaxis=False, legend=True, xlim=(None,None), ylim=(None,None), tight_layout=True, **kwargs) :
     """
     uses matplot lib to create graphs of the selected vectors
     for the selected SimResult objects.
@@ -761,6 +761,9 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
                             print('<Plot> the Y key ' + Y_Keys[y] + ' from simulation ' + SimResultObjects[s].get_Name() + ' is not numpy array ')
 
                 if type(Y) == np.ndarray :
+                    if DropZeros and Y.min() == 0 and Y.max() == 0:
+                        print('<Plot> skipping the Y key ' + Y_Keys[y] + ' from simulation ' + SimResultObjects[s].get_Name() + ' because it is all zeroes ')
+                        continue
                     if len(Y) != len(X) :
                         print('<Plot> the Y vector ' + str( Y_Keys[y]) + ' from the model ' + str( SimResultObjects[s] ) + ' contains less than tha its X vector ' + str( X_Key[0] ) + '\n       len(Y):' + str(len(Y)) + ' != len(X):' + str(len(X)))
                     else :
