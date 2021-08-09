@@ -5647,22 +5647,23 @@ Copy of input object, shifted.
                     raise TypeError("others must be SimDataFrame, DataFrame, SimSeries or Series")
             return kwargs['ax']
     
-    def to_schedule(self,units=None,ShutStop='STOP'):
+    def to_schedule(self,units='FIELD',ControlMode=None,ShutStop='STOP'):
         """
         export a eclipse style schedule file.
-
+    
         Parameters
         ----------
         units : str or dict, optional
             a string 'FIELD', 'METRIC', LAB or PVT-M will convert the data to the corresponding eclipse simulator units system.
             a dictionary should contain desired units for all the columns to be converted. The default is None.
-
+    
         Returns
         -------
         None.
         """
+        from .._common.stringformat import date as strDate
         
-        eclipseUnits = {'FIELD':{'OPR':'stb/day',  # Oil rate
+        eclipseUnits0 = {'FIELD':{'OPR':'stb/day',  # Oil rate
                                  'WPR':'stb/day',  # Water rate
                                  'GPR':'Mscf/day',  # Gas rate
                                  'LPR':'stb/day',  # Liquid rate
@@ -5707,15 +5708,15 @@ Copy of input object, shifted.
                                  # 'SPR': 'stb/day',  # Steam production rate
                                  }}
     
-        # create dictionary for keyword parameters
-        for sys in eclipseUnits:
-            for each in eclipseUnits[sys]:
+        # create dictionary for keyword parameters        
+        if units in eclipseUnits0:
+            eclipseUnits = {}
+            for each in eclipseUnits0[units]:
                 for X in 'FGW':
                     for H in ' H':
-                        eclipseUnits[sys][X+each+H.strip()] = eclipseUnits[sys][each]
-        
-        if units in eclipseUnits:
-            units = eclipseUnits[units]
+                        eclipseUnits[X+each+H.strip()] = eclipseUnits0[units][each]
+            del eclipseUnits0
+            units = eclipseUnits
         
         data = self.to(units).melt()
         
