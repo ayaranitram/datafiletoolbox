@@ -5,8 +5,8 @@ Created on Mon Mar  8 08:56:44 2021
 @author: martin
 """
 
-__version__ = '0.12.1'
-__release__ = 210725
+__version__ = '0.12.2'
+__release__ = 210823
 __all__ = ['EclSumLoader']
 
 from .._Classes.Errors import PrototypeError, MissingDependence
@@ -38,6 +38,13 @@ class _EclSumLoader(object):
                     os.environ['PYTHONPATH'] = eclPath + ';' + os.environ['PYTHONPATH']
                 else :
                     os.environ['PYTHONPATH'] = eclPath
+                    
+                if 'JUPYTER_PATH' in os.environ:
+                    JupyterPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib' + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
+                    os.environ['JUPYTER_PATH'] = JupyterPath + ';' + os.environ['JUPYTER_PATH']
+                else :
+                    os.environ['JUPYTER_PATH'] = eclPath
+
                 eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib'
                 eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
                 os.environ['PATH'] = eclPath + ( ';' + os.environ['PATH'] ) if 'PATH' in os.environ else ''
@@ -55,16 +62,18 @@ class _EclSumLoader(object):
                     # the class is already registered in cwrap from a previos load, no need to register again
                     warn("PrototypeError: Type: 'ecl_type_enum' already registered!")
                     # return self._EclSum
-                except:
+                except Exception as e:
                     if _loadingECLfile[0] :
                         raise MissingDependence("EclSum failed to load")
                     else:
-                        print("WARNING: EclSum failed to load, you will not be able to load results in eclipse binary format.")
-            except:
+                        print("WARNING: EclSum failed to load, you will not be able to load results in eclipse binary format.\n")
+                        print(e)
+            except Exception as e:
                 if _loadingECLfile[0]:
                     raise MissingDependence("EclSum failed to load")
                 else:
-                    print("WARNING: EclSum failed to load, you will not be able to load results in eclipse binary format.")
+                    print("WARNING: EclSum failed to load, you will not be able to load results in eclipse binary format.\n")
+                    print(e)
 
     def __call__(self,SummaryFilePath,reload=False,unload=False,**kwargs) :  # kwargs will be ignored
         reload = bool(reload)
