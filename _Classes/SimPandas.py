@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.67.6'
-__release__ = 210805
+__version__ = '0.67.7'
+__release__ = 210824
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -5612,12 +5612,13 @@ Copy of input object, shifted.
         matplotlib AxesSubplot.
         """
         y = self.columns if y is None else [y] if type(y) is str else y
+        y = [ i for i in y if i != x ] if x is not None else y
         if others is None:
             if 'ylabel' not in kwargs:
-                kwargs['ylabel'] = ('\n').join([ str(yi) + (' [' + str(self.get_units(yi)[yi]) +' ]' ) if self.get_units(yi)[yi] is not None else '' for yi in y ])
+                kwargs['ylabel'] = ('\n').join([ str(yi) + (' [' + str(self.get_units(yi)[yi]) +']' ) if self.get_units(yi)[yi] is not None else '' for yi in y ])
             if x is not None:
                 if x in self.columns:
-                    fig = self.set_index(x).DF.plot(**kwargs)
+                    fig = self.set_index(x,drop=True).DF.plot(**kwargs)
                     plt.tight_layout()
                     return fig
                 else:
@@ -5629,6 +5630,8 @@ Copy of input object, shifted.
         else:
             if type(others) not in (list,tuple):
                 others = [others]
+            if len(others) > 10 and 'legend' not in kwargs:
+                kwargs['legend'] = False
             if 'ax' in kwargs and kwargs['ax'] is not None:
                 kwargs['ax'] = self.plot(y=y, x=x, others=None, **kwargs)
             else:
@@ -5637,7 +5640,7 @@ Copy of input object, shifted.
             for oth in others:
                 if type(oth) in (SimDataFrame,SimSeries):
                     newY = [ ny for ny in self.columns if ny in oth ]
-                    kwargs['ax'] = oth[newy].to(self.get_units()).plot(y=y, x=x, others=None, **kwargs)
+                    kwargs['ax'] = oth[newY].to(self.get_units()).plot(y=y, x=x, others=None, **kwargs)
                 elif isinstance(oth,DataFrame):
                     newY = [ ny for ny in self.columns if ny in oth ]
                     kwargs['ax'] = oth[newY].plot(**kwargs)
