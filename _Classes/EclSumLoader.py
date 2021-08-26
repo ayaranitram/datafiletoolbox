@@ -6,7 +6,7 @@ Created on Mon Mar  8 08:56:44 2021
 """
 
 __version__ = '0.12.2'
-__release__ = 210823
+__release__ = 210826
 __all__ = ['EclSumLoader']
 
 from .._Classes.Errors import PrototypeError, MissingDependence
@@ -18,7 +18,7 @@ from .._common.sharedVariables import _loadingECLfile
 class _EclSumLoader(object):
     _EclSum = None
     _AlreadyLoaded = {}
-    
+
     def __init__(self):
         self._EclSum = None
         if _EclSumLoader._EclSum:
@@ -38,7 +38,7 @@ class _EclSumLoader(object):
                     os.environ['PYTHONPATH'] = eclPath + ';' + os.environ['PYTHONPATH']
                 else :
                     os.environ['PYTHONPATH'] = eclPath
-                    
+
                 if 'JUPYTER_PATH' in os.environ:
                     JupyterPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib' + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
                     os.environ['JUPYTER_PATH'] = JupyterPath + ';' + os.environ['JUPYTER_PATH']
@@ -48,7 +48,7 @@ class _EclSumLoader(object):
                 eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib'
                 eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
                 os.environ['PATH'] = eclPath + ( ';' + os.environ['PATH'] ) if 'PATH' in os.environ else ''
-                
+
                 #from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
                 try :
                     from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary import EclSum
@@ -75,7 +75,7 @@ class _EclSumLoader(object):
                     print("WARNING: EclSum failed to load, you will not be able to load results in eclipse binary format.\n")
                     print(e)
 
-    def __call__(self,SummaryFilePath,reload=False,unload=False,**kwargs) :  # kwargs will be ignored
+    def __call__(self,SummaryFilePath,reload=True,unload=False,**kwargs) :  # kwargs will be ignored
         reload = bool(reload)
         unload = bool(unload)
         if unload:

@@ -6,7 +6,7 @@ Created on Thu Jan 21 11:00:20 2021
 """
 
 __version__ = '0.21.1'
-__release__ = 210804
+__release__ = 210826
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -19,7 +19,7 @@ import os
 class XLSX(_SimResult):
     """
     object to contain data read from .xlsx files
-    
+
     """
     def __init__(self, inputFile=None, verbosity=2, sheet_name=None, header=[0, 1], units=1, overwrite=True, combine_SheetName_ColumnName=True, sheetName_auto='R', nameSeparator=':', **kwargs) :
         _SimResult.__init__(self, verbosity=verbosity)
@@ -119,7 +119,7 @@ class XLSX(_SimResult):
             if KeyIndex :
                 self.DTindex = Key
                 break
-        
+
         # # look for other not indentical but common index
         # if not KeyIndex:
         #     for Key in ('DATE', 'DATES', 'TIME', 'DAYS', 'MONTHS', 'YEARS') + self.keys :
@@ -152,7 +152,7 @@ class XLSX(_SimResult):
                     IndexVector = pd.merge_ordered(IndexVector,self.Frames[frame][self.DTindex],on=self.DTindex,how='outer')
             self.add_Key(self.DTindex)
             self.TimeVector = self.DTindex
-            _ = self.set_Vector(Key=self.DTindex, VectorData=IndexVector.to_numpy().reshape(-1,), Units=self.get_Units(self.DTindex), DataType='auto', overwrite=True) 
+            _ = self.set_Vector(Key=self.DTindex, VectorData=IndexVector.to_numpy().reshape(-1,), Units=self.get_Units(self.DTindex), DataType='auto', overwrite=True)
             return self.DTindex
         else :
             _verbose(self.speak, 3, "not a commong index name found.")
@@ -176,7 +176,7 @@ class XLSX(_SimResult):
         #     self.add_Key( NewKey )
         #     self.set_Unit( NewKey, NewUnits )
         #     _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage )
-        
+
         if type(header) is int :
             if type(units) is int :
                 if header != units :
@@ -199,16 +199,16 @@ class XLSX(_SimResult):
             except:
                 raise ModuleNotFoundError("Missing optional dependency 'xlrd'.\nInstall xlrd for Excel support.\nUse pip or conda to install xlrd.")
             raise TypeError('Not able to read the excel file, please check input parameters and excel sheets format.')
-            
+
         if sheet_name is not None and type(NewFrames) is not dict :
             NewFrames = {str(sheet_name):NewFrames}
-        
+
         if bool(combine_SheetName_ColumnName):
             if type(combine_SheetName_ColumnName) in (int,float):
                 combine_SheetName_ColumnName = bool(combine_SheetName_ColumnName)
             elif type(combine_SheetName_ColumnName) is str and combine_SheetName_ColumnName.upper().strip() in ['RIGHT','LEFT','R','L']:
                 if combine_SheetName_ColumnName in NewFrames:
-                    _verbose(self.speak, 3, "WARNING: The paramater combine_SheetName_ColumnName is set to " + combine_SheetName_ColumnName + 
+                    _verbose(self.speak, 3, "WARNING: The paramater combine_SheetName_ColumnName is set to " + combine_SheetName_ColumnName +
                              " but this is also the name a sheet in the workbook.\n It will be considered as the " + combine_SheetName_ColumnName +
                              " option of the parameter. To set it as the sheet name provide the name of the sheet in a list: [" + combine_SheetName_ColumnName + "]")
                 combine_SheetName_ColumnName = combine_SheetName_ColumnName.upper()[0]
@@ -227,7 +227,7 @@ class XLSX(_SimResult):
                 self.Frames[str(each)] = NewFrames[each]
                 for col in NewFrames[each].columns :
                     NewKey = ' '.join(col[0:-1]).strip()
-                    
+
                     if combine_SheetName_ColumnName == 'R':
                         NewKey = NewKey + self.nameSeparator + str(each).strip()
                     elif combine_SheetName_ColumnName == 'L':
@@ -241,7 +241,7 @@ class XLSX(_SimResult):
                             or (each,'R') in combine_SheetName_ColumnName or (each,'r') in combine_SheetName_ColumnName \
                                 or ('R', each) in combine_SheetName_ColumnName or ('r', each) in combine_SheetName_ColumnName:
                                     NewKey = str(each).strip() + self.nameSeparator + NewKey
-                            
+
                     if NewKey in self.FramesIndex:
                         #if ( NewFrames[each][col].values == self.Frames[ self.FramesIndex[NewKey][0] ][ self.FramesIndex[NewKey][1] ].values ).all():
                         if NewFrames[each][col].equals( self.Frames[ self.FramesIndex[NewKey][0] ][ self.FramesIndex[NewKey][1] ] ):
@@ -253,7 +253,7 @@ class XLSX(_SimResult):
                         else:
                             if combine_SheetName_ColumnName is True:
                                 cleaningList.append(NewKey)  # to later remove the key
-                                
+
                                 # rename the other Key
                                 otherFrame = self.FramesIndex[NewKey][0]
                                 if str(otherFrame) in ECLkeys or str(otherFrame)[1:4] in ECLkeys:
@@ -265,16 +265,16 @@ class XLSX(_SimResult):
                                     self.add_Key( NewOtherKey )
                                     self.set_Unit( NewOtherKey, self.get_Unit(NewKey) )
                                     _verbose(self.speak, 1, " > renamed key: '" + NewKey + "' to '" + NewOtherKey + "'" )
-                                    
+
                                 # rename this frame key
                                 if str(each) in ECLkeys or str(each)[1:4] in ECLkeys:
                                     NewKey = str(each).strip() + self.nameSeparator + NewKey
                                 else:
                                     NewKey = NewKey + self.nameSeparator + str(each).strip()
-                                    
+
                             elif combine_SheetName_ColumnName is False:
                                 NewKey = NewKey + '_' + str( list(self.FramesIndex.keys()).count(NewKey) +1 )
-                            
+
                             self.FramesIndex[NewKey] = ( each, col )
                             if col[-1].startswith('Unnamed:') :
                                 NewUnits = ''
@@ -285,7 +285,7 @@ class XLSX(_SimResult):
                             self.add_Key( NewKey )
                             self.set_Unit( NewKey, NewUnits )
                             _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage )
-                            
+
                     else:
                         self.FramesIndex[NewKey] = ( each, col )
                         if col[-1].startswith('Unnamed:') :
@@ -298,10 +298,10 @@ class XLSX(_SimResult):
                         self.set_Unit( NewKey, NewUnits )
                         _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage )
                         # _foundNewKey()
-                        
+
             elif self.Frames[str(each)].equals(NewFrames[each]) :
                 _verbose(self.speak, 2, "the sheet '"+each+"' was already loaded.")
-                
+
             else :
                 if self.overwrite :
                     _verbose(self.speak, 2, "the sheet '"+str(each)+"' will overwrite the previously loaded sheet.")
@@ -325,7 +325,7 @@ class XLSX(_SimResult):
                         self.set_Unit( NewKey, NewUnits )
                         self.speak = userVerbose
                         _verbose(self.speak, 1, " > found key: '"+NewKey+"'" + unitsMessage )
-        
+
         if len(cleaningList) > 0:
             self.keys = tuple(set( [ K for K in self.keys if K not in set(cleaningList) ] ))
             for K in cleaningList:
@@ -333,7 +333,7 @@ class XLSX(_SimResult):
                     del self.units[K]
                 if K in self.FramesIndex:
                     del self.FramesIndex[K]
-            
+
             for timeK in ['DATE','DATES','TIME','DAYS','MONTHS','YEARS']:
                 if timeK in list(map(str.upper,cleaningList)):
                     commonIndex = None
@@ -362,19 +362,19 @@ class XLSX(_SimResult):
                         partK = str(thisTimeK[0]).strip()
                     else:
                         partK = str(thisTimeK)
-                    
+
                     if partK + self.nameSeparator + frame in self.FramesIndex :
                         del self.FramesIndex[ partK + self.nameSeparator + frame ]
                     elif frame + self.nameSeparator + partK in self.FramesIndex :
                         del self.FramesIndex[ frame + self.nameSeparator + partK ]
-                        
+
                     if partK + self.nameSeparator + frame in self.units :
                         del self.units[ partK + self.nameSeparator + frame ]
                     elif frame + self.nameSeparator + partK in self.units :
                         del self.units[ frame + self.nameSeparator + partK ]
-                    
+
                     self.keys = tuple([ K for K in self.keys if K != (partK + self.nameSeparator + frame) and K != (frame + self.nameSeparator + partK) ])
-                        
+
 
     def list_Keys(self, pattern=None, reload=False) :
         """
@@ -546,9 +546,9 @@ class XLSX(_SimResult):
     #         # if UList is None:
     #         #     if ':' in Key:
     #         #         if Key.split(':')[0] in self.FramesIndex and Key.split(':')[-1] in self.Frames:
-    #         #             return self.get_Unit(Key.split(':')[0]) 
+    #         #             return self.get_Unit(Key.split(':')[0])
     #         #         elif Key.split(':')[-1] in self.FramesIndex and Key.split(':')[0] in self.Frames:
-    #         #             return self.get_Unit(Key.split(':')[-1]) 
+    #         #             return self.get_Unit(Key.split(':')[-1])
     #         if Key in self.keys :
     #             if ':' in Key :
     #                 if Key[0] == 'W' :
@@ -593,7 +593,7 @@ class XLSX(_SimResult):
     #                 else :
     #                     return None
     #             UList = None
-                
+
     #     elif type(Key) is str and Key.strip() == '--EveryType--' :
     #         Key = []
     #         KeyDict = {}

@@ -6,7 +6,7 @@ Created on Wed May 13 00:31:52 2020
 """
 
 __version__ = '0.4.1'
-__release__ = 220730
+__release__ = 210826
 __all__ = ['Plot']
 
 import time
@@ -35,13 +35,13 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     uses matplot lib to create graphs of the selected vectors
     for the selected SimResult objects.
     """
-    
+
     # validate common keyword parameters:
     for kw in ['xMin','xMax','yMin','yMax','Xmin','Xmax','Ymin','Ymax']:
         if kw in kwargs:
             kwargs[kw.lower()] = kwargs[kw]
             kwargs.pop(kw,None)
-        
+
     if 'xmin' in kwargs and 'xmax' in kwargs:
         if xlim == (None,None):
             xlim = (kwargs['xmin'],kwargs['xmax'])
@@ -55,7 +55,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
         if xlim == (None,None):
             xlim = (None,kwargs['xmax'])
             kwargs.pop('xmax',None)
-    
+
     if 'ymin' in kwargs and 'ymax' in kwargs:
         if ylim == (None,None):
             ylim = (kwargs['ymin'],kwargs['ymax'])
@@ -69,10 +69,10 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
         if ylim == (None,None):
             ylim = (kwargs[None,'ymax'])
             kwargs.pop('ymax',None)
-    
+
     # validate plt.tight_layout() argument
     tight_layout = bool(tight_layout)
-    
+
     # validate pyplot figure parameters
     if fig is None and num is None:
         pass
@@ -83,16 +83,16 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
 
     if dpi is not None and not isinstance(dpi,(int,float)):
         raise TypeError('dpi must be int or float')
-    
+
     if figsize is None:
         pass
     elif type(figsize) is tuple:
         if len(figsize) != 2:
             raise ValueError('figsize must be a tuple of two floats or integers')
         if not isinstance(figsize[0],(int,float)):
-            raise TypeError('figsize must be a tuple of floats (float,float)')            
+            raise TypeError('figsize must be a tuple of floats (float,float)')
         if not isinstance(figsize[1],(int,float)):
-            raise TypeError('figsize must be a tuple of floats (float,float)')            
+            raise TypeError('figsize must be a tuple of floats (float,float)')
 
     # ensure SimResultObjects is not empty and is OK
     if len(SimResultObjects) == 0 :
@@ -177,7 +177,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
         time.sleep(timeout)
 
 
-    # check matplotlib.pyplot.plot color argument is provided 
+    # check matplotlib.pyplot.plot color argument is provided
     if 'c' in kwargs and ( ObjectsColors is None or len(ObjectsColors) == 0 ):
         SeriesColors = kwargs['c']
     if 'color' in kwargs and ( ObjectsColors is None or len(ObjectsColors) == 0 ):
@@ -192,7 +192,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     if type(ObjectsColors) is not list :
         raise TypeError('<Plot> ObjectsColors must be a matplotlib color string, a single RGB tuple, or a list of strings or RGB tuples.')
 
-    # check matplotlib.pyplot.plot color argument is provided 
+    # check matplotlib.pyplot.plot color argument is provided
     if 'c' in kwargs and ( SeriesColors is None or len(SeriesColors) == 0 ):
         SeriesColors = kwargs['c']
     if 'color' in kwargs and ( SeriesColors is None or len(SeriesColors) == 0 ):
@@ -233,11 +233,11 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
         del kwargs['c']
     if 'color' in kwargs:
         del kwargs['color']
-        
+
     # remove show legeng argument from kwargs
     if 'legend' in kwargs:
         del kwargs['legend']
-    
+
     # remove user limits from kwargs
     if 'xlim' in kwargs:
         del kwargs['xlim']
@@ -279,7 +279,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
             time.sleep(timeout)
     if len(Y_Axis) != len(Y_Keys) :
         print('<Plot> found ' + str(len(Y_Axis)) + ' Y_Axis but ' + str(len(Y_Keys)) + ' Y_Keys.', Y_Axis, Y_Keys)
-    
+
     if singleYaxis:
         Y_Axis = [0]*len(Y_Axis)
 
@@ -602,7 +602,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
 
     Axis = [ fig.add_subplot() ]
 
-    plt.title(Title)    
+    plt.title(Title)
 
     # display grid if required
     if Xgrid > 0 :
@@ -679,7 +679,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
                     print('<Plot> the X key ' + X_Key[0] + ' from simulation ' + SimResultObjects[s].get_Name() + ' is not numpy array ')
         elif Xdate :
             X = X.astype('datetime64[D]').astype('O')  # convert numpy date array to array of datetime objects
-            
+
             if xlim != (None,None):
                 xlim = list(xlim)
                 for xl in range(2):  # try to convert date as string to datetime object
@@ -833,10 +833,10 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
                 plotLabels  += [ None ]
                 LegendLines += [ None ]
 
-    # display the legend    
+    # display the legend
     if bool(legend):
         Axis[0].legend( LegendLines, plotLabels, loc=legendLocation )  # LegendLines contains selected plotLines for the leggend
-    
+
     # display horizontal line if required
     if type(hline) is dict:
         plt.hlines(hline['y'], xmin=hline['xmin'], xmax=hline['xmax'], colors=hline['colors'], linestyles=hline['linestyle'], label='')
@@ -844,10 +844,10 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     # set the user limits
     plt.xlim(xlim)
     plt.ylim(ylim)
-    
+
     if tight_layout:
         plt.tight_layout()
-    
+
     if bool(show):
         plt.show()
 

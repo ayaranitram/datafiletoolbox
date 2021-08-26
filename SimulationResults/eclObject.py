@@ -6,7 +6,7 @@ Created on Wed May 13 15:45:12 2020
 """
 
 __version__ = '0.25.3'
-__release__ = 210804
+__release__ = 210826
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
@@ -21,9 +21,9 @@ import os
 class ECL(_SimResult):
     """
     object to contain eclipse format results read from SMSPEC using libecl from equinor
-    """  
+    """
     loadEclSum = EclSumLoader()
-    
+
     def __init__(self, inputFile=None, verbosity=2, **kwargs) :
         _SimResult.__init__(self, verbosity=verbosity)
         self.kind = ECL
@@ -264,4 +264,3 @@ class ECL(_SimResult):
                 if type(each) == str :
                     tempUnits[each] = self.get_Unit(each)
             return tempUnits
-

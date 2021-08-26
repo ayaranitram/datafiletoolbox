@@ -6,7 +6,7 @@ Created on Wed May 13 00:46:05 2020
 """
 
 __version__ = '0.2.0'
-__release__ = 210305
+__release__ = 210826
 __all__ = ['_mainKey', '_itemKey', '_keyType', '_wellFromAttribute', 'tamiz', '_meltDF']
 
 import pandas
@@ -182,13 +182,13 @@ def _meltDF(df, hue='--auto', label='--auto', SimObject=None, FullOutput=False,*
         common procedure to melt and rename the dataframe
         """
         if type(df) in [SimSeries,SimDataFrame]:
-            SimDF = True 
+            SimDF = True
             unitsdict = df.get_units().copy()
             units = lambda col : unitsdict[col] if col in unitsdict else None
             df = df.DF
         else:
             SimDF = False
-            
+
         for key in ['hue','label','SimObject','FullOutput'] :
             kwargs.pop(key, None)
         if 'var_name' in kwargs :
@@ -199,7 +199,7 @@ def _meltDF(df, hue='--auto', label='--auto', SimObject=None, FullOutput=False,*
             value_name = kwargs['value_name']
         else :
             value_name = 'value'
-        
+
         df = df.melt(var_name=var_name, value_name=value_name, ignore_index=False)
         df['attribute'] = _mainKey( list(df[var_name]), False)
         df['item'] = _itemKey( list(df[var_name]), False)
@@ -306,7 +306,7 @@ def _meltDF(df, hue='--auto', label='--auto', SimObject=None, FullOutput=False,*
                     label = itemLabel
                 elif label == 'main' :
                     label = 'attribute'
-        
+
         # generate values for units columns
         if SimDF:
             unitsCol = [units(df[var_name].iloc[i]) for i in range(len(df))]

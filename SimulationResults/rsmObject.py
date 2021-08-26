@@ -6,7 +6,7 @@ Created on Wed May 13 15:34:04 2020
 """
 
 __version__ = '0.1.0'
-__release__ = 210804
+__release__ = 210826
 __all__ = ['RSM']
 
 from .mainObject import SimResult as _SimResult
@@ -93,14 +93,14 @@ class RSM(_SimResult):
                 self.DTindex = Key
                 KeyIndex = True
                 break
-            
+
         if KeyIndex :
             _verbose(self.speak, 1, "found the index: " + str(self.DTindex))
             # create result vector for the common index
             IndexVector = self.results[self.DTindex]
             self.add_Key(self.DTindex)
             self.TimeVector = self.DTindex
-            _ = self.set_Vector(Key=self.DTindex, VectorData=IndexVector, Units=self.get_Units(self.DTindex), DataType='auto', overwrite=True) 
+            _ = self.set_Vector(Key=self.DTindex, VectorData=IndexVector, Units=self.get_Units(self.DTindex), DataType='auto', overwrite=True)
             return self.DTindex
         else :
             _verbose(self.speak, 3, "time index not found.")
@@ -108,7 +108,7 @@ class RSM(_SimResult):
 
     def readRSM(self, inputFile, **kwargs) :
         """
-        internal function to read an RSM file 
+        internal function to read an RSM file
         """
         with open(inputFile,'r') as file:
             rsm = file.readlines()
@@ -119,7 +119,7 @@ class RSM(_SimResult):
             if len(rsm[l].strip()) == 0:
                 l += 1
                 continue
-            
+
             if rsm[l].strip().upper().startswith('SUMMARY OF RUN'):
                 if self.name is None:
                     self.name =  rsm[l].strip()[15:]
@@ -133,13 +133,13 @@ class RSM(_SimResult):
 
                 multipliers = [ each.strip() for each in  rsm[l].split('\t') ]
                 l += 1
-                
+
                 names = [ each.strip() for each in  rsm[l].split('\t') ]
                 l += 1
 
                 numbers = [ each.strip() for each in  rsm[l].split('\t') ]
                 l += 1
-                
+
                 mults = [ each.startswith('*10**') for each in multipliers ]
                 if np.array(mults).sum() > 0:
                     nulls = [ len(each.strip())==0 for each in multipliers ]
@@ -157,13 +157,13 @@ class RSM(_SimResult):
                     multipliers = [ 1 ] * len(multipliers)
                 for c in range(len(colnames)):
                     if len(names[c]) > 0:
-                        colnames[c] = colnames[c] + self.nameSeparator + names[c] 
+                        colnames[c] = colnames[c] + self.nameSeparator + names[c]
                     elif len(str(numbers[c])) > 0:
                          colnames[c] = colnames[c] + self.nameSeparator + str(numbers[c])
-                
+
                 while sum(map(len,[ each.strip() for each in  rsm[l].split('\t') ])) == 0:
                     l += 1
-            
+
                 rsmtext = ''.join(rsm[l:])
                 endline = rsmtext.index('\n\n') if '\n\n' in rsmtext else len(rsmtext)-1
                 table = np.array([ [ cell.strip() for cell in row.split('\t') ] for row in rsmtext[:endline].split('\n') ])

@@ -6,7 +6,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = '0.60.2'
-__release__ = 210804
+__release__ = 210826
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -296,10 +296,10 @@ class SimResult(object):
         if not self.is_Key('DATES') :
             self.createDATES()
         if not self.is_Key('TIME') :
-            self.createTIME()         
+            self.createTIME()
         _ = self.get_start()
         _ = self.get_end()
-        
+
         if ('preload' not in kwargs) or ('preload' in kwargs and kwargs['preload'] is True):
             self.get_Producers()
             self.get_Injectors()
@@ -860,11 +860,11 @@ class SimResult(object):
                 self.wellsLists['WaterInjectors'] = list(_wellFromAttribute((self[['WWIR']].replace(0, np.nan).dropna(axis=1, how='all')).columns ).values() )
             else :
                 self.wellsLists['WaterInjectors'] = []
-                
+
             _ = self.get_WaterInjectorsHistory(reload=True)
-            
+
         return self.wellsLists['WaterInjectors']
-    
+
     def get_WaterInjectorsHistory(self, reload=False):
         """
         returns a list of the wells that inject water at any time in the simulation with history keyword.
@@ -889,11 +889,11 @@ class SimResult(object):
                 self.wellsLists['GasInjectors'] = list(_wellFromAttribute((self[['WGIR']].replace(0, np.nan).dropna(axis=1, how='all')).columns ).values() )
             else :
                 self.wellsLists['GasInjectors'] = []
-                
+
             _ = self.get_GasInjectorsHistory(reload=True)
-            
+
         return self.wellsLists['GasInjectors']
-    
+
     def get_GasInjectorsHistory(self, reload=False):
         """
         returns a list of the wells that inject gas at any time in the simulation.
@@ -918,11 +918,11 @@ class SimResult(object):
                 self.wellsLists['OilInjectors'] = list(_wellFromAttribute((self[['WOIR']].replace(0, np.nan).dropna(axis=1, how='all')).columns ).values() )
             else :
                 self.wellsLists['OilInjectors'] = []
-                
+
             _ = self.get_OilInjectorsHistory(reload=True)
-            
+
         return self.wellsLists['OilInjectors']
-    
+
     def get_OilInjectorsHistory(self, reload=False):
         """
         returns a list of the wells that inject oil at any time in the simulation.
@@ -976,9 +976,9 @@ class SimResult(object):
 
             else :
                 self.wellsLists['WaterProducers'] = []
-            
+
             _ = self.get_WaterProducersHistory(reload=True)
-            
+
         return self.wellsLists['WaterProducers']
 
     def get_WaterProducersHistory(self, reload=False):
@@ -1088,9 +1088,9 @@ class SimResult(object):
 
             else :
                 self.wellsLists['OilProducers'] = []
-            
+
             _ = self.get_OilProducersHistory(reload=True)
-            
+
         return self.wellsLists['OilProducers']
 
     def get_OilProducersHistory(self, reload=False ) :
@@ -1191,11 +1191,11 @@ class SimResult(object):
                 self.wellsLists['GasProducers'] = list(_wellFromAttribute(list(self[['WGPR']].replace(0, np.nan).dropna(axis=1, how='all').columns)))
             elif 'GasProducers' not in self.wellsLists :
                 self.wellsLists['GasProducers'] = []
-                
+
             _ = self.get_GasProducersHistory(reload=True)
-            
+
         return self.wellsLists['GasProducers']
-    
+
     def get_GasProducersHistory(self, reload=False):
         """
         returns a list of the wells considered gas producers at any time in the simulation.
@@ -1210,7 +1210,7 @@ class SimResult(object):
                 _verbose(self.speak, 2, "neither GOR or OIL RATE available or the data doesn't has units, every well with gas rate > 0 will be listeda as gas producer.")
                 self.wellsLists['GasProducers'] += list(_wellFromAttribute(list(self[['WGPRH']].replace(0, np.nan).dropna(axis=1, how='all').columns)))
                 self.wellsLists['GasProducers'] = list(set(self.wellsLists['GasProducers']))
-                
+
         return self.wellsLists['GasProducers']
 
     def get_Producers(self, reload=False ) :
@@ -1230,14 +1230,14 @@ class SimResult(object):
         Returns
         -------
         None.
-        
+
         Raises
         -------
         InvalidKeyError if the requested Key is not valid.
 
         """
         return self.set_Index(Key)
-        
+
     def set_Index(self, Key):
         """
         defines the Key to be used as default index for the returned DataFrames.
@@ -1250,7 +1250,7 @@ class SimResult(object):
         Returns
         -------
         None.
-        
+
         Raises
         -------
         InvalidKeyError if the requested Key is not valid.
@@ -1261,7 +1261,7 @@ class SimResult(object):
             return self
         else:
             raise InvalidKeyError(Key,'is not a valid Key in this dataset')
-            
+
     def get_index(self):
         return self.get_Index()
     def get_Index(self):
@@ -1630,10 +1630,10 @@ class SimResult(object):
         """
         if type(Keys) not in [list, tuple, set, str] :
             raise TypeError(" Keys must be a list of keys or a string.")
-        
+
         if type(Keys) is str :
             Keys = [Keys]
-            
+
         if _is_SimulationResult(objects) and otherSims is None :
             objects, otherSims = None, objects
         elif otherSims is None and type(objects) in (list,tuple,set) and len(objects) > 0:
@@ -1644,7 +1644,7 @@ class SimResult(object):
                 objects , otherSims = None , objects  # all of them are Simulation Results
             else:
                 raise TypeError("some of the 'otherSims' provided are not SimulationResults instances.")
-                    
+
         if objects is not None :
             if type(objects) not in [str, list, tuple, set] :
                 raise TypeError(" objects must be list of wells, groups or regions or one of the magic words 'wells', 'groups', 'regions'.")
@@ -1959,10 +1959,10 @@ class SimResult(object):
                 sort = 'quantile'
             else :
                 sort = ''
-        
+
         # get the data
         df , dateIndex = self[Keys] , True
-        
+
         # convert units and keep the regular Pandas DataFrame only
         if type(df) is SimDataFrame :
             df = df.convert(plotUnits)
@@ -1973,7 +1973,7 @@ class SimResult(object):
             df = df.replace(0, np.nan)
         if cleanAllZeros :
             df = df.replace(0, np.nan).dropna(axis='columns', how='all').replace(np.nan, 0)
-        
+
         # prepare index to resample
         if bool(resample) :
             if self.is_Key('DATE') :
@@ -1983,7 +1983,7 @@ class SimResult(object):
             else :
                 dateIndex = False
 
-        # resample            
+        # resample
         if resample == 'daily' :
             resample = '1D'
         elif resample == 'weekly' :
@@ -2032,20 +2032,20 @@ class SimResult(object):
 
         if sort in ['item'] :
             df = df.sort_values(by=itemLabel, axis=0, ascending=bool(ascending))
-        
+
         if otherSims is not None:
             df['Simulation'] = str(self.name)
             if _is_SimulationResult(otherSims):
                 otherSims = [otherSims]
-            
-            
+
+
             for os in otherSims:
                 other = os._common_dataprep_for_seaborn(Keys=Keys, objects=None, otherSims=None, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, sort=sort, ascending=ascending, resample=resample)
                 other = other[0].rename(columns={'value':values})
                 other['Simulation'] = str(os.name)
                 df = df.append(other)
             hue = 'Simulation'
-        
+
         return df, hue, label, itemLabel, values
 
     def box(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, resample='daily', row=None, col=None, returnFig=True, returnDF=False, logY=False,logX=False,**kwargs) :
@@ -2099,12 +2099,12 @@ class SimResult(object):
         sns.despine(offset=10, trim=True)
         if grid :
             ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
-            
+
         if bool(rotation) is True :
             if rotation is True :
                 rotation = 90
             plt.xticks(rotation=rotation)
-        
+
         if bool(tight_layout) :
             plt.tight_layout()
         if bool(logY):
@@ -2112,7 +2112,7 @@ class SimResult(object):
         if bool(logX):
             plt.xscale('log')
         plt.show()
-        
+
         if bool(returnFig) and bool(returnDF) :
             return fig, df
         elif bool(returnFig) and not bool(returnDF) :
@@ -2159,11 +2159,11 @@ class SimResult(object):
 
         if inner not in ('box','quartile', 'point', 'stick', None) :
             inner = None
-        
+
         if split and len(df[hue].unique()) > 2 :
             split = False
             _verbose(2, self.speak, "There must be exactly two hue levels to use 'split', thus it will be ignored.")
-                
+
         fig = plt.figure(figsize=figsize, dpi=dpi)
         # Draw a nested boxplot to show bills by day and time
         # ax = sns.catplot(kind='violin',
@@ -2181,16 +2181,16 @@ class SimResult(object):
         sns.despine(offset=10, trim=True)
         if grid :
             ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
-            
+
         if bool(rotation) is True :
             if rotation is True :
                 rotation = 90
             plt.xticks(rotation=rotation)
-        
+
         if bool(tight_layout) :
             plt.tight_layout()
         plt.show()
-        
+
         if bool(returnFig) and bool(returnDF) :
             return fig, df
         elif bool(returnFig) and not bool(returnDF) :
@@ -2201,20 +2201,20 @@ class SimResult(object):
             return None
 
 
-    def plot(self, 
-             Keys=[], 
-             Index=None, 
-             otherSims=None, 
-             Wells=[], 
-             Groups=[], 
-             Regions=[], 
-             DoNotRepeatColors=None, 
-             grid=False, 
-             show=True, 
+    def plot(self,
+             Keys=[],
+             Index=None,
+             otherSims=None,
+             Wells=[],
+             Groups=[],
+             Regions=[],
+             DoNotRepeatColors=None,
+             grid=False,
+             show=True,
              hline=False,
-             fig=None, 
-             num=None, 
-             figsize=(6, 4), 
+             fig=None,
+             num=None,
+             figsize=(6, 4),
              dpi=150,
              singleYaxis=False,
              **kwargs):  # Index='TIME'
@@ -2240,7 +2240,7 @@ class SimResult(object):
             pass
         elif not isinstance(fig, Figure):
                 raise TypeError('fig must be a matplotlib.pyplot Figure instance')
-        
+
         if hline is not None:
             pass
         elif hline is True:
@@ -2249,7 +2249,7 @@ class SimResult(object):
             hline = None
         elif type(hline) not in [int,float]:
             raise ValueError('hline must be int, float or bool')
-        
+
         Xgrid, Ygrid = 0, 0
         if type(grid) is str :
             grid = grid.strip()
@@ -2491,7 +2491,7 @@ class SimResult(object):
                 if sim.is_Key(X):
                     _ = sim(X)
             sim.speak = prevSpeak
-            
+
         if hline is not None:
             xmin = min(self(IndexList[0]))
             xmax = min(self(IndexList[0]))
@@ -3033,7 +3033,7 @@ class SimResult(object):
         optional parameter `Key´ could be used to assing the property to a
         particular Key.
         """
-        return self.set_Width(linewidth=linewidth,Key=Key)  
+        return self.set_Width(linewidth=linewidth,Key=Key)
 
     def set_Width(self, linewidth=None, Key=None):
         """
@@ -3254,7 +3254,7 @@ class SimResult(object):
             else :
                 print('wrong set_Verbosity argument: ' + str(verbosity_level) + '\nVerbosity will be set to True (1)')
                 self.speak = 1
-                
+
     def get_Verbosity(self) :
         return self.speak
 
@@ -3273,7 +3273,7 @@ class SimResult(object):
 
     def isKey(self, Key) :
         return self.is_Key(Key)
-    
+
     def is_Key(self, Key) :
         if type(Key) != str or len(Key)==0 :
             return False
@@ -3350,7 +3350,7 @@ class SimResult(object):
         returns a list of Keys for the given attribute
         """
         if self.is_Key(Attribute ) :
-            return [ Attribute ]	
+            return [ Attribute ]
         if self.is_Attribute(Attribute ) :
             return self.attributes[ Attribute ]
         return []
@@ -3751,7 +3751,7 @@ class SimResult(object):
                 for K in self.find_Keys(Key):
                     self.set_Filter(K, Condition=Condition, Min=Min, Max=Max, Filter=Filter, IncrementalFilter=IncrementalFilter, FilterOperation=FilterOperation, UnDo=None)
                 return None
-            
+
         # start of main function, setting parameters
         DateFormat = '' # set default date string format
 
@@ -4963,10 +4963,10 @@ class SimResult(object):
             but ignoring the zeros in the data
 
         """
-        
+
         if not self.useSimPandas:
             raise MissingDependence('simPandas is required to interpret calculation strings.\n Activate simPandas .use_SimPandas()')
-        
+
         CalcData, CalcUnits, i, firstNeg = [], [], 0, False
 
         def _getValues(Key) :
@@ -4998,7 +4998,7 @@ class SimResult(object):
         else :
             substractionSign = '-'
         operators.append(substractionSign)
-        
+
         # convert string to calculation tuple
         if type(CalculationTuple) is str :
             _verbose (self.speak, 1, ' the received string for CalculatedTuple was converted to tuple, \n  received: ' + CalculationTuple + '\n  converted to: ' + str(tuple(_multisplit(CalculationTuple, operators ) ) ) )

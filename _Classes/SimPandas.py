@@ -7,7 +7,7 @@ Created on Sun Oct 11 11:14:32 2020
 """
 
 __version__ = '0.67.7'
-__release__ = 210824
+__release__ = 210826
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -130,13 +130,13 @@ class _SimLocIndexer(indexing._LocIndexer):
     def __init__(self, *args):
         self.spd = args[1]
         super().__init__(*args)
-        
+
     def __getitem__(self, *args):
         result = super().__getitem__(*args)
         if isinstance(result,(Series,DataFrame)):
             if type(self.spd) is SimSeries:
                 return self.spd._class(data=result, **self.spd._SimParameters)
-            
+
             elif type(self.spd) is SimDataFrame and type(*args) is not tuple and isinstance(result,Series):
                 return self.spd._class(data=dict(zip(result.index,result.values)),index=[result.name], **self.spd._SimParameters)
             elif type(self.spd) is SimDataFrame and type(*args) is not tuple and isinstance(result,DataFrame):
@@ -150,7 +150,7 @@ class _SimLocIndexer(indexing._LocIndexer):
                 return result
         else:
             return result
-    
+
     def __setitem__(self, key, value):  #, units=None):
         #########################################################################################################################
         # units to be considered ONLY when passing a SimSeries or SimDataFrame because the shape of the structure must be known #
@@ -240,12 +240,12 @@ class SimSeries(Series) :
             self.units = units
         elif units is None and type(data) is SimSeries :
             if type(data.units) is str:
-                units = data.units 
+                units = data.units
                 if indexUnits is None:
                     indexUnits = data.indexUnits
-                    self.indexUnits = indexUnits 
+                    self.indexUnits = indexUnits
             elif type(data.units) is dict :
-                units = data.units.copy() 
+                units = data.units.copy()
                 if data.index.name not in units:
                         units[data.index.name] = data.indexUnits
 
@@ -325,7 +325,7 @@ class SimSeries(Series) :
             self.autoAppend = bool(autoAppend)
         elif 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None :
             self.autoAppend = bool(kwargs['autoAppend'] )
-            
+
         # set the provided name
         if self.name is None and name is not None:
             self.name = name
@@ -333,7 +333,7 @@ class SimSeries(Series) :
             self.name = kwargsB['columns'][0]
         if self.name is None and 'columns' in kwargsB and type(kwargsB['columns']) is str and len(kwargsB['columns'].strip()) > 0:
             self.name = kwargsB['columns'].strip()
-    
+
     @property
     def _constructor(self):
         return _simseries_constructor_with_fallback
@@ -341,7 +341,7 @@ class SimSeries(Series) :
     def _constructor_expanddim(self):
         # from datafiletoolbox.SimPandas.simframe import SimDataFrame
         return SimDataFrame
-    
+
     @property
     def _SimParameters(self) :
         return {'units':self.units.copy() if type(self.units) is dict else self.units,
@@ -352,7 +352,7 @@ class SimSeries(Series) :
                 'nameSeparator':self.nameSeparator,
                 'intersectionCharacter':self.intersectionCharacter,
                 'autoAppend':self.autoAppend}
-    
+
     @property
     def loc(self) -> _SimLocIndexer:
         """
@@ -366,7 +366,7 @@ class SimSeries(Series) :
     #     wrapper for .iloc indexing
     #     """
     #     return self.spdiLocator
-    
+
     @property
     def _class(self):
         return SimSeries
@@ -383,7 +383,7 @@ class SimSeries(Series) :
                 try :
                     return self.iloc[key]
                 except :
-                    raise KeyError("the requested Key is not a valid index or name")
+                    raise KeyError("the requested Key is not a valid index or name: "+str(key))
 
     def __contains__(self, item) :
         if item in self.columns :
@@ -395,7 +395,7 @@ class SimSeries(Series) :
 
     def set_index(self, name) :
         self.set_indexName(name)
-    
+
     def describe(self,*args,**kwargs):
         return self._class(data=self.to_Pandas().describe(*args,**kwargs),**self._SimParameters)
 
@@ -419,10 +419,10 @@ class SimSeries(Series) :
             return ''
         else :
             return self.nameSeparator
-    
+
     def transpose(self):
         return self
-    
+
     @property
     def T(self):
         return self.transpose()
@@ -438,7 +438,7 @@ class SimSeries(Series) :
 
     def as_Series(self) :
         return Series(self)
-    
+
     def to_SimDataFrame(self):
         if type(self.units) is str:
             return SimDataFrame(data=self)
@@ -500,7 +500,7 @@ class SimSeries(Series) :
             else :
                 objs += [each]
         return tuple(set(objs))
-    
+
     def to_excel(self, excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None, header=True, units=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None, sort=None) :
         """
         Wrapper of .to_excel method from Pandas.
@@ -586,10 +586,10 @@ class SimSeries(Series) :
             if int > 0 will sort the columns alphabetically ascending.
             if int < 0 will sort the columns alphabetically descending.
             if int == 0 will keep the current order of the columns.
-            
+
         """
         return self.to_SimDataFrame().to_excel(excel_writer, split_by=split_by, sheet_name=sheet_name, na_rep=na_rep, float_format=float_format, columns=columns, header=header, units=units, index=index, index_label=index_label, startrow=startrow, startcol=startcol, engine=engine, merge_cells=merge_cells, encoding=encoding, inf_rep=inf_rep, verbose=verbose, freeze_panes=freeze_panes, sort=sort)
-    
+
     def renameRight(self, inplace=False) :
         if self.nameSeparator in [None, '', False] :
             return self  # raise ValueError("name separator must not be None")
@@ -630,7 +630,7 @@ class SimSeries(Series) :
         SDF1, SDF2 = SimSeries1, SimSeries2
 
         cha = self.intersectionCharacter
-        
+
         if LR is not None :
             LR = LR.upper()
             if LR not in 'LR' :
@@ -692,8 +692,8 @@ class SimSeries(Series) :
 
         Alter Series index labels or name.
 
-        Function / dict values must be unique (1-to-1). 
-        Labels not contained in a dict / Series will be left as-is. 
+        Function / dict values must be unique (1-to-1).
+        Labels not contained in a dict / Series will be left as-is.
         Extra labels listed don’t throw an error.
 
         Alternatively, change Series.name with a scalar value.
@@ -705,7 +705,7 @@ class SimSeries(Series) :
         Unused. Accepted for compatibility with DataFrame method only.
 
         indexscalar, hashable sequence, dict-like or function, optional
-        Functions or dict-like are transformations to apply to the index. 
+        Functions or dict-like are transformations to apply to the index.
         Scalar or hashable sequence-like will alter the Series.name attribute.
 
         **kwargs
@@ -725,7 +725,7 @@ class SimSeries(Series) :
             else :
                 catch = super().rename(**kwargs)
                 cAfter = list(catch.index)
-            
+
             newUnits = {}
             for i in range(len(cBefore)) :
                 newUnits[cAfter[i]] = self.units[cBefore[i]]
@@ -980,8 +980,8 @@ class SimSeries(Series) :
         if forward:
             return SimSeries(data=-1*self.S.diff(periods=-1*periods), **self._SimParameters )
         else:
-            return SimSeries(data=self.S.diff(periods=periods), **self._SimParameters ) 
-        
+            return SimSeries(data=self.S.diff(periods=periods), **self._SimParameters )
+
     def __neg__(self) :
         result = -self.as_Series()
         return SimSeries(data=result, **self._SimParameters )
@@ -1025,7 +1025,7 @@ class SimSeries(Series) :
                 params['dtype'] = result.dtype
             params['name'] = newName
             return SimSeries(data=result, **params)
-            
+
         # let's Pandas deal with other types, maintain units, dtype and name
         result = self.as_Series() + other
         try:
@@ -1076,7 +1076,7 @@ class SimSeries(Series) :
                 params['dtype'] = result.dtype
             params['name'] = newName
             return SimSeries(data=result, **params)
-        
+
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() - other
         try:
@@ -1304,7 +1304,7 @@ class SimSeries(Series) :
             return (self[notNA].append(self[NA])).sort_index()
         else:
             return SimSeries(data=self.S.astype(int), **self._SimParameters)
-    
+
     def __abs__(self) :
         return SimSeries(data=abs(self.S), **self._SimParameters)
 
@@ -1316,19 +1316,19 @@ class SimSeries(Series) :
 
     def average(self, axis=0, **kwargs) :
         return self.mean(axis=axis, **kwargs)
-    
+
     def average0(self, axis=0, **kwargs) :
         return self.mean0(axis=axis, **kwargs)
 
     def count0(self, **kwargs) :
         return self.replace(0,np.nan).count(**kwargs)
-    
+
     def max0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).max(axis=axis, **kwargs)
-     
+
     def mean0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).mean(axis=axis, **kwargs)
-    
+
     def median0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).median(axis=axis, **kwargs)
 
@@ -1337,7 +1337,7 @@ class SimSeries(Series) :
 
     def mode0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).mode(axis=axis, **kwargs)
-    
+
     def prod0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).prod(axis=axis, **kwargs)
 
@@ -1346,18 +1346,18 @@ class SimSeries(Series) :
 
     def rms(self, axis=0, **kwargs):
         return (self**2).mean(axis=axis, **kwargs)**0.5
-    
+
     def rms0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).rms(axis=axis, **kwargs)
 
     def std0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).std(axis=axis, **kwargs)
-    
+
     def sum0(self, axis=0, **kwargs) :
         return self.sum(axis=axis, **kwargs)
 
     def var0(self, axis=0, **kwargs) :
-        return self.replace(0,np.nan).var(axis=axis, **kwargs)    
+        return self.replace(0,np.nan).var(axis=axis, **kwargs)
 
     def __repr__(self) -> str :
         """
@@ -1417,7 +1417,7 @@ class SimSeries(Series) :
 
     def get_units(self, items=None) :
         return self.get_Units()
-    
+
     def get_Units(self, items=None) :
         if type(self.units) is str and type(self.name) is str :
             uDic = { str(self.name) : self.units }
@@ -1433,7 +1433,7 @@ class SimSeries(Series) :
         else:
             return self.units.copy() if type(self.units) is dict else self.units
         return uDic
-    
+
     def set_units(self,units,item=None):
         """
         Alias of .set_Units method.
@@ -1444,7 +1444,7 @@ class SimSeries(Series) :
         units : str or list of str
             the units to be assigned
         item : str, optional
-            The name of the column to apply the units. 
+            The name of the column to apply the units.
             The default is None. In this case the unit
 
         Raises
@@ -1460,7 +1460,7 @@ class SimSeries(Series) :
 
         """
         return self.set_Units(units=units,item=item)
-    
+
     def set_Units(self,units,item=None):
         """
         This method can be used to define the units related to the values of a column (item).
@@ -1470,7 +1470,7 @@ class SimSeries(Series) :
         units : str or list of str
             the units to be assigned
         item : str, optional
-            The name of the column to apply the units. 
+            The name of the column to apply the units.
             The default is None. In this case the unit
 
         Raises
@@ -1487,7 +1487,7 @@ class SimSeries(Series) :
         """
         if item is not None and item not in self.columns:
             raise ValueError("the required item '" + str(item) + "' is not in this SimSeries")
-            
+
         if self.units is None or type(self.units) is str:
             if units is None:
                 self.units = None
@@ -1495,7 +1495,7 @@ class SimSeries(Series) :
                 self.units = units.strip()
             else:
                 raise TypeError("units must be a string.")
-                
+
         elif type(self.units) is dict:
             if type(units) in [list,tuple]:
                 if type(item) in [list,tuple]:
@@ -1510,7 +1510,7 @@ class SimSeries(Series) :
                         raise ValueError("units list must be the same length of columns in the SimSeries or must be followed by a list of items.")
                 else:
                     raise TypeError("if units is a list, items must be a list of the same length.")
-                
+
             if item is None and len(self.columns) > 1:
                 raise ValueError("More than one column in this SimSeries, item must not be None")
             elif item is None and len(self.columns) == 1:
@@ -1791,34 +1791,34 @@ class SimSeries(Series) :
         Return the first n rows.
 
         This function returns first n rows from the object based on position. It is useful for quickly verifying data, for example, after sorting or appending rows.
-        
+
         For negative values of n, this function returns all rows except the last n rows, equivalent to df[n:].
-        
+
         Parameters:
         ----------
             n : int, default 5
             Number of rows to select.
-        
+
         Returns
         -------
             type of caller
             The first n rows of the caller object.
         """
         return SimSeries(data=self.S.head(n),**self._SimParameters)
-    
+
     def tail(self,n=5):
         """
         Return the last n rows.
 
         This function returns last n rows from the object based on position. It is useful for quickly verifying data, for example, after sorting or appending rows.
-        
+
         For negative values of n, this function returns all rows except the first n rows, equivalent to df[n:].
-        
+
         Parameters:
         ----------
             n : int, default 5
             Number of rows to select.
-        
+
         Returns
         -------
             type of caller
@@ -1829,19 +1829,19 @@ class SimSeries(Series) :
     def cumsum(self, skipna=True, *args, **kwargs):
         """
         Return cumulative sum over a SimDataFrame.
-    
+
         Returns a SimDataFrame or SimSeries of the same size containing the cumulative sum.
-    
+
         Parameters:
             axis : {0 or ‘index’, 1 or ‘columns’}, default 0
                 The index or the name of the axis. 0 is equivalent to None or ‘index’.
-    
+
         skipna: bool, default True
             Exclude NA/null values. If an entire row/column is NA, the result will be NA.
-    
+
         *args, **kwargs
             Additional keywords have no effect but might be accepted for compatibility with NumPy.
-    
+
         Returns
             SimSeries or SimDataFrame
             Return cumulative sum of Series or DataFrame.
@@ -1853,7 +1853,7 @@ class SimSeries(Series) :
         add jitter the values of the SimSeries
         """
         return jitter(self,std)
-    
+
     def daily(self, outBy='mean', datetimeIndex=False) :
         """
         return a Series with a single row per day.
@@ -1911,45 +1911,45 @@ class SimSeries(Series) :
     def DaysInYear(self,column=None):
         """
         returns a SimSeries with the number of days in a particular year
-    
+
         Parameters
         ----------
         column : str
-            The selected column must be an of dtype integer, date, datetime containing 
+            The selected column must be an of dtype integer, date, datetime containing
             the year to calculate the number of day.
-            
+
         Returns
         -------
         a new SimSeries with the resulting array and same index as the input.
         """
         return self.daysInYear(column=column)
-    
+
     def daysinyear(self,column=None):
         """
         returns a SimSeries with the number of days in a particular year
-    
+
         Parameters
         ----------
         column : str
-            The selected column must be an of dtype integer, date, datetime containing 
+            The selected column must be an of dtype integer, date, datetime containing
             the year to calculate the number of day.
-            
+
         Returns
         -------
         a new SimSeries with the resulting array and same index as the input.
         """
         return self.daysInYear(column=column)
-    
+
     def daysInYear(self,column=None):
         """
         returns a SimSeries with the number of days in a particular year
-    
+
         Parameters
         ----------
         column : str
-            The selected column must be an of dtype integer, date, datetime containing 
+            The selected column must be an of dtype integer, date, datetime containing
             the year to calculate the number of day.
-            
+
         Returns
         -------
         a new SimSeries with the resulting array and same index as the input.
@@ -2009,12 +2009,12 @@ class SimSeries(Series) :
     def realYear(self,column=None):
         """
         returns a SimSeries with the year and cumulative days as fraction
-    
+
         Parameters
         ----------
         column : str
             The selected column must be a datetime array.
-            
+
         Returns
         -------
         a new SimSeries with the resulting array and same index as the input.
@@ -2026,7 +2026,7 @@ class SimSeries(Series) :
         if column is not None:
             if type(column) is str and column in self.columns:
                 if 'datetime' in str(self[column].dtype):
-                    return realYear(self[column])  
+                    return realYear(self[column])
                 else :
                     raise ValueError('selected column is not a valid date format')
             elif type(column) is str and column not in self.columns:
@@ -2181,7 +2181,7 @@ class SimDataFrame(DataFrame) :
             self.set_indexUnits(kwargsB['indexUnits'])
         if self.indexUnits is not None and self.index.name is not None and len(self.index.name) > 0 and type(self.units) is dict and self.index.name not in self.units:
             self.units[self.index.name] = self.indexUnits
-        
+
         # set the units
         if type(units) is str :
             if self.transposed:
@@ -2300,7 +2300,7 @@ class SimDataFrame(DataFrame) :
         if key not in self.columns :
             raise ValueError("The key '"+str(key)+"' is not a column name of this SimDataFrame.")
         if inplace:
-            indexUnits = self.get_Units(key) 
+            indexUnits = self.get_Units(key)
             super().set_index(key, drop=drop, append=append, inplace=inplace, verify_integrity=verify_integrity, **kwargs)
             self.set_indexUnits(indexUnits)
         else:
@@ -2309,20 +2309,20 @@ class SimDataFrame(DataFrame) :
             params['indexName'] = None
             params['indexUnits'] = self.get_Units(key)[key]
             return SimDataFrame(data=self.DF.set_index(key, drop=drop, append=append, inplace=inplace, verify_integrity=verify_integrity, **kwargs), **params)
-    
+
     def describe(self,*args,**kwargs):
         return self._class(data=self.to_Pandas().describe(*args,**kwargs),**self._SimParameters)
-    
+
     def shift(self, periods=1, freq=None, axis=0, fill_value=None):
         """
         wrapper for Pandas shift method
-        
+
         Shift index by desired number of periods with an optional time freq.
 
         When freq is not passed, shift the index without realigning the data.
-        If freq is passed (in this case, the index must be date or datetime, 
+        If freq is passed (in this case, the index must be date or datetime,
         or it will raise a NotImplementedError), the index will be increased using the periods and the freq. freq can be inferred when specified as “infer” as long as either freq or inferred_freq attribute is set in the index.
-        
+
         Parameters
 periodsint
 Number of periods to shift. Can be positive or negative.
@@ -2341,7 +2341,7 @@ Changed in version 1.1.0.
 Returns
 SimDataFrame
 Copy of input object, shifted.
-        
+
         """
         return SimDataFrame(data=self.DF.shift(periods=periods, freq=freq, axis=axis, fill_value=fill_value), **self._SimParameters)
 
@@ -2430,7 +2430,7 @@ Copy of input object, shifted.
             if int > 0 will sort the columns alphabetically ascending.
             if int < 0 will sort the columns alphabetically descending.
             if int == 0 will keep the current order of the columns.
-            
+
         """
         # if header is not requiered and sheet_name is str, directly pass it to Pandas
         if(not header and type(sheet_name) is str ) or(not units and type(sheet_name) is str ) :
@@ -2487,7 +2487,7 @@ Copy of input object, shifted.
                 if len(sheet_name) > 32 and verbose :
                     print(" the sheet_name '"+sheet_name+"' is longer than 32 characters, \n will be but to the first 32 characters: '"+sheet_name[:32]+"'")
                 names =(sheet_name[:32], )
-                
+
         elif type(split_by) is str :
             if split_by == 'left' :
                 names = tuple(sorted(self[cols].left))
@@ -2497,13 +2497,13 @@ Copy of input object, shifted.
                 names = tuple(sorted(set(map(firstChar, cols))))
             elif split_by == 'last' :
                 names = tuple(sorted(set(map(lastChar, cols))))
-                
+
         elif type(split_by) is int :
             if split_by == 0 :
                 raise ValueError(" integer `split_by´ parameter must be positive or negative, not zero.")
             else :
                 names = tuple(sorted(set([iChar(c)(split_by) for c in cols] )))
-                
+
         else :
             raise ValueError(" `split_by´ parameter must be 'left', 'right', 'first', 'last', an integer or None.")
 
@@ -2542,9 +2542,9 @@ Copy of input object, shifted.
             # get the columns for this sheet
             if split_by is None:
                 if sort is None:
-                    colselect = tuple(cols) 
+                    colselect = tuple(cols)
                 elif int(sort) > 0:
-                    colselect = tuple(sorted(cols)) 
+                    colselect = tuple(sorted(cols))
                 elif int(sort) < 0:
                     colselect = tuple(sorted(cols)[::-1])
                 else:
@@ -2620,7 +2620,7 @@ Copy of input object, shifted.
 
     def transpose(self):
         return SimDataFrame(data=self.DF.T, **self._SimParameters, transposed=(not self.transposed))
-    
+
     @property
     def T(self):
         return self.transpose()
@@ -2642,25 +2642,25 @@ Copy of input object, shifted.
 
     def as_DataFrame(self) :
         return DataFrame(self)
-    
+
     def to_Series(self):
         return self.to_SimSeries().to_Series()
-    
+
     def to_SimSeries(self):
         if len(self.columns) == 1 :
             return self[self.columns[0]]
         if len(self) <= 1:
             return SimSeries(data=Series(self.DF.iloc[0].to_list(), name=self.index[0], index=self.columns.to_list()) , **self._SimParameters)
         raise TypeError('Not possioble to converto to SimSeries')
-    
+
     @property
     def Series(self):
         return self.to_Series()
-    
+
     @property
     def SimSeries(self):
         return self.to_SimSeries()
-    
+
     @property
     def S(self):
         return self.to_SimSeries()
@@ -2668,7 +2668,7 @@ Copy of input object, shifted.
     @property
     def SS(self):
         return self.to_SimSeries()
-    
+
     @property
     def s(self):
         return self.to_SimSeries()
@@ -2685,7 +2685,7 @@ Copy of input object, shifted.
     @property
     def DF(self) :
         return self.as_DataFrame()
-    
+
     @property
     def df(self) :
         return self.as_DataFrame()
@@ -2696,7 +2696,7 @@ Copy of input object, shifted.
         else returns None
         """
         return self.convert(units)
-    
+
     @property
     def indexName(self):
         return self.index.name
@@ -2716,18 +2716,18 @@ Copy of input object, shifted.
                 result.set_Units(self.indexUnits,item=self.index.name)
             result.index.name = None
             return result
-        
+
     def append(self, other, ignore_index=False, verify_integrity=False, sort=False):
         """
         wrapper of Pandas.DataFrame append method considering the units of both Frames
-        
+
         Append rows of other to the end of caller, returning a new object.
 
         Parameters
         ----------
         other : SimDataFrame, SimSeries or DataFrame, Series/dict-like object, or list of these
             The data to append.
-            
+
         ignore_index : bool, default False
             If True, the resulting axis will be labeled 0, 1, …, n - 1.
 
@@ -2743,7 +2743,7 @@ Copy of input object, shifted.
         -------
             SimDataFrame
         """
-        
+
         if type(other) in (SimDataFrame,SimSeries):
             otherC = other.copy()
             newUnits = self.get_units(self.columns).copy()
@@ -2862,7 +2862,7 @@ Copy of input object, shifted.
             self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace)
             return None
         else:
-            return SimDataFrame(data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace), **self._SimParameters ) 
+            return SimDataFrame(data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace), **self._SimParameters )
 
     def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise') :
         axis = _cleanAxis(axis)
@@ -2870,26 +2870,26 @@ Copy of input object, shifted.
             self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors)
             return None
         else:
-            return SimDataFrame(data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors), **self._SimParameters ) 
+            return SimDataFrame(data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors), **self._SimParameters )
 
     def drop_duplicates(self, subset=None, keep='first', inplace=False, ignore_index=False) :
         return SimDataFrame(data=self.DF.drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index), **self._SimParameters )
 
     def fillna(self, value=None, method=None, axis='index', inplace=False, limit=None, downcast=None) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast), **self._SimParameters ) 
-    
+        return SimDataFrame(data=self.DF.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast), **self._SimParameters )
+
     def interpolate(self, method='slinear', axis='index', limit=None, inplace=False, limit_direction=None, limit_area=None, downcast=None, **kwargs) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.interpolate(method=method, axis=axis, limit=limit, inplace=inplace, limit_direction=limit_direction, limit_area=limit_area, downcast=downcast, **kwargs), **self._SimParameters ) 
+        return SimDataFrame(data=self.DF.interpolate(method=method, axis=axis, limit=limit, inplace=inplace, limit_direction=limit_direction, limit_area=limit_area, downcast=downcast, **kwargs), **self._SimParameters )
 
     def replace(self, to_replace=None, value=None, inplace=False, limit=None, regex=False, method='pad') :
-        return SimDataFrame(data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method), **self._SimParameters ) 
+        return SimDataFrame(data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method), **self._SimParameters )
 
     # def groupby(self, by=None, axis=0, level=None, as_index=True, sort=True, group_keys=True, squeeze=False, observed=False, dropna=True) :
     #     axis = _cleanAxis(axis)
     #     selfGrouped = self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna)
-    #     return SimDataFrame(data=selfGrouped, **self._SimParameters ) 
+    #     return SimDataFrame(data=selfGrouped, **self._SimParameters )
 
     def daily(self, outBy='mean', datetimeIndex=False) :
         """
@@ -2944,7 +2944,7 @@ Copy of input object, shifted.
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)
-        
+
         if datetimeIndex:
             output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-'+str(DD).zfill(2) for YYYY,MM,DD in output.index ] )
             output.index.names = ['DATE']
@@ -3015,8 +3015,8 @@ Copy of input object, shifted.
         else :
             raise ValueError(" outBy parameter is not valid.")
 
-        output = SimDataFrame(data=result, **self._SimParameters) 
-        
+        output = SimDataFrame(data=result, **self._SimParameters)
+
         if datetimeIndex:
             output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-01' for YYYY,MM in output.index ] )
             output.index.names = ['DATE']
@@ -3048,7 +3048,7 @@ Copy of input object, shifted.
             std : returns the standard deviation per year
             sum : returns the summation of all the values per year
             count : returns the number of rows per year
-            integrate : calculates the numerical integration over the index (a datetime-index) and returns 
+            integrate : calculates the numerical integration over the index (a datetime-index) and returns
             representative : calculates the numerical integration of the column over the index (a datetime-index) and then divide it by the elapsed time on between each pair of rows
             cumsum or cumulative : first run cumsum over the columns and then return the last value of each year
         """
@@ -3088,7 +3088,7 @@ Copy of input object, shifted.
         else :
             raise ValueError(" outBy parameter is not valid.")
 
-        output = SimDataFrame(data=result, **self._SimParameters)  
+        output = SimDataFrame(data=result, **self._SimParameters)
         output.index.names = ['YEAR']
         output.index.name = 'YEAR'
         output.set_Units('year','YEAR')
@@ -3128,7 +3128,7 @@ Copy of input object, shifted.
             else :
                 raise TypeError("labels does not match neither len(index) or len(columns).")
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.reindex(labels=labels, axis=axis, **kwargs), **self._SimParameters ) 
+        return SimDataFrame(data=self.DF.reindex(labels=labels, axis=axis, **kwargs), **self._SimParameters )
 
     def rename(self, **kwargs) :
         """
@@ -3227,7 +3227,7 @@ Copy of input object, shifted.
             else :
                 objs[each] = each
         if len(set(objs.keys())) != len(set(objs.values())) :
-            objs = dict( zip(objs.keys(),objs.keys()) ) 
+            objs = dict( zip(objs.keys(),objs.keys()) )
         if inplace :
             self.rename(columns=objs, inplace=True)
         else :
@@ -3245,7 +3245,7 @@ Copy of input object, shifted.
             else :
                 objs[each] = each
         if len(set(objs.keys())) != len(set(objs.values())) :
-            objs = dict( zip(objs.keys(),objs.keys()) ) 
+            objs = dict( zip(objs.keys(),objs.keys()) )
         if inplace :
             self.rename(columns=objs, inplace=True)
         else :
@@ -3253,7 +3253,7 @@ Copy of input object, shifted.
 
     def _CommonRename(self, SimDataFrame1, SimDataFrame2=None, LR=None) :
         cha = self.intersectionCharacter
-        
+
         if LR is not None :
             LR = LR.upper()
             if LR not in 'LR' :
@@ -3309,19 +3309,19 @@ Copy of input object, shifted.
                 alternative = self._CommonRename(SDF1, SDF2, LR='L')
                 if len(alternative[2]) < len(commonNames) :
                     return alternative
-        
+
         else :
             SDF1C, SDF2C = SDF1, SDF2.copy()
             commonNames = None
-        
+
         return SDF1C, SDF2C, commonNames
-    
+
     def _JoinedIndex(self, other, *, drop_duplicates=False, keep='first'):
         return _MergeIndex(self, other, how='outer', drop_duplicates=drop_duplicates, keep=keep)
-    
+
     def _CommonIndex(self, other, *, drop_duplicates=True, keep='first'):
         return _MergeIndex(self, other, how='inner', drop_duplicates=drop_duplicates, keep=keep)
-    
+
     def _MergeIndex(self, other, how='outer', *, drop_duplicates=True, keep='first'):
         return _MergeIndex(self, other, how=how, drop_duplicates=drop_duplicates, keep=keep)
 
@@ -3343,10 +3343,10 @@ Copy of input object, shifted.
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             notFount = 0
-            
+
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            
+
             for col in otherI.columns :
                 if col in selfI.columns :
                     result[col] = selfI[col] + otherI[col]
@@ -3357,14 +3357,14 @@ Copy of input object, shifted.
             if notFount == len(otherI.columns) :
                 if selfI.nameSeparator is not None and otherI.nameSeparator is not None :
                     selfC, otherC, newNames = selfI._CommonRename(otherI)
-                    
+
                     # if no columns has common names
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
                             return selfC + otherC.to_SimSeries()
                         else :
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
-                    
+
                     if (selfI.columns != selfC.columns).any() or (otherI.columns != otherC.columns).any() :
                         resultX = selfC + otherC
                         resultX.rename(columns=newNames, inplace=True)
@@ -3411,10 +3411,10 @@ Copy of input object, shifted.
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             notFount = 0
-            
+
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            
+
             for col in otherI.columns :
                 if col in selfI.columns :
                     result[col] = selfI[col] - otherI[col]
@@ -3425,14 +3425,14 @@ Copy of input object, shifted.
             if notFount == len(otherI.columns) :
                 if selfI.nameSeparator is not None and otherI.nameSeparator is not None :
                     selfC, otherC, newNames = selfI._CommonRename(otherI)
-                    
+
                     # if no columns has common names
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
                             return selfC - otherC.to_SimSeries()
                         else :
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
-                    
+
                     resultX = selfC - otherC
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
@@ -3465,7 +3465,7 @@ Copy of input object, shifted.
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() - other
-            return SimDataFrame(data=result, **self._SimParameters) 
+            return SimDataFrame(data=result, **self._SimParameters)
 
     def __rsub__(self, other) :
         return self.__neg__().__add__(other)
@@ -3475,10 +3475,10 @@ Copy of input object, shifted.
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            
+
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            
+
             notFount = 0
             for col in otherI.columns :
                 if col in selfI.columns :
@@ -3489,14 +3489,14 @@ Copy of input object, shifted.
             if notFount == len(otherI.columns) :
                 if selfI.nameSeparator is not None and otherI.nameSeparator is not None :
                     selfC, otherC, newNames = selfI._CommonRename(otherI)
-                    
+
                     # if no columns has common names
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
                             return selfC * otherC.to_SimSeries()
                         else :
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
-                    
+
                     resultX = selfC * otherC
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
@@ -3519,10 +3519,10 @@ Copy of input object, shifted.
                     result[col] = selfI[col] * otherI
             return result
 
-        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with 
+        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with
         elif isinstance(other, DataFrame):
             return self.__mul__(SimDataFrame(data=other, **self._SimParameters))
-        
+
         # let's Pandas deal with other types, maintain units and dtype
         else :
             result = self.as_DataFrame() * other
@@ -3536,10 +3536,10 @@ Copy of input object, shifted.
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            
+
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            
+
             notFount = 0
             for col in otherI.columns :
                 if col in selfI.columns :
@@ -3550,7 +3550,7 @@ Copy of input object, shifted.
             if notFount == len(otherI.columns) :
                 if self.nameSeparator is not None and otherI.nameSeparator is not None :
                     selfC, otherC, newNames = selfI._CommonRename(otherI)
-                    
+
                     # if no columns has common names
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the divisor
@@ -3579,7 +3579,7 @@ Copy of input object, shifted.
                     result[col] = selfI[col] / otherI
             return result
 
-        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with 
+        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with
         elif isinstance(other, DataFrame):
             return self.__truediv__(SimDataFrame(data=other, **self._SimParameters))
 
@@ -3596,10 +3596,10 @@ Copy of input object, shifted.
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            
+
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            
+
             notFount = 0
             for col in otherI.columns :
                 if col in selfI.columns :
@@ -3610,7 +3610,7 @@ Copy of input object, shifted.
             if notFount == len(otherI.columns) :
                 if selfI.nameSeparator is not None and otherI.nameSeparator is not None :
                     selfC, otherC, newNames = selfI._CommonRename(otherI)
-                    
+
                     # if no columns has common names
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
@@ -3639,7 +3639,7 @@ Copy of input object, shifted.
                     result[col] = self[col] // other
             return result
 
-        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with 
+        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with
         elif isinstance(other, DataFrame):
             return self.__floordiv__(SimDataFrame(data=other, **self._SimParameters))
 
@@ -3656,10 +3656,10 @@ Copy of input object, shifted.
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            
+
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            
+
             notFount = 0
             for col in otherI.columns :
                 if col in selfI.columns :
@@ -3670,14 +3670,14 @@ Copy of input object, shifted.
             if notFount == len(otherI.columns) :
                 if selfI.nameSeparator is not None and otherI.nameSeparator is not None :
                     selfC, otherC, newNames = selfI._CommonRename(otherI)
-                    
+
                     # if no columns has common names
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
                             return selfC % otherC.to_SimSeries()
                         else :
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
-                    
+
                     resultX = selfC % otherC
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
@@ -3700,7 +3700,7 @@ Copy of input object, shifted.
                     result[col] = selfI[col] % otherI
             return result
 
-        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with 
+        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with
         elif isinstance(other, DataFrame):
             return self.__mod__(SimDataFrame(data=other, **self._SimParameters))
 
@@ -3714,10 +3714,10 @@ Copy of input object, shifted.
         if isinstance(other, SimDataFrame) :
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimDataFrames are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
-            
+
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            
+
             notFount = 0
             for col in otherI.columns :
                 if col in selfI.columns :
@@ -3728,14 +3728,14 @@ Copy of input object, shifted.
             if notFount == len(otherI.columns) :
                 if selfI.nameSeparator is not None and otherI.nameSeparator is not None :
                     selfC, otherC, newNames = self._CommonRename(otherI)
-                    
+
                     # if no columns has common names
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
                             return selfC ** otherC.to_SimSeries()
                         else :
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
-                    
+
                     resultX = selfC ** otherC
                     resultX.rename(columns=newNames, inplace=True)
                     if self.autoAppend :
@@ -3758,7 +3758,7 @@ Copy of input object, shifted.
                     result[col] = selfI[col] ** otherI
             return result
 
-        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with 
+        # if other is Pandas DataFrame, convert it to SimDataFrame to be able to deal with
         elif isinstance(other, DataFrame):
             return self.__pow__(SimDataFrame(data=other, **self._SimParameters))
 
@@ -3768,8 +3768,8 @@ Copy of input object, shifted.
             return SimDataFrame(data=result, **self._SimParameters)
 
     def __int__(self) :
-        return SimDataFrame(data=self.DF.astype(int), **self._SimParameters) 
-    
+        return SimDataFrame(data=self.DF.astype(int), **self._SimParameters)
+
     def merge(self, right, how='inner', on=None, left_on=None, right_on=None, left_index=None, right_index=None, sort=False, suffixes=('_x', '_y'), copy=True, indicator=False, validate=None):
         if on is None and left_on is None and right_on is None and right_index is None and left_index is None:
             left_index, right_index = True, True
@@ -3831,10 +3831,10 @@ Copy of input object, shifted.
             params = self._SimParameters
             params['units'] = units
             return SimDataFrame(data=data, **params)
-        
+
     def max0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).max(axis=axis, **kwargs)
-    
+
     def mean(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
@@ -3857,7 +3857,7 @@ Copy of input object, shifted.
             params = self._SimParameters
             params['units'] = units
             return SimDataFrame(data=data, **params)
-        
+
     def mean0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).mean(axis=axis, **kwargs)
 
@@ -3883,7 +3883,7 @@ Copy of input object, shifted.
             params = self._SimParameters
             params['units'] = units
             return SimDataFrame(data=data, **params)
-    
+
     def median0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).median(axis=axis, **kwargs)
 
@@ -3909,14 +3909,14 @@ Copy of input object, shifted.
             params = self._SimParameters
             params['units'] = units
             return SimDataFrame(data=data, **params)
-        
+
     def min0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).min(axis=axis, **kwargs)
 
     def mode(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
         if axis == 0 :
-            return SimDataFrame(data=self.DF.mode(axis=axis, **kwargs), **self._SimParameters) 
+            return SimDataFrame(data=self.DF.mode(axis=axis, **kwargs), **self._SimParameters)
         if axis == 1 :
             newName = '.mode'
             if len(set(self.get_Units(self.columns).values())) == 1 :
@@ -4011,10 +4011,10 @@ Copy of input object, shifted.
             params['name'] = newName
             params['columns'] = [newName]
             return SimDataFrame(data=data, **params)
-        
+
         return (SimDataFrame(data=(self.DF**2), **self._SimParameters).mean(axis=axis, **kwargs))**0.5
-    
-    def rms0(self, axis=0, **kwargs) :       
+
+    def rms0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).rms(axis=axis, **kwargs)
 
     def std(self, axis=0, **kwargs) :
@@ -4039,7 +4039,7 @@ Copy of input object, shifted.
             params = self._SimParameters
             params['units'] = units
             return SimDataFrame(data=data, **params)
-        
+
     def std0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).std(axis=axis, **kwargs)
 
@@ -4090,7 +4090,7 @@ Copy of input object, shifted.
             return self.sum(axis=1).sum(axis=0)
 
     def sum0(self, axis=0, **kwargs) :
-        return self.sum(axis=axis, **kwargs)    
+        return self.sum(axis=axis, **kwargs)
 
     def var(self, axis=0, **kwargs) :
         axis = _cleanAxis(axis)
@@ -4167,7 +4167,7 @@ Copy of input object, shifted.
     def __setitem__(self, key, value, units=None):
         if type(key) is str :
             key = key.strip()
-        if type(value) is tuple and len(value) == 2 and type(value[1]) in [str,dict] and units is None :  # and type(value[0]) in [SimSeries, Series, list, tuple, np.ndarray,float,int,str] 
+        if type(value) is tuple and len(value) == 2 and type(value[1]) in [str,dict] and units is None :  # and type(value[0]) in [SimSeries, Series, list, tuple, np.ndarray,float,int,str]
             value, units = value[0], value[1]
         if type(value) is SimDataFrame and len(value.index) == 1 and type(key) is not slice and ( (key in self.index or pd.to_datetime(key) in self.index) and (key not in self.columns and pd.to_datetime(key) not in self.columns)):
             self.loc[key] = value
@@ -4202,7 +4202,7 @@ Copy of input object, shifted.
                                 print("WARNING: failed to convert the provided index to the units of this SimDataFrame index.")
                         else:
                             print("WARNING: not able to convert the provided index to the units of this SimDataFrame index.")
-   
+
             else :
                 uDic = { str(key) : 'UNITLESS' }
         elif type(units) is str :
@@ -4211,7 +4211,7 @@ Copy of input object, shifted.
             raise NotImplementedError
         else :
             raise NotImplementedError
-        
+
         if isinstance(value, SimDataFrame) :
             if len(value.columns) == 1 :
                 value = value.to_SimSeries()
@@ -4219,8 +4219,8 @@ Copy of input object, shifted.
                 for col in value.columns:
                     self.__setitem__(col,value[col])
                 return None
-            
-        
+
+
         before = len(self.columns)
         # if len(self.index) == len(value.index) and (self.index == value.index).all() :
         #     pass
@@ -4239,13 +4239,13 @@ Copy of input object, shifted.
                     self.new_Units(self.columns[c], 'UNITLESS')
 
     def __getitem__(self, key) :
-        
+
         ### if key is boolean filter, return the filtered SimDataFrame
         if isinstance(key, (Series)) or type(key) is np.ndarray :
             if str(key.dtype) == 'bool' :
                 return SimDataFrame( data=self._getbyFilter(key), **self._SimParameters)
-        
-        ### if key is pd.Index or pd.MultiIndex return selected rows or columns 
+
+        ### if key is pd.Index or pd.MultiIndex return selected rows or columns
         if isinstance(key, (Index)) :
             keyCols = True
             for each in key :
@@ -4381,7 +4381,7 @@ Copy of input object, shifted.
         ### if is a single row return it as a DataFrame instead of a Series
         if byIndex :
             result = _Series2Frame(result)
-        
+
         if type(result) is DataFrame:
             result = SimDataFrame(result, **self._SimParameters)
         elif type(result) is Series:
@@ -4773,7 +4773,7 @@ Copy of input object, shifted.
     def get_Units(self, items=None) :
         if self.units is None:
             self.units = {}
-            
+
         if items is None :
             return self.units.copy()
         uDic = {}
@@ -4811,7 +4811,7 @@ Copy of input object, shifted.
         units : str or list of str
             the units to be assigned
         item : str, optional
-            The name of the column to apply the units. 
+            The name of the column to apply the units.
             The default is None. In this case the unit
 
         Raises
@@ -4837,7 +4837,7 @@ Copy of input object, shifted.
         units : str or list of str
             the units to be assigned
         item : str, optional
-            The name of the column to apply the units. 
+            The name of the column to apply the units.
             The default is None. In this case the unit
 
         Raises
@@ -4872,7 +4872,7 @@ Copy of input object, shifted.
             for k,u in units.items():
                 self.set_Units(u,k)
             return None
-        
+
         if self.units is None:
             self.units = {}
         if type(self.units) is dict:
@@ -4915,7 +4915,7 @@ Copy of input object, shifted.
 
         if self.units is None:
             self.units = {}
-        
+
         if key not in self.units :
             self.units[key] = units
         else :
@@ -5266,10 +5266,10 @@ Copy of input object, shifted.
             if U is None:
                 newUnits[C] = None
             elif len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
-                newUnits[C] = U.split('/')[0] 
+                newUnits[C] = U.split('/')[0]
             else :
                 newUnits[C] = U + '*' + dtUnits
-        
+
         if str(dt.dtype).startswith('timedelta') :
             firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]))
         else:
@@ -5277,7 +5277,7 @@ Copy of input object, shifted.
         params = self._SimParameters
         params['units'] = newUnits
         return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative)), **params)
-    
+
     def differenciate(self, na_position='last'):  #, method='trapz') :
         """
         Calculates numerical differentiation of the columns values over the index values.
@@ -5295,7 +5295,7 @@ Copy of input object, shifted.
         if str(dt.dtype).startswith('timedelta') :
             dt = dt.astype('timedelta64[s]').astype('float64')/60/60/24
             dtUnits = 'DAYS'
-        
+
         diff = np.diff(self.DF.to_numpy(),axis=0)
         diff = diff / dt.reshape(-1,1)
 
@@ -5310,27 +5310,27 @@ Copy of input object, shifted.
                     newUnits[C] = U.split('*')[0]
                 else :
                     newUnits[C] = str(U) + '/' + str(dtUnits)
-        
+
         if na_position == 'first':
-            if str(dt.dtype).startswith('timedelta') :    
+            if str(dt.dtype).startswith('timedelta') :
                 NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]))
             else:
                 NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=[self.index[0]])
             diff = DataFrame(data=diff, index=self.index[1:], columns=self.columns)
             diff = NaNRow.append(diff)
         else:
-            if str(dt.dtype).startswith('timedelta') :    
+            if str(dt.dtype).startswith('timedelta') :
                 NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[-1]]))
             else:
                 NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=[self.index[-1]])
             diff = DataFrame(data=diff, index=self.index[:-1], columns=self.columns)
             diff = diff.append(NaNRow)
-            
+
         params = self._SimParameters
         params['units'] = newUnits
         params['indexUnits'] = self.indexUnits
         return SimDataFrame(data=diff, **params)
-    
+
     def sort_values(self,by=None, axis='--auto', ascending=True, inplace=False, kind='quicksort', na_position='last', ignore_index=False, key=None) :
         if by is None and axis == '--auto' :
             if len(self.index) == 1 and len(self.columns) > 1 :
@@ -5374,34 +5374,34 @@ Copy of input object, shifted.
         Return the first n rows.
 
         This function returns first n rows from the object based on position. It is useful for quickly verifying data, for example, after sorting or appending rows.
-        
+
         For negative values of n, this function returns all rows except the last n rows, equivalent to df[n:].
-        
+
         Parameters:
         ----------
             n : int, default 5
             Number of rows to select.
-        
+
         Returns
         -------
             type of caller
             The first n rows of the caller object.
         """
         return SimDataFrame(data=self.DF.head(n),**self._SimParameters)
-    
+
     def tail(self,n=5):
         """
         Return the last n rows.
 
         This function returns last n rows from the object based on position. It is useful for quickly verifying data, for example, after sorting or appending rows.
-        
+
         For negative values of n, this function returns all rows except the first n rows, equivalent to df[n:].
-        
+
         Parameters:
         ----------
             n : int, default 5
             Number of rows to select.
-        
+
         Returns
         -------
             type of caller
@@ -5412,19 +5412,19 @@ Copy of input object, shifted.
     def cumsum(self, skipna=True, *args, **kwargs):
         """
         Return cumulative sum over a SimDataFrame.
-    
+
         Returns a SimDataFrame or SimSeries of the same size containing the cumulative sum.
-    
+
         Parameters:
             axis : {0 or ‘index’, 1 or ‘columns’}, default 0
                 The index or the name of the axis. 0 is equivalent to None or ‘index’.
-    
+
         skipna: bool, default True
             Exclude NA/null values. If an entire row/column is NA, the result will be NA.
-    
+
         *args, **kwargs
             Additional keywords have no effect but might be accepted for compatibility with NumPy.
-    
+
         Returns
             SimSeries or SimDataFrame
             Return cumulative sum of Series or DataFrame.
@@ -5444,45 +5444,45 @@ Copy of input object, shifted.
     def DaysInYear(self,column=None):
         """
         returns a SimSeries with the number of days in a particular year
-    
+
         Parameters
         ----------
         column : str
-            The selected column must be an array of dtype integer, date, datetime containing 
+            The selected column must be an array of dtype integer, date, datetime containing
             the year to calculate the number of day.
-            
+
         Returns
         -------
         a new SimSeries with the resulting array and same index as the input.
         """
         return self.daysInYear(column=column)
-    
+
     def daysinyear(self,column=None):
         """
         returns a SimSeries with the number of days in a particular year
-    
+
         Parameters
         ----------
         column : str
-            The selected column must be an array of dtype integer, date, datetime containing 
+            The selected column must be an array of dtype integer, date, datetime containing
             the year to calculate the number of day.
-            
+
         Returns
         -------
         a new SimSeries with the resulting array and same index as the input.
         """
         return self.daysInYear(column=column)
-    
+
     def daysInYear(self,column=None):
         """
         returns a SimSeries with the number of days in a particular year
-    
+
         Parameters
         ----------
         column : str
-            The selected column must be an array of dtype integer, date, datetime containing 
+            The selected column must be an array of dtype integer, date, datetime containing
             the year to calculate the number of day.
-            
+
         Returns
         -------
         a new SimSeries with the resulting array and same index as the input.
@@ -5528,12 +5528,12 @@ Copy of input object, shifted.
     def RealYear(self,column=None):
         """
         returns a SimSeries with the year and cumulative days as fraction
-    
+
         Parameters
         ----------
         column : str
             The selected column must be a datetime array.
-            
+
         Returns
         -------
         a new SimSeries with the resulting array and same index as the input.
@@ -5543,12 +5543,12 @@ Copy of input object, shifted.
     def realyear(self,column=None):
         """
         returns a SimSeries with the year and cumulative days as fraction
-    
+
         Parameters
         ----------
         column : str
             The selected column must be a datetime array.
-            
+
         Returns
         -------
         a new SimSeries with the resulting array and same index as the input.
@@ -5558,12 +5558,12 @@ Copy of input object, shifted.
     def realYear(self,column=None):
         """
         returns a SimSeries with the year and cumulative days as fraction
-    
+
         Parameters
         ----------
         column : str
             The selected column must be a datetime array.
-            
+
         Returns
         -------
         a new SimSeries with the resulting array and same index as the input.
@@ -5591,7 +5591,7 @@ Copy of input object, shifted.
                 return SimSeries(data=list(realYear(self.index)), **params)
             else:
                 raise ValueError('index is not a valid date or year integer')
-    
+
     def plot(self, y=None, x=None, others=None,**kwargs):
         """
         wrapper of Pandas plot method, with some superpowers
@@ -5649,23 +5649,23 @@ Copy of input object, shifted.
                 else:
                     raise TypeError("others must be SimDataFrame, DataFrame, SimSeries or Series")
             return kwargs['ax']
-    
+
     def to_schedule(self,units='FIELD',ControlMode=None,ShutStop='STOP'):
         """
         export a eclipse style schedule file.
-    
+
         Parameters
         ----------
         units : str or dict, optional
             a string 'FIELD', 'METRIC', LAB or PVT-M will convert the data to the corresponding eclipse simulator units system.
             a dictionary should contain desired units for all the columns to be converted. The default is None.
-    
+
         Returns
         -------
         None.
         """
         from .._common.stringformat import date as strDate
-        
+
         eclipseUnits0 = {'FIELD':{'OPR':'stb/day',  # Oil rate
                                  'WPR':'stb/day',  # Water rate
                                  'GPR':'Mscf/day',  # Gas rate
@@ -5674,7 +5674,7 @@ Copy of input object, shifted.
                                  'BHP':'psia',  # BHP
                                  'THP':'psia',  # THP
                                  # 'WGPR': 'Mscf/day',  # Wet gas production rate
-                                 # 'TMR':'lb-M/day',  # Total molar rate 
+                                 # 'TMR':'lb-M/day',  # Total molar rate
                                  # 'SPR': 'stb/day',  # Steam production rate
                                  },
                         'METRIC':{'OPR':'sm3/day',  # Oil rate
@@ -5685,7 +5685,7 @@ Copy of input object, shifted.
                                  'BHP':'barsa',  # BHP
                                  'THP':'barsa',  # THP
                                  # 'WGPR': 'sm3/day',  # Wet gas production rate
-                                 # 'TMR':'kg-M/day',  # Total molar rate 
+                                 # 'TMR':'kg-M/day',  # Total molar rate
                                  # 'SPR': 'sm3/day',  # Steam production rate
                                  },
                         'LAB':{'OPR':'scc/hr',  # Oil rate
@@ -5696,7 +5696,7 @@ Copy of input object, shifted.
                                  'BHP':'atma',  # BHP
                                  'THP':'atma',  # THP
                                  # 'WGPR': 'Mscf/day',  # Wet gas production rate
-                                 # 'TMR':'lb-M/day',  # Total molar rate 
+                                 # 'TMR':'lb-M/day',  # Total molar rate
                                  # 'SPR': 'stb/day',  # Steam production rate
                                  },
                         'PVT-M':{'OPR':'sm3/day',  # Oil rate
@@ -5707,11 +5707,11 @@ Copy of input object, shifted.
                                  'BHP':'atma',  # BHP
                                  'THP':'atma',  # THP
                                  # 'WGPR': 'Mscf/day',  # Wet gas production rate
-                                 # 'TMR':'lb-M/day',  # Total molar rate 
+                                 # 'TMR':'lb-M/day',  # Total molar rate
                                  # 'SPR': 'stb/day',  # Steam production rate
                                  }}
-    
-        # create dictionary for keyword parameters        
+
+        # create dictionary for keyword parameters
         if units in eclipseUnits0:
             eclipseUnits = {}
             for each in eclipseUnits0[units]:
@@ -5720,60 +5720,60 @@ Copy of input object, shifted.
                         eclipseUnits[X+each+H.strip()] = eclipseUnits0[units][each]
             del eclipseUnits0
             units = eclipseUnits
-        
+
         data = self.to(units).melt()
-        
+
         indexName = data.index.name
         itemName = data.columns[2]
-        
+
         if indexName is not None and itemName is not None and len(indexName)>0 and len(itemName)>0:
             data = data.reset_index().sort_values(by=[indexName,itemName,'attribute'],axis=0,ascending=True).set_index(indexName)
         else:
             data = data.melt().sort_index(axis=0,ascending=True)
-        
+
         out = {'WCONHIST':DataFrame(index=data[itemName].unique(), columns=range(2,13)),
                'WCONINJH':DataFrame(index=data[itemName].unique(), columns=range(2,13)),
                'WCONPROD':DataFrame(index=data[itemName].unique(), columns=range(2,21)),
                'WCONINJE':DataFrame(index=data[itemName].unique(), columns=range(2,16))}
-        
+
         if type(ControlMode) is str:
             ControlMode = { item:ControlMode for item in data[itemName].unique() }
-        
+
         itemCol = 2
         valueCol = 0
         attCol = 1
-        
+
         curtime = ''
         lastime = None
         i = 0
-        
+
         GORcriteria = 10
-        
+
         outstr = []
-        
+
         for i in range(len(data)):
             curtime = data.iloc[i].name
             if i == 0:
                 lastime = curtime
-            
+
             if lastime != curtime or i == len(data)-1:
                 # prepare keywords to write
                 out['WCONHIST']['keyword'] = 'WCONHIST'
                 out['WCONINJH']['keyword'] = 'WCONINJH'
                 keywords = out['WCONHIST'].append(out['WCONINJH'])
                 keywords.dropna(axis=0, how='all',subset=range(2,13),inplace=True)
-                
+
                 prodh = keywords['keyword'] == 'WCONHIST'
                 keywords.loc[prodh,2] = [ 'OPEN' if each else ShutStop for each in (keywords.loc[prodh,4:6].sum(axis=1) > 0) ]
-                
+
                 injeh = keywords['keyword'] == 'WCONINJH'
                 keywords.loc[injeh,2] = [ 'OPEN' if each else ShutStop for each in (keywords.loc[injeh,4] > 0) ]
-                
+
                 if ControlMode is None:
                     keywords.loc[prodh,3] = keywords.loc[prodh,4:6].isna().values.astype(int) * np.array(['ORAT','WRAT','GRAT']).reshape(1,-1)
                 else:
                     keywords.loc[:,3] = [ ControlMode[item] for item in keywords.loc[:].index ]
-                
+
                 # write keywords
                 for kw in keywords['keyword'].unique():
                     outstr.append(kw)
@@ -5782,24 +5782,24 @@ Copy of input object, shifted.
                         outstr.append(line)
                     outstr.append('/')
                     outstr.append('\n')
-                
+
                 # write lastime
                 if type(lastime) in (int,float):
                     outstr.append('TSTEP')
                     outstr.append(' ' + str(lastime) + ' /')
                     outstr.append('/')
-                else:    
+                else:
                     outstr.append('DATES')
                     outstr.append(' ' + dt.datetime(lastime).strftime("%d %d %Y %H:%M:%S") + ' /')
                     outstr.append('/')
                 outstr.append('\n')
-                
+
                 # reset out (keywords) dictionary
                 out = {'WCONHIST':DataFrame(index=data[itemName].unique(), columns=range(2,13)),
                        'WCONINJH':DataFrame(index=data[itemName].unique(), columns=range(2,13)),
                        'WCONPROD':DataFrame(index=data[itemName].unique(), columns=range(2,21)),
                        'WCONINJE':DataFrame(index=data[itemName].unique(), columns=range(2,16))}
-            
+
             # read the input table and put the values in the corresponding parameter of the keywords
             if data.iloc[i,attCol] == 'WOPRH':
                 out['WCONHIST'].loc[data.iloc[i,itemCol],4] = data.iloc[i,valueCol]
@@ -5811,13 +5811,13 @@ Copy of input object, shifted.
                 out['WCONHIST'].loc[data.iloc[i,itemCol],7] = data.iloc[i,valueCol]
                 out['WCONINJH'].loc[data.iloc[i,itemCol],7] = data.iloc[i,valueCol]
             elif data.iloc[i,attCol] == 'WALQH':
-                out['WCONHIST'].loc[data.iloc[i,itemCol],8] = data.iloc[i,valueCol]   
+                out['WCONHIST'].loc[data.iloc[i,itemCol],8] = data.iloc[i,valueCol]
             elif data.iloc[i,attCol] == 'WTHPH':
-                out['WCONHIST'].loc[data.iloc[i,itemCol],9] = data.iloc[i,valueCol]  
-                out['WCONINJH'].loc[data.iloc[i,itemCol],6] = data.iloc[i,valueCol]             
+                out['WCONHIST'].loc[data.iloc[i,itemCol],9] = data.iloc[i,valueCol]
+                out['WCONINJH'].loc[data.iloc[i,itemCol],6] = data.iloc[i,valueCol]
             elif data.iloc[i,attCol] == 'WBHPH':
-                out['WCONHIST'].loc[data.iloc[i,itemCol],10] = data.iloc[i,valueCol]  
-                out['WCONINJH'].loc[data.iloc[i,itemCol],5] = data.iloc[i,valueCol]   
+                out['WCONHIST'].loc[data.iloc[i,itemCol],10] = data.iloc[i,valueCol]
+                out['WCONINJH'].loc[data.iloc[i,itemCol],5] = data.iloc[i,valueCol]
             elif data.iloc[i,attCol] == 'WWGPRH':
                 out['WCONHIST'].loc[data.iloc[i,itemCol],11] = data.iloc[i,valueCol]
             elif data.iloc[i,attCol] == 'WNPRH':
@@ -5832,9 +5832,9 @@ Copy of input object, shifted.
                 out['WCONINJH'].loc[data.iloc[i,itemCol],4] = data.iloc[i,valueCol]
                 out['WCONINJH'].loc[data.iloc[i,itemCol],2] = 'GAS'
             elif data.iloc[i,attCol] == 'WCTRL':
-                out['WCONHIST'].loc[data.iloc[i,itemCol],3] = data.iloc[i,valueCol]  
-                out['WCONINJH'].loc[data.iloc[i,itemCol],12] = data.iloc[i,valueCol]    
-                  
+                out['WCONHIST'].loc[data.iloc[i,itemCol],3] = data.iloc[i,valueCol]
+                out['WCONINJH'].loc[data.iloc[i,itemCol],12] = data.iloc[i,valueCol]
+
             lastime = curtime
 
 
@@ -5860,7 +5860,7 @@ def daysInYear(year):
         return dt.date(year.timetuple().tm_year, 12, 31).timetuple().tm_yday
     if type(year) is pd.Timestamp:
         return dt.date(year.year,12,31).timetuple().tm_yday
-    
+
     if type(year) in (list,tuple,np.ndarray):
         if np.array(year).dtype in ('int','int64','float','float64') :
             return np.array([ dt.date(int(Y), 12, 31).timetuple().tm_yday for Y in year ], dtype=int)
@@ -5871,14 +5871,14 @@ def daysInYear(year):
         elif len(set(map(type,year))) == 2 and list(set(map(type,year)))[0] in (dt.date, dt.datetime) and list(set(map(type,year)))[1] in (dt.date, dt.datetime):
             return np.array([ dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in year ], dtype=int)
     if isinstance(year,pd.DatetimeIndex):
-        return np.array([ dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in year ], dtype=int) 
-    
+        return np.array([ dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in year ], dtype=int)
+
     if isinstance(year,SimSeries):
         params = year._SimParameters
         params['name'] = 'DaysInYear'
         params['units'] = 'days'
         return SimSeries(data=np.array([ dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in year ], dtype=int), index=year.index, **params)
-    
+
     if isinstance(year,Series):
         return Series(data=np.array([ dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in year ], dtype=int), index=year.index)
 
@@ -5900,7 +5900,7 @@ def realYear(date):
         return date.timetuple().tm_year + date.timetuple().tm_yday / dt.date(date.timetuple().tm_year, 12, 31).timetuple().tm_yday
     if type(date) is pd.Timestamp:
         return date.year + dt.date(date.year,date.month,date.day).timetuple().tm_yday / dt.date(date.year, 12, 31).timetuple().tm_yday
-    
+
     if type(date) is np.ndarray and 'datetime' in str(np.array(date).dtype):
             return np.array([ Y.year + dt.date(Y.year, Y.month, Y.day).timetuple().tm_yday / dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in pd.to_datetime(date) ], dtype=float)
     if type(date) in (list,tuple):
@@ -5909,14 +5909,14 @@ def realYear(date):
         elif len(set(map(type,date))) == 2 and list(set(map(type,date)))[0] in (dt.date, dt.datetime) and list(set(map(type,date)))[1] in (dt.date, dt.datetime):
             return np.array([ Y.timetuple().tm_year + Y.timetuple().tm_yday / dt.date(Y.timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in date ], dtype=float)
     if isinstance(date,pd.DatetimeIndex):
-        return np.array([ Y.year + dt.date(Y.year,Y.month,Y.day).timetuple().tm_yday / dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in date ], dtype=float) 
+        return np.array([ Y.year + dt.date(Y.year,Y.month,Y.day).timetuple().tm_yday / dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in date ], dtype=float)
 
     if isinstance(date,SimSeries):
         params = date._SimParameters
         params['name'] = 'Year'
         params['units'] = 'year'
         return SimSeries(data=realYear(date.to_Pandas()), **params)
-    
+
     if isinstance(date,Series):
         return Series(data=np.array([ Y.year + dt.date(Y.year, Y.month, Y.day).timetuple().tm_yday / dt.date(Y.year, 12, 31).timetuple().tm_yday for Y in date ], dtype=float), index=date.index)
 
@@ -5931,11 +5931,11 @@ def _MergeIndex(left, right, how='outer', *, drop_duplicates=True, keep='first')
     right : Series, SimSeries, DataFrame or SimDataFrame
         The right frame to merge
     how : str, optional
-        The merge method to be used. 
+        The merge method to be used.
         The default is 'outer'.
     drop_duplicates : boo, optional
         If True, drop lines with duplicated indexes to avoid reindexing error due to repeated index.
-        If False, will drop the lines of duplicated indexes to avoid error and then put back line 
+        If False, will drop the lines of duplicated indexes to avoid error and then put back line
     Raises
     ------
     ValueError
@@ -5949,7 +5949,7 @@ def _MergeIndex(left, right, how='outer', *, drop_duplicates=True, keep='first')
         Reindexed to the merged index.
 
     """
-    
+
     def mergeAppend(frame, newIndex):
         if type(frame) is SimSeries:
             frame = frame.sdf
@@ -5968,15 +5968,15 @@ def _MergeIndex(left, right, how='outer', *, drop_duplicates=True, keep='first')
         else:
             newframe = frame.reindex(index=newIndex)
         return SimDataFrame(newframe, **frame._SimParameters)
-                
+
     if how not in ('outer','inner','left','right','cross'):
         raise ValueError("how must be 'outer', 'iner', 'left', 'right' or 'cross'")
-    
+
     # if both indexes are equal
     if len(left.index) == len(right.index) and (left.index == right.index).all():
         return left, right
-    
-    # if are different, extract a Series accoring to the type of input    
+
+    # if are different, extract a Series accoring to the type of input
     else:
         # from datafiletoolbox import SimSeries, SimDataFrame
         # from pandas import Series, DataFrame
@@ -5989,7 +5989,7 @@ def _MergeIndex(left, right, how='outer', *, drop_duplicates=True, keep='first')
             ileft = left.iloc[:,0]
         elif type(left) is Series:
             ileft = left
-        
+
         # checking right
         if type(right) is SimDataFrame:
             iright = right.DF.iloc[:,0]
@@ -5999,7 +5999,7 @@ def _MergeIndex(left, right, how='outer', *, drop_duplicates=True, keep='first')
             iright = right.iloc[:,0]
         elif type(right) is Series:
             iright = right
-        
+
         # merge the indexes
         newIndex= pd.merge(ileft,iright,how=how,left_index=True,right_index=True).index
         # return original dataframes reindexed to the merged index
@@ -6009,7 +6009,7 @@ def _MergeIndex(left, right, how='outer', *, drop_duplicates=True, keep='first')
         else:
             return mergeAppend(left, newIndex), mergeAppend(right, newIndex)
 
-    
+
 def merge_units(left, right, suffixes=('_x', '_y')):
     """
     return a dictionary with the units of both SimDataFrames merged, corresponding to the merged DataFrame.
@@ -6037,16 +6037,16 @@ def merge_units(left, right, suffixes=('_x', '_y')):
                 merged[col + suffixes[1]] = right.get_units(col)[col]
             else:
                 merged[col] = right.get_units(col)[col]
-    
+
     elif type(left) in [SimDataFrame, SimSeries] and type(right) not in [SimDataFrame, SimSeries]:
-        
+
         if isinstance(right,DataFrame):
             columns = right.columns
         elif isinstance(right,Series) and type(right.name) is str and len(right.name.strip()) > 0:
             columns = [right.name]
         else:
             columns = []
-            
+
         for col in left.columns:
             if col in columns:
                 merged[col + suffixes[0]] = left.get_units(col)[col]
@@ -6057,16 +6057,16 @@ def merge_units(left, right, suffixes=('_x', '_y')):
                 merged[col + suffixes[1]] = 'UNDEFINED'
             else:
                 merged[col] = 'UNDEFINED'
-    
+
     elif type(left) not in [SimDataFrame, SimSeries] and type(right) in [SimDataFrame, SimSeries]:
-        
+
         if isinstance(left,DataFrame):
             columns = left.columns
         elif isinstance(left,Series) and type(left.name) is str and len(left.name.strip()) > 0:
             columns = [left.name]
         else:
             columns = []
-            
+
         for col in right.columns:
             if col in columns:
                 merged[col + suffixes[0]] = right.get_units(col)[col]
@@ -6087,15 +6087,15 @@ def merge_SimParameters(left,right):
         if left.index.name == right.index.name:
             merged['indexName'] = left.index.name
         else:
-            merged['indexName'] = ( str(left.index.name) if left.index.name is not None else '' 
-                                   + 
+            merged['indexName'] = ( str(left.index.name) if left.index.name is not None else ''
+                                   +
                                     str(right.index.name) if right.index.name is not None else '' )
         if left.indexUnits == right.indexUnits:
             merged['indexUnits'] = left.indexUnits
         else:
             # what to do if index units are different? should convert index if possible...
             merged['indexUnits'] = left.indexUnits
-        
+
         renameSeparatorRight = False
         renameSeparatorLeft = False
         if left.nameSeparator == right.nameSeparator:
@@ -6110,12 +6110,12 @@ def merge_SimParameters(left,right):
                     merged['nameSeparator'] = right.nameSeparator
                     # must rename right to use left nameSeparator
                     renameSeparatorLeft = True
-                else: 
+                else:
                     # should look for a new common name separator
                     merged['nameSeparator'] = left.nameSeparator + right.nameSeparator
                     renameSeparatorLeft = True
                     renameSeparatorRight = True
-        
+
         renameIntersectionRight = False
         renameIntersectionLeft = False
         if left.intersectionCharacter == right.intersectionCharacter:
@@ -6130,20 +6130,20 @@ def merge_SimParameters(left,right):
                     merged['intersectionCharacter'] = right.intersectionCharacter
                     # must rename right to use left intersectionCharacter
                     renameIntersectionLeft = True
-                else: 
+                else:
                     # should look for a new common name separator
                     merged['intersectionCharacter'] = left.intersectionCharacter + right.intersectionCharacter
                     renameIntersectionLeft = True
                     renameIntersectionRight = True
-        
+
         merged['autoAppend'] = bool(int(left.autoAppend) + int(right.autoAppend))
-    
+
     elif type(left) in [SimDataFrame, SimSeries] and type(right) not in [SimDataFrame, SimSeries]:
         merged = left._SimParameters.copy()
     elif type(left) not in [SimDataFrame, SimSeries] and type(right) in [SimDataFrame, SimSeries]:
         merged = right._SimParameters.copy()
     return merged
-    
+
 def merge(left, right, how='inner', on=None, left_on=None, right_on=None, left_index=False, right_index=False, sort=False, suffixes=('_x', '_y'), copy=True, indicator=False, validate=None):
     """
     Wrapper of Pandas merge, to merge also the units dictionary.
@@ -6165,7 +6165,7 @@ def merge(left, right, how='inner', on=None, left_on=None, right_on=None, left_i
         · inner: use intersection of keys from both frames, similar to a SQL inner join; preserve the order of the left keys.
         · cross: creates the cartesian product from both frames, preserves the order of the left keys.
     on : label or list
-        Column or index level names to join on. These must be found in both DataFrames. 
+        Column or index level names to join on. These must be found in both DataFrames.
         If on is None and not merging on indexes then this defaults to the intersection of the columns in both DataFrames.
     left_on : label or list, or array-like
         Column or index level names to join on in the left DataFrame. Can also be an array or list of arrays of the length of the left DataFrame. These arrays are treated as if they are columns.
@@ -6196,7 +6196,7 @@ def merge(left, right, how='inner', on=None, left_on=None, right_on=None, left_i
         A SimDataFrame of the two merged objects.
     """
     params = {}
-    
+
     # checking right
     if type(right) is SimDataFrame:
         iright = right.DF
@@ -6208,7 +6208,7 @@ def merge(left, right, how='inner', on=None, left_on=None, right_on=None, left_i
         iright = right
     elif type(right) is Series:
         iright = right
-    
+
     # checking left
     if type(left) is SimDataFrame:
         ileft = left.DF
@@ -6223,8 +6223,7 @@ def merge(left, right, how='inner', on=None, left_on=None, right_on=None, left_i
         ileft = left
     elif type(left) is Series:
         ileft = left
-    
+
     mergeddata = pd.merge(ileft, iright, how=how, on=on, left_on=left_on, right_on=right_on, left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, copy=copy, indicator=indicator, validate=validate)
     params['units'] = merge_units(left, right, suffixes=suffixes)
     return SimDataFrame(data=mergeddata,**params)
-    

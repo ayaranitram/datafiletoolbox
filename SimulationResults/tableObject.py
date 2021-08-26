@@ -6,7 +6,7 @@ Created on Thu Jan 21 11:00:20 2021
 """
 
 __version__ = '0.20.1'
-__release__ = 210804
+__release__ = 210826
 __all__ = ['TABLE']
 
 from .mainObject import SimResult as _SimResult
@@ -28,7 +28,7 @@ import os
 class TABLE(_SimResult):
     """
     object to contain data read from generic table files, like .txt or csv
-    
+
     """
     def __init__(self, inputFile=None, verbosity=2, sep=None, header='infer', units='infer', names=None, overwrite=True, index_col=False, **kwargs) :
         _SimResult.__init__(self, verbosity=verbosity)
@@ -51,7 +51,7 @@ class TABLE(_SimResult):
         if len(self.Frames) > 0:
             self.name = _extension(inputFile)[1]
             self.initialize(**kwargs)
-    
+
     def initialize(self, **kwargs) :
         """
         run intensive routines, to have the data loaded and ready
@@ -87,13 +87,13 @@ class TABLE(_SimResult):
         if not self.is_Key('DAY') and self.is_Key('DATE') :
             self.createDAY()
         _SimResult.initialize(self, **kwargs)
-    
+
     def set_itemsCol(self,column,frame=None):
         if frame is None:
             for Frame in self.Frames:
                 if column in self.Frames[Frame].columns:
                     self.itemsCol[Frame] = column
-    
+
     def findItemsCol(self):
         for frame in self.Frames:
             for col in self.Frames[frame].columns:
@@ -104,12 +104,12 @@ class TABLE(_SimResult):
                         else :
                             self.itemsCol[frame] = col
                             break
-    
+
     def stripItems(self):
         for frame in self.Frames:
             if frame in self.itemsCol:
                 self.Frames[frame][self.itemsCol[frame]] = self.Frames[frame][self.itemsCol[frame]].str.strip("""\t\r\n'" """)
-    
+
     def readTable(self, inputFile, sep=None, header='infer', units=None, names=None, index_col=False):
         """
         internal function to read a generic table from a file (header in first row, units in second row)
@@ -124,7 +124,7 @@ class TABLE(_SimResult):
                     header = list(header)+[units]
         elif type(header) is str and header.strip().lower() == 'infer':
             pass  # to be implemented
-        
+
         if type(units) is str and units.strip().lower() == 'infer':
             units = None  # to be implemented
         elif type(units) is int:
@@ -142,7 +142,7 @@ class TABLE(_SimResult):
         user_index_col = index_col
         if index_col is False and ( type(header) is not int and header != 'infer' ) :
             index_col = None
-        
+
         try :
             NewFrame = pd.read_table(inputFile, sep=sep, header=header, engine='python', index_col=index_col)
         except ImportError:
@@ -157,16 +157,16 @@ class TABLE(_SimResult):
             except:
                 raise ModuleNotFoundError("Missing optional dependency 'xlrd'.\nInstall xlrd for Excel support.\nUse pip or conda to install xlrd.")
             raise TypeError('Not able to read the excel file, please check input parameters and excel sheets format.')
-        
+
         if inputFile in self.Frames:
             _verbose(self.speak, 2, "the file '"+str(inputFile)+"' will overwrite the previously loaded file with the same name.")
-        
+
         if user_index_col is False and ( type(header) is not int and header != 'infer' ) :
             colNames = NewFrame.columns
             NewFrame.reset_index(inplace=True)
             NewFrame.drop(NewFrame.columns[-1],axis=1,inplace=True)
             NewFrame.columns = colNames
-        
+
         NewNames = {}
         if units is not None:
             for col in NewFrame.columns:
@@ -202,7 +202,7 @@ class TABLE(_SimResult):
             return self.vectors[key]
         if key == self.DTindex:
             return self.DTindexValues
-        
+
         if frame is None:
             frame = list(self.Frames.keys())
         elif frame in self.Frames:
@@ -216,7 +216,7 @@ class TABLE(_SimResult):
                 return None
             if key == self.DTindex and self.lastFrame in self.Frames and key in self.Frames[self.lastFrame] and self.lastItem != '':
                 result = self.Frames[self.lastFrame][self.Frames[self.lastFrame][self.itemsCol[self.lastFrame]] == self.lastItem][key]
-                
+
             for Frame in self.Frames:
                 if ':' in key and ':' not in [key[0],key[-1]]:
                     if _mainKey(key) in self.Frames[Frame].columns:
@@ -236,7 +236,7 @@ class TABLE(_SimResult):
                         self.lastItem = ''
                         self.lastFrame = Frame
                         result = self.Frames[Frame][key[:-1]]
-        
+
         vector = Series(data=[0]*len(self.DTindexValues),index=self.DTindexValues)
         vector = vector + result
         self.vectors[key] = vector.to_numpy()
@@ -252,7 +252,7 @@ class TABLE(_SimResult):
                             if col not in ['DATE','DATES','TIME','YEARS','MONTHS','DAYS'] :
                                 keys.append(str(col) + ':' + str(item))
         self.keys = tuple(sorted(set(keys)))
-        
+
     def list_Keys(self, pattern=None, reload=False) :
         """
         Return a StringList of summary keys matching @pattern.
@@ -275,7 +275,7 @@ class TABLE(_SimResult):
                 if pattern in key :
                     keysList.append(key)
             return tuple( keysList )
-    
+
     # def extract_Wells(self) :
     #     """
     #     Will return a list of all the well names in case.
@@ -326,7 +326,7 @@ class TABLE(_SimResult):
     #         return tuple(results)
     #     else :
     #         return self.groups
-    
+
     def extractDATE(self):
         dates = []
         for frame in self.Frames:

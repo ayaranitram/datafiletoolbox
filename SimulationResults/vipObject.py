@@ -6,7 +6,7 @@ Created on Wed May 13 15:34:04 2020
 """
 
 __version__ = '0.21.0'
-__release__ = 210804
+__release__ = 210826
 __all__ = ['VIP']
 
 from .mainObject import SimResult as _SimResult
@@ -649,7 +649,7 @@ class VIP(_SimResult):
             return False
         else:
             sss = sss.split('\n')
-        
+
         sssType = sss[0].split()[0]
         _verbose( self.speak, 1, 'Type of data in this input file: ' + str(sssType) )
 
@@ -844,7 +844,7 @@ class VIP(_SimResult):
                     except:
                         DateVector = None
                         break
-        
+
         if DateVector is None:
             for sss in self.results :
                 if self.results[sss][0] != 'FIELD' :
@@ -861,7 +861,7 @@ class VIP(_SimResult):
                             pass
             if DateVector is not None:
                 DateVector = list(set(DateVector))
-            
+
         self.set_Vector( 'DATES', np.array( pd.to_datetime( DateVector ), dtype='datetime64[s]'), self.get_Unit('DATE'), DataType='datetime64', overwrite=True )
         #self.set_Vector( 'DATES', np.array( pd.to_datetime( self.get_Vector('DATE')['DATE'] ), dtype='datetime64[s]'), self.get_Unit('DATE'), DataType='datetime64', overwrite=True )
         self.set_Vector( 'DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), overwrite=True )
