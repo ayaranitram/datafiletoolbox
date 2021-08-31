@@ -7,7 +7,7 @@ Created on Sat Dec  7 21:48:37 2019
 """
 
 __version__ = '0.5.3'
-__release__ = 210826
+__release__ = 210831
 
 import numpy
 # import pandas
@@ -45,7 +45,7 @@ class unit(object) :
         'T' : (lambda X: X*1.0E+12,lambda X: X*1.0E+24,lambda X: X*1.0E+36) , # tera
         'G' : (lambda X: X*1.0E+09,lambda X: X*1.0E+18,lambda X: X*1.0E+27) , # giga
         'M' : (lambda X: X*1.0E+06,lambda X: X*1.0E+12,lambda X: X*1.0E+18) , # mega
-        'K' : (lambda X: X*1.0E+03,lambda X: X*1.0E+06,lambda X: X*1.0E+09) , # kilo with uppercase K because it is very common
+        'K' : (lambda X: X*1.0E+03,)*3 , # with uppercase K is commonly used to express x1000
         'k' : (lambda X: X*1.0E+03,lambda X: X*1.0E+06,lambda X: X*1.0E+09) , # kilo
         'h' : (lambda X: X*1.0E+02,lambda X: X*1.0E+04,lambda X: X*1.0E+06) , # hecto
         'd' : (lambda X: X*1.0E-01,lambda X: X*1.0E-02,lambda X: X*1.0E-03) , # deci

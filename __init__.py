@@ -10,7 +10,7 @@ Created on Tue Jul  9 21:23:27 2019
 """
 
 __version__ = '0.42.4'
-__release__ = 210806
+__release__ = 210828
 __author__ = 'Martin Carlos Araya <martinaraya@gmail.com>'
 __all__ = ['stringformat', 'extension', 'Alternate', 'convert', 'SimPandas',
            'SimSeries', 'SimDataFrame', 'loadSimulationResults','melt']
