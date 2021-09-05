@@ -1582,52 +1582,52 @@ class SimResult(object):
         """
         return self.len_tSteps()
 
-    def to(self, units) :
-        """
-        returns the dataframe converted to the requested units if possible,
-        else returns None
-        """
-        return self.convert(units)
-    def convert(self, units) :
-        """
-        returns the dataframe converted to the requested units if possible,
-        else returns None
-        """
-        # if type(units) is str and len(set(self.get_Units(self.columns).values() )) == 1 :
-        #     if convertibleUnits(list(set(self.get_Units(self.columns).values() ))[0], units) :
-        #         return SimDataFrame(data=convertUnit(self.DF, list(set(self.get_Units(self.columns).values() ))[0], units, self.speak ), units=units )
-        if type(units) is str :
-            result = self.copy()
-            valid = False
-            for col in self.columns :
-                if convertibleUnits(self.get_Units(col)[col], units ) :
-                    result[col] = self[col].to(units) # convertUnit(self[col].S, self.get_Units(col)[col], unitsDict[col], self.speak ), unitsDict[col]
-                    valid = True
-            if valid :
-                return result
-        if type(units) in [list, tuple] :
-            result = self.copy()
-            valid = False
-            for col in self.columns :
-                for ThisUnits in units :
-                    if convertibleUnits(self.get_Units(col)[col], ThisUnits ) :
-                        result[col] = self[col].to(ThisUnits) # convertUnit(self[col].S, self.get_Units(col)[col], unitsDict[col], self.speak ), unitsDict[col]
-                        valid = True
-                        break
-            if valid :
-                return result
-        if type(units) is dict :
-            unitsDict = {}
-            for k, v in units.items() :
-                keys = self.find_Keys(k)
-                if len(keys) > 0 :
-                    for each in keys :
-                        unitsDict[each] = v
-            result = self.copy()
-            for col in self.columns :
-                if col in unitsDict :
-                    result[col] = self[col].convert(unitsDict[col]) # convertUnit(self[col].S, self.get_Units(col)[col], unitsDict[col], self.speak ), unitsDict[col]
-            return result
+    # def to(self, units) :
+    #     """
+    #     returns the dataframe converted to the requested units if possible,
+    #     else returns None
+    #     """
+    #     return self.convert(units)
+    # def convert(self, units) :
+    #     """
+    #     returns the dataframe converted to the requested units if possible,
+    #     else returns None
+    #     """
+    #     # if type(units) is str and len(set(self.get_Units(self.columns).values() )) == 1 :
+    #     #     if convertibleUnits(list(set(self.get_Units(self.columns).values() ))[0], units) :
+    #     #         return SimDataFrame(data=convertUnit(self.DF, list(set(self.get_Units(self.columns).values() ))[0], units, self.speak ), units=units )
+    #     if type(units) is str :
+    #         result = self.copy()
+    #         valid = False
+    #         for col in self.columns :
+    #             if convertibleUnits(self.get_Units(col)[col], units ) :
+    #                 result[col] = self[col].to(units) # convertUnit(self[col].S, self.get_Units(col)[col], unitsDict[col], self.speak ), unitsDict[col]
+    #                 valid = True
+    #         if valid :
+    #             return result
+    #     if type(units) in [list, tuple] :
+    #         result = self.copy()
+    #         valid = False
+    #         for col in self.columns :
+    #             for ThisUnits in units :
+    #                 if convertibleUnits(self.get_Units(col)[col], ThisUnits ) :
+    #                     result[col] = self[col].to(ThisUnits) # convertUnit(self[col].S, self.get_Units(col)[col], unitsDict[col], self.speak ), unitsDict[col]
+    #                     valid = True
+    #                     break
+    #         if valid :
+    #             return result
+    #     if type(units) is dict :
+    #         unitsDict = {}
+    #         for k, v in units.items() :
+    #             keys = self.find_Keys(k)
+    #             if len(keys) > 0 :
+    #                 for each in keys :
+    #                     unitsDict[each] = v
+    #         result = self.copy()
+    #         for col in self.columns :
+    #             if col in unitsDict :
+    #                 result[col] = self[col].convert(unitsDict[col]) # convertUnit(self[col].S, self.get_Units(col)[col], unitsDict[col], self.speak ), unitsDict[col]
+    #         return result
 
     def _commonInputCleaning(self, Keys=[], objects=None, otherSims=None) :
         """
