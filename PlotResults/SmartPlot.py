@@ -839,7 +839,11 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
 
     # display horizontal line if required
     if type(hline) is dict:
-        plt.hlines(hline['y'], xmin=hline['xmin'], xmax=hline['xmax'], colors=hline['colors'], linestyles=hline['linestyle'], label='')
+        plt.hlines(hline['y'], xmin=hline['xmin'], xmax=hline['xmax'], colors=hline['colors'], linestyles=hline['linestyle'], label=hline['label'])
+    elif type(hline) in (int,float):
+        xMin , xMax = plt.xlim()
+        print('limites x de la figura',xMin,xMax)
+        plt.hlines(hline, xmin=xMin, xmax=xMax, colors='darkgray', linestyles='--', label='')
 
     # set the user limits
     plt.xlim(xlim)
