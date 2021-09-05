@@ -742,7 +742,7 @@ class SimResult(object):
     def __repr__(self):
         self.printMessages = 1
 
-        text = "\n" + str(self.kind).split('.')[-1][:-2] + " source: '" + self.name + "'"
+        text = "\n" + str(self.kind).split('.')[-1][:-2] + " source: '" + str(self.name) + "'"
         if self.is_Key('DATE') :
             text = text + '\n from ' + str(self.start) + ' to ' + str(self.end) # str(self('DATE')[0]) + ' to ' + str(self('DATE')[-1])
         if self.is_Key('FOIP') :
