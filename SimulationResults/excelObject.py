@@ -35,12 +35,14 @@ class XLSX(_SimResult):
             self.sheetName_auto = 'R'
         self.nameSeparator = str(nameSeparator)
         self.commonIndex = None
-        if type(inputFile) is str and len(inputFile.strip()) > 0 :
-            if os.path.isfile(inputFile) :
+        if 'frames' in kwargs or ( type(inputFile) is str and len(inputFile.strip()) > 0 ):
+            if 'frames' in kwargs and kwargs['frames'] is not None:
+                self.fromSimDataFrame(kwargs['frames'])
+            elif os.path.isfile(inputFile) :
                 self.readSimExcel(inputFile, sheet_name=sheet_name, header=header, units=units, combine_SheetName_ColumnName=combine_SheetName_ColumnName, **kwargs)
             else :
                 print("file doesn't exists")
-        if len(self.Frames) > 0 :
+        if len(self.Frames) > 0 and inputFile is not None:
             self.name = _extension(inputFile)[1]
             # if 'TIME' not in self.keys :
             #     if 'DATE' in self.keys :
@@ -158,6 +160,17 @@ class XLSX(_SimResult):
             _verbose(self.speak, 3, "not a commong index name found.")
             self.DTindex = None
 
+    def fromSimDataFrame(self,frame):
+        self.units = frame.get_units()
+        self.nameSeparator = frame.nameSeparator
+        if frame.index.name is not None and frame.index.name not in frame.columns:
+            indexName = frame.index.name
+            self.DTindex = indexName
+            frame.reset_index(inplace=True)
+        self.Frames['sdf'] = frame
+        self.name = 'from SimDataFrame'
+        self.keys = frame.columns
+
     def readSimExcel(self, inputFile, sheet_name=None, header=[0, 1], units=1, combine_SheetName_ColumnName=True, **kwargs) :
         """
         internal function to read an excel file with SimDataFrame format (header in first row, units in second row)
@@ -185,6 +198,7 @@ class XLSX(_SimResult):
             if type(units) is int :
                 if units not in header :
                     header = list(header)+[units]
+
         try :
             NewFrames = pd.read_excel(inputFile, sheet_name=sheet_name, header=header)
         except ImportError:
@@ -334,6 +348,7 @@ class XLSX(_SimResult):
                 if K in self.FramesIndex:
                     del self.FramesIndex[K]
 
+            commonIndex = None
             for timeK in ['DATE','DATES','TIME','DAYS','MONTHS','YEARS']:
                 if timeK in list(map(str.upper,cleaningList)):
                     commonIndex = None

@@ -5837,6 +5837,15 @@ Copy of input object, shifted.
 
             lastime = curtime
 
+    def to_SimationResults(self):
+        """
+        loads the current frame into a SimulationResults excelObject.
+
+        return XLSX instance from Simulation Results
+        """
+        from datafiletoolbox.SimulationResults.excelObject import XLSX
+        return XLSX(frames=self)
+
 
 
 def daysInYear(year):
