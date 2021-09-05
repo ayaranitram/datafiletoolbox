@@ -310,6 +310,11 @@ class SimResult(object):
         self.set_RestartsTimeVector()
         # self.set_savingFilter()
         self.set_vectorTemplate()
+        if 'index' in kwargs:
+            if self.is_Key(kwargs['index']):
+                _ = self.set_index(kwargs['index'])
+            else:
+                print("the requested index is not a valid key in this object: '"+str(kwargs['index'])+"'")
 
     def get_start(self):
         if self.start is not None:
