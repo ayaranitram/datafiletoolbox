@@ -4396,7 +4396,7 @@ Copy of input object, shifted.
         try to get a filtered DataFrame or Series(.filter[key] )
         """
         if len(key) != len(self.DF) :
-            raise ValueError('Filter wrong length ' + len(key) + ' instead of ' + len(self.DF) )
+            raise ValueError('Filter wrong length ' + str(len(key)) + ' instead of ' + str(len(self.DF)) )
         if not isinstance(key, (Series, SimSeries)) and type(key) is not np.ndarray :
             raise TypeError("Filter must be a Series or Array" )
         else :
