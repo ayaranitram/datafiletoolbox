@@ -6,8 +6,8 @@ Created on Sat Dec  7 21:48:37 2019
 @author: martin
 """
 
-__version__ = '0.5.3'
-__release__ = 210831
+__version__ = '0.5.4'
+__release__ = 210906
 
 import numpy
 # import pandas
@@ -1300,6 +1300,9 @@ def unitDivision(unit1, unit2):
         unit1 = 'dimensionless'
     if unit2 is None :
         unit2 = 'dimensionless'
+
+    if unit1 == unit2:
+        return 'dimensionless'
 
     if type(unit1) is str and len(unit1.strip(' ()'))==0 :
         unit1 = 'dimensionless'
