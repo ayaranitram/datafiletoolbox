@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.2'
-__release__ = 210826
+__version__ = '0.60.3'
+__release__ = 210906
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -5177,6 +5177,11 @@ class SimResult(object):
                 else :
                     operandB = 0
                     operandA = 0
+
+                if type(operandA) is SimDataFrame and len(operandA.columns) == 1:
+                    operandA = operandA.to_SimSeries()
+                if type(operandB) is SimDataFrame and len(operandB.columns) == 1:
+                    operandB = operandB.to_SimSeries()
 
                 if CalculationTuple[i] == substractionSign :  # '-' or ' -'
                     Stack.append(operandA - operandB)
