@@ -5,8 +5,8 @@ Created on Wed May 13 00:31:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.4.1'
-__release__ = 210826
+__version__ = '0.4.2'
+__release__ = 210906
 __all__ = ['Plot']
 
 import time
@@ -838,8 +838,8 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
         Axis[0].legend( LegendLines, plotLabels, loc=legendLocation )  # LegendLines contains selected plotLines for the leggend
 
     # display horizontal line if required
-    if type(hline) is dict:
-        plt.hlines(hline['y'], xmin=hline['xmin'], xmax=hline['xmax'], colors=hline['colors'], linestyles=hline['linestyle'], label=hline['label'])
+    if type(hline) is dict and len(hline) > 0:
+        plt.hlines(hline['y'], xmin=hline['xmin'] if 'xmin' in hline else None, xmax=hline['xmax'] if 'xmax' in hline else None, colors=hline['colors'] if 'colors' in hline else None, linestyles=hline['linestyle'] if 'linestyle' in hline else None, label=hline['label'] if 'label' in hline else None)
     elif type(hline) in (int,float):
         xMin , xMax = plt.xlim()
         print('limites x de la figura',xMin,xMax)
