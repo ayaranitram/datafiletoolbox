@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.67.7'
-__release__ = 210826
+__version__ = '0.68.0'
+__release__ = 210907
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -1887,10 +1887,14 @@ class SimSeries(Series) :
             std : returns the standard deviation per month
             sum : returns the summation of all the values per month
             count : returns the number of rows per month
+
+        datetimeIndex : bool
+            if True the index will converted to DateTimeIndex with Day=1 for each month
+            if False the index will be a MultiIndex (Year,Month)
         """
         return self.to_SimDataFrame().monthly(outBy=outBy, datetimeIndex=datetimeIndex).to_SimSeries()
 
-    def yearly(self, outBy='mean') :
+    def yearly(self, outBy='mean', datetimeIndex=False) :
         """
         return a dataframe with a single row per year.
         index must be a date type.
@@ -1905,8 +1909,12 @@ class SimSeries(Series) :
             std : returns the standard deviation per year
             sum : returns the summation of all the values per year
             count : returns the number of rows per year
+
+        datetimeIndex : bool
+            if True the index will converted to DateTimeIndex with Day=1 and Month=1 for each year
+            if False the index will be a MultiIndex (Year,Month)
         """
-        return self.to_SimDataFrame().yearly(outBy=outBy).to_SimSeries()
+        return self.to_SimDataFrame().yearly(outBy=outBy, datetimeIndex=datetimeIndex).to_SimSeries()
 
     def DaysInYear(self,column=None):
         """
@@ -2978,6 +2986,10 @@ Copy of input object, shifted.
             std : returns the standard deviation per month
             sum : returns the summation of all the values per month
             count : returns the number of rows per month
+
+        datetimeIndex : bool
+            if True the index will converted to DateTimeIndex with Day=1 for each month
+            if False the index will be a MultiIndex (Year,Month)
         """
         try :
             result = self.DF.groupby([self.index.year, self.index.month])
@@ -3033,7 +3045,7 @@ Copy of input object, shifted.
             # output.indexUnits = ('year','month')
         return output
 
-    def yearly(self, outBy='mean') :
+    def yearly(self, outBy='mean', datetimeIndex=False) :
         """
         return a dataframe with a single row per year.
         index must be a date type.
@@ -3051,6 +3063,10 @@ Copy of input object, shifted.
             integrate : calculates the numerical integration over the index (a datetime-index) and returns
             representative : calculates the numerical integration of the column over the index (a datetime-index) and then divide it by the elapsed time on between each pair of rows
             cumsum or cumulative : first run cumsum over the columns and then return the last value of each year
+
+        datetimeIndex : bool
+            if True the index will converted to DateTimeIndex with Day=1 and Month=1 for each year
+            if False the index will be a MultiIndex (Year,Month)
         """
         try :
             result = self.DF.groupby(self.index.year)
@@ -3089,10 +3105,18 @@ Copy of input object, shifted.
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)
-        output.index.names = ['YEAR']
-        output.index.name = 'YEAR'
-        output.set_Units('year','YEAR')
-        output.indexUnits = 'year'
+
+        if datetimeIndex:
+            output.index = pd.to_datetime( [ str(YYYY)+'-01-01' for YYYY in output.index ] )
+            output.index.names = ['DATE']
+            output.index.name = 'DATE'
+            if 'DATE' not in output.units:
+                output.set_Units('date','DATE')
+        else:
+            output.index.names = ['YEAR']
+            output.index.name = 'YEAR'
+            output.set_Units('year','YEAR')
+            output.indexUnits = 'year'
         return output
 
     def aggregate(self, func=None, axis=0, *args, **kwargs) :
