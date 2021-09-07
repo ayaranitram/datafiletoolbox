@@ -5,8 +5,8 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.0'
-__release__ = 210519
+__version__ = '0.1.1'
+__release__ = 210907
 __all__ = ['NEXUS']
 
 from .mainObject import SimResult as _SimResult
@@ -94,7 +94,7 @@ class NEXUS(_SimResult):
         else :
             self.VIPstyle = 'ERROR'
             _verbose( self.speak, 3, ' Unable to convert to ECL style keys')
-            if type(self.ECLstyle) == bool :
+            if type(self.ECLstyle) is bool :
                 self.use_VIPstyle()
         self.complete_Units()
 
@@ -110,14 +110,14 @@ class NEXUS(_SimResult):
         else :
             self.ECLstyle = 'ERROR'
             _verbose( self.speak, 3, ' Unable to get VIP style keys.')
-            if type(self.VIPstyle) == bool :
+            if type(self.VIPstyle) is bool :
                 self.use_ECLstyle()
         self.complete_Units()
 
     def get_Style(self) :
-        if self.VIPstyle == True and self.ECLstyle == False :
+        if self.VIPstyle is True and self.ECLstyle is False :
             return 'using VIP style'
-        if self.ECLstyle == True and self.VIPstyle == False :
+        if self.ECLstyle is True and self.VIPstyle is False :
             return 'using ECL style'
         return 'error in style, highly recommended to regenerate style'
 
@@ -156,7 +156,7 @@ class NEXUS(_SimResult):
                     _verbose( self.speak, 2, 'Successfully applied LPG correction for VIP sss reports.')
 
     def reload(self) :
-        # if self.CSV == False :
+        # if self.CSV is False :
         #     self.loadSSS(self.path)
         # else :
         #     self.loadCSV(self.path)
@@ -278,7 +278,7 @@ class NEXUS(_SimResult):
 
       ####################### end of auxiliar functions #######################
 
-        if SSStype == [] : # and self.CSV == False:
+        if SSStype == [] : # and self.CSV is False:
             for sss in list(self.results.keys()) :
                 SSStype += [self.results[sss][0]]
         elif type(SSStype) == str :
@@ -287,7 +287,7 @@ class NEXUS(_SimResult):
         key = str(key).strip().upper()
         if forceVIP :
             _verbose( self.speak, 1, 'forced to use inputs as VIP keywords')
-        if self.ECLstyle == True and forceVIP == False:
+        if self.ECLstyle is True and forceVIP is False:
             # if key in self.keysECL :
             try :
                 VIPkey, keyType, keyName = _fromECLtoVIP( key, self.speak )
@@ -404,7 +404,7 @@ class NEXUS(_SimResult):
     def extract_Wells(self) : #, pattern=None) :
         # preparing object attribute
         wellsList = list( self.wells )
-        # if self.CSV == False :
+        # if self.CSV is False :
         #     for sss in self.results :
         #         if self.results[sss][0] == 'WELL' :
         #             wellsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() )
@@ -431,7 +431,7 @@ class NEXUS(_SimResult):
         matching the pattern will be returned; the matching is based
         on fnmatch(), i.e. shell style wildcards.
         """
-        if len(self.groups) == 0 or reload == True :
+        if len(self.groups) == 0 or reload is True :
             self.groups = tuple( self.extract_Areas(pattern) )
         if pattern is None :
             return self.groups
@@ -460,7 +460,7 @@ class NEXUS(_SimResult):
     def extract_Regions(self, pattern=None) :
         # preparing object attribute
         regionsList = list( self.regions )
-        # if self.CSV == False :
+        # if self.CSV is False :
         #     for sss in self.results :
         #         if self.results[sss][0] == 'REGION' :
         #             regionsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() )
@@ -628,7 +628,7 @@ class NEXUS(_SimResult):
         # else :
         #     self.keys = self.keysVIP
 
-        if len(self.keys) == 0 or reload == True :
+        if len(self.keys) == 0 or reload is True :
             keys = []
             keys +=  list( self.extract_Keys() )
             for extra in ( 'TIME', 'DATE', 'DATES' ) :
@@ -698,9 +698,9 @@ class NEXUS(_SimResult):
             if len(keysList) > 0 :
                 return tuple(keysList)
         else :
-            if self.ECLstyle == True :
+            if self.ECLstyle is True :
                 return self.keysECL
-            elif self.VIPstyle == True :
+            elif self.VIPstyle is True :
                 return self.keysVIP
             else :
                 return self.keys
@@ -799,7 +799,7 @@ class NEXUS(_SimResult):
                         else :
                             tempUnits[each] = self.extract_Unit(KeyDict[each]).strip('( )').strip("'").strip('"')
             return tempUnits
-        elif type(Key) == list or type(Key) == tuple :
+        elif type(Key) in [list,tuple] :
             tempUnits = {}
             for each in Key :
                 if type(each) == str and each.strip() in self.units :
@@ -819,19 +819,19 @@ class NEXUS(_SimResult):
                 if Vector == 'DATE' or Vector == 'DATES' :
                     self.units[Vector] = 'DATE'
                 else :
-                    if self.ECLstyle == True :
+                    if self.ECLstyle is True :
                         ECLkey = _fromVIPtoECL( Vector, self.results[sss][0], self.speak )
                         if ECLkey != None :
                             self.units[ ECLkey ] = self.results[sss][1]['Units'][Vector].strip('( )').strip("'").strip('"')
-                    if self.VIPstyle == True :
+                    if self.VIPstyle is True :
                         self.units[Vector] = self.results[sss][1]['Units'][Vector].strip('( )').strip("'").strip('"')
         Key = Key.strip()
-        if self.ECLstyle == True :
+        if self.ECLstyle is True :
             if Key in self.units :
                 return self.units[Key]
             elif Key in _ECL2VIPkey and _ECL2VIPkey[Key] in self.units :
                 return self.units[ _fromECLtoVIP( Key, self.speak ) ]
-        if self.VIPstyle == True :
+        if self.VIPstyle is True :
             if Key.strip() in self.units :
                 return self.units[Key]
             elif Key in _VIP2ECLkey and _VIP2ECLkey[Key] in self.units :

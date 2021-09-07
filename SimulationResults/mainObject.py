@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.3'
-__release__ = 210906
+__version__ = '0.60.4'
+__release__ = 210907
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -445,7 +445,7 @@ class SimResult(object):
 
     def __getitem__(self, item) :
         if type(item) is tuple :
-            if len(item)==0 :
+            if len(item) == 0 :
                 return None
             else :
                 keys, indexes = _tamiz(item)
@@ -969,7 +969,7 @@ class SimResult(object):
                     gasProducers = gasProducers.rename(columns=_wellFromAttribute(gasProducers.columns ) )
                     prodCheck = gasProducers + prodCheck
 
-                prodCheck = ((prodCheck==0) & (waterProducers>0)).replace(False, np.nan).dropna(axis=1, how='all')
+                prodCheck = ((prodCheck == 0) & (waterProducers > 0)).replace(False, np.nan).dropna(axis=1, how='all')
 
                 self.wellsLists['WaterProducers'] = list(prodCheck.columns )
 
@@ -1010,7 +1010,7 @@ class SimResult(object):
                     gasProducers = gasProducers.rename(columns=_wellFromAttribute(gasProducers.columns ) )
                     prodCheck = gasProducers + prodCheck
 
-                prodCheck = ((prodCheck==0) & (waterProducers>0)).replace(False, np.nan).dropna(axis=1, how='all')
+                prodCheck = ((prodCheck == 0) & (waterProducers > 0)).replace(False, np.nan).dropna(axis=1, how='all')
 
                 self.wellsLists['WaterProducers'] += list(prodCheck.columns)
                 if len(self.wellsLists['WaterProducers']) > 1:
@@ -1473,10 +1473,10 @@ class SimResult(object):
             for each in Key :
                 tempUnits[each] = self.get_Unit(each)
             return tempUnits
-        elif type(Key) == list or type(Key) == tuple :
+        elif type(Key) in [list,tuple] :
             tempUnits = {}
             for each in Key :
-                if type(each) == str :
+                if type(each) is str :
                     tempUnits[each] = self.get_Unit(each)
             return tempUnits
 
@@ -5775,7 +5775,7 @@ class SimResult(object):
     #         txtfile = txtfile + 'keysECL =:= ' + str(self.keysECL ) + '\n'
     #         txtfile = txtfile + 'keysVIP =:= ' + str(self.keysVIP ) + '\n'
     #         txtfile = txtfile + 'keysCSV =:= ' + str(self.keysCSV ) + '\n'
-    #         if self.CSV == False :
+    #         if self.CSV is False :
     #             txtfile = txtfile + 'CSV =:= ' + str(False ) + '\n'
     #         else :
     #             txtfile = txtfile + 'CSV =:= ' + str(True ) + '\n'

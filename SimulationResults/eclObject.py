@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.25.3'
-__release__ = 210826
+__version__ = '0.25.4'
+__release__ = 210907
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
@@ -119,7 +119,7 @@ class ECL(_SimResult):
         matching the pattern will be returned; the matching is based
         on fnmatch(), i.e. shell style wildcards.
         """
-        if len(self.groups) == 0 or reload == True :
+        if len(self.groups) == 0 or reload is True :
             self.groups = tuple(self.results.groups())
         if pattern is None :
             return self.groups
@@ -138,7 +138,7 @@ class ECL(_SimResult):
         If pattern is None you will get all the keys of summary
         object.
         """
-        if len(self.keys) == 0 or reload == True :
+        if len(self.keys) == 0 or reload is True :
             self.keys = tuple( self.results.keys(pattern))
             for extra in ( 'TIME', 'DATE', 'DATES' ) :
                 if extra not in self.keys :
@@ -258,9 +258,9 @@ class ECL(_SimResult):
                         else :
                             tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
             return tempUnits
-        elif type(Key) == list or type(Key) == tuple :
+        elif type(Key) in [list,tuple] :
             tempUnits = {}
             for each in Key :
-                if type(each) == str :
+                if type(each) is str :
                     tempUnits[each] = self.get_Unit(each)
             return tempUnits

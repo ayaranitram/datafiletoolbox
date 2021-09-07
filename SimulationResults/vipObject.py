@@ -39,7 +39,7 @@ class VIP(_SimResult):
         # self.CSV = False
         self.VIPnotECL = []
         self.LPGcorrected = False
-        if type(inputFile) == str and len(inputFile.strip()) > 0 :
+        if type(inputFile) is str and len(inputFile.strip()) > 0 :
             self.selectLoader(inputFile)
         if self.results != {} :
             self.initialize(**kwargs)
@@ -94,7 +94,7 @@ class VIP(_SimResult):
         else :
             self.VIPstyle = 'ERROR'
             _verbose( self.speak, 3, ' Unable to convert to ECL style keys')
-            if type(self.ECLstyle) == bool :
+            if type(self.ECLstyle) is bool :
                 self.use_VIPstyle()
         self.complete_Units()
 
@@ -110,14 +110,14 @@ class VIP(_SimResult):
         else :
             self.ECLstyle = 'ERROR'
             _verbose( self.speak, 3, ' Unable to get VIP style keys.')
-            if type(self.VIPstyle) == bool :
+            if type(self.VIPstyle) is bool :
                 self.use_ECLstyle()
         self.complete_Units()
 
     def get_KeywordStyle(self) :
-        if self.VIPstyle == True and self.ECLstyle == False :
+        if self.VIPstyle is True and self.ECLstyle is False :
             return 'using VIP style'
-        if self.ECLstyle == True and self.VIPstyle == False :
+        if self.ECLstyle is True and self.VIPstyle is False :
             return 'using ECL style'
         return 'error in style, highly recommended to regenerate style'
 
@@ -127,12 +127,12 @@ class VIP(_SimResult):
     #     """
     #     if type(CSVFilePath) == str and len(CSVFilePath.strip()) > 0 :
     #         CSVFilePath = CSVFilePath.strip()
-    #     if os.path.isfile( CSVFilePath ) == False :
+    #     if os.path.isfile( CSVFilePath ) is False :
     #         raise FileNotFoundError('No such file found for: ' + str(CSVFilePath) )
     #     else :
     #         Temporal = self.CSVread( CSVFilePath )
     #         if Temporal != {} :
-    #             if self.CSV == False :
+    #             if self.CSV is False :
     #                 self.CSV = {}
     #             self.CSV[_extension(CSVFilePath)[1]] = Temporal
     #             self.CSVextractBacis()
@@ -257,7 +257,7 @@ class VIP(_SimResult):
     #         nullSet = True
     #     except :
     #         nullSet = False
-    #     if nullSet == True :
+    #     if nullSet is True :
     #         try :
     #             self.null = int(self.null)
     #         except :
@@ -533,7 +533,7 @@ class VIP(_SimResult):
     #                         self.units[DATEflag] = 'DATE'
     #                     break
 
-    #     if FOUNDflag == False :
+    #     if FOUNDflag is False :
     #         _verbose( self.speak, 2, 'vector corresponding to key ' + key + ' not found in CSV data.')
     #     else :
     #         if type(DATEflag) == str :
@@ -592,7 +592,7 @@ class VIP(_SimResult):
     #         _verbose( self.speak, -1, '  > results dictionary generated with issues.')
 
     def reload(self) :
-        # if self.CSV == False :
+        # if self.CSV is False :
         #     self.loadSSS(self.path)
         # else :
         #     self.loadCSV(self.path)
@@ -718,7 +718,7 @@ class VIP(_SimResult):
 
       ####################### end of auxiliar functions #######################
 
-        if SSStype == [] : # and self.CSV == False:
+        if SSStype == [] : # and self.CSV is False:
             for sss in list(self.results.keys()) :
                 SSStype += [self.results[sss][0]]
         elif type(SSStype) == str :
@@ -727,7 +727,7 @@ class VIP(_SimResult):
         key = str(key).strip().upper()
         if forceVIP :
             _verbose( self.speak, 1, 'forced to use inputs as VIP keywords')
-        if self.ECLstyle == True and forceVIP == False:
+        if self.ECLstyle is True and forceVIP is False:
             # if key in self.keysECL :
             try :
                 VIPkey, keyType, keyName = _fromECLtoVIP( key, self.speak )
@@ -829,7 +829,7 @@ class VIP(_SimResult):
         if FieldTime is not None :
             self.fieldtime = ( min(FieldTime), max(FieldTime), FieldTime )
 
-    def get_Dates(self) :
+    def get_Dates(self):
         for sss in self.results :
             if self.results[sss][0] == 'FIELD' :
                 try :
@@ -893,7 +893,7 @@ class VIP(_SimResult):
         matching the pattern will be returned; the matching is based
         on fnmatch(), i.e. shell style wildcards.
         """
-        if len(self.groups) == 0 or reload == True :
+        if len(self.groups) == 0 or reload is True :
             self.groups = tuple( self.extract_Areas(pattern) )
         return self.groups
 
@@ -1081,7 +1081,7 @@ class VIP(_SimResult):
         object.
         """
 
-        if len(self.keys) == 0 or reload == True :
+        if len(self.keys) == 0 or reload is True :
             keys = []
             keys +=  list( self.extract_Keys() )
             for extra in ( 'TIME', 'DATE', 'DATES' ) :
@@ -1151,9 +1151,9 @@ class VIP(_SimResult):
             if len(keysList) > 0 :
                 return tuple(keysList)
         else :
-            if self.ECLstyle == True :
+            if self.ECLstyle is True :
                 return self.keysECL
-            elif self.VIPstyle == True :
+            elif self.VIPstyle is True :
                 return self.keysVIP
             else :
                 return self.keys
@@ -1252,14 +1252,14 @@ class VIP(_SimResult):
                         else :
                             tempUnits[each] = self.extract_Unit(KeyDict[each]).strip('( )').strip("'").strip('"')
             return tempUnits
-        elif type(Key) == list or type(Key) == tuple :
+        elif type(Key) in [list,tuple]:
             tempUnits = {}
             for each in Key :
-                if type(each) == str and each.strip() in self.units :
+                if type(each) is str and each.strip() in self.units :
                     tempUnits[each] = self.units[each.strip()]
                 if type(each) == str and ( each.strip() == 'DATES' or each.strip() == 'DATE' ) :
                     tempUnits[each] = 'DATE'
-                elif type(each) == str and each.strip() in self.keys :
+                elif type(each) is str and each.strip() in self.keys :
                     if self.extract_Unit(each.strip()) is None :
                         tempUnits[each] = self.extract_Unit(each.strip())
                     else :
@@ -1272,14 +1272,14 @@ class VIP(_SimResult):
                 if Vector == 'DATE' or Vector == 'DATES' :
                     self.units[Vector] = 'DATE'
                 else :
-                    if self.ECLstyle == True :
+                    if self.ECLstyle is True :
                         ECLkey = _fromVIPtoECL( Vector, self.results[sss][0], self.speak )
                         if ECLkey != None :
                             self.units[ ECLkey ] = self.results[sss][1]['Units'][Vector].strip('( )').strip("'").strip('"')
                     if self.VIPstyle == True :
                         self.units[Vector] = self.results[sss][1]['Units'][Vector].strip('( )').strip("'").strip('"')
         Key = Key.strip()
-        if self.ECLstyle == True :
+        if self.ECLstyle is True :
             if Key in self.units :
                 return self.units[Key]
             elif Key in _ECL2VIPkey and _ECL2VIPkey[Key] in self.units :

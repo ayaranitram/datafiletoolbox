@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.20.1'
-__release__ = 210826
+__version__ = '0.20.2'
+__release__ = 210907
 __all__ = ['TABLE']
 
 from .mainObject import SimResult as _SimResult
@@ -500,9 +500,9 @@ class TABLE(_SimResult):
                         else :
                             tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
             return tempUnits
-        elif type(Key) == list or type(Key) == tuple :
+        elif type(Key) in [list,tuple]:
             tempUnits = {}
             for each in Key :
-                if type(each) == str :
+                if type(each) is str :
                     tempUnits[each] = self.get_Unit(each)
             return tempUnits
