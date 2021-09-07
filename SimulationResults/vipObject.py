@@ -5,8 +5,8 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.21.0'
-__release__ = 210826
+__version__ = '0.22.0'
+__release__ = 210907
 __all__ = ['VIP']
 
 from .mainObject import SimResult as _SimResult
@@ -36,6 +36,7 @@ class VIP(_SimResult):
         self.keysVIP = ()
         # self.keysCSV = ()
         self.results = {}
+        self.correctedUnits = {}
         # self.CSV = False
         self.VIPnotECL = []
         self.LPGcorrected = False
@@ -62,6 +63,7 @@ class VIP(_SimResult):
         self.buldSalinityVectors()
         self.get_TotalReservoirVolumes()
         _SimResult.initialize(self, **kwargs)
+        self.convertUnits()
 
     def selectLoader(self, inputFile) :
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
@@ -717,6 +719,13 @@ class VIP(_SimResult):
             _verbose( self.speak, 1, 'identified VIP key ' + VIPkey + ' for ' + str(keyType) + ' summary for the item ' + keyName )
             return VIPkey, keyType, keyName
 
+        def correctUnits(key,vector):
+            if key in self.correctedUnits:
+                self.units[key] = self.correctedUnits[key][1]
+                return vector * self.correctedUnits[key][2]
+            else:
+                return vector
+
       ####################### end of auxiliar functions #######################
 
         if SSStype == [] : # and self.CSV is False:
@@ -776,7 +785,7 @@ class VIP(_SimResult):
                                         _verbose( self.speak, 1, 'the values were converted to floating point type')
                                     except :
                                         _verbose( self.speak, 1, 'the values are treated as string type')
-                                return RawCol
+                                return correctUnits(key, RawCol)
                 else :
                     for sss in list(self.results.keys()) :
                         if self.results[sss][0] == keyType :
@@ -817,7 +826,7 @@ class VIP(_SimResult):
                                 if len(CleanCol) > 0 :
                                     CleanCol = self.fillZeros( CleanCol, CleanTime )
 
-                                return CleanCol
+                                return correctUnits(key, CleanCol)
 
     def set_FieldTime(self) :
         if len( self.get_Restart() ) > 0 :
@@ -1169,6 +1178,8 @@ class VIP(_SimResult):
         for all the keys in the results file
 
         """
+        if type(Key) is str and Key in self.units and self.units[Key] is not None:
+            return self.units[Key]
         if type(Key) is str and Key.strip() != '--EveryType--' :
             Key = Key.strip().upper()
             if Key in self.units :
@@ -1467,3 +1478,21 @@ class VIP(_SimResult):
                         df2 = self[[rv[2]]]
                         df2.rename( columns=_wellFromAttribute(df2.columns), inplace=True )
                         self[key] = df0 + df1 + df2, self.get_Units(rv[0])
+
+    def convertUnits(self):
+        """
+        convert KSM3 and MSM3 to SM3 avoiding units conversion issues later.
+        """
+        vipunits = {'KSM3':('SM3',1000),
+                    'KSTM3':('STM3',1000),
+                    'MSM3':('SM3',1000000)}
+
+        for k in self.get_Keys():
+            ku = self.get_Unit(k)
+            if ku is not None:
+                for vu,conv in vipunits.items():
+                    if vu in ku:
+                        _verbose(1, self.speak,"The key '" + k + "' will be converted from " + str(vu) + " to "+conv[0] + ".")
+                        self.correctedUnits[k] = (ku, ku.replace(vu,conv[0]), conv[1])
+                        self.units[key] = self.correctedUnits[key][1]
+                        break
