@@ -166,7 +166,8 @@ class VIP(_SimResult):
             self.get_Keys(reload=True)
             self.units = self.get_Unit(self.keys)
             try:
-                _verbose( self.speak, 1, 'simulation runs from ' +  str( self.get_Dates()[0] ) + ' to ' + str( self.get_Dates()[-1] ) )
+                dates = self.get_Dates()
+                _verbose( self.speak, 1, 'simulation runs from ' +  str( dates[0] ) + ' to ' + str( dates[-1] ) )
             except:
                 pass
         else :
@@ -834,32 +835,32 @@ class VIP(_SimResult):
             if self.results[sss][0] == 'FIELD' :
                 try :
                     DateVector = _strDate( list( self.loadVector('DATE', 'FIELD', True) ), speak=(self.speak==1))
-                    _verbose( self.speak, 2, "'DATE' extracted from FIELD")
                     break
                 except :
                     try:
                         DateVector = _strDate( list( self.loadVector('DATE', 'FIELD', True) ), formatIN='DD-MM-YYYY', speak=(self.speak==1))
-                        _verbose( self.speak, 2, "'DATE' extracted from FIELD")
                         break
                     except:
                         DateVector = None
                         break
 
-        if DateVector is None:
+        if DateVector is not None:
+            _verbose( self.speak, 2, "'DATE' extracted from FIELD")
+
+        else:  # if DateVector is None:
             for sss in self.results :
                 if self.results[sss][0] != 'FIELD' :
                     try :
                         DateVector = _strDate( list( self.loadVector('DATE', sss, True) ), speak=(self.speak==1))
-                        _verbose( self.speak, 2, "'DATE' extracted from " + sss)
                         break
                     except :
                         try:
                             DateVector = _strDate( list( self.loadVector('DATE', sss, True) ), formatIN='DD-MM-YYYY', speak=(self.speak==1))
-                            _verbose( self.speak, 2, "'DATE' extracted from " + sss)
                             break
                         except:
                             pass
             if DateVector is not None:
+                _verbose( self.speak, 2, "'DATE' extracted from " + sss)
                 DateVector = list(set(DateVector))
 
         self.set_Vector( 'DATES', np.array( pd.to_datetime( DateVector ), dtype='datetime64[s]'), self.get_Unit('DATE'), DataType='datetime64', overwrite=True )
@@ -1012,7 +1013,7 @@ class VIP(_SimResult):
         regiond names and number.
         """
         Numbers = self.directSSS('#', 'REGION')
-        Names = self.directSSS('NAME', 'REGION')
+        Names = None if Numbers is None else self.directSSS('NAME', 'REGION')
         regNum = {}
 
         if Numbers is None or Names is None:
@@ -1257,7 +1258,7 @@ class VIP(_SimResult):
             for each in Key :
                 if type(each) is str and each.strip() in self.units :
                     tempUnits[each] = self.units[each.strip()]
-                if type(each) == str and ( each.strip() == 'DATES' or each.strip() == 'DATE' ) :
+                elif type(each) is str and ( each.strip() == 'DATES' or each.strip() == 'DATE' ) :
                     tempUnits[each] = 'DATE'
                 elif type(each) is str and each.strip() in self.keys :
                     if self.extract_Unit(each.strip()) is None :
@@ -1276,7 +1277,7 @@ class VIP(_SimResult):
                         ECLkey = _fromVIPtoECL( Vector, self.results[sss][0], self.speak )
                         if ECLkey != None :
                             self.units[ ECLkey ] = self.results[sss][1]['Units'][Vector].strip('( )').strip("'").strip('"')
-                    if self.VIPstyle == True :
+                    elif self.VIPstyle is True :
                         self.units[Vector] = self.results[sss][1]['Units'][Vector].strip('( )').strip("'").strip('"')
         Key = Key.strip()
         if self.ECLstyle is True :
@@ -1284,7 +1285,7 @@ class VIP(_SimResult):
                 return self.units[Key]
             elif Key in _ECL2VIPkey and _ECL2VIPkey[Key] in self.units :
                 return self.units[ _fromECLtoVIP( Key, self.speak ) ]
-        if self.VIPstyle == True :
+        elif self.VIPstyle is True :
             if Key.strip() in self.units :
                 return self.units[Key]
             elif Key in _VIP2ECLkey and _VIP2ECLkey[Key] in self.units :
