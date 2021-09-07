@@ -1485,14 +1485,15 @@ class VIP(_SimResult):
         """
         vipunits = {'KSM3':('SM3',1000),
                     'KSTM3':('STM3',1000),
-                    'MSM3':('SM3',1000000)}
+                    'MSM3':('SM3',1000000),
+                    'MSTM3':('STM3',1000000)}
 
         for k in self.get_Keys():
             ku = self.get_Unit(k)
             if ku is not None:
                 for vu,conv in vipunits.items():
                     if vu in ku:
-                        _verbose(1, self.speak,"The key '" + k + "' will be converted from " + str(vu) + " to "+conv[0] + ".")
+                        _verbose( self.speak, 1, "The key '" + k + "' will be converted from " + str(vu) + " to "+conv[0] + ".")
                         self.correctedUnits[k] = (ku, ku.replace(vu,conv[0]), conv[1])
-                        self.units[key] = self.correctedUnits[key][1]
+                        self.units[k] = self.correctedUnits[k][1]
                         break
