@@ -3970,7 +3970,14 @@ Copy of input object, shifted.
         if axis == 0 :
             return SimDataFrame(data=self.DF.quantile(q=q, axis=axis, **kwargs), **self._SimParameters)
         if axis == 1 :
-            newName = '.Q'+str(q*100)
+            namedecimals = 1
+            if 'namedecimals' in kwargs:
+                if type(kwargs['namedecimals']) is int:
+                    namedecimals = kwargs['namedecimals']
+                del kwargs['namedecimals']
+            else:
+                namedecimals = len(str(q))-2
+            newName = '.Q'+str(round(q*100,namedecimals))
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
             else :
