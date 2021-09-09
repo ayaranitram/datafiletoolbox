@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.68.0'
-__release__ = 210907
+__version__ = '0.68.1'
+__release__ = 210909
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -684,6 +684,12 @@ class SimSeries(Series) :
                 alternative = self._CommonRename(SDF1, SDF2, LR='L')
                 if len(alternative[2]) < len(commonNames) :
                     return alternative
+
+        # check if proposed names are not repetitions of original names
+        for name in commonNames:
+            if self.nameSeparator in commonNames[name]:
+                if commonNames[name].split(':')[0] == commonNames[name].split(':')[1] and commonNames[name].split(':')[0] == name:
+                    commonNames[name] = name
         return SDF1C, SDF2C, commonNames
 
     def rename(self,index=None, **kwargs) :
@@ -5243,7 +5249,6 @@ Copy of input object, shifted.
             filterStr = '(' + filterStr
 
         retTuple = []
-        # print(last)
         if returnString :
             retTuple += [ filterStr ]
         if returnFilter or returnFrame :
@@ -5293,7 +5298,6 @@ Copy of input object, shifted.
 
         newUnits = {}
         for C, U in self.units.items() :
-            # print(C,U, U.split('/')[-1].upper() , dtUnits, U.split('/')[-1].upper() == dtUnits)
             if U is None:
                 newUnits[C] = None
             elif len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
