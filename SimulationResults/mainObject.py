@@ -5240,6 +5240,8 @@ class SimResult(object):
                             Stack[-1].replace(np.nan, 0, inplace=True) # replace NaN by zeros in the data
 
         Result = Stack[-1]
+        if isinstance(Result,SimDataFrame) and len(Result.columns) == 1:
+            Result = Result.to_SimSeries()
 
         # save the result
         self.set_Vector(str(CalculationTuple), Result, Result.get_units(), 'auto', True )
