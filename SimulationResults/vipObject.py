@@ -5,8 +5,8 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.22.0'
-__release__ = 210907
+__version__ = '0.22.1'
+__release__ = 210909
 __all__ = ['VIP']
 
 from .mainObject import SimResult as _SimResult
@@ -958,7 +958,7 @@ class VIP(_SimResult):
                     SSS = S
                     break
             if SSS is None :
-                print('SSS type ' + SSStype + ' not found')
+                print(SSStype + ' SSS not found')
                 return None
 
         SSS = _extension(SSS)[1] + _extension(SSS)[0]
@@ -983,7 +983,7 @@ class VIP(_SimResult):
                     SSS = Sfile
                     break
             if SSS is None :
-                print('SSS type ' + SSStype + ' not found')
+                print(SSStype + ' SSS not found')
                 return {}
             else :
                 SSS = [ _extension(SSS)[1] + _extension(SSS)[0] ]
@@ -998,7 +998,7 @@ class VIP(_SimResult):
                     if _extension(Sfile)[1].upper().endswith( Stype.upper() ) :
                         SSS += [ _extension(Sfile)[1] + _extension(Sfile)[0] ]
             if SSS == [] :
-                print('SSS type ' + SSStype + ' not found')
+                print(SSStype + ' SSS not found')
                 return {}
 
         output = {}
@@ -1496,4 +1496,6 @@ class VIP(_SimResult):
                         _verbose( self.speak, 1, "The key '" + k + "' will be converted from " + str(vu) + " to "+conv[0] + ".")
                         self.correctedUnits[k] = (ku, ku.replace(vu,conv[0]), conv[1])
                         self.units[k] = self.correctedUnits[k][1]
+                        if k in self.vectors:
+                            self.vectors[k] *= conv[1]
                         break
