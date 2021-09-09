@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.4'
-__release__ = 210907
+__version__ = '0.60.5'
+__release__ = 210909
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -4499,6 +4499,10 @@ class SimResult(object):
                 VectorData = VectorData.astype(DataType)
             except :
                 _verbose(self.speak, 2, ' <set_Vector> not able to cast the VectorData ' + Key + ', kept as received: ' + DataType + '.' )
+
+        # ensure VectorData is numpy.array
+        if isinstance(VectorData,Series):
+            VectorData = VectorData.to_numpy()
 
         # save restart vector part
         if len(self.get_vectorTemplate()[self.get_vectorTemplate()==-1]) > 0 :
