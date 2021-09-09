@@ -647,7 +647,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
         Xdate = True
         ToU = SimResultObjects[-1].get_plotUnit(X_Key[0])
         FromU = SimResultObjects[-1].get_Unit(X_Key[0])
-        X0 = SimResultObjects[-1].get_Vector(X_Key[0])[X_Key[0]]
+        X0 = SimResultObjects[-1](X_Key[0])
         X = convertUnit( X0, FromU, ToU, PrintConversionPath=(SimResultObjects[-1].get_Verbosity()==1) )
         time.sleep(timeout*5)
         datemin = np.datetime64(X[0], 'Y')
@@ -666,7 +666,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
 
         FromU = SimResultObjects[s].get_Unit(X_Key[0])
         ToU = X_Units[0]
-        X0 = SimResultObjects[s].get_Vector(X_Key[0])[X_Key[0]]
+        X0 = SimResultObjects[s](X_Key[0])
         time.sleep(timeout)
         X = convertUnit( X0, FromU, ToU, PrintConversionPath=(SimResultObjects[s].get_Verbosity()==1) )
         time.sleep(timeout*5)
@@ -695,12 +695,12 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
             # check if the key exists in the object:
             if not SimResultObjects[s].is_Key(Y_Keys[y]) :
                 continue
-            Y0 = SimResultObjects[s].get_Vector( Y_Keys[y] )[ Y_Keys[y] ]
+            Y0 = SimResultObjects[s]( Y_Keys[y] )
 
             if len(Y_Keys) == len(X_Key) :
                 FromU = SimResultObjects[s].get_Unit(X_Key[y])
                 ToU = X_Units[y]
-                X0 = SimResultObjects[s].get_Vector(X_Key[y])[X_Key[y]]
+                X0 = SimResultObjects[s](X_Key[y])
                 time.sleep(timeout)
                 X = convertUnit( X0, FromU, ToU, PrintConversionPath=(SimResultObjects[s].get_Verbosity()==1) )
                 time.sleep(timeout*5)
