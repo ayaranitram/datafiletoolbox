@@ -3068,7 +3068,7 @@ Copy of input object, shifted.
             count : returns the number of rows per year
             integrate : calculates the numerical integration over the index (a datetime-index) and returns
             representative : calculates the numerical integration of the column over the index (a datetime-index) and then divide it by the elapsed time on between each pair of rows
-            cumsum or cumulative : first run cumsum over the columns and then return the last value of each year
+            cumsum or cumulative : run cumsum over the columns and then return the last value of each year
 
         datetimeIndex : bool
             if True the index will converted to DateTimeIndex with Day=1 and Month=1 for each year
@@ -5890,7 +5890,7 @@ def daysInYear(year):
     Parameters
     ----------
     year : int, date, datetime or array-like of int, date, or datetime
-        The year to calculate the number of day.
+        The year to calculate the number of days.
         Can a single year, represented as an integer or as date or datetime object
         Also, list or array of year is accepted.
 
