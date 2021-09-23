@@ -2963,7 +2963,7 @@ Copy of input object, shifted.
             output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-'+str(DD).zfill(2) for YYYY,MM,DD in output.index ] )
             output.index.names = ['DATE']
             output.index.name = 'DATE'
-            if 'DATE' not in output.units:
+            if output.units is None or 'DATE' not in output.units:
                 output.set_Units('date','DATE')
         else:
             output.index.names = ['YEAR', 'MONTH', 'DAY']
@@ -3039,7 +3039,7 @@ Copy of input object, shifted.
             output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-01' for YYYY,MM in output.index ] )
             output.index.names = ['DATE']
             output.index.name = 'DATE'
-            if 'DATE' not in output.units:
+            if output.units is None or 'DATE' not in output.units:
                 output.set_Units('date','DATE')
         else:
             output.index.names = ['YEAR', 'MONTH']
@@ -3116,7 +3116,7 @@ Copy of input object, shifted.
             output.index = pd.to_datetime( [ str(YYYY)+'-01-01' for YYYY in output.index ] )
             output.index.names = ['DATE']
             output.index.name = 'DATE'
-            if 'DATE' not in output.units:
+            if output.units is None or 'DATE' not in output.units:
                 output.set_Units('date','DATE')
         else:
             output.index.names = ['YEAR']
