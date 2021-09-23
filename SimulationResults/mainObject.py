@@ -765,9 +765,9 @@ class SimResult(object):
 
         text = text + '\n\n production wells: ' + str(len(self.get_Producers()))
         if self.get_OilProducers() != [] :
-            text = text + '\n    oil wells' + ' (with GOR<' + str(self.get_GORcriteria()[0]) + str(self.get_GORcriteria()[1]) + ' ) : ' + str(len(self.get_OilProducers()))
+            text = text + '\n    oil wells' + ' (with GOR<' + str(self.get_GORcriteria()[0]) + str(self.get_GORcriteria()[1]) + ') : ' + str(len(self.get_OilProducers()))
         if self.get_GasProducers() != [] :
-            text = text + '\n    gas wells' + ' (with GOR>' + str(self.get_GORcriteria()[0]) + str(self.get_GORcriteria()[1]) + ' ) : ' + str(len(self.get_GasProducers()))
+            text = text + '\n    gas wells' + ' (with GOR>' + str(self.get_GORcriteria()[0]) + str(self.get_GORcriteria()[1]) + ') : ' + str(len(self.get_GasProducers()))
         if self.get_WaterProducers() != [] :
             text = text + '\n  water wells: ' + str(len(self.get_WaterProducers()))
 
