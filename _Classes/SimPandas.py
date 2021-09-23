@@ -5928,6 +5928,106 @@ def daysInYear(year):
 
     raise ValueError("input 'year' is not a valid date or year integer")
 
+def daysInMonth(month,year=None):
+    """
+    returns the number of days in a particular month of particular year
+
+    Parameters
+    ----------
+    month : str, int, date, datetime or array-like of int, date, or datetime
+        The month to calculate the number of days.
+        Can a single month, represented as an integer or as date or datetime object
+        Also, list or array of months is accepted.
+    year : integer, optional
+        If 'month' is provided as integer, year can be used to specify the year
+        when to calculate the number of days in the month.
+        This is only useful for February
+
+    Returns
+    -------
+    int or array of ints, according to the input
+    """
+    daysinmonths = {1:31,
+                    2:28,
+                    3:31,
+                    4:30,
+                    5:31,
+                    6:30,
+                    7:31,
+                    8:31,
+                    9:30,
+                    10:31,
+                    11:30,
+                    12:31}
+    monthsnames = {'JAN':1,
+                   'ENE':1,
+                   'GEN':1,
+                   'FEB':2,
+                   'MAR':3,
+                   'APR':4,
+                   'ABR':4,
+                   'MAY':5,
+                   'JUN':6,
+                   'GIU':6,
+                   'JUL':7,
+                   'JLY':7,
+                   'LUG':7,
+                   'AUG':8,
+                   'AGO':8,
+                   'SEP':9,
+                   'SET':9,
+                   'OCT':10,
+                   'OTT':10,
+                   'NOV':11,
+                   'DEC':12,
+                   'DIC':12,
+                   }
+    if type(month) is str:
+        if month.upper() in monthsnames:
+            month = monthsnames[month.upper()]
+        else:
+            raise ValueError("input 'month' not recognized.")
+
+    if type(month) in (int,float):
+        if year is None:
+            return daysinmonths[int(month)]
+        if type(year) is not int:
+            raise ValueError("input 'year' is not a valid year integer")
+        if dt.date(int(year), 12, 31).timetuple().tm_yday == 366 and month == 2:
+            return 29
+        else:
+            return daysinmonths[int(month)]
+
+    if type(month) in (dt.date, dt.datetime):
+        return daysInMonth(month.timetuple().tm_mon, month.timetuple().tm_year)
+
+    if type(month) is pd.Timestamp:
+        return daysInMonth(month.month, month.year)
+
+    if type(month) in (list,tuple,np.ndarray):
+        if np.array(month).dtype in ('int','int64','float','float64') :
+            return np.array([ daysInMonth(M,year) for M in month ], dtype=int)
+        elif 'datetime' in str(np.array(year).dtype):
+            return np.array([ M.astype(object).timetuple().tm_mon for M in month ], dtype=int)
+        elif len(set(map(type,month))) == 1 and list(set(map(type,month)))[0] in (dt.date, dt.datetime):
+            return np.array([ M.timetuple().tm_mon for M in month ], dtype=int)
+        elif len(set(map(type,month))) == 2 and list(set(map(type,month)))[0] in (dt.date, dt.datetime) and list(set(map(type,month)))[1] in (dt.date, dt.datetime):
+            return np.array([ M.timetuple().tm_mon for M in month ], dtype=int)
+
+    if isinstance(month,pd.DatetimeIndex):
+        return np.array([ M.month for M in month ], dtype=int)
+
+    if isinstance(month,SimSeries):
+        params = month._SimParameters
+        params['name'] = 'DaysInMonth'
+        params['units'] = 'days'
+        return SimSeries(data=np.array([ M.month for M in month ], dtype=int), index=month.index, **params)
+
+    if isinstance(month,Series):
+        return Series(data=np.array([ M.month for M in month ], dtype=int), index=month.index)
+
+    raise ValueError("input 'month' is not a valid date or month integer")
+
 def realYear(date):
     """
     returns a float corresponding for the year and the fraction of year represented by the date.
