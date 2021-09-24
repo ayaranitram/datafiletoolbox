@@ -5,14 +5,15 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.25.4'
-__release__ = 210907
+__version__ = '0.25.5'
+__release__ = 210924
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
 from .._common.functions import _mainKey
 from .._common.inout import _extension
 from .._common.inout import _verbose
+from .._Classes.Errors import CorruptedFileError
 from .._Classes.EclSumLoader import EclSumLoader
 import numpy as np
 import os
@@ -51,7 +52,9 @@ class ECL(_SimResult):
 
             if os.path.isfile(SummaryFilePath):
                 if not os.path.isfile(SummaryFilePath[:-6]+'UNSMRY'):
-                    raise FileNotFoundError( "the file doesn't exist:\n  -> " + _extension(SummaryFilePath)[2] + _extension(SummaryFilePath)[1] +'.UNSMRY' )
+                    raise FileNotFoundError( "The file doesn't exist:\n  -> " + _extension(SummaryFilePath)[2] + _extension(SummaryFilePath)[1] +'.UNSMRY' )
+                if os.path.getsize(SummaryFilePath) <= 680 and ( 'ignoreSMSPEC' not in kwargs or bool(kwargs['ignoreSMSPEC']) is False) :
+                    raise CorruptedFileError("\nThe SMSPEC file seems to be corrupted.\nIf you think this is not corrupted add the keyword\n   'ignoreSPSPEC=True'\nto skip this check, but if the file corrupted a fatal error will occur!")
                 _verbose( self.speak, 1, ' > loading summary file:\n  ' + SummaryFilePath)
                 EclSummary = ECL.loadEclSum
                 self.results = EclSummary(SummaryFilePath, **kwargs) # ecl.summary.EclSum(SummaryFilePath)

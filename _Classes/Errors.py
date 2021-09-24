@@ -5,7 +5,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = '0.0.0'
-__release = 210514
+__release = 210924
 __all__ = []
 
 
@@ -29,4 +29,7 @@ class MissingDependence(Exception):
 
 
 class InvalidKeyError(Exception):
+    pass
+
+class CorruptedFileError(Exception):
     pass
