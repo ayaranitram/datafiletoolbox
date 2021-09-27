@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.69.3'
-__release__ = 210923
+__version__ = '0.69.5'
+__release__ = 210927
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -260,6 +260,7 @@ class SimSeries(Series) :
         kwargs.pop('nameSeparator', None)
         kwargs.pop('autoAppend', None)
         kwargs.pop('operatePerName',None)
+        kwargs.pop('transposed',None)
         # convert to pure Pandas
         if type(data) in [ SimDataFrame, SimSeries ] :
             self.nameSeparator = data.nameSeparator
@@ -354,13 +355,14 @@ class SimSeries(Series) :
     def _SimParameters(self) :
         return {'units':self.units.copy() if type(self.units) is dict else self.units,
                 'name':self.name,
-                'speak':self.speak,
+                'speak':self.speak if hasattr(self,'speak') else False,
                 'indexName':self.index.name,
-                'indexUnits':self.indexUnits,
-                'nameSeparator':self.nameSeparator,
-                'intersectionCharacter':self.intersectionCharacter,
-                'autoAppend':self.autoAppend,
-                'operatePerName':self.operatePerName}
+                'indexUnits':self.indexUnits if hasattr(self,'indexUnits') else None,
+                'nameSeparator':self.nameSeparator if hasattr(self,'nameSeparator') else None,
+                'intersectionCharacter':self.intersectionCharacter if hasattr(self,'intersectionCharacter') else '∩',
+                'autoAppend':self.autoAppend if hasattr(self,'autoAppend') else False,
+                'operatePerName':self.operatePerName if hasattr(self,'operatedPerName') else False,
+                }
 
     @property
     def loc(self) -> _SimLocIndexer:
@@ -2129,7 +2131,7 @@ class SimDataFrame(DataFrame) :
     pandas.DataFrame
 
     """
-    _metadata = ["units", "speak", "indexUnits", "nameSeparator", "intersectionCharacter", "autoAppend", "spdLocator", "transposed","operatePerName"]  #, "spdiLocator"]
+    _metadata = ["units", "speak", "indexUnits", "nameSeparator", "intersectionCharacter", "autoAppend", "spdLocator", "transposed", "operatePerName"]  #, "spdiLocator"]
 
     def __init__(self, data=None, units=None, index=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩', autoAppend=False, transposed=False, operatePerName=False, *args, **kwargs) :
         self.units = None
@@ -2300,13 +2302,15 @@ class SimDataFrame(DataFrame) :
     @property
     def _SimParameters(self) :
         return {'units':self.units.copy() if type(self.units) is dict else self.units,
-                'speak':self.speak,
+                'speak':self.speak if hasattr(self,'speak') else False,
                 'indexName':self.index.name,
-                'indexUnits':self.indexUnits,
-                'nameSeparator':self.nameSeparator,
-                'intersectionCharacter':self.intersectionCharacter,
-                'autoAppend':self.autoAppend,
-                'operatePerName':self.operatePerName}
+                'indexUnits':self.indexUnits if hasattr(self,'indexUnits') else None,
+                'nameSeparator':self.nameSeparator if hasattr(self,'nameSeparator') else None,
+                'intersectionCharacter':self.intersectionCharacter if hasattr(self,'intersectionCharacter') else '∩',
+                'autoAppend':self.autoAppend if hasattr(self,'autoAppend') else False,
+                'transposed':self.transposed if hasattr(self,'transposed') else False,
+                'operatePerName':self.operatePerName if hasattr(self,'operatedPerName') else False,
+                }
 
     def set_indexName(self, Name) :
         if type(Name) is str and len(Name.strip())>0:
