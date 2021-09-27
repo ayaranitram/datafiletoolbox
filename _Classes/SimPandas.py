@@ -75,7 +75,7 @@ def _Series2Frame(aSimSeries) :
         return aSimSeries
     if type(aSimSeries) is SimSeries :
         try :
-            return SimDataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list())), units=aSimSeries.get_Units(), index=aSimSeries.columns, speak=aSimSeries.speak, indexName=aSimSeries.index.name, indexUnits=aSimSeries.indexUnits, nameSeparator=aSimSeries.nameSeparator, intersectionCharacter=aSimSeries.intersectionCharacter, autoAppend=aSimSeries.autoAppend)
+            return SimDataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list())), units=aSimSeries.get_Units(), index=aSimSeries.columns, speak=aSimSeries.speak, indexName=aSimSeries.index.name, indexUnits=aSimSeries.indexUnits, nameSeparator=aSimSeries.nameSeparator, intersectionCharacter=aSimSeries.intersectionCharacter, autoAppend=aSimSeries.autoAppend, operatePerName=aSimSeries.operatePerName)
         except :
             return aSimSeries
     if type(aSimSeries) is Series :
@@ -194,9 +194,9 @@ class SimSeries(Series) :
     pandas.Series
 
     """
-    _metadata = ["units", "speak", 'indexUnits', 'nameSeparator', 'intersectionCharacter', 'autoAppend', 'spdLocator']  #, 'spdiLocator']
+    _metadata = ["units", "speak", 'indexUnits', 'nameSeparator', 'intersectionCharacter', 'autoAppend', 'spdLocator', 'operatePerName']  #, 'spdiLocator']
 
-    def __init__(self, data=None, units=None, index=None, name=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩' , autoAppend=False, *args, **kwargs) :
+    def __init__(self, data=None, units=None, index=None, name=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩' , autoAppend=False, operatePerName=False, *args, **kwargs) :
         Uname = None
         Udict = None
         self.units = None
@@ -205,6 +205,7 @@ class SimSeries(Series) :
         self.nameSeparator = None
         self.intersectionCharacter = '∩'
         self.autoAppend = False
+        self.operatePerName = False
         self.spdLocator = _SimLocIndexer("loc", self)
         # self.spdiLocator = _SimLocIndexer("iloc", self)
 
@@ -258,6 +259,7 @@ class SimSeries(Series) :
         kwargs.pop('indexUnits', None)
         kwargs.pop('nameSeparator', None)
         kwargs.pop('autoAppend', None)
+        kwargs.pop('operatePerName',None)
         # convert to pure Pandas
         if type(data) in [ SimDataFrame, SimSeries ] :
             self.nameSeparator = data.nameSeparator
@@ -326,6 +328,12 @@ class SimSeries(Series) :
         elif 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None :
             self.autoAppend = bool(kwargs['autoAppend'] )
 
+        # catch operatePerName from kwargs
+        if operatePerName is not None :
+            self.operatePerName = bool(operatePerName)
+        elif 'operatePerName' in kwargsB and kwargsB['operatePerName'] is not None :
+            self.operatePerName = bool(kwargs['operatePerName'] )
+
         # set the provided name
         if self.name is None and name is not None:
             self.name = name
@@ -351,7 +359,8 @@ class SimSeries(Series) :
                 'indexUnits':self.indexUnits,
                 'nameSeparator':self.nameSeparator,
                 'intersectionCharacter':self.intersectionCharacter,
-                'autoAppend':self.autoAppend}
+                'autoAppend':self.autoAppend,
+                'operatePerName':self.operatePerName}
 
     @property
     def loc(self) -> _SimLocIndexer:
@@ -687,8 +696,8 @@ class SimSeries(Series) :
 
         # check if proposed names are not repetitions of original names
         for name in commonNames:
-            if self.nameSeparator in commonNames[name]:
-                if commonNames[name].split(':')[0] == commonNames[name].split(':')[1] and commonNames[name].split(':')[0] == name:
+            if self.nameSeparator  is str and len(self.nameSeparator) > 0 and self.nameSeparator in commonNames[name]:
+                if commonNames[name].split(self.nameSeparator)[0] == commonNames[name].split(self.nameSeparator)[1] and commonNames[name].split(self.nameSeparator)[0] == name:
                     commonNames[name] = name
         return SDF1C, SDF2C, commonNames
 
@@ -1046,7 +1055,7 @@ class SimSeries(Series) :
     def __sub__(self, other) :
         params = self._SimParameters
         # both SimSeries
-        if isinstance(other, SimSeries) :
+        if isinstance(other, SimSeries):
             if self.index.name is not None and other.index.name is not None and self.index.name != other.index.name :
                 Warning("indexes of both SimSeries are not of the same kind:\n   '"+self.index.name+"' != '"+other.index.name+"'")
             if type(self.units) is str and type(other.units) is str :
@@ -1073,7 +1082,7 @@ class SimSeries(Series) :
                 raise NotImplementedError
 
         # other is Pandas Series
-        elif isinstance(other, Series) :
+        elif isinstance(other, Series):
             result = self.S.sub(other, fill_value=0)
             newName = _stringNewName(self._CommonRename(SimSeries(other, **self._SimParameters))[2])
             try:
@@ -1091,10 +1100,10 @@ class SimSeries(Series) :
             params['dtype'] = result.dtype
         return SimSeries(data=result, **params)
 
-    def __rsub__(self, other) :
+    def __rsub__(self, other):
         return self.__neg__().__add__(other)
 
-    def __mul__(self, other) :
+    def __mul__(self, other):
         params = self._SimParameters
         # both SimSeries
         if isinstance(other, SimSeries) :
@@ -2120,15 +2129,16 @@ class SimDataFrame(DataFrame) :
     pandas.DataFrame
 
     """
-    _metadata = ["units", "speak", "indexUnits", "nameSeparator", "intersectionCharacter", "autoAppend", "spdLocator", "transposed"]  #, "spdiLocator"]
+    _metadata = ["units", "speak", "indexUnits", "nameSeparator", "intersectionCharacter", "autoAppend", "spdLocator", "transposed","operatePerName"]  #, "spdiLocator"]
 
-    def __init__(self, data=None, units=None, index=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩', autoAppend=False, transposed=False, *args, **kwargs) :
+    def __init__(self, data=None, units=None, index=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩', autoAppend=False, transposed=False, operatePerName=False, *args, **kwargs) :
         self.units = None
         self.speak = bool(speak)
         self.indexUnits = None
         self.nameSeparator = None
         self.intersectionCharacter = '∩'
         self.autoAppend = False
+        self.operatePerName = False
         self.spdLocator = _SimLocIndexer("loc", self)
         self.transposed = bool(transposed)
         # self.spdiLocator = _SimLocIndexer("iloc", self)
@@ -2173,10 +2183,12 @@ class SimDataFrame(DataFrame) :
         kwargs.pop('units', None)
         kwargs.pop('speak', None)
         kwargs.pop('autoAppend', None)
+        kwargs.pop('operatePerName',None)
         # convert to pure Pandas
         if type(data) in [ SimDataFrame, SimSeries ] :
             self.nameSeparator = data.nameSeparator
             self.autoAppend = data.autoAppend
+            self.operatePerName = data.operatePerName
             data = data.to_Pandas()
         super().__init__(data=data, index=index, *args, **kwargs)
 
@@ -2257,6 +2269,12 @@ class SimDataFrame(DataFrame) :
         elif 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None :
             self.autoAppend = bool(kwargsB['autoAppend'])
 
+        # set operatePerName if provided as argument
+        if operatePerName is not None :
+            self.operatePerName = bool(operatePerName)
+        elif 'operatePerName' in kwargsB and kwargsB['operatePerName'] is not None :
+            self.operatePerName = bool(kwargsB['operatePerName'])
+
     # @property
     # def _constructor(self):
     #     return SimDataFrame
@@ -2287,7 +2305,8 @@ class SimDataFrame(DataFrame) :
                 'indexUnits':self.indexUnits,
                 'nameSeparator':self.nameSeparator,
                 'intersectionCharacter':self.intersectionCharacter,
-                'autoAppend':self.autoAppend}
+                'autoAppend':self.autoAppend,
+                'operatePerName':self.operatePerName}
 
     def set_indexName(self, Name) :
         if type(Name) is str and len(Name.strip())>0:
@@ -3408,12 +3427,14 @@ Copy of input object, shifted.
             return result
 
         # other is SimSeries
-        elif isinstance(other, SimSeries) :
+        elif isinstance(other, (SimSeries,Series)):
+            if type(other) is Series:
+                other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if otherI.name in selfI.columns :
+            if operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] + otherI
-            elif selfI.autoAppend :
+            elif selfI.autoAppend :  # elif selfI.autoAppend :
                 result[otherI.name] = otherI
             else :
                 for col in selfI.columns :
@@ -3473,12 +3494,14 @@ Copy of input object, shifted.
             return result
 
         # other is SimSeries
-        elif isinstance(other, SimSeries) :
+        elif isinstance(other, (SimSeries,Series)):
+            if type(other) is Series:
+                other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if otherI.name in selfI.columns :
+            if operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] - otherI
-            elif self.autoAppend :
+            if self.autoAppend :  # elif self.autoAppend :
                 result[otherI.name] = -otherI
             else :
                 for col in selfI.columns :
@@ -3539,10 +3562,12 @@ Copy of input object, shifted.
             return result
 
         # other is SimSeries
-        elif isinstance(other, SimSeries) :
+        elif isinstance(other, (SimSeries,Series)):
+            if type(other) is Series:
+                other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if otherI.name in selfI.columns :
+            if operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = self[otherI.name] * otherI
             else :
                 for col in selfI.columns :
@@ -3599,10 +3624,12 @@ Copy of input object, shifted.
             return result
 
         # other is SimSeries
-        elif isinstance(other, SimSeries) :
+        elif isinstance(other, (SimSeries,Series)):
+            if type(other) is Series:
+                other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if otherI.name in selfI.columns :
+            if operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] / otherI
             else :
                 for col in selfI.columns :
@@ -3659,10 +3686,12 @@ Copy of input object, shifted.
             return result
 
         # other is SimSeries
-        elif isinstance(other, SimSeries) :
+        elif isinstance(other, (SimSeries,Series)):
+            if type(other) is Series:
+                other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if otherI.name in selfI.columns :
+            if operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] // otherI
             else :
                 for col in self.columns :
@@ -3720,10 +3749,12 @@ Copy of input object, shifted.
             return result
 
         # other is SimSeries
-        elif isinstance(other, SimSeries) :
+        elif isinstance(other, (SimSeries,Series)):
+            if type(other) is Series:
+                other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if otherI.name in selfI.columns :
+            if operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[other.name] % otherI
             else :
                 for col in selfI.columns :
@@ -3778,10 +3809,12 @@ Copy of input object, shifted.
             return result
 
         # other is SimSeries
-        elif isinstance(other, SimSeries) :
+        elif isinstance(other, (SimSeries,Series)):
+            if type(other) is Series:
+                other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if otherI.name in selfI.columns :
+            if operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = self[otherI.name] ** otherI
             else :
                 for col in selfI.columns :
