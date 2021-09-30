@@ -112,4 +112,3 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
             except:
                 pass
     return OBJ
-

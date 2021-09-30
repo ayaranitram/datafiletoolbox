@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.21.2'
-__release__ = 210907
+__version__ = '0.21.4'
+__release__ = 210930
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -58,7 +58,8 @@ class XLSX(_SimResult):
         self.extract_Groups()
         self.extract_Regions()
         self.get_Attributes(None, True)
-        self.find_index()
+        self.find_index(**kwargs)
+        self.otherDateNames()
         _SimResult.initialize(self, **kwargs)
         if self.is_Key('DATES') and not self.is_Key('DATE') :
             self['DATE'] = 'DATES'
@@ -75,11 +76,17 @@ class XLSX(_SimResult):
         if self.is_Key('TIME') and ( self.get_Unit('TIME') is None or self.get_Unit('TIME').upper() in ['', 'NONE'] ) :
             self.set_Unit('TIME', 'DAYS', overwrite=True)
 
-    def find_index(self) :
+    def find_index(self,**kwargs) :
         """
         identify the column that is common to all the frames, to be used as index.
         If there is a single frame the first column is used.
         """
+
+        possibleKeys = ('DATE', 'DATES', 'TIME', 'DAYS', 'MONTHS', 'YEARS') + self.keys
+        if 'index' in kwargs and kwargs['index'] in self.FramesIndex:
+            possibleKeys = (kwargs['index'],) + ('DATE', 'DATES', 'Date', 'date', 'Dates', 'dates', 'TIME', 'Time', 'time', 'DAYS', 'Days', 'days', 'MONTHS', 'Months', 'months', 'YEARS', 'Years', 'years') + self.keys
+            self.DTindex = kwargs['index']
+
         # check current KeyIndex
         KeyIndex = True
         IndexVector = None
@@ -103,7 +110,7 @@ class XLSX(_SimResult):
             return self.DTindex
 
         # look for other identical index
-        for Key in ('DATE', 'DATES', 'TIME', 'DAYS', 'MONTHS', 'YEARS') + self.keys :
+        for Key in possibleKeys:
             KeyIndex = True
             IndexVector = None
             for frame in self.Frames :
@@ -160,6 +167,17 @@ class XLSX(_SimResult):
             _verbose(self.speak, 3, "not a commong index name found.")
             self.DTindex = None
 
+    def otherDateNames(self):
+        if not self.is_Key('DATE') and not self.is_Key('DATES') :
+            for datename in ['Date','date','Dates','dates','FECHA','Fecha','fecha','DATA','Data','data']:
+                if self.is_Key(datename):
+                    if 'date' in str(self.get_RawVector(datename)[datename].dtype):
+                        try:
+                            _ = self.set_Vector(Key='DATE', VectorData=self.get_RawVector(datename)[datename].reshape(-1,), Units='date', DataType='datetime', overwrite=True)
+                            return
+                        except:
+                            pass
+
     def fromSimDataFrame(self,frame):
         self.units = frame.get_units()
         self.nameSeparator = frame.nameSeparator
@@ -199,8 +217,12 @@ class XLSX(_SimResult):
                 if units not in header :
                     header = list(header)+[units]
 
+        pdkwargs = kwargs.copy()
+        for k in ['speak','verbosity','verbose','reload','preload','unload','ignoreSMSPEC','index','frames']:
+            if k in pdkwargs:
+                del pdkwargs[k]
         try :
-            NewFrames = pd.read_excel(inputFile, sheet_name=sheet_name, header=header)
+            NewFrames = pd.read_excel(inputFile, sheet_name=sheet_name, header=header, **pdkwargs)
         except ImportError:
             raise ImportError("Missing optional dependencies 'xlrd' and 'openpyxl'.\nInstall xlrd and openpyxl for Excel support.\nUse pip or conda to install xlrd and install openpyxl.")
         except :
@@ -278,7 +300,7 @@ class XLSX(_SimResult):
                                     self.FramesIndex[NewOtherKey] = ( self.FramesIndex[NewKey][0] , self.FramesIndex[NewKey][1] )
                                     self.add_Key( NewOtherKey )
                                     self.set_Unit( NewOtherKey, self.get_Unit(NewKey) )
-                                    _verbose(self.speak, 1, " > renamed key: '" + NewKey + "' to '" + NewOtherKey + "'" )
+                                    _verbose(self.speak, 1, " > renamed key: '" + NewKey + "' to '" + NewOtherKey + "'")
 
                                 # rename this frame key
                                 if str(each) in ECLkeys or str(each)[1:4] in ECLkeys:
@@ -298,7 +320,7 @@ class XLSX(_SimResult):
                                 unitsMessage = " with units: '"+NewUnits+"'"
                             self.add_Key( NewKey )
                             self.set_Unit( NewKey, NewUnits )
-                            _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage )
+                            _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage)
 
                     else:
                         self.FramesIndex[NewKey] = ( each, col )
@@ -310,7 +332,7 @@ class XLSX(_SimResult):
                             unitsMessage = " with units: '"+NewUnits+"'"
                         self.add_Key( NewKey )
                         self.set_Unit( NewKey, NewUnits )
-                        _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage )
+                        _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage)
                         # _foundNewKey()
 
             elif self.Frames[str(each)].equals(NewFrames[each]) :
