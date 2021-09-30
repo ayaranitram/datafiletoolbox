@@ -4409,7 +4409,9 @@ class SimResult(object):
             raise TypeError(' <set_Vector> VectorData must be a list, tuple, numpy.ndarray, pandas Series or DataFrame, SimSeries or SimDataFrame. Received ' + str(type(VectorData)))
 
         # validating Units
-        if type(Units) is str :
+        if Units is None:
+            Units = 'dimensionless'
+        elif type(Units) is str :
             Units = Units.strip()
             if Units.startswith('(') and Units.endswith(')') and Units.count('(') == 1 and Units.count(')') == 1 :
                 Units = Units.strip('()')
