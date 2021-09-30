@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.69.5'
-__release__ = 210927
+__version__ = '0.69.6'
+__release__ = 210930
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -2946,6 +2946,9 @@ Copy of input object, shifted.
             sum : returns the summation of all the values per year
             count : returns the number of rows per year
         """
+        if type(outBy) is bool:
+            outBy, datetimeIndex = 'mean', outBy
+
         try :
             result = self.DF.groupby([self.index.year, self.index.month, self.index.day])
         except:
@@ -2972,17 +2975,18 @@ Copy of input object, shifted.
             result = self.integrate()
             result = result.DF.groupby([self.index.year, self.index.month, self.index.day])
             index = DataFrame(data=self.index, index=self.index ).groupby([self.index.year, self.index.month, self.index.day])
-            index = np.append(index.first().to_numpy(), index.last().to_numpy()[-1] )
-            deltaindex = np.diff(index )
+            index = np.append(index.first().to_numpy(), index.last().to_numpy()[-1])
+            deltaindex = np.diff(index)
             if isinstance(self.index, DatetimeIndex) :
                 deltaindex = deltaindex.astype('timedelta64[s]').astype('float64')/60/60/24
             values = result.first().append(result.last().iloc[-1] )
             deltavalues = np.diff(values.transpose())
-            result = DataFrame(data=(deltavalues/deltaindex).transpose(), index=result.first().index, columns=self.columns )
+            result = DataFrame(data=(deltavalues/deltaindex).transpose(), index=result.first().index, columns=self.columns)
         else :
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)
+        output.index = pd.MultiIndex.from_tuples([(int(y),int(m),int(d)) for y,m,d in output.index ])
 
         if datetimeIndex:
             output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-'+str(DD).zfill(2) for YYYY,MM,DD in output.index ] )
@@ -3022,6 +3026,9 @@ Copy of input object, shifted.
             if True the index will converted to DateTimeIndex with Day=1 for each month
             if False the index will be a MultiIndex (Year,Month)
         """
+        if type(outBy) is bool:
+            outBy, datetimeIndex = 'mean', outBy
+
         try :
             result = self.DF.groupby([self.index.year, self.index.month])
         except:
@@ -3059,6 +3066,7 @@ Copy of input object, shifted.
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)
+        output.index = pd.MultiIndex.from_tuples([(int(y),int(m)) for y,m in output.index ])
 
         if datetimeIndex:
             output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-01' for YYYY,MM in output.index ] )
@@ -3099,6 +3107,9 @@ Copy of input object, shifted.
             if True the index will converted to DateTimeIndex with Day=1 and Month=1 for each year
             if False the index will be a MultiIndex (Year,Month)
         """
+        if type(outBy) is bool:
+            outBy, datetimeIndex = 'mean', outBy
+
         try :
             result = self.DF.groupby(self.index.year)
         except:
@@ -3136,6 +3147,7 @@ Copy of input object, shifted.
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)
+        output.index = [ int(y) for y in output.index ]
 
         if datetimeIndex:
             output.index = pd.to_datetime( [ str(YYYY)+'-01-01' for YYYY in output.index ] )
@@ -4241,6 +4253,7 @@ Copy of input object, shifted.
         return result
 
     def __setitem__(self, key, value, units=None):
+        uDic = {}
         if type(key) is str :
             key = key.strip()
         if type(value) is tuple and len(value) == 2 and type(value[1]) in [str,dict] and units is None :  # and type(value[0]) in [SimSeries, Series, list, tuple, np.ndarray,float,int,str]
