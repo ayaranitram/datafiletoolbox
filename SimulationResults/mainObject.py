@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.5'
-__release__ = 210909
+__version__ = '0.60.6'
+__release__ = 210930
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -389,7 +389,7 @@ class SimResult(object):
 
     def set_RestartsTimeVector(self, TimeVector=None) :
         if TimeVector is None :
-            for Time in ['DATE', 'DATES', 'TIME', 'DAYS', 'MONTHS', 'YEARS'] :
+            for Time in ['DATE', 'DATES', 'TIME', 'DAYS', 'MONTHS', 'YEARS', 'Date', 'date', 'Dates', 'dates', 'Time', 'time'] :
                 if self.is_Key(Time) :
                     self.TimeVector = Time
                     break
