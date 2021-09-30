@@ -1407,10 +1407,14 @@ class SimResult(object):
 
         """
         if type(Key) is str and Key.strip() != '--EveryType--' :
+            if Key in self.units :
+                return self.units[Key]
+            if Key.strip() in self.units :
+                return self.units[Key.strip()]
             Key = Key.strip().upper()
             if Key in self.units :
                 return self.units[Key]
-            if Key in ['DATES','DATE'] :
+            if Key in ['DATES','DATE','Date','date'] :
                     self.units[Key] = 'DATE'
                     return 'DATE'
             if Key in self.keys :
