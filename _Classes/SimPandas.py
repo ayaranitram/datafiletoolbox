@@ -2656,7 +2656,9 @@ Copy of input object, shifted.
             SDFwriter.save()
 
     def transpose(self):
-        return SimDataFrame(data=self.DF.T, **self._SimParameters, transposed=(not self.transposed))
+        params = self._SimParameters
+        params['transposed'] = not self.transposed
+        return SimDataFrame(data=self.DF.T, **params)
 
     @property
     def T(self):
