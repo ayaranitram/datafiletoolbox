@@ -6,7 +6,7 @@ Created on Wed May 13 00:45:52 2020
 """
 
 __version__ = '0.54.0'
-__release__ = 210803
+__release__ = 210930
 __all__ = ['loadSimulationResults']
 
 from .._common.inout import _extension
@@ -29,10 +29,13 @@ except ImportError :
 
 def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
     """
-    Loads the results of reservoir simulation into and SimuResult object.
+    Loads the results of reservoir simulation into SimResult object.
     This library can read:
         .SSS files from VIP simulator
         .SMSPEC files from Eclipse, Intersect or tNavigator
+        .RSM files
+        .XLSX files exported from datafiletoolbox
+        .PKL files from previously saved SimResults instances
     """
     for verbKey in  ['speak','verbosity','verbose'] :
         if verbKey in kwargs and type(kwargs[verbKey]) in [bool,int,float] :
