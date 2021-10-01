@@ -812,6 +812,7 @@ def UnitConversions():
     UC.addEdge(conversion(UC.getNode('bara'), UC.getNode('Pascal'), lambda p: p*100000))
     UC.addEdge(conversion(UC.getNode('atmosphere'), UC.getNode('absolute bar'), lambda p: p*1.01325))
     UC.addEdge(conversion(UC.getNode('absolute bar'), UC.getNode('absolute psi'), lambda p: p*14.503773773022))
+    UC.addEdge(conversion(UC.getNode('bar gauge'), UC.getNode('psi gauge'), lambda p: p*14.503773773022))
     UC.addEdge(conversion(UC.getNode('atmosphere'), UC.getNode('Pascal'), lambda p: p*101325))
     UC.addEdge(conversion(UC.getNode('atmosphere'), UC.getNode('Torr'), lambda p: p*760))
 
