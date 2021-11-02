@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.21.4'
-__release__ = 210930
+__version__ = '0.21.5'
+__release__ = 211102
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -382,7 +382,13 @@ class XLSX(_SimResult):
                             if commonIndex is None:
                                 commonIndex = candidate
                             else:
-                                commonIndex = pd.merge_ordered( commonIndex, candidate, on=timeK, how='outer' )
+                                try:
+                                    commonIndex = pd.merge_ordered( commonIndex, candidate, on=timeK, how='outer' )
+                                except ValueError:
+                                    if timeK in ['DATE','DATES']:
+                                        raise ValueError('column ' + str(timeK) + ' has values that are not in date format in sheet ' + str(frame) + '.')
+                                    else:
+                                        raise ValueError('index column ' + str(timeK) + ' has different kind of values in sheet ' + str(frame) + '.')
                         else:
                             commonIndex = None
                             commonTimeK = None
