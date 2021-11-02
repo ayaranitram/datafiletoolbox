@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.69.6'
-__release__ = 210930
+__version__ = '0.69.9'
+__release__ = 211101
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from io import StringIO
@@ -2930,7 +2930,7 @@ Copy of input object, shifted.
     #     selfGrouped = self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna)
     #     return SimDataFrame(data=selfGrouped, **self._SimParameters )
 
-    def daily(self, outBy='mean', datetimeIndex=False) :
+    def daily(self, outBy='mean', datetimeIndex=False, by=None) :
         """
         return a dataframe with a single row per day.
         index must be a date type.
@@ -2945,12 +2945,35 @@ Copy of input object, shifted.
             std : returns the standard deviation per year
             sum : returns the summation of all the values per year
             count : returns the number of rows per year
+        
+        by :  label, or list of labels 
+            Used to determine the groups for the groupby. 
+            If by is a function, it’s called on each value of the object’s index. 
+            If a dict or Series is passed, the Series or dict VALUES will be used 
+            to determine the groups (the Series’ values are first aligned; see .align() method). 
+            If an ndarray is passed, the values are used as-is to determine the groups. 
+            A label or list of labels may be passed to group by the columns in self. 
+            Notice that a tuple is interpreted as a (single) key.
         """
         if type(outBy) is bool:
             outBy, datetimeIndex = 'mean', outBy
+            
+        if by is None:
+            by = []
+        elif type(by) is list:
+            newBy = []
+            for each in by:
+                if each in self.columns:
+                    newBy.append(each)
+            by = newBy
+        elif by in self.columns:
+            by =  [by]
+        else:
+            by =  [by]
+        by = [self.index.year, self.index.month, self.index.day] + by
 
         try :
-            result = self.DF.groupby([self.index.year, self.index.month, self.index.day])
+            result = self.DF.groupby(by=by)  # [self.index.year, self.index.month, self.index.day]
         except:
             raise TypeError('index must be of datetime type.')
         if outBy == 'first' :
@@ -2973,8 +2996,8 @@ Copy of input object, shifted.
             result = result.count()
         elif outBy in ['int', 'integrate', 'integral', 'cum', 'cumulative', 'representative'] :
             result = self.integrate()
-            result = result.DF.groupby([self.index.year, self.index.month, self.index.day])
-            index = DataFrame(data=self.index, index=self.index ).groupby([self.index.year, self.index.month, self.index.day])
+            result = result.DF.groupby(by=by)  # [self.index.year, self.index.month, self.index.day]
+            index = DataFrame(data=self.index, index=self.index ).groupby(by=by)  # [self.index.year, self.index.month, self.index.day]
             index = np.append(index.first().to_numpy(), index.last().to_numpy()[-1])
             deltaindex = np.diff(index)
             if isinstance(self.index, DatetimeIndex) :
@@ -3006,7 +3029,7 @@ Copy of input object, shifted.
             # output.indexUnits = ('year','month','day')
         return output
 
-    def monthly(self, outBy='mean', datetimeIndex=False) :
+    def monthly(self, outBy='mean', datetimeIndex=False, by=None) :
         """
         return a dataframe with a single row per month.
         index must be a date type.
@@ -3025,12 +3048,35 @@ Copy of input object, shifted.
         datetimeIndex : bool
             if True the index will converted to DateTimeIndex with Day=1 for each month
             if False the index will be a MultiIndex (Year,Month)
+        
+        by :  label, or list of labels 
+            Used to determine the groups for the groupby. 
+            If by is a function, it’s called on each value of the object’s index. 
+            If a dict or Series is passed, the Series or dict VALUES will be used 
+            to determine the groups (the Series’ values are first aligned; see .align() method). 
+            If an ndarray is passed, the values are used as-is to determine the groups. 
+            A label or list of labels may be passed to group by the columns in self. 
+            Notice that a tuple is interpreted as a (single) key.
         """
         if type(outBy) is bool:
             outBy, datetimeIndex = 'mean', outBy
+        
+        if by is None:
+            by = []
+        elif type(by) is list:
+            newBy = []
+            for each in by:
+                if each in self.columns:
+                    newBy.append(each)
+            by = newBy
+        elif by in self.columns:
+            by =  [by]
+        else:
+            by =  [by]
+        by = [self.index.year, self.index.month] + by
 
         try :
-            result = self.DF.groupby([self.index.year, self.index.month])
+            result = self.DF.groupby(by=by)  # [self.index.year, self.index.month]
         except:
             raise TypeError('index must be of datetime type.')
         if outBy == 'first' :
@@ -3053,8 +3099,8 @@ Copy of input object, shifted.
             result = result.count()
         elif outBy in ['int', 'integrate', 'integral', 'cum', 'cumulative', 'representative'] :
             result = self.integrate()
-            result = result.DF.groupby([self.index.year, self.index.month])
-            index = DataFrame(data=self.index, index=self.index ).groupby([self.index.year, self.index.month])
+            result = result.DF.groupby(by=by)  # [self.index.year, self.index.month]
+            index = DataFrame(data=self.index, index=self.index ).groupby(by=by)  # [self.index.year, self.index.month]
             index = np.append(index.first().to_numpy(), index.last().to_numpy()[-1] )
             deltaindex = np.diff(index)
             if isinstance(self.index, DatetimeIndex) :
@@ -3084,7 +3130,7 @@ Copy of input object, shifted.
             # output.indexUnits = ('year','month')
         return output
 
-    def yearly(self, outBy='mean', datetimeIndex=False) :
+    def yearly(self, outBy='mean', datetimeIndex=False, by=None) :
         """
         return a dataframe with a single row per year.
         index must be a date type.
@@ -3106,12 +3152,37 @@ Copy of input object, shifted.
         datetimeIndex : bool
             if True the index will converted to DateTimeIndex with Day=1 and Month=1 for each year
             if False the index will be a MultiIndex (Year,Month)
+        
+        by :  label, or list of labels 
+            Used to determine the groups for the groupby. 
+            If by is a function, it’s called on each value of the object’s index. 
+            If a dict or Series is passed, the Series or dict VALUES will be used 
+            to determine the groups (the Series’ values are first aligned; see .align() method). 
+            If an ndarray is passed, the values are used as-is to determine the groups. 
+            A label or list of labels may be passed to group by the columns in self. 
+            Notice that a tuple is interpreted as a (single) key.
         """
         if type(outBy) is bool:
             outBy, datetimeIndex = 'mean', outBy
+        
+        if by is None:
+            by = []
+        elif type(by) is list:
+            newBy = []
+            for each in by:
+                if each in self.columns:
+                    newBy.append(each)
+            by = newBy
+        elif by in self.columns:
+            by =  [by]
+        else:
+            by =  [by]
+        by = [self.index.year] + by
+        if len(by) == 1:
+            by = by[0]
 
         try :
-            result = self.DF.groupby(self.index.year)
+            result = self.DF.groupby(by=by)  # self.index.year
         except:
             raise TypeError('index must be of datetime type.')
         if outBy == 'first' :
@@ -3134,8 +3205,8 @@ Copy of input object, shifted.
             result = result.count()
         elif outBy in ['int', 'integrate', 'integral', 'cum', 'cumulative', 'representative','rep','repr'] :
             result = self.integrate()
-            result = result.DF.groupby(self.index.year)
-            index = DataFrame(data=self.index, index=self.index).groupby(self.index.year)
+            result = result.DF.groupby(by=by)  # self.index.year
+            index = DataFrame(data=self.index, index=self.index).groupby(by=by)  # self.index.year
             index = np.append(index.first().to_numpy(), index.last().to_numpy()[-1])
             deltaindex = np.diff(index)
             if isinstance(self.index, DatetimeIndex) :
