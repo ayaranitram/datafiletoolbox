@@ -808,7 +808,7 @@ class SimSeries(Series) :
     def dropna(self, axis=0, inplace=False, how=None) :
         axis = _cleanAxis(axis)
         if inplace:
-            self.S.dropna(axis=axis, inplace=inplace, how=how)
+            super().dropna(axis=axis, inplace=inplace, how=how)
             return None
         else:
             return SimSeries(data=self.S.dropna(axis=axis, inplace=inplace, how=how), **self._SimParameters )
@@ -816,7 +816,7 @@ class SimSeries(Series) :
     def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise') :
         axis = _cleanAxis(axis)
         if inplace:
-            self.S.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors='errors')
+            super().drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors='errors')
             return None
         else:
             return SimSeries(data=self.S.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors='errors'), **self._SimParameters )
@@ -1803,10 +1803,10 @@ class SimSeries(Series) :
 
     def sort_values(self, axis=0, ascending=True, inplace=False, kind='quicksort', na_position='last', ignore_index=False, key=None) :
         if inplace :
-            self.S.sort_values(axis=axis, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
+            super().sort_values(axis=axis, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
             return None
         else :
-            return SimSeries(data=self.S.sort_values(axis=axis, ascending=ascending, inplace=False, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
+            return SimSeries(data=self.S.sort_values(axis=axis, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
 
     def head(self,n=5):
         """
@@ -2908,7 +2908,7 @@ Copy of input object, shifted.
     def dropna(self, axis='index', how='all', thresh=None, subset=None, inplace=False) :
         axis = _cleanAxis(axis)
         if inplace:
-            self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace)
+            super().dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace)
             return None
         else:
             return SimDataFrame(data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace), **self._SimParameters )
@@ -2927,24 +2927,36 @@ Copy of input object, shifted.
                 if columns in self.right or columns in self.left:
                     columns = self[columns].columns
         if inplace:
-            self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors)
+            super().drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors)
             return None
         else:
             return SimDataFrame(data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors), **self._SimParameters )
 
-    def drop_duplicates(self, subset=None, keep='first', inplace=False, ignore_index=False) :
-        return SimDataFrame(data=self.DF.drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index), **self._SimParameters )
+    def drop_duplicates(self, subset=None, keep='first', inplace=False, ignore_index=False):
+        if inplace:
+            super().drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index)
+        else:
+            return SimDataFrame(data=self.DF.drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index), **self._SimParameters )
 
     def fillna(self, value=None, method=None, axis='index', inplace=False, limit=None, downcast=None) :
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast), **self._SimParameters )
+        if inplace:
+            super().fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast)
+        else:
+            return SimDataFrame(data=self.DF.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast), **self._SimParameters )
 
-    def interpolate(self, method='slinear', axis='index', limit=None, inplace=False, limit_direction=None, limit_area=None, downcast=None, **kwargs) :
+    def interpolate(self, method='slinear', axis='index', limit=None, inplace=False, limit_direction=None, limit_area=None, downcast=None, **kwargs):
         axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.interpolate(method=method, axis=axis, limit=limit, inplace=inplace, limit_direction=limit_direction, limit_area=limit_area, downcast=downcast, **kwargs), **self._SimParameters )
+        if inplace:
+            super().interpolate(method=method, axis=axis, limit=limit, inplace=inplace, limit_direction=limit_direction, limit_area=limit_area, downcast=downcast, **kwargs)
+        else:
+            return SimDataFrame(data=self.DF.interpolate(method=method, axis=axis, limit=limit, inplace=inplace, limit_direction=limit_direction, limit_area=limit_area, downcast=downcast, **kwargs), **self._SimParameters )
 
-    def replace(self, to_replace=None, value=None, inplace=False, limit=None, regex=False, method='pad') :
-        return SimDataFrame(data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method), **self._SimParameters )
+    def replace(self, to_replace=None, value=None, inplace=False, limit=None, regex=False, method='pad'):
+        if inplace:
+            super().replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method)
+        else:
+            return SimDataFrame(data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method), **self._SimParameters )
 
     # def groupby(self, by=None, axis=0, level=None, as_index=True, sort=True, group_keys=True, squeeze=False, observed=False, dropna=True) :
     #     axis = _cleanAxis(axis)
@@ -3388,9 +3400,9 @@ Copy of input object, shifted.
         if len(set(objs.keys())) != len(set(objs.values())) :
             objs = dict( zip(objs.keys(),objs.keys()) )
         if inplace :
-            self.rename(columns=objs, inplace=True)
+            self.rename(columns=objs, inplace=inplace)
         else :
-            return self.rename(columns=objs, inplace=False)
+            return self.rename(columns=objs, inplace=inplace)
 
     def renameLeft(self, inplace=False) :
         if self.nameSeparator in [None, '', False] :
@@ -3406,9 +3418,9 @@ Copy of input object, shifted.
         if len(set(objs.keys())) != len(set(objs.values())) :
             objs = dict( zip(objs.keys(),objs.keys()) )
         if inplace :
-            self.rename(columns=objs, inplace=True)
+            self.rename(columns=objs, inplace=inplace)
         else :
-            return self.rename(columns=objs, inplace=False)
+            return self.rename(columns=objs, inplace=inplace)
 
     def _CommonRename(self, SimDataFrame1, SimDataFrame2=None, LR=None) :
         cha = self.intersectionCharacter
@@ -5527,31 +5539,31 @@ Copy of input object, shifted.
                                                                                   key=key).T, **self._SimParameters)
                 if inplace :
                     self = result
-                    return None
+                    return result
                 else :
                     return result
             elif len(self.index) > 1 and len(self.columns) == 1 :
                 if inplace :
-                    self.DF.sort_values(by=self.columns[0], axis=0, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
+                    super().sort_values(by=self.columns[0], axis=0, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
                     return None
                 else :
-                    return SimDataFrame(data=self.DF.sort_values(by=self.columns[0], axis=0, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
+                    return SimDataFrame(data=self.DF.sort_values(by=self.columns[0], axis=0, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
             else :
                 if axis == '--auto' :
                     axis = 0
                 if inplace :
-                    self.DF.sort_values(axis=axis, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
+                    super().sort_values(axis=axis, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
                     return None
                 else :
-                    return SimDataFrame(data=self.DF.sort_values(axis=axis, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
+                    return SimDataFrame(data=self.DF.sort_values(axis=axis, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
         else :
             if axis == '--auto' :
                 axis = 0
             if inplace :
-                self.DF.sort_values(by=by, axis=axis, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
+                super().sort_values(by=by, axis=axis, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
                 return None
             else :
-                return SimDataFrame(data=self.DF.sort_values(by=by, axis=axis, ascending=ascending, inplace=True, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
+                return SimDataFrame(data=self.DF.sort_values(by=by, axis=axis, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
 
     def head(self,n=5):
         """
