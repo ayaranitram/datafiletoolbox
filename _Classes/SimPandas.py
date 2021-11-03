@@ -6,10 +6,11 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.69.9'
-__release__ = 211101
+__version__ = '0.70.0'
+__release__ = 211103
 __all__ = ['SimSeries', 'SimDataFrame']
 
+from sys import getsizeof
 from io import StringIO
 from shutil import get_terminal_size
 from pandas._config import get_option
@@ -2110,6 +2111,11 @@ class SimSeries(Series) :
         """
         return self.sdf.plot(y=y, x=x, others=others, **kwargs)
 
+    def info(self,*args,**kwargs):
+        """
+        .info method implemented for SimSeries for compatibility with SimDataFrame.
+        """
+        return self.SDF.info()
 
 
 class SimDataFrame(DataFrame) :
@@ -2945,19 +2951,19 @@ Copy of input object, shifted.
             std : returns the standard deviation per year
             sum : returns the summation of all the values per year
             count : returns the number of rows per year
-        
-        by :  label, or list of labels 
-            Used to determine the groups for the groupby. 
-            If by is a function, it’s called on each value of the object’s index. 
-            If a dict or Series is passed, the Series or dict VALUES will be used 
-            to determine the groups (the Series’ values are first aligned; see .align() method). 
-            If an ndarray is passed, the values are used as-is to determine the groups. 
-            A label or list of labels may be passed to group by the columns in self. 
+
+        by :  label, or list of labels
+            Used to determine the groups for the groupby.
+            If by is a function, it’s called on each value of the object’s index.
+            If a dict or Series is passed, the Series or dict VALUES will be used
+            to determine the groups (the Series’ values are first aligned; see .align() method).
+            If an ndarray is passed, the values are used as-is to determine the groups.
+            A label or list of labels may be passed to group by the columns in self.
             Notice that a tuple is interpreted as a (single) key.
         """
         if type(outBy) is bool:
             outBy, datetimeIndex = 'mean', outBy
-            
+
         if by is None:
             by = []
         elif type(by) is list:
@@ -3048,19 +3054,19 @@ Copy of input object, shifted.
         datetimeIndex : bool
             if True the index will converted to DateTimeIndex with Day=1 for each month
             if False the index will be a MultiIndex (Year,Month)
-        
-        by :  label, or list of labels 
-            Used to determine the groups for the groupby. 
-            If by is a function, it’s called on each value of the object’s index. 
-            If a dict or Series is passed, the Series or dict VALUES will be used 
-            to determine the groups (the Series’ values are first aligned; see .align() method). 
-            If an ndarray is passed, the values are used as-is to determine the groups. 
-            A label or list of labels may be passed to group by the columns in self. 
+
+        by :  label, or list of labels
+            Used to determine the groups for the groupby.
+            If by is a function, it’s called on each value of the object’s index.
+            If a dict or Series is passed, the Series or dict VALUES will be used
+            to determine the groups (the Series’ values are first aligned; see .align() method).
+            If an ndarray is passed, the values are used as-is to determine the groups.
+            A label or list of labels may be passed to group by the columns in self.
             Notice that a tuple is interpreted as a (single) key.
         """
         if type(outBy) is bool:
             outBy, datetimeIndex = 'mean', outBy
-        
+
         if by is None:
             by = []
         elif type(by) is list:
@@ -3152,19 +3158,19 @@ Copy of input object, shifted.
         datetimeIndex : bool
             if True the index will converted to DateTimeIndex with Day=1 and Month=1 for each year
             if False the index will be a MultiIndex (Year,Month)
-        
-        by :  label, or list of labels 
-            Used to determine the groups for the groupby. 
-            If by is a function, it’s called on each value of the object’s index. 
-            If a dict or Series is passed, the Series or dict VALUES will be used 
-            to determine the groups (the Series’ values are first aligned; see .align() method). 
-            If an ndarray is passed, the values are used as-is to determine the groups. 
-            A label or list of labels may be passed to group by the columns in self. 
+
+        by :  label, or list of labels
+            Used to determine the groups for the groupby.
+            If by is a function, it’s called on each value of the object’s index.
+            If a dict or Series is passed, the Series or dict VALUES will be used
+            to determine the groups (the Series’ values are first aligned; see .align() method).
+            If an ndarray is passed, the values are used as-is to determine the groups.
+            A label or list of labels may be passed to group by the columns in self.
             Notice that a tuple is interpreted as a (single) key.
         """
         if type(outBy) is bool:
             outBy, datetimeIndex = 'mean', outBy
-        
+
         if by is None:
             by = []
         elif type(by) is list:
@@ -6003,6 +6009,53 @@ Copy of input object, shifted.
         """
         from datafiletoolbox.SimulationResults.excelObject import XLSX
         return XLSX(frames=self)
+
+    def info(self,*args,**kwargs):
+        """
+        wrapper for pandas.DataFrame.info() but with Units.
+        """
+        def fillblank(string,length):
+            if len(string.strip()) > length:
+                return string.strip() + ' '
+            return string.strip() + ' '*(length - len(string.strip()) + 1)
+
+        print(type(self))
+        print( str(type(self.DF.index)).split('.')[-1][:-2] + ': ' + str(len(self)) + ' entries, ' + str(self.index[0]) + ' to ' + str(self.index[-1]))
+
+        columns = [ str(col) for col in self.columns ]
+        notnulls = [ str(self[col].notnull().sum()) for col in self.columns ]
+        dtypes = [ str(self[col].dtype) for col in self.columns ]
+        units = [ str(self.units[col]) for col in self.columns ]
+
+        print('Data columns (total ' + str(len(columns)) + ' columns):')
+
+        line = ' ' + fillblank('#', len(str(len(columns))))
+        line = line + ' ' + fillblank('Column', max(len('Column'), max(map(len,columns))))
+        line = line + ' ' + fillblank('Non-Null Count', max(len('Non-Null Count'), len(str(len(self))) + len(' non-null')))
+        line = line + ' ' + fillblank('Dtype',max(len('Dtype'), max(map(len,dtypes))))
+        line = line + ' ' + fillblank('Units',max(len('Units'), max(map(len,units))))
+        print(line)
+
+        line = fillblank('---', len(str(len(columns))))
+        line = line + ' ' + fillblank('------', max(map(len,columns)))
+        line = line + ' ' + fillblank('--------------', len(str(len(self))) + len(' non-null '))
+        line = line + ' ' + fillblank('-----',max(map(len,dtypes)))
+        line = line + ' ' + fillblank('-----',max(map(len,units)))
+        print(line)
+
+        for i in range(len(columns)):
+            line = ' ' + fillblank(str(i), max(len('# '), len(str(len(columns)))))
+            line = line + ' ' + fillblank(columns[i], max(len('Column'), max(map(len,columns))))
+            line = line + ' ' + fillblank(notnulls[i] + ' non-null', max(len('Non-Null Count'), len(str(len(self))) + len(' non-null')))
+            line = line + ' ' + fillblank(dtypes[i], max(len('Dtype'), max(map(len,dtypes))))
+            line = line + ' ' + fillblank(units[i], max(len('Units'), max(map(len,units))))
+            print(line)
+
+        print('dtypes: ' + ', '.join([ each + '(' + str(dtypes.count(each)) + ')' for each in sorted(set(dtypes)) ]))
+
+        print( 'memory usage: ' + str(int(getsizeof(self)/1024/1024*10)/10) + '+ MB')
+
+        return None
 
 
 
