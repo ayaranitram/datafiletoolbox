@@ -334,6 +334,20 @@ class XLSX(_SimResult):
                         self.set_Unit( NewKey, NewUnits )
                         _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage)
                         # _foundNewKey()
+                        if combine_SheetName_ColumnName is True:
+                            cleaningList.append(NewKey)  # to later remove the key
+
+                            # rename the other Key
+                            otherFrame = self.FramesIndex[NewKey][0]
+                            if str(otherFrame) in ECLkeys or str(otherFrame)[1:4] in ECLkeys:
+                                NewOtherKey = str(otherFrame).strip() + self.nameSeparator + NewKey
+                            else:
+                                NewOtherKey = NewKey + self.nameSeparator + str(otherFrame).strip()
+                            if NewOtherKey not in self.FramesIndex:
+                                self.FramesIndex[NewOtherKey] = ( self.FramesIndex[NewKey][0] , self.FramesIndex[NewKey][1] )
+                                self.add_Key( NewOtherKey )
+                                self.set_Unit( NewOtherKey, self.get_Unit(NewKey) )
+                                _verbose(self.speak, 1, " > renamed key: '" + NewKey + "' to '" + NewOtherKey + "'")
 
             elif self.Frames[str(each)].equals(NewFrames[each]) :
                 _verbose(self.speak, 2, "the sheet '"+each+"' was already loaded.")
