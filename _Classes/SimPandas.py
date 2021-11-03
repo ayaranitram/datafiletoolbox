@@ -4968,7 +4968,7 @@ Copy of input object, shifted.
                         uDic[att] = 'UNITLESS'
             elif len(self.get_Keys(each)) > 0 :
                 for key in self.get_Keys(each) :
-                    uDic[key] = self.units[key]
+                    uDic[key] = self.units[key] if key in self.units else ''
         return uDic
 
     def get_UnitsString(self, items=None) :
