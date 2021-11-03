@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.70.3'
+__version__ = '0.70.4'
 __release__ = 211103
 __all__ = ['SimSeries', 'SimDataFrame']
 
@@ -1846,7 +1846,7 @@ class SimSeries(Series) :
             type of caller
             The last n rows of the caller object.
         """
-        return SimSeries(data=self.S.head(n),**self._SimParameters)
+        return SimSeries(data=self.S.tail(n),**self._SimParameters)
 
     def cumsum(self, skipna=True, *args, **kwargs):
         """
@@ -5603,7 +5603,7 @@ Copy of input object, shifted.
             type of caller
             The last n rows of the caller object.
         """
-        return SimDataFrame(data=self.DF.head(n),**self._SimParameters)
+        return SimDataFrame(data=self.DF.tail(n),**self._SimParameters)
 
     def cumsum(self, skipna=True, *args, **kwargs):
         """
