@@ -824,14 +824,18 @@ class SimSeries(Series) :
     @property
     def wells(self) :
         objs = []
-        if type(self.name) is str :
-            if self.nameSeparator in self.name and self.name[0] == 'W' :
-                objs = [self.name.split(self.nameSeparator )[-1]]
+        if type(self.name) is str:
+            if self.nameSeparator in self.name and self.name[0] == 'W':
+                objs = [self.name.split(self.nameSeparator)[-1]]
         elif type(self.index[-1]) is str :
-            for each in list(self.index ) :
-                if self.nameSeparator in each and each[0] == 'W' :
-                    objs += [each.split(self.nameSeparator )[-1]]
+            for each in list(self.index):
+                if self.nameSeparator in each and each[0] == 'W':
+                    objs += [each.split(self.nameSeparator)[-1]]
         return tuple(set(objs))
+
+    # @property
+    # def items(self) :
+    #     return self.left
 
     def get_Wells(self, pattern=None) :
         """
@@ -3337,12 +3341,12 @@ Copy of input object, shifted.
 
     @property
     def right(self) :
-        if self.nameSeparator in [None, '', False] :
-            return tuple(self.columns )
+        if self.nameSeparator in [None, '', False]:
+            return tuple(self.columns)
         objs = []
-        for each in list(self.columns ) :
-            if self.nameSeparator in each :
-                objs += [each.split(self.nameSeparator )[-1]]
+        for each in list(self.columns):
+            if self.nameSeparator in each:
+                objs += [each.split(self.nameSeparator)[-1]]
             else :
                 objs += [each]
         return tuple(set(objs))
@@ -3350,11 +3354,11 @@ Copy of input object, shifted.
     @property
     def left(self) :
         if self.nameSeparator in [None, '', False] :
-            return tuple(self.columns )
+            return tuple(self.columns)
         objs = []
-        for each in list(self.columns ) :
+        for each in list(self.columns):
             if self.nameSeparator in each :
-                objs += [each.split(self.nameSeparator )[0]]
+                objs += [each.split(self.nameSeparator)[0]]
             else :
                 objs += [each]
         return tuple(set(objs))
@@ -4727,10 +4731,15 @@ Copy of input object, shifted.
         if self.nameSeparator in [None, '', False] :
             return []
         objs = []
-        for each in list(self.columns ) :
+        for each in list(self.columns) :
             if type(each) is str and self.nameSeparator in each and each[0] == 'W' :
                 objs += [each.split(self.nameSeparator )[-1]]
         return tuple(set(objs))
+
+    # @property
+    # def items(self) :
+    #     return self.left
+
     def get_Wells(self, pattern=None) :
         """
         Will return a tuple of all the well names in case.
