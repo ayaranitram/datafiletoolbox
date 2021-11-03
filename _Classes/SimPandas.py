@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.70.2'
+__version__ = '0.70.3'
 __release__ = 211103
 __all__ = ['SimSeries', 'SimDataFrame']
 
@@ -2920,7 +2920,7 @@ Copy of input object, shifted.
                 if labels in self.right or labels in self.left:
                     labels = self[labels].columns
             elif axis == 0 and labels not in self.index:
-                filt = [labels in ind for ind in self.index]
+                filt = [labels in str(ind) for ind in self.index]
                 labels = self.index[filt]
         elif columns is not None:
             if columns not in self.columns:
