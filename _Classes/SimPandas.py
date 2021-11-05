@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.70.4'
-__release__ = 211103
+__version__ = '0.70.5'
+__release__ = 211105
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from sys import getsizeof
@@ -4407,7 +4407,7 @@ Copy of input object, shifted.
         elif type(units) is str :
             uDic = { str(key) : units.strip() }
         elif type(units) is dict :
-            raise NotImplementedError
+            uDic = units
         else :
             raise NotImplementedError
 
