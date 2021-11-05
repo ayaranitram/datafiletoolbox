@@ -1646,10 +1646,10 @@ class SimSeries(Series) :
                     filterStr = filterStr.rstrip()
                     filterStr += " self.S['"+key+"']"
                 # key might be a wellname, attribute or a pattern
-                elif len(self.find_Keys(key) ) == 1 :
+                elif len(self.find_Keys(key)) == 1 :
                     filterStr = filterStr.rstrip()
                     filterStr += " self.S['"+ self.find_Keys(key)[0] +"']"
-                elif len(self.find_Keys(key) ) > 1 :
+                elif len(self.find_Keys(key)) > 1 :
                     filterStr = filterStr.rstrip()
                     filterStr += " self.S["+ str(list(self.find_Keys(key)) ) +"]"
                     PandasAgg = '.any(axis=1)'
@@ -2911,9 +2911,9 @@ Copy of input object, shifted.
             super().dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace)
             return None
         else:
-            return SimDataFrame(data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace), **self._SimParameters )
+            return SimDataFrame(data=self.DF.dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace), **self._SimParameters)
 
-    def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise') :
+    def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise'):
         axis = _cleanAxis(axis)
         if labels is not None:
             if axis == 1 and labels not in self.columns:
@@ -2930,20 +2930,20 @@ Copy of input object, shifted.
             super().drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors)
             return None
         else:
-            return SimDataFrame(data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors), **self._SimParameters )
+            return SimDataFrame(data=self.DF.drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors), **self._SimParameters)
 
     def drop_duplicates(self, subset=None, keep='first', inplace=False, ignore_index=False):
         if inplace:
             super().drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index)
         else:
-            return SimDataFrame(data=self.DF.drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index), **self._SimParameters )
+            return SimDataFrame(data=self.DF.drop_duplicates(subset=subset, keep=keep, inplace=inplace, ignore_index=ignore_index), **self._SimParameters)
 
     def fillna(self, value=None, method=None, axis='index', inplace=False, limit=None, downcast=None) :
         axis = _cleanAxis(axis)
         if inplace:
             super().fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast)
         else:
-            return SimDataFrame(data=self.DF.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast), **self._SimParameters )
+            return SimDataFrame(data=self.DF.fillna(value=value, method=method, axis=axis, inplace=inplace, limit=limit, downcast=downcast), **self._SimParameters)
 
     def interpolate(self, method='slinear', axis='index', limit=None, inplace=False, limit_direction=None, limit_area=None, downcast=None, **kwargs):
         axis = _cleanAxis(axis)
@@ -2956,7 +2956,7 @@ Copy of input object, shifted.
         if inplace:
             super().replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method)
         else:
-            return SimDataFrame(data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method), **self._SimParameters )
+            return SimDataFrame(data=self.DF.replace(to_replace=to_replace, value=value, inplace=inplace, limit=limit, regex=regex, method=method), **self._SimParameters)
 
     # def groupby(self, by=None, axis=0, level=None, as_index=True, sort=True, group_keys=True, squeeze=False, observed=False, dropna=True) :
     #     axis = _cleanAxis(axis)
@@ -4942,7 +4942,7 @@ Copy of input object, shifted.
         keys = []
         if type(criteria) is str and len(criteria.strip()) > 0 :
             if criteria.strip()[0] == '!' and len(criteria.strip()) > 1 :
-                keys = list(self.columns )
+                keys = list(self.columns)
                 keys.remove(criteria[1:])
                 return tuple(keys )
             criteria = [criteria]
@@ -4956,13 +4956,13 @@ Copy of input object, shifted.
                 if key in self.wells or key in self.groups or key in self.regions :
                     keys += list(self.get_Keys('*'+self.nameSeparator+key))
                 elif key in self.attributes :
-                    keys += list(self.keyGen(key, self.attributes[key] ) )
+                    keys += list(self.keyGen(key, self.attributes[key]))
                 else :
                     keys += list(self.get_Keys(key))
             elif type(key) is str and key in self.columns :
                 keys += [ key ]
             else :
-                keys += list(self.find_Keys(key) )
+                keys += list(self.find_Keys(key))
         return tuple(keys)
 
     def get_units(self, items=None) :
