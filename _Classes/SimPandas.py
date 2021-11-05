@@ -2907,6 +2907,12 @@ Copy of input object, shifted.
 
     def dropna(self, axis='index', how='all', thresh=None, subset=None, inplace=False) :
         axis = _cleanAxis(axis)
+        if subset is not None:
+            if type(subset) is str and subset in self.columns:
+                pass
+            elif len(self.find_Keys(subset)) > 0:
+                subset = list(self.find_Keys(subset))
+
         if inplace:
             super().dropna(axis=axis, how=how, thresh=thresh, subset=subset, inplace=inplace)
             return None
@@ -2917,15 +2923,15 @@ Copy of input object, shifted.
         axis = _cleanAxis(axis)
         if labels is not None:
             if axis == 1 and labels not in self.columns:
-                if labels in self.right or labels in self.left:
-                    labels = self[labels].columns
+                if len(self.find_Keys(labels)) > 0:
+                    labels = list(self.find_Keys(labels))
             elif axis == 0 and labels not in self.index:
                 filt = [labels in str(ind) for ind in self.index]
                 labels = self.index[filt]
         elif columns is not None:
             if columns not in self.columns:
-                if columns in self.right or columns in self.left:
-                    columns = self[columns].columns
+                if len(self.find_Keys(columns)) > 0:
+                    columns = list(self.find_Keys(columns))
         if inplace:
             super().drop(labels=labels, axis=axis, index=index, columns=columns, level=level, inplace=inplace, errors=errors)
             return None
