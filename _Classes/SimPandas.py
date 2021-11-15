@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.70.5'
-__release__ = 211105
+__version__ = '0.70.6'
+__release__ = 211115
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from sys import getsizeof
