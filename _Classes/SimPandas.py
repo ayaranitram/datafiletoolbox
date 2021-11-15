@@ -2922,7 +2922,9 @@ Copy of input object, shifted.
     def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise'):
         axis = _cleanAxis(axis)
         if labels is not None:
-            if axis == 1 and labels not in self.columns:
+            if axis == 1 and type(labels) is list:
+                labels = list(self.find_Keys(labels))
+            elif axis == 1 and labels not in self.columns:
                 if len(self.find_Keys(labels)) > 0:
                     labels = list(self.find_Keys(labels))
             elif axis == 0 and labels not in self.index:
