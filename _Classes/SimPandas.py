@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.70.7'
+__version__ = '0.70.9'
 __release__ = 211122
 __all__ = ['SimSeries', 'SimDataFrame']
 
@@ -3087,7 +3087,7 @@ Copy of input object, shifted.
                 output.set_Units('day','DAY')
         return output
 
-    def monthly(self, outBy='mean', datetimeIndex=False, by=None) :
+    def monthly(self, outBy='mean', datetimeIndex=False, by=None, day='first'):
         """
         return a dataframe with a single row per month.
         index must be a date type.
@@ -3115,7 +3115,35 @@ Copy of input object, shifted.
             If an ndarray is passed, the values are used as-is to determine the groups.
             A label or list of labels may be passed to group by the columns in self.
             Notice that a tuple is interpreted as a (single) key.
+
+        day : str or int
+            The day of the month to write on the datetime index.
+            If integer or string number, this number will be used as the day for the index.
+            If string 'first' the first day of the month will be used, always 1.
+            If string 'last' the last day of each month will be used.
+            Ignored if datetimeIndex is False.
         """
+        if day is None:
+            day = '01'
+        elif type(day) in [int,float]:
+            if day > 31 or day < 1:
+                raise ValueError("'day' must be between 1 and 31")
+            day = str(int(day))
+        elif type(day) is str:
+            if day.strip().isdigit():
+                day = day.strip()
+                if int(day) > 31 or int(day) < 1:
+                    raise ValueError("'day' must be between 1 and 31")
+            elif day.strip().lower() == 'first':
+                day = '01'
+            elif day.strip().lower() == 'last':
+                day = day.strip().lower()
+            else:
+                raise ValueError("'day' parameter must be an integer or the string 'first'")
+        else:
+            raise ValueError("'day' parameter must be an integer or the string 'first'")
+        day = '-' + day.zfill(2)
+
         if type(outBy) is bool:
             outBy, datetimeIndex = 'mean', outBy
 
@@ -3180,16 +3208,16 @@ Copy of input object, shifted.
 
         if datetimeIndex:
             if userby is None:
-                output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-01' for YYYY,MM in output.index ] )
+                output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+(day if day != '-last' else '-'+str(daysInMonth(MM,YYYY))) for YYYY,MM in output.index ] )
                 output.index.names = ['DATE']
                 output.index.name = 'DATE'
                 if 'DATE' not in output.get_Units():  # if output.units is None or 'DATE' not in output.units:
                     output.set_Units('date','DATE')
             elif len(userby) == 1:
                 #output.index = pd.to_datetime( [ str(i[0])+'-'+str(i[1]).zfill(2)+'-01' for i in output.index ] )
-                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-'+str(i[1]).zfill(2)+'-01'),i[2],) for i in output.index])
+                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-'+str(i[1]).zfill(2)+ (day if day != '-last' else '-'+str(daysInMonth(i[1],i[0]))) ),i[2],) for i in output.index])
             else:
-                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-'+str(i[1]).zfill(2)+'-01'),) + tuple(i[2:]) for i in output.index])
+                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-'+str(i[1]).zfill(2)+ (day if day != '-last' else '-'+str(daysInMonth(i[1],i[0]))) ),) + tuple(i[2:]) for i in output.index])
             if userby is not None:
                 output.index.names = ['DATE'] + userby
                 output.index.name = 'DATE' + '_' + '_'.join(map(str,userby))
@@ -3206,7 +3234,7 @@ Copy of input object, shifted.
                 output.set_Units('month','MONTH')
         return output
 
-    def yearly(self, outBy='mean', datetimeIndex=False, by=None) :
+    def yearly(self, outBy='mean', datetimeIndex=False, by=None, day='first', month=None) :
         """
         return a dataframe with a single row per year.
         index must be a date type.
@@ -3225,11 +3253,11 @@ Copy of input object, shifted.
             representative : calculates the numerical integration of the column over the index (a datetime-index) and then divide it by the elapsed time on between each pair of rows
             cumsum or cumulative : run cumsum over the columns and then return the last value of each year
 
-        datetimeIndex : bool
+        datetimeIndex : bool, optional
             if True the index will converted to DateTimeIndex with Day=1 and Month=1 for each year
             if False the index will be a MultiIndex (Year,Month)
 
-        by :  label, or list of labels
+        by :  label, or list of labels, optional
             Used to determine the groups for the groupby.
             If by is a function, it’s called on each value of the object’s index.
             If a dict or Series is passed, the Series or dict VALUES will be used
@@ -3237,7 +3265,86 @@ Copy of input object, shifted.
             If an ndarray is passed, the values are used as-is to determine the groups.
             A label or list of labels may be passed to group by the columns in self.
             Notice that a tuple is interpreted as a (single) key.
+
+        day : str or int, optional
+            Ignored if datetimeIndex is False.
+            The day of the month to write on the datetime index.
+            If integer or string number, this number will be used as the day for the index.
+            If string 'first' the first day of the 'month' will be used, always 1.
+            If string 'last' the last day of 'month' will be used.
+            Default is 'first'.
+
+        month : str or int, optional
+            Ignored if datetimeIndex is False.
+            The month of the year to write on the datetime index.
+            If integer or string number, this number will be used as the month for the index.
+            If string 'first' the first month of the year will be used, always 1.
+            If string 'last' the last month of the year will be used, always 12.
+            Default is None.
         """
+        monthsnames = {'JAN':1, 'ENE':1, 'GEN':1,
+                       'FEB':2,
+                       'MAR':3,
+                       'APR':4, 'ABR':4,
+                       'MAY':5,
+                       'JUN':6, 'GIU':6,
+                       'JUL':7, 'JLY':7, 'LUG':7,
+                       'AUG':8, 'AGO':8,
+                       'SEP':9, 'SET':9,
+                       'OCT':10, 'OTT':10,
+                       'NOV':11,
+                       'DEC':12, 'DIC':12, }
+        if month is None:
+            if str(day).strip().lower() not in ['first','last']:
+                raise ValueError("please provide 'month' when requesting a particular day")
+        elif type(month) in [int,float]:
+            if month > 12 or month < 1:
+                raise ValueError("'month' must be between 1 and 12")
+            month = str(int(month))
+        elif type(month) is str:
+            if month.strip().isdigit():
+                month = month.strip()
+                if int(month) > 12 or int(month) < 1:
+                    raise ValueError("'month' must be between 1 and 12")
+            elif month.lower() == 'first':
+                month = '01'
+            elif month.lower() == 'last':
+                month = '12'
+            elif month.strip().upper()[:3] in monthsnames:
+                month = str(monthsnames[month.strip().upper()[:3]])
+            else:
+                raise ValueError("'month' parameter must be an integer or the string representing a month, or 'first' or 'last'")
+        else:
+            raise ValueError("'month' parameter must be an integer or the string representing a month, or 'first' or 'last'")
+        if day is None:
+            day = '01'
+        elif type(day) in [int,float]:
+            day = str(int(day))
+        elif type(day) is str:
+            if day.strip().isdigit():
+                day = day.strip()
+                if int(day) > 31 or int(day) < 1:
+                    raise ValueError("'day' must be between 1 and 31")
+            elif day.lower() == 'first':
+                day = '01'
+                if month is None:
+                    month = '01'
+            elif day.lower() == 'last':
+                if month is None:
+                    day = '31'
+                    month = '12'
+                elif int(month) == 2:
+                    day = 'last'
+                else:
+                    day = str(daysInMonth(int(month)))
+            else:
+                raise ValueError("'day' parameter must be an integer or the string 'first'")
+        else:
+            raise ValueError("'day' parameter must be an integer or the string 'first'")
+
+        month = '-' + month.zfill(2)
+        day = '-' + day.zfill(2)
+
         if type(outBy) is bool:
             outBy, datetimeIndex = 'mean', outBy
 
@@ -3304,15 +3411,15 @@ Copy of input object, shifted.
 
         if datetimeIndex:
             if userby is None:
-                output.index = pd.to_datetime( [ str(YYYY)+'-01-01' for YYYY in output.index ] )
+                output.index = pd.to_datetime( [ str(YYYY)+month+(day if day != '-last' else '-'+str(daysInMonth(month[1:],YYYY))) for YYYY in output.index ] )
                 output.index.names = ['DATE']
                 output.index.name = 'DATE'
                 if 'DATE' not in output.get_Units():  # if output.units is None or 'DATE' not in output.units:
                     output.set_Units('date','DATE')
             elif len(userby) == 1:
-                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-01-01'),i[1],) for i in output.index])
+                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+month+(day if day != '-last' else '-'+str(daysInMonth(month[1:],i[0])))),i[1],) for i in output.index])
             else:
-                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-01-01'),) + tuple(i[1:]) for i in output.index])
+                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+month+(day if day != '-last' else '-'+str(daysInMonth(month[1:],i[0])))),) + tuple(i[1:]) for i in output.index])
             if userby is not None:
                 output.index.names = ['DATE'] + userby
                 output.index.name = 'DATE' + '_' + '_'.join(map(str,userby))
