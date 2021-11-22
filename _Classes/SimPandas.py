@@ -6254,6 +6254,14 @@ def daysInMonth(month,year=None):
     if type(month) is str:
         if month.upper() in monthsnames:
             month = monthsnames[month.upper()]
+        elif month.isdigit():
+            return daysInMonth(int(month),year)
+        elif year is None:
+            try:
+                month = pd.to_datetime(month)
+                return daysInMonth(month.month,month.year)
+            except:
+                raise ValueError("input 'month' not recognized.")
         else:
             raise ValueError("input 'month' not recognized.")
 
