@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.70.6'
-__release__ = 211115
+__version__ = '0.70.7'
+__release__ = 211122
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from sys import getsizeof
@@ -3011,6 +3011,7 @@ Copy of input object, shifted.
             by =  [by]
         else:
             by =  [by]
+        userby = by if len(by) > 0 else None
         by = [self.index.year, self.index.month, self.index.day] + by
 
         try :
@@ -3050,24 +3051,40 @@ Copy of input object, shifted.
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)
-        output.index = pd.MultiIndex.from_tuples([(int(y),int(m),int(d)) for y,m,d in output.index ])
+        if userby is None:
+            output.index = pd.MultiIndex.from_tuples([(int(y),int(m),int(d)) for y,m,d in output.index ])
+        elif len(userby) == 1:
+            output.index = pd.MultiIndex.from_tuples([(int(i[0]),int(i[1]),int(i[2]),i[3]) for i in output.index ])
+        else:
+            output.index = pd.MultiIndex.from_tuples([(int(i[0]),int(i[1]),int(i[2]),) + tuple(i[3:]) for i in output.index ])
 
         if datetimeIndex:
-            output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-'+str(DD).zfill(2) for YYYY,MM,DD in output.index ] )
-            output.index.names = ['DATE']
-            output.index.name = 'DATE'
-            if 'DATE' not in output.get_Units():  # if output.units is None or 'DATE' not in output.units:
-                output.set_Units('date','DATE')
-        else:
+            if userby is None:
+                output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-'+str(DD).zfill(2) for YYYY,MM,DD in output.index ] )
+                output.index.names = ['DATE']
+                output.index.name = 'DATE'
+                if 'DATE' not in output.get_Units():  # if output.units is None or 'DATE' not in output.units:
+                    output.set_Units('date','DATE')
+            elif len(userby) == 1:
+                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-'+str(i[1]).zfill(2)+'-'+str(i[2]).zfill(2)),i[3]) for i in output.index ])
+            else:
+                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-'+str(i[1]).zfill(2)+'-'+str(i[2]).zfill(2)),) + tuple(i[3:]) for i in output.index ])
+            if userby is not None:
+                output.index.names = ['DATE'] + userby
+                output.index.name = 'DATE' + '_' + '_'.join(map(str,userby))
+        elif userby is None:
             output.index.names = ['YEAR', 'MONTH', 'DAY']
             output.index.name = 'YEAR_MONTH_DAY'
+        else:
+            output.index.names = ['YEAR', 'MONTH', 'DAY'] + userby
+            output.index.name = 'YEAR_MONTH_DAY' + '_' + '_'.join(map(str,userby))
+        if not datetimeIndex:
             if 'YEAR' not in output.units:
                 output.set_Units('year','YEAR')
             if 'MONTH' not in output.units:
                 output.set_Units('month','MONTH')
             if 'DAY' not in output.units:
                 output.set_Units('day','DAY')
-            # output.indexUnits = ('year','month','day')
         return output
 
     def monthly(self, outBy='mean', datetimeIndex=False, by=None) :
@@ -3114,6 +3131,7 @@ Copy of input object, shifted.
             by =  [by]
         else:
             by =  [by]
+        userby = by if len(by) > 0 else None
         by = [self.index.year, self.index.month] + by
 
         try :
@@ -3153,22 +3171,39 @@ Copy of input object, shifted.
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)
-        output.index = pd.MultiIndex.from_tuples([(int(y),int(m)) for y,m in output.index ])
+        if userby is None:
+            output.index = pd.MultiIndex.from_tuples([(int(y),int(m)) for y,m in output.index ])
+        elif len(userby) == 1:
+            output.index = pd.MultiIndex.from_tuples([(int(i[0]),int(i[1]),i[2]) for i in output.index ])
+        else:
+            output.index = pd.MultiIndex.from_tuples([(int(i[0]),int(i[1]),) + tuple(i[2:]) for i in output.index ])
 
         if datetimeIndex:
-            output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-01' for YYYY,MM in output.index ] )
-            output.index.names = ['DATE']
-            output.index.name = 'DATE'
-            if 'DATE' not in output.get_Units():  # if output.units is None or 'DATE' not in output.units:
-                output.set_Units('date','DATE')
-        else:
+            if userby is None:
+                output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-01' for YYYY,MM in output.index ] )
+                output.index.names = ['DATE']
+                output.index.name = 'DATE'
+                if 'DATE' not in output.get_Units():  # if output.units is None or 'DATE' not in output.units:
+                    output.set_Units('date','DATE')
+            elif len(userby) == 1:
+                #output.index = pd.to_datetime( [ str(i[0])+'-'+str(i[1]).zfill(2)+'-01' for i in output.index ] )
+                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-'+str(i[1]).zfill(2)+'-01'),i[2],) for i in output.index])
+            else:
+                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-'+str(i[1]).zfill(2)+'-01'),) + tuple(i[2:]) for i in output.index])
+            if userby is not None:
+                output.index.names = ['DATE'] + userby
+                output.index.name = 'DATE' + '_' + '_'.join(map(str,userby))
+        elif userby is None:
             output.index.names = ['YEAR', 'MONTH']
             output.index.name = 'YEAR_MONTH'
+        else:
+            output.index.names = ['YEAR', 'MONTH'] + userby
+            output.index.name = 'YEAR_MONTH' + '_' + '_'.join(map(str,userby))
+        if not datetimeIndex:
             if 'YEAR' not in output.units:
                 output.set_Units('year','YEAR')
             if 'MONTH' not in output.units:
                 output.set_Units('month','MONTH')
-            # output.indexUnits = ('year','month')
         return output
 
     def yearly(self, outBy='mean', datetimeIndex=False, by=None) :
@@ -3218,6 +3253,7 @@ Copy of input object, shifted.
             by =  [by]
         else:
             by =  [by]
+        userby = by if len(by) > 0 else None
         by = [self.index.year] + by
         if len(by) == 1:
             by = by[0]
@@ -3259,17 +3295,34 @@ Copy of input object, shifted.
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)
-        output.index = [ int(y) for y in output.index ]
+        if userby is None:
+            output.index = [ int(y) for y in output.index ]
+        elif len(userby) == 1:
+            output.index = pd.MultiIndex.from_tuples([(int(i[0]),i[1]) for i in output.index ])
+        else:
+            output.index = pd.MultiIndex.from_tuples([(int(i[0]),) + tuple(i[1:]) for i in output.index ])
 
         if datetimeIndex:
-            output.index = pd.to_datetime( [ str(YYYY)+'-01-01' for YYYY in output.index ] )
-            output.index.names = ['DATE']
-            output.index.name = 'DATE'
-            if 'DATE' not in output.get_Units():  # if output.units is None or 'DATE' not in output.units:
-                output.set_Units('date','DATE')
-        else:
+            if userby is None:
+                output.index = pd.to_datetime( [ str(YYYY)+'-01-01' for YYYY in output.index ] )
+                output.index.names = ['DATE']
+                output.index.name = 'DATE'
+                if 'DATE' not in output.get_Units():  # if output.units is None or 'DATE' not in output.units:
+                    output.set_Units('date','DATE')
+            elif len(userby) == 1:
+                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-01-01'),i[1],) for i in output.index])
+            else:
+                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-01-01'),) + tuple(i[1:]) for i in output.index])
+            if userby is not None:
+                output.index.names = ['DATE'] + userby
+                output.index.name = 'DATE' + '_' + '_'.join(map(str,userby))
+        elif userby is None:
             output.index.names = ['YEAR']
             output.index.name = 'YEAR'
+        else:
+            output.index.names = ['YEAR',] + userby
+            output.index.name = 'YEAR' + '_' + '_'.join(map(str,userby))
+        if not datetimeIndex:
             output.set_Units('year','YEAR')
             output.indexUnits = 'year'
         return output
