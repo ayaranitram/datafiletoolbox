@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.70.9'
-__release__ = 211122
+__version__ = '0.70.10'
+__release__ = 211124
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from sys import getsizeof
@@ -3063,7 +3063,7 @@ Copy of input object, shifted.
                 output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-'+str(DD).zfill(2) for YYYY,MM,DD in output.index ] )
                 output.index.names = ['DATE']
                 output.index.name = 'DATE'
-                if 'DATE' not in output.get_Units():  # if output.units is None or 'DATE' not in output.units:
+                if 'DATE' not in output.get_Units():
                     output.set_Units('date','DATE')
             elif len(userby) == 1:
                 output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-'+str(i[1]).zfill(2)+'-'+str(i[2]).zfill(2)),i[3]) for i in output.index ])
@@ -3079,11 +3079,11 @@ Copy of input object, shifted.
             output.index.names = ['YEAR', 'MONTH', 'DAY'] + userby
             output.index.name = 'YEAR_MONTH_DAY' + '_' + '_'.join(map(str,userby))
         if not datetimeIndex:
-            if 'YEAR' not in output.units:
+            if 'YEAR' not in output.get_Units():
                 output.set_Units('year','YEAR')
-            if 'MONTH' not in output.units:
+            if 'MONTH' not in output.get_Units():
                 output.set_Units('month','MONTH')
-            if 'DAY' not in output.units:
+            if 'DAY' not in output.get_Units():
                 output.set_Units('day','DAY')
         return output
 
@@ -3211,7 +3211,7 @@ Copy of input object, shifted.
                 output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+(day if day != '-last' else '-'+str(daysInMonth(MM,YYYY))) for YYYY,MM in output.index ] )
                 output.index.names = ['DATE']
                 output.index.name = 'DATE'
-                if 'DATE' not in output.get_Units():  # if output.units is None or 'DATE' not in output.units:
+                if 'DATE' not in output.get_Units():
                     output.set_Units('date','DATE')
             elif len(userby) == 1:
                 #output.index = pd.to_datetime( [ str(i[0])+'-'+str(i[1]).zfill(2)+'-01' for i in output.index ] )
@@ -3228,9 +3228,9 @@ Copy of input object, shifted.
             output.index.names = ['YEAR', 'MONTH'] + userby
             output.index.name = 'YEAR_MONTH' + '_' + '_'.join(map(str,userby))
         if not datetimeIndex:
-            if 'YEAR' not in output.units:
+            if 'YEAR' not in output.get_Units():
                 output.set_Units('year','YEAR')
-            if 'MONTH' not in output.units:
+            if 'MONTH' not in output.get_Units():
                 output.set_Units('month','MONTH')
         return output
 
@@ -3414,7 +3414,7 @@ Copy of input object, shifted.
                 output.index = pd.to_datetime( [ str(YYYY)+month+(day if day != '-last' else '-'+str(daysInMonth(month[1:],YYYY))) for YYYY in output.index ] )
                 output.index.names = ['DATE']
                 output.index.name = 'DATE'
-                if 'DATE' not in output.get_Units():  # if output.units is None or 'DATE' not in output.units:
+                if 'DATE' not in output.get_Units():
                     output.set_Units('date','DATE')
             elif len(userby) == 1:
                 output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+month+(day if day != '-last' else '-'+str(daysInMonth(month[1:],i[0])))),i[1],) for i in output.index])
