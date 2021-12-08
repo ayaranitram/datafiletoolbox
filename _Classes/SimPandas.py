@@ -2810,11 +2810,11 @@ Copy of input object, shifted.
         if type(other) in (SimDataFrame,SimSeries):
             otherC = other.copy()
             newUnits = self.get_units(self.columns).copy()
-            for col, unit in self.get_units(self.columns).items():
+            for col, units in self.get_units(self.columns).items():
                 if col in otherC.columns:
-                    if unit != otherC.get_units(col)[col]:
-                        if convertibleUnits(otherC.get_units(col)[col], unit) :
-                            otherC[col] = otherC[col].to(unit)
+                    if units != otherC.get_units(col)[col]:
+                        if convertibleUnits(otherC.get_units(col)[col], units) :
+                            otherC[col] = otherC[col].to(units)
                         else:
                             newUnits[col+'_2nd'] = otherC.get_units(col)[col]
                             otherC.rename(columns={col:col+'_2nd'},inplace=True)
