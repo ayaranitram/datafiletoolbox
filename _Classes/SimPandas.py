@@ -3736,7 +3736,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] + otherI
             elif selfI.autoAppend :  # elif selfI.autoAppend :
                 result[otherI.name] = otherI
@@ -3803,7 +3803,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] - otherI
             if self.autoAppend :  # elif self.autoAppend :
                 result[otherI.name] = -otherI
@@ -3871,7 +3871,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = self[otherI.name] * otherI
             else :
                 for col in selfI.columns :
@@ -3933,7 +3933,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] / otherI
             else :
                 for col in selfI.columns :
@@ -3995,7 +3995,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] // otherI
             else :
                 for col in self.columns :
@@ -4058,7 +4058,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns:
                 result[otherI.name] = selfI[other.name] % otherI
             else :
                 for col in selfI.columns :
@@ -4118,7 +4118,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = self[otherI.name] ** otherI
             else :
                 for col in selfI.columns :
