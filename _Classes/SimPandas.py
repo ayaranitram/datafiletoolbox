@@ -2301,9 +2301,13 @@ class SimDataFrame(DataFrame) :
         elif 'operatePerName' in kwargsB and kwargsB['operatePerName'] is not None :
             self.operatePerName = bool(kwargsB['operatePerName'])
 
-    # @property
-    # def _constructor(self):
-    #     return SimDataFrame
+    @property
+    def _constructor(self):
+        return SimDataFrame
+
+    @property
+    def _constructor_sliced(self):
+        return SimSeries
 
     @property
     def loc(self) -> _SimLocIndexer:
