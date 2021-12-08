@@ -2004,7 +2004,7 @@ class SimSeries(Series) :
                     raise ValueError('selected column is not a valid date or year integer')
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
-            elif type(colum) is list:
+            elif type(column) is list:
                 result = self.SimDataFrame(data={}, index=self.index, **self._SimParameters)
                 for col in column:
                     if col in self.columns:
@@ -5944,7 +5944,7 @@ Copy of input object, shifted.
                     raise ValueError('selected column is not a valid date format')
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
-            elif type(colum) is list:
+            elif type(column) is list:
                 result = self._class(data={},index=self.index,**self._SimParameters)
                 for col in column:
                     if col in self.columns:
