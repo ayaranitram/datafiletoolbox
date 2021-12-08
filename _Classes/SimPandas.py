@@ -1437,21 +1437,35 @@ class SimSeries(Series) :
         else:
             return result
 
-    def get_units(self, items=None) :
+    def get_units(self, items=None):
         return self.get_Units()
 
-    def get_Units(self, items=None) :
-        if type(self.units) is str and type(self.name) is str :
+    def get_Units(self, items=None):
+        """
+        returns the units for the selected 'items' or for all the columns in the SimDataFrame.
+
+        Parameters
+        ----------
+        items : str or list of str, optional
+            Ignored, this parameter is kept for compatibility with SimDataFrame. The default is None.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+        if self.units is None:
+            return 'UNITLESS'
+        elif type(self.units) is str and type(self.name) is str:
             uDic = { str(self.name) : self.units }
-        elif type(self.units) is dict :
+        elif type(self.units) is dict:
             uDic = {}
-            for each in self.index :
-                if each in self.units :
+            for each in self.index:
+                if each in self.units:
                     uDic[each] = self.units[each]
                 else :
                     uDic[each] = 'UNITLESS'
-        elif self.units is None:
-            return 'UNITLESS'
         else:
             return self.units.copy() if type(self.units) is dict else self.units
         return uDic
@@ -5136,7 +5150,22 @@ Copy of input object, shifted.
     def get_units(self, items=None) :
         return self.get_Units(items)
 
-    def get_Units(self, items=None) :
+    def get_Units(self, items=None):
+        """
+        returns a dictionary with the units for the selected 'items' (or columns)
+        or for all the columns in this SimDataFrame
+
+        Parameters
+        ----------
+        items : str of iterable (i.e. list), optional
+            The columns or items to return their units. 
+            The default is None, and then al the entire units dictionary will be returned.
+
+        Returns
+        -------
+        dict
+            A dictionary {column:units}
+        """
         if self.units is None:
             self.units = {}
 
