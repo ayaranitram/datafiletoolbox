@@ -4679,7 +4679,7 @@ Copy of input object, shifted.
                         key += list(self.find_Keys(each) )
                     else : # key is not a column name, might be a filter or index
                         try : # to evalue as a filter
-                            trash = self.filter(each, returnFilter=True)
+                            _ = self.filter(each, returnFilter=True)
                             filters += [each]
                         except :
                             try : # to evaluate as an index value
