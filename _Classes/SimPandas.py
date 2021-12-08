@@ -164,7 +164,7 @@ class _SimLocIndexer(indexing._LocIndexer):
         #     else:
         #         value = SimDataFrame(data=value, columns=self.spd.columns, units=units)
         if type(value) in (SimSeries,SimDataFrame):
-            value = value.to(self.spd.units)
+            value = value.to(self.spd.get_Units())
         if type(value) is SimDataFrame and len(value.index) == 1:
             value = value.to_SimSeries()
         super().__setitem__(key, value)
