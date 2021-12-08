@@ -4651,9 +4651,11 @@ Copy of input object, shifted.
 
         ### if key is a string but not a column name, check if it is an item, attribute, pattern, filter or index
         if type(key) is str and key not in self.columns :
-
+            result = None  # initialize variable
             if bool(self.find_Keys(key)) : # catch the column names this key represent
                 key = list(self.find_Keys(key))
+            elif key == self.indexName:  # key is the name of the index
+                result = self.index
             else : # key is not a column name
                 try : # to evalue as a filter
                     result = self._getbyCriteria(key)
@@ -4707,7 +4709,13 @@ Copy of input object, shifted.
                     raise Warning('filter conditions removed every row :\n   '+ ' and '.join(filters))
 
         ### attempt to get the desired keys, first as column names, then as indexes
-        if bool(key) or key == 0 :
+        if result is not None:
+            params = self._SimParameters
+            params['indexName'] = None
+            params['units'] =  self.get_Units(key)
+            params['columns'] = key if type(key) in (list,Index) else [key]
+            result = SimDataFrame(data=result, **params)
+        elif bool(key) or key == 0:
             try :
                 result = self._getbyColumn(key)
             except :
