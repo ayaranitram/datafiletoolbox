@@ -790,9 +790,9 @@ class SimSeries(Series) :
         if type(units) is dict :  # and type(self.units) is dict:
             return self.to_SimDataFrame().convert(units).to_SimSeries()
 
-    def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
-        axis = _cleanAxis(axis)
-        return SimSeries(data=self.S.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )
+    # def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
+    #     axis = _cleanAxis(axis)
+    #     return SimSeries(data=self.S.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )
 
     def reindex(self, index=None, **kwargs) :
         """
@@ -3456,9 +3456,9 @@ Copy of input object, shifted.
         axis = _cleanAxis(axis)
         return SimDataFrame(data=self.DF.aggregate(func=func, axis=axis, *args, **kwargs), **self._SimParameters )
 
-    def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
-        axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )
+    # def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
+    #     axis = _cleanAxis(axis)
+    #     return SimDataFrame(data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )
 
     def reindex(self, labels=None, index=None, columns=None, axis=None, **kwargs) :
         """
