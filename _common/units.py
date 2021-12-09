@@ -1318,7 +1318,14 @@ def unitDivision(unit1, unit2):
         else :
             return unit1
 
-    if unit1 != unit2 and convertible(unit1, unit2) :
+    # if '/' in unit1 and '/' in unit2:
+    #     if len(unit1.split('/')) == 2 and len(unit2.split('/')) == 2:
+    #         if unit1.split('/')[1] == unit2.split('/')[1] and unit1.split('/')[0] != unit2.split('/')[0]:
+    #             return unit1.split('/')[0] + '/' + unit2.split('/')[0]
+    #         if unit1.split('/')[0] == unit0.split('/')[0] and unit1.split('/')[1] != unit2.split('/')[1]:
+    #             return unit2.split('/')[1] + '/' + unit1.split('/')[1]
+
+    if unit1 != unit2 and convertible(unit1, unit2):
         return unitDivision(unit1, unit1)
 
     U1bas, U1pow, U2bas, U2pow = '', '', '', ''
