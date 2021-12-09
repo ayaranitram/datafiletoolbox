@@ -21,6 +21,8 @@ import pandas as pd
 import fnmatch
 import warnings
 from pandas import Series, DataFrame, DatetimeIndex, Timestamp, Index
+# from pandas.core.groupby.generic import DataFrameGroupBy
+# from pandas.core.window.rolling import Rolling
 import numpy as np
 import datetime as dt
 from warnings import warn
@@ -167,7 +169,26 @@ class _SimLocIndexer(indexing._LocIndexer):
             value = value.to(self.spd.get_Units())
         if type(value) is SimDataFrame and len(value.index) == 1:
             value = value.to_SimSeries()
-        super().__setitem__(key, value)
+        super().__setitem__(key, value)    
+
+
+# class SimRolling(Rolling):
+#     def __init__(self, df, window, min_periods=None, center=False, win_type=None, on=None, axis=0, closed=None, method='single', SimParameters=None):
+#         super().__init__(window, min_periods=min_periods, center=center, win_type=win_type, on=on, axis=axis, closed=closed, method=method)
+#         self.params =  SimParameters
+    
+#     def _resolve_output(self, out: DataFrame, obj: DataFrame) -> DataFrame:
+#         from pandas.core.base import DataError
+#         """Validate and finalize result."""
+#         if out.shape[1] == 0 and obj.shape[1] > 0:
+#             raise DataError("No numeric types to aggregate")
+#         elif out.shape[1] == 0:
+#             return obj.astype("float64")
+
+#         self._insert_on_column(out, obj)
+#         if self.params is not None:
+#             out =  SimDataFrame(out, **self.params)
+#         return out
 
 
 class SimSeries(Series) :
@@ -6298,6 +6319,10 @@ Copy of input object, shifted.
 
         return None
 
+    # def rolling(self, window, min_periods=None, center=False, win_type=None, on=None, axis=0, closed=None, method='single'):
+    #     return SimRolling(self.df, window, min_periods=min_periods, center=center, win_type=win_type, on=on, axis=axis, closed=closed, method=method,
+    #         SimParameters=self._SimParameters,
+    #         )
 
 
 def daysInYear(year):
