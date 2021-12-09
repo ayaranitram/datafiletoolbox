@@ -4644,6 +4644,7 @@ Copy of input object, shifted.
         indexFilter = None
         indexes = None
         slices = None
+        result = None  # initialize variable
 
         ### convert tuple argument to list
         if type(key) is tuple :
@@ -4651,7 +4652,6 @@ Copy of input object, shifted.
 
         ### if key is a string but not a column name, check if it is an item, attribute, pattern, filter or index
         if type(key) is str and key not in self.columns :
-            result = None  # initialize variable
             if bool(self.find_Keys(key)) : # catch the column names this key represent
                 key = list(self.find_Keys(key))
             elif key == self.indexName:  # key is the name of the index
