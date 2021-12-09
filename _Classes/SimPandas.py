@@ -21,6 +21,8 @@ import pandas as pd
 import fnmatch
 import warnings
 from pandas import Series, DataFrame, DatetimeIndex, Timestamp, Index
+# from pandas.core.groupby.generic import DataFrameGroupBy
+# from pandas.core.window.rolling import Rolling
 import numpy as np
 import datetime as dt
 from warnings import warn
@@ -164,10 +166,29 @@ class _SimLocIndexer(indexing._LocIndexer):
         #     else:
         #         value = SimDataFrame(data=value, columns=self.spd.columns, units=units)
         if type(value) in (SimSeries,SimDataFrame):
-            value = value.to(self.spd.units)
+            value = value.to(self.spd.get_Units())
         if type(value) is SimDataFrame and len(value.index) == 1:
             value = value.to_SimSeries()
-        super().__setitem__(key, value)
+        super().__setitem__(key, value)    
+
+
+# class SimRolling(Rolling):
+#     def __init__(self, df, window, min_periods=None, center=False, win_type=None, on=None, axis=0, closed=None, method='single', SimParameters=None):
+#         super().__init__(window, min_periods=min_periods, center=center, win_type=win_type, on=on, axis=axis, closed=closed, method=method)
+#         self.params =  SimParameters
+    
+#     def _resolve_output(self, out: DataFrame, obj: DataFrame) -> DataFrame:
+#         from pandas.core.base import DataError
+#         """Validate and finalize result."""
+#         if out.shape[1] == 0 and obj.shape[1] > 0:
+#             raise DataError("No numeric types to aggregate")
+#         elif out.shape[1] == 0:
+#             return obj.astype("float64")
+
+#         self._insert_on_column(out, obj)
+#         if self.params is not None:
+#             out =  SimDataFrame(out, **self.params)
+#         return out
 
 
 class SimSeries(Series) :
@@ -790,9 +811,9 @@ class SimSeries(Series) :
         if type(units) is dict :  # and type(self.units) is dict:
             return self.to_SimDataFrame().convert(units).to_SimSeries()
 
-    def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
-        axis = _cleanAxis(axis)
-        return SimSeries(data=self.S.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )
+    # def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
+    #     axis = _cleanAxis(axis)
+    #     return SimSeries(data=self.S.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )
 
     def reindex(self, index=None, **kwargs) :
         """
@@ -1437,21 +1458,35 @@ class SimSeries(Series) :
         else:
             return result
 
-    def get_units(self, items=None) :
+    def get_units(self, items=None):
         return self.get_Units()
 
-    def get_Units(self, items=None) :
-        if type(self.units) is str and type(self.name) is str :
+    def get_Units(self, items=None):
+        """
+        returns the units for the selected 'items' or for all the columns in the SimDataFrame.
+
+        Parameters
+        ----------
+        items : str or list of str, optional
+            Ignored, this parameter is kept for compatibility with SimDataFrame. The default is None.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+        if self.units is None:
+            return 'UNITLESS'
+        elif type(self.units) is str and type(self.name) is str:
             uDic = { str(self.name) : self.units }
-        elif type(self.units) is dict :
+        elif type(self.units) is dict:
             uDic = {}
-            for each in self.index :
-                if each in self.units :
+            for each in self.index:
+                if each in self.units:
                     uDic[each] = self.units[each]
                 else :
                     uDic[each] = 'UNITLESS'
-        elif self.units is None:
-            return 'UNITLESS'
         else:
             return self.units.copy() if type(self.units) is dict else self.units
         return uDic
@@ -2004,7 +2039,7 @@ class SimSeries(Series) :
                     raise ValueError('selected column is not a valid date or year integer')
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
-            elif type(colum) is list:
+            elif type(column) is list:
                 result = self.SimDataFrame(data={}, index=self.index, **self._SimParameters)
                 for col in column:
                     if col in self.columns:
@@ -2287,9 +2322,13 @@ class SimDataFrame(DataFrame) :
         elif 'operatePerName' in kwargsB and kwargsB['operatePerName'] is not None :
             self.operatePerName = bool(kwargsB['operatePerName'])
 
-    # @property
-    # def _constructor(self):
-    #     return SimDataFrame
+    @property
+    def _constructor(self):
+        return SimDataFrame
+
+    @property
+    def _constructor_sliced(self):
+        return SimSeries
 
     @property
     def loc(self) -> _SimLocIndexer:
@@ -2796,11 +2835,11 @@ Copy of input object, shifted.
         if type(other) in (SimDataFrame,SimSeries):
             otherC = other.copy()
             newUnits = self.get_units(self.columns).copy()
-            for col, unit in self.get_units(self.columns).items():
+            for col, units in self.get_units(self.columns).items():
                 if col in otherC.columns:
-                    if unit != otherC.get_units(col)[col]:
-                        if convertibleUnits(otherC.get_units(col)[col], unit) :
-                            otherC[col] = otherC[col].to(unit)
+                    if units != otherC.get_units(col)[col]:
+                        if convertibleUnits(otherC.get_units(col)[col], units) :
+                            otherC[col] = otherC[col].to(units)
                         else:
                             newUnits[col+'_2nd'] = otherC.get_units(col)[col]
                             otherC.rename(columns={col:col+'_2nd'},inplace=True)
@@ -3438,9 +3477,9 @@ Copy of input object, shifted.
         axis = _cleanAxis(axis)
         return SimDataFrame(data=self.DF.aggregate(func=func, axis=axis, *args, **kwargs), **self._SimParameters )
 
-    def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
-        axis = _cleanAxis(axis)
-        return SimDataFrame(data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )
+    # def resample(self, rule, axis=0, closed=None, label=None, convention='start', kind=None, loffset=None, base=None, on=None, level=None, origin='start_day', offset=None) :
+    #     axis = _cleanAxis(axis)
+    #     return SimDataFrame(data=self.DF.resample(rule, axis=axis, closed=closed, label=label, convention=convention, kind=kind, loffset=loffset, base=base, on=on, level=level, origin=origin, offset=offset), **self._SimParameters )
 
     def reindex(self, labels=None, index=None, columns=None, axis=None, **kwargs) :
         """
@@ -3722,7 +3761,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] + otherI
             elif selfI.autoAppend :  # elif selfI.autoAppend :
                 result[otherI.name] = otherI
@@ -3789,7 +3828,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] - otherI
             if self.autoAppend :  # elif self.autoAppend :
                 result[otherI.name] = -otherI
@@ -3857,7 +3896,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = self[otherI.name] * otherI
             else :
                 for col in selfI.columns :
@@ -3919,7 +3958,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] / otherI
             else :
                 for col in selfI.columns :
@@ -3981,7 +4020,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] // otherI
             else :
                 for col in self.columns :
@@ -4044,7 +4083,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns:
                 result[otherI.name] = selfI[other.name] % otherI
             else :
                 for col in selfI.columns :
@@ -4104,7 +4143,7 @@ Copy of input object, shifted.
                 other = SimSeries(other, **self._SimParameters)
             selfI, otherI = self._JoinedIndex(other)
             result = selfI.copy()
-            if operatePerName and otherI.name in selfI.columns :
+            if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = self[otherI.name] ** otherI
             else :
                 for col in selfI.columns :
@@ -4626,6 +4665,7 @@ Copy of input object, shifted.
         indexFilter = None
         indexes = None
         slices = None
+        result = None  # initialize variable
 
         ### convert tuple argument to list
         if type(key) is tuple :
@@ -4633,9 +4673,10 @@ Copy of input object, shifted.
 
         ### if key is a string but not a column name, check if it is an item, attribute, pattern, filter or index
         if type(key) is str and key not in self.columns :
-
             if bool(self.find_Keys(key)) : # catch the column names this key represent
                 key = list(self.find_Keys(key))
+            elif key == self.indexName:  # key is the name of the index
+                result = self.index
             else : # key is not a column name
                 try : # to evalue as a filter
                     result = self._getbyCriteria(key)
@@ -4665,7 +4706,7 @@ Copy of input object, shifted.
                         key += list(self.find_Keys(each) )
                     else : # key is not a column name, might be a filter or index
                         try : # to evalue as a filter
-                            trash = self.filter(each, returnFilter=True)
+                            _ = self.filter(each, returnFilter=True)
                             filters += [each]
                         except :
                             try : # to evaluate as an index value
@@ -4689,7 +4730,13 @@ Copy of input object, shifted.
                     raise Warning('filter conditions removed every row :\n   '+ ' and '.join(filters))
 
         ### attempt to get the desired keys, first as column names, then as indexes
-        if bool(key) or key == 0 :
+        if result is not None:
+            params = self._SimParameters
+            params['indexName'] = None
+            params['units'] =  self.get_Units(key)
+            params['columns'] = key if type(key) in (list,Index) else [key]
+            result = SimDataFrame(data=result, **params)
+        elif bool(key) or key == 0:
             try :
                 result = self._getbyColumn(key)
             except :
@@ -5136,7 +5183,22 @@ Copy of input object, shifted.
     def get_units(self, items=None) :
         return self.get_Units(items)
 
-    def get_Units(self, items=None) :
+    def get_Units(self, items=None):
+        """
+        returns a dictionary with the units for the selected 'items' (or columns)
+        or for all the columns in this SimDataFrame
+
+        Parameters
+        ----------
+        items : str of iterable (i.e. list), optional
+            The columns or items to return their units. 
+            The default is None, and then al the entire units dictionary will be returned.
+
+        Returns
+        -------
+        dict
+            A dictionary {column:units}
+        """
         if self.units is None:
             self.units = {}
 
@@ -5944,7 +6006,7 @@ Copy of input object, shifted.
                     raise ValueError('selected column is not a valid date format')
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
-            elif type(colum) is list:
+            elif type(column) is list:
                 result = self._class(data={},index=self.index,**self._SimParameters)
                 for col in column:
                     if col in self.columns:
@@ -6257,6 +6319,10 @@ Copy of input object, shifted.
 
         return None
 
+    # def rolling(self, window, min_periods=None, center=False, win_type=None, on=None, axis=0, closed=None, method='single'):
+    #     return SimRolling(self.df, window, min_periods=min_periods, center=center, win_type=win_type, on=on, axis=axis, closed=closed, method=method,
+    #         SimParameters=self._SimParameters,
+    #         )
 
 
 def daysInYear(year):
