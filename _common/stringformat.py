@@ -71,7 +71,7 @@ def isnumeric(string) :
     """
     returns True if the string is a number
     """
-    assert type(string) is str
+    # assert type(string) is str
     try :
         float(string)
         return True
@@ -89,7 +89,7 @@ def getnumber(string) :
 def isDate(dateStr, formatIN='', speak=False, returnFormat=False ):
     """
     returns True if the string 'dateStr' is a valid date, otherwise returns False.
-    """	
+    """
     if formatIN != '' :
         try :
             date(dateStr, formatIN=formatIN, speak=speak, returnFormat=returnFormat )
