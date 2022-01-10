@@ -169,14 +169,14 @@ class _SimLocIndexer(indexing._LocIndexer):
             value = value.to(self.spd.get_Units())
         if type(value) is SimDataFrame and len(value.index) == 1:
             value = value.to_SimSeries()
-        super().__setitem__(key, value)    
+        super().__setitem__(key, value)
 
 
 # class SimRolling(Rolling):
 #     def __init__(self, df, window, min_periods=None, center=False, win_type=None, on=None, axis=0, closed=None, method='single', SimParameters=None):
 #         super().__init__(window, min_periods=min_periods, center=center, win_type=win_type, on=on, axis=axis, closed=closed, method=method)
 #         self.params =  SimParameters
-    
+
 #     def _resolve_output(self, out: DataFrame, obj: DataFrame) -> DataFrame:
 #         from pandas.core.base import DataError
 #         """Validate and finalize result."""
@@ -2970,7 +2970,7 @@ Copy of input object, shifted.
                 filt = [labels in str(ind) for ind in self.index]
                 labels = self.index[filt]
         elif columns is not None:
-            if columns not in self.columns:
+            if type(columns) is not list and columns not in self.columns:
                 if len(self.find_Keys(columns)) > 0:
                     columns = list(self.find_Keys(columns))
         if inplace:
@@ -5191,7 +5191,7 @@ Copy of input object, shifted.
         Parameters
         ----------
         items : str of iterable (i.e. list), optional
-            The columns or items to return their units. 
+            The columns or items to return their units.
             The default is None, and then al the entire units dictionary will be returned.
 
         Returns
