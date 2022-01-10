@@ -5,18 +5,27 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.25.5'
-__release__ = 210924
+__version__ = '0.25.6'
+__release__ = 220110
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
 from .._common.functions import _mainKey
 from .._common.inout import _extension
 from .._common.inout import _verbose
+from .._common.stringformat import isnumeric as _isnumeric
 from .._Classes.Errors import CorruptedFileError
 from .._Classes.EclSumLoader import EclSumLoader
 import numpy as np
 import os
+import glob
+
+
+def findMultiSummaryFiles(inputFile):
+    files = glob.glob(_extension(inputFile)[2] + _extension(inputFile)[1] + '.S*')
+    exts = [ _extension(file)[0].replace('.S','') for file in files ]
+    summaries = [ files[i] for i in range(len(files)) if (len(exts[i])==4 and _isnumeric(exts[i])) ]
+    return summaries
 
 
 class ECL(_SimResult):
@@ -30,7 +39,7 @@ class ECL(_SimResult):
         self.kind = ECL
         if type(inputFile) == str and len(inputFile.strip()) > 0 :
             self.loadSummary(inputFile, **kwargs)
-            if 'unload' in kwargs and kwargs['unload'] is True:
+            if ('unload' in kwargs and kwargs['unload'] is True) or ('close' in kwargs and kwargs['close'] is True):
                     return None
         if self.results is not None :
             self.initialize(**kwargs)
@@ -51,14 +60,14 @@ class ECL(_SimResult):
                         _verbose( self.speak, 3, "\nWARNING: '.SMSPEC' file found in 'RESULTS' subdirectory, not in the same folder the '.DATA' is present.\n")
 
             if os.path.isfile(SummaryFilePath):
-                if not os.path.isfile(SummaryFilePath[:-6]+'UNSMRY'):
-                    raise FileNotFoundError( "The file doesn't exist:\n  -> " + _extension(SummaryFilePath)[2] + _extension(SummaryFilePath)[1] +'.UNSMRY' )
+                if not os.path.isfile(SummaryFilePath[:-6]+'UNSMRY') and len(findMultiSummaryFiles(SummaryFilePath))==0:
+                    raise FileNotFoundError( "No Summary files found:\n  -> i.e.: " + _extension(SummaryFilePath)[2] + _extension(SummaryFilePath)[1] +'.UNSMRY' )
                 if os.path.getsize(SummaryFilePath) <= 680 and ( 'ignoreSMSPEC' not in kwargs or bool(kwargs['ignoreSMSPEC']) is False) :
                     raise CorruptedFileError("\nThe SMSPEC file seems to be corrupted.\nIf you think this is not corrupted add the keyword\n   'ignoreSPSPEC=True'\nto skip this check, but if the file corrupted a fatal error will occur!")
                 _verbose( self.speak, 1, ' > loading summary file:\n  ' + SummaryFilePath)
                 EclSummary = ECL.loadEclSum
                 self.results = EclSummary(SummaryFilePath, **kwargs) # ecl.summary.EclSum(SummaryFilePath)
-                if 'unload' in kwargs and kwargs['unload'] is True:
+                if ('unload' in kwargs and kwargs['unload'] is True) or ('close' in kwargs and kwargs['close'] is True):
                     return None
                 self.name = _extension(SummaryFilePath)[1]
                 self.set_FieldTime()

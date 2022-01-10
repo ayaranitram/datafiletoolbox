@@ -5,8 +5,8 @@ Created on Wed May 13 00:45:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.54.0'
-__release__ = 210930
+__version__ = '0.54.1'
+__release__ = 220110
 __all__ = ['loadSimulationResults']
 
 from .._common.inout import _extension
@@ -56,7 +56,7 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
         print( 'Please provide the path to the simulation results as string.')
         return None
     if Simulator is None :
-        if _extension(FullPath)[0].upper() in ['.SMSPEC','.UNSMRY','.DATA'] :
+        if _extension(FullPath)[0].upper() in ['.SMSPEC','.UNSMRY','.DATA','.AFI'] :
             Simulator = 'ECLIPSE'
         elif _extension(FullPath)[0].upper() in ['.DAT','.SSS'] :
             Simulator = 'VIP'

@@ -5,8 +5,8 @@ Created on Mon Mar  8 08:56:44 2021
 @author: martin
 """
 
-__version__ = '0.12.2'
-__release__ = 210826
+__version__ = '0.12.3'
+__release__ = 220110
 __all__ = ['EclSumLoader']
 
 from .._Classes.Errors import PrototypeError, MissingDependence
@@ -78,6 +78,8 @@ class _EclSumLoader(object):
     def __call__(self,SummaryFilePath,reload=True,unload=False,**kwargs) :  # kwargs will be ignored
         reload = bool(reload)
         unload = bool(unload)
+        if 'close' in kwargs and kwargs['close'] is True:
+            unload = True
         if unload:
             if SummaryFilePath in _EclSumLoader._AlreadyLoaded:
                 _EclSumLoader._AlreadyLoaded[SummaryFilePath] = None
