@@ -360,7 +360,7 @@ class SimSeries(Series) :
         # set the provided name
         if self.name is None and name is not None:
             self.name = name
-        if self.name is None and 'columns' in kwargsB and type(kwargsB['columns']) is list and len(kwargsB['columns']) == 1:
+        if self.name is None and 'columns' in kwargsB and type(kwargsB['columns']) is not str and hasattr(kwargsB['columns'],'__iter__') and len(kwargsB['columns']) == 1:
             self.name = kwargsB['columns'][0]
         if self.name is None and 'columns' in kwargsB and type(kwargsB['columns']) is str and len(kwargsB['columns'].strip()) > 0:
             self.name = kwargsB['columns'].strip()
@@ -1554,8 +1554,8 @@ class SimSeries(Series) :
                 raise TypeError("units must be a string.")
 
         elif type(self.units) is dict:
-            if type(units) in [list,tuple]:
-                if type(item) in [list,tuple]:
+            if type(units) is not str and hasattr(units,'__iter__'):
+                if type(item) is not str and hasattr(item,'__iter__'):
                     if len(item) == len(units):
                         return self.set_Units( dict(zip(item,units)) )
                     else:
@@ -2039,7 +2039,7 @@ class SimSeries(Series) :
                     raise ValueError('selected column is not a valid date or year integer')
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
-            elif type(column) is list:
+            elif hasattr(column,'__iter__'):
                 result = self.SimDataFrame(data={}, index=self.index, **self._SimParameters)
                 for col in column:
                     if col in self.columns:
@@ -2096,7 +2096,7 @@ class SimSeries(Series) :
                     raise ValueError('selected column is not a valid date format')
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
-            elif type(column) is list:
+            elif hasattr(column,'__iter__'):
                 result = SimDataFrame(data={}, index=self.index, **self._SimParameters)
                 for col in column:
                     if col in self.columns:
@@ -2263,7 +2263,7 @@ class SimDataFrame(DataFrame) :
             # for key in list(self.columns) :
             #     self.units[ key ] = units
             self.units = dict(zip(list(self.columns), [units]*len(list(self.columns))))
-        elif type(units) is list or type(units) is tuple :
+        elif hasattr(units,'__iter__'):
             if self.transposed:
                 if len(units) == len(self.index) :
                     self.units = dict(zip(list(self.index), units))
@@ -2873,7 +2873,7 @@ Copy of input object, shifted.
                     valid = True
             if valid :
                 return result
-        if type(units) in [list, tuple, Index] :
+        if type(units) is not str and hasattr(units,'__iter__'):
             result = self.copy()
             valid = False
             for col in self.columns :
@@ -2961,7 +2961,7 @@ Copy of input object, shifted.
     def drop(self, labels=None, axis=0, index=None, columns=None, level=None, inplace=False, errors='raise'):
         axis = _cleanAxis(axis)
         if labels is not None:
-            if axis == 1 and type(labels) is list:
+            if axis == 1 and type(labels) is not str and hasattr(labels,'__iter__'):
                 labels = list(self.find_Keys(labels))
             elif axis == 1 and labels not in self.columns:
                 if len(self.find_Keys(labels)) > 0:
@@ -3040,7 +3040,7 @@ Copy of input object, shifted.
 
         if by is None:
             by = []
-        elif type(by) is list:
+        elif type(by) is not str and hasattr(by,'__iter__'):
             newBy = []
             for each in by:
                 if each in self.columns:
@@ -3188,7 +3188,7 @@ Copy of input object, shifted.
 
         if by is None:
             by = []
-        elif type(by) is list:
+        elif type(by) is not str and hasattr(by,'__iter__'):
             newBy = []
             for each in by:
                 if each in self.columns:
@@ -3389,7 +3389,7 @@ Copy of input object, shifted.
 
         if by is None:
             by = []
-        elif type(by) is list:
+        elif type(by) is not str and hasattr(by,'__iter__'):
             newBy = []
             for each in by:
                 if each in self.columns:
@@ -5282,8 +5282,8 @@ Copy of input object, shifted.
         """
         if item is not None and item not in self.columns and item != self.index.name and item not in self.index.names:
             raise ValueError("the required item '" + str(item) + "' is not in this SimDataFrame.")
-        if type(units) in [list,tuple]:
-            if type(item) in [list,tuple]:
+        if type(units) is not str and hasattr(units,'__iter__'):
+            if type(item) is not str and hasattr(item,'__iter__'):
                 if len(item) == len(units):
                     return self.set_Units( dict(zip(item,units)) )
                 else:
@@ -5927,7 +5927,7 @@ Copy of input object, shifted.
                     raise ValueError('selected column is not a valid date or year integer')
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
-            elif type(column) is list:
+            elif type(column) is not str and hasattr(column,'__iter__'):
                 result = self._class(data={}, index=self.index, **self._SimParameters)
                 for col in column:
                     if col in self.columns:
@@ -6006,7 +6006,7 @@ Copy of input object, shifted.
                     raise ValueError('selected column is not a valid date format')
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
-            elif type(column) is list:
+            elif type(column) is not str and hasattr(column,'__iter__'):
                 result = self._class(data={},index=self.index,**self._SimParameters)
                 for col in column:
                     if col in self.columns:
