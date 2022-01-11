@@ -7,33 +7,38 @@ Created on Wed May 13 15:45:12 2020
 
 __version__ = '0.0.0'
 __release__ = 220110
-__all__ = ['HDF5']
+__all__ = ['H5']
 
 from .mainObject import SimResult as _SimResult
-from .._common.functions import _mainKey
+from .._common.functions import _mainKey, _itemKey
 from .._common.inout import _extension
 from .._common.inout import _verbose
 # from .._common.stringformat import isnumeric as _isnumeric
-# from .._Classes.Errors import CorruptedFileError
+from .._Classes.Errors import CorruptedFileError
 import numpy as np
 import os
 import h5py
+import warnings
+import datetime as dt
 
 
 
-class HDF5(_SimResult):
+class H5(_SimResult):
     """
     object to contain HDF5 format results read from h5 file using h5py
     """
 
     def __init__(self, inputFile=None, verbosity=2, **kwargs) :
         _SimResult.__init__(self, verbosity=verbosity)
-        self.kind = HDF5
-        if type(inputFile) == str and len(inputFile.strip()) > 0 :
+        self.kind = H5
+        self.keynames = None
+        self.numpy_dates =  None
+        if type(inputFile) == str and len(inputFile.strip()) > 0:
+            self.smspec = self.readSMSPEC(inputFile)
             self.loadSummary(inputFile, **kwargs)
             # if ('unload' in kwargs and kwargs['unload'] is True) or ('close' in kwargs and kwargs['close'] is True):
             #         return None
-        if self.results is not None :
+        if self.results is not None:
             self.initialize(**kwargs)
 
     def loadSummary(self, h5FilePath, **kwargs):
@@ -75,6 +80,51 @@ class HDF5(_SimResult):
         else :
             print("h5FilePath must be a string")
 
+    def readSMSPEC(self,smspecPath):
+        """
+        read the SMSPEC file and extract the well and group names
+        """
+        if type(smspecPath) is str :
+            smspecPath = smspecPath.strip()
+            if _extension(smspecPath)[0].lower() != '.SMSPEC' :
+                newPath = _extension(smspecPath)[2] + _extension(smspecPath)[1] + '.SMSPEC'
+                if os.path.isfile(newPath):
+                    smspecPath = newPath
+            if os.path.isfile(smspecPath):
+                if os.path.getsize(smspecPath) == 0:
+                    warnings.warn("\nThe .SMSPEC file seems to be empty")
+            else :
+                warnings.warn( "the file doesn't exist:\n  -> " + smspecPath )
+        with open(smspecPath, 'r', errors='surrogateescape') as file:
+            smspec = file.read()
+        keywords_index =  smspec.index('\x00\x00\x10KEYWORDS')
+        keywords_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x03H') + 4
+        names_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x10NAMES   ') 
+        keywords = smspec[keywords_index:names_index]
+        keywords = [ keywords[i:i+8].strip() for i in range(0,len(keywords),8) ]
+
+        names_index = names_index + smspec[names_index:].index('\x00\x00\x03H') + 4
+        
+        nums_index = names_index + smspec[names_index:].index('NUMS    ')
+        
+        names = smspec[names_index:nums_index]
+        names = [ names[i:i+8].strip() for i in range(0,len(names),8) ]
+
+        units_index = nums_index + smspec[nums_index:].index('\x00\x00\x10UNITS   ')
+        units_index = units_index + smspec[units_index:].index('\x00\x00\x03H') + 4
+        measrmnt_index = units_index + smspec[units_index:].index('\x00\x00\x10MEASRMNT')
+        units = smspec[units_index:measrmnt_index]
+        units = [ units[i:i+8].strip() for i in range(0,len(units),8) ]
+
+        self.units = { keywords[i]+(':'+names[i] if len(names[i])>0 else '') : units[i] for i in range(len(keywords)) }
+        
+        self.keynames = {}
+        for i in range(len(keywords)):
+            if keywords[i] not in self.keynames:
+                self.keynames[keywords[i]] = []
+            if names[i] not in self.keynames[keywords[i]]:
+                self.keynames[keywords[i]].append(names[i])
+
     def reload(self) :
         self.loadSummary(self.path)
 
@@ -82,37 +132,50 @@ class HDF5(_SimResult):
         """
         support function to extract data from the 'summary_vectors' key of the HDF5 file
         """
+        main , item = _mainKey(key) , _itemKey(key)
+        if main[0] == 'F':
+            item_pos = 0
+        elif main in self.keynames:
+            if item in self.keynames[main]:
+                item_pos = self.keynames[main].index(item)
+        else:
+            item_pos =  None
+        
+        item_h5 = list(self.results['summary_vectors'][main].keys())[item_pos]
+        return np.array(self.results['summary_vectors'][main][item_h5]['values'])
+            
 
     # support functions for get_Vector:
     def loadVector(self, key):
             """
             internal function to load a numpy vector from the HDF5 files
             """
-            if str(key).upper().strip() in ["DATES", "DATE"] :
-                return self.results.numpy_dates
+            if str(key).upper().strip() in ["DATES", "DATE"]:
+                self.get_Dates()
+                if self.start is not None:
+                    return self.numpy_dates
             else :
-                return self.results['summary_vectors'][key]
+                return self.readH5(key)
 
     def get_Dates(self) :
         try:
-            self.start = np.datetime64(str(self.results.['general']['start_date'][2]) + '-' +
-                                       str(self.results.['general']['start_date'][1]) + '-' +
-                                       str(self.results.['general']['start_date'][0]) + 'T' +
-                                       str(self.results.['general']['start_date'][3]) + ':' +
-                                       str(self.results.['general']['start_date'][4]) + ':' +
-                                       str(self.results.['general']['start_date'][5]) + '.' +
-                                       str(self.results.['general']['start_date'][6])
+            self.start = np.datetime64(str(self.results['general']['start_date'][2]) + '-' +
+                                       str(self.results['general']['start_date'][1]).zfill(2) + '-' +
+                                       str(self.results['general']['start_date'][0]).zfill(2) + 'T' +
+                                       str(self.results['general']['start_date'][3]).zfill(2) + ':' +
+                                       str(self.results['general']['start_date'][4]).zfill(2) + ':' +
+                                       str(self.results['general']['start_date'][5]).zfill(2) + '.' +
+                                       str(self.results['general']['start_date'][6])
                                        , 's')
         except:
             self.start = None
-        try :
-            self.end = self.results.end_date
-        except :
-            if self.start is None:
-                self.end = None
-            else:
-                self.end = self.start + int(max(self.get_Vector('TIME')['TIME']))
-        return self.results.numpy_dates
+
+        if self.start is None:
+            self.end = None
+        else:
+            self.numpy_dates = self.start + np.array([ np.timedelta64(dt.timedelta(float(t))) for t in self.results['general']['time'] ] )
+            self.end = self.numpy_dates[-1]
+        return self.numpy_dates
 
     def extract_Wells(self) :
         self.wells = tuple(self.results.wells())
