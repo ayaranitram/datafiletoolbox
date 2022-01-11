@@ -5,8 +5,8 @@ Created on Wed May 13 00:45:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.54.1'
-__release__ = 220110
+__version__ = '0.54.2'
+__release__ = 220111
 __all__ = ['loadSimulationResults']
 
 from .._common.inout import _extension
@@ -17,6 +17,7 @@ from .CSVSimResultNexusDesktopObject import NexusDesktopCSV as _NexusDesktopCSV
 from .excelObject import XLSX as _XLSX
 from .tableObject import TABLE as _TABLE
 from .rsmObject import RSM as _RSM
+from .h5Object import H5 as _H5
 
 
 okECL = False
@@ -72,6 +73,8 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
             Simulator = 'Pickle'
         elif _extension(FullPath)[0].upper() in ['.RSM'] :
             Simulator = 'RSM'
+        elif _extension(FullPath)[0].upper() in ['.H5'] :
+            Simulator = 'H5'
     elif type(Simulator) is str and len(Simulator.strip()) > 0 :
         Simulator = Simulator.strip().upper()
 
@@ -95,6 +98,8 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
         OBJ = _TABLE(FullPath,verbosity=Verbosity,**kwargs)
     elif Simulator in ['RSM'] :
         OBJ = _RSM(FullPath,verbosity=Verbosity,**kwargs)
+    elif Simulator in ['H5'] :
+        OBJ = _H5(FullPath,verbosity=Verbosity,**kwargs)
     elif Simulator in ['Pickle'] :
         import os
         if not os.path.isfile(FullPath):

@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.0'
-__release__ = 220110
+__version__ = '0.1.0'
+__release__ = 220111
 __all__ = ['H5']
 
 from .mainObject import SimResult as _SimResult
@@ -97,27 +97,44 @@ class H5(_SimResult):
                 warnings.warn( "the file doesn't exist:\n  -> " + smspecPath )
         with open(smspecPath, 'r', errors='surrogateescape') as file:
             smspec = file.read()
+
         keywords_index =  smspec.index('\x00\x00\x10KEYWORDS')
         keywords_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x03H') + 4
-        names_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x10NAMES   ') 
-        keywords = smspec[keywords_index:names_index]
+        last_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x10')
+        keywords = smspec[keywords_index:last_index]
         keywords = [ keywords[i:i+8].strip() for i in range(0,len(keywords),8) ]
 
+        # names_index = last_index + smspec[last_index:].index('\x00\x00\x10NAMES   ')
+        if '\x00\x00\x10NAMES   ' in smspec:
+            names_index = smspec.index('\x00\x00\x10NAMES   ')
+        elif '\x00\x00\x10WGNAMES ' in smspec:
+            names_index = smspec.index('\x00\x00\x10WGNAMES ')
+        elif '\x00\x00\x10WNAMES  ' in smspec:
+            names_index = smspec.index('\x00\x00\x10WNAMES  ')
+        elif '\x00\x00\x10GNAMES  ' in smspec:
+            names_index = smspec.index('\x00\x00\x10GNAMES  ')
+        else:
+            names_index = smspec.index('NAMES')
         names_index = names_index + smspec[names_index:].index('\x00\x00\x03H') + 4
-        
-        nums_index = names_index + smspec[names_index:].index('NUMS    ')
-        
-        names = smspec[names_index:nums_index]
+        last_index = names_index + smspec[names_index:].index('\x00\x00\x10')
+        names = smspec[names_index:last_index]
         names = [ names[i:i+8].strip() for i in range(0,len(names),8) ]
 
-        units_index = nums_index + smspec[nums_index:].index('\x00\x00\x10UNITS   ')
+        # nums_index = smspec.index('\x00\x00\x10NUMS    ')
+
+        units_index = smspec.index('\x00\x00\x10UNITS   ')
         units_index = units_index + smspec[units_index:].index('\x00\x00\x03H') + 4
-        measrmnt_index = units_index + smspec[units_index:].index('\x00\x00\x10MEASRMNT')
-        units = smspec[units_index:measrmnt_index]
+        last_index = units_index + smspec[units_index:].index('\x00\x00\x10')
+        units = smspec[units_index:last_index]
         units = [ units[i:i+8].strip() for i in range(0,len(units),8) ]
 
+        # measrmnt_index = smspec.index('\x00\x00\x10MEASRMNT')
+
         self.units = { keywords[i]+(':'+names[i] if len(names[i])>0 else '') : units[i] for i in range(len(keywords)) }
-        
+        fieldKeys = [ k for k in self.units.keys() if _mainKey(k) != k if k[0] == 'F' ]
+        for k in fieldKeys:
+            self.units[_mainKey(k)] = self.units[k]
+
         self.keynames = {}
         for i in range(len(keywords)):
             if keywords[i] not in self.keynames:
@@ -133,6 +150,7 @@ class H5(_SimResult):
         support function to extract data from the 'summary_vectors' key of the HDF5 file
         """
         main , item = _mainKey(key) , _itemKey(key)
+        item_pos = 0
         if main[0] == 'F':
             item_pos = 0
         elif main in self.keynames:
@@ -140,10 +158,9 @@ class H5(_SimResult):
                 item_pos = self.keynames[main].index(item)
         else:
             item_pos =  None
-        
         item_h5 = list(self.results['summary_vectors'][main].keys())[item_pos]
         return np.array(self.results['summary_vectors'][main][item_h5]['values'])
-            
+
 
     # support functions for get_Vector:
     def loadVector(self, key):
@@ -177,9 +194,23 @@ class H5(_SimResult):
             self.end = self.numpy_dates[-1]
         return self.numpy_dates
 
-    def extract_Wells(self) :
-        self.wells = tuple(self.results.wells())
-        return self.wells
+    def extract_Wells(self, pattern=None) :
+        """
+        Will return a list of all the well names in case.
+        """
+        # preparing object attribute
+        outList = list( self.wells )
+        for key in self.get_Keys() :
+            if key[0] == 'W' :
+                if ':' in key :
+                    item = key.split(':')[1]
+                    outList.append( item )
+        self.wells = tuple( set( outList ) )
+        # preparing list to return
+        if pattern is None:
+            return self.wells
+        else:
+            return tuple(fnmatch.filter(self.wells, pattern))
 
     def extract_Groups(self, pattern=None, reload=False) :
         """
@@ -191,12 +222,19 @@ class H5(_SimResult):
         matching the pattern will be returned; the matching is based
         on fnmatch(), i.e. shell style wildcards.
         """
-        if len(self.groups) == 0 or reload is True :
-            self.groups = tuple(self.results.groups())
-        if pattern is None :
+        # preparing object attribute
+        outList = list( self.groups )
+        for key in self.get_Keys() :
+            if key[0] == 'G' :
+                if ':' in key :
+                    item = key.split(':')[1]
+                    outList.append( item )
+        self.groups = tuple( set( outList ) )
+        # preparing list to return
+        if pattern is None:
             return self.groups
         else:
-            return tuple(self.results.groups(pattern))
+            return tuple(fnmatch.filter(self.groups, pattern))
 
     def list_Keys(self, pattern=None, reload=False) :
         """
@@ -211,128 +249,129 @@ class H5(_SimResult):
         object.
         """
         if len(self.keys) == 0 or reload is True :
-            self.keys = tuple( self.results.keys(pattern))
+            listOfKeys = []
+            for key in list(self.results['summary_vectors'].keys()):
+                if key not in self.keynames or len(self.keynames[key]) == 1:
+                    listOfKeys.append(key)
+                else:  # key in self.keynames and len(self.keynames[key]) > 1:
+                    for item in self.keynames[key]:
+                        listOfKeys.append(key+':'+item)
+            self.keys = tuple( set(listOfKeys) )
             for extra in ( 'TIME', 'DATE', 'DATES' ) :
                 if extra not in self.keys :
                     self.keys = tuple( [extra] + list(self.keys) )
-        if pattern is None :
+        if pattern is None:
             return self.keys
         else:
-            return tuple( self.results.keys(pattern) )
+            return tuple(fnmatch.filter(self.keys, pattern))
 
     def extract_Regions(self, pattern=None) :
         # preparing object attribute
-        regionsList = list( self.regions )
+        outList = list( self.regions )
         for key in self.get_Keys() :
             if key[0] == 'R' :
                 if ':' in key :
-                    region = key.split(':')[1]
-                    regionsList.append( region )
-        regionsList = list( set( regionsList ))
-        regionsList.sort()
-        self.regions = tuple( regionsList )
+                    item = key.split(':')[1]
+                    outList.append( item )
+        self.regions = tuple( set( outList ) )
         # preparing list to return
-        if pattern != None :
-            regionsList = []
-            for region in self.regions :
-                if pattern in region :
-                    regionsList.append(region)
-            return tuple(regionsList)
-        else :
+        if pattern is None:
             return self.regions
+        else:
+            return tuple(fnmatch.filter(self.regions, pattern))
 
-    def get_Unit(self, Key='--EveryType--') :
-        """
-        returns a string identifiying the unit of the requested Key
+    # def get_Unit(self, Key='--EveryType--') :
+    #     """
+    #     returns a string identifiying the unit of the requested Key
 
-        Key could be a list containing Key strings, in this case a dictionary
-        with the requested Keys and units will be returned.
-        the Key '--EveryType--' will return a dictionary Keys and units
-        for all the keys in the results file
+    #     Key could be a list containing Key strings, in this case a dictionary
+    #     with the requested Keys and units will be returned.
+    #     the Key '--EveryType--' will return a dictionary Keys and units
+    #     for all the keys in the results file
 
-        """
-        if type(Key) is str and Key.strip() != '--EveryType--' :
-            Key = Key.strip().upper()
-            if Key in self.units :
-                return self.units[Key]
-            if Key in ['DATES','DATE']:
-                    self.units[Key] = 'DATE'
-                    return 'DATE'
-            if Key in self.keys :
-                return self.results.unit(Key)
-            else:
-                if Key[0] == 'W' :
-                    UList=[]
-                    for W in self.get_Wells() :
-                        if Key+':'+W in self.units :
-                            UList.append(self.units[Key+':'+W])
-                        elif Key in self.keys :
-                            UList.append( self.results.unit(Key+':'+W) )
-                    if len(set(UList)) == 1 :
-                        self.units[Key] = UList[0]
-                        return UList[0]
-                    else :
-                        return None
-                elif Key[0] == 'G' :
-                    UList=[]
-                    for G in self.get_Groups() :
-                        if Key+':'+G in self.units :
-                            UList.append(self.units[Key+':'+G])
-                        elif Key in self.keys :
-                            UList.append( self.results.unit(Key+':'+G) )
-                    if len(set(UList)) == 1 :
-                        self.units[Key] = UList[0]
-                        return UList[0]
-                    else :
-                        return None
-                elif Key[0] == 'R' :
-                    UList=[]
-                    for R in self.get_Regions() :
-                        if Key+':'+R in self.units :
-                            UList.append(self.units[Key+':'+R])
-                        elif Key in self.keys :
-                            UList.append( self.results.unit(Key+':'+R) )
-                    if len(set(UList)) == 1 :
-                        self.units[Key] = UList[0]
-                        return UList[0]
-                    else :
-                        return None
-                UList = None
+    #     """
+    #     if type(Key) is str and Key.strip() != '--EveryType--' :
+    #         Key = Key.strip().upper()
+    #         if Key in self.units :
+    #             return self.units[Key]
+    #         if Key in ['DATES','DATE']:
+    #                 self.units[Key] = 'DATE'
+    #                 return 'DATE'
+    #         if Key in self.keys :
+    #             return self.results.unit(Key)
+    #         else:
+    #             if Key[0] == 'W' :
+    #                 UList=[]
+    #                 for W in self.get_Wells() :
+    #                     if Key+':'+W in self.units :
+    #                         UList.append(self.units[Key+':'+W])
+    #                     elif Key in self.keys :
+    #                         UList.append( self.results.unit(Key+':'+W) )
+    #                 if len(set(UList)) == 1 :
+    #                     self.units[Key] = UList[0]
+    #                     return UList[0]
+    #                 else :
+    #                     return None
+    #             elif Key[0] == 'G' :
+    #                 UList=[]
+    #                 for G in self.get_Groups() :
+    #                     if Key+':'+G in self.units :
+    #                         UList.append(self.units[Key+':'+G])
+    #                     elif Key in self.keys :
+    #                         UList.append( self.results.unit(Key+':'+G) )
+    #                 if len(set(UList)) == 1 :
+    #                     self.units[Key] = UList[0]
+    #                     return UList[0]
+    #                 else :
+    #                     return None
+    #             elif Key[0] == 'R' :
+    #                 UList=[]
+    #                 for R in self.get_Regions() :
+    #                     if Key+':'+R in self.units :
+    #                         UList.append(self.units[Key+':'+R])
+    #                     elif Key in self.keys :
+    #                         UList.append( self.results.unit(Key+':'+R) )
+    #                 if len(set(UList)) == 1 :
+    #                     self.units[Key] = UList[0]
+    #                     return UList[0]
+    #                 else :
+    #                     return None
+    #             UList = None
 
-        elif type(Key) is str and Key.strip() == '--EveryType--' :
-            Key = []
-            KeyDict = {}
-            for each in self.keys :
-                if ':' in each :
-                    Key.append( _mainKey(each) )
-                    KeyDict[ _mainKey(each) ] = each
-                else :
-                    Key.append(each)
-            Key = list( set (Key) )
-            Key.sort()
-            tempUnits = {}
-            for each in Key :
-                if each in self.units :
-                    tempUnits[each] = self.units[each]
-                elif each in self.keys and ( each != 'DATES' and each != 'DATE' ) :
-                    if self.results.unit(each) is None :
-                        tempUnits[each] = self.results.unit(each)
-                    else :
-                        tempUnits[each] = self.results.unit(each).strip('( )').strip("'").strip('"')
-                elif each in self.keys and ( each == 'DATES' or each == 'DATE' ) :
-                    tempUnits[each] = 'DATE'
-                else :
-                    if KeyDict[each] in self.units :
-                        tempUnits[each] = self.units[KeyDict[each]]
-                    elif KeyDict[each] in self.keys :
-                        if self.results.unit(KeyDict[each]) is None :
-                            tempUnits[each] = self.results.unit(KeyDict[each])
-                        else :
-                            tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
-            return tempUnits
-        elif type(Key) in [list,tuple] :
-            tempUnits = {}
-            for each in Key :
-                if type(each) is str :
-                    tempUnits[each] = self.get_Unit(each)
-            return tempUnits
+    #     elif type(Key) is str and Key.strip() == '--EveryType--' :
+    #         Key = []
+    #         KeyDict = {}
+    #         for each in self.keys :
+    #             if ':' in each :
+    #                 Key.append( _mainKey(each) )
+    #                 KeyDict[ _mainKey(each) ] = each
+    #             else :
+    #                 Key.append(each)
+    #         Key = list( set (Key) )
+    #         Key.sort()
+    #         tempUnits = {}
+    #         for each in Key :
+    #             if each in self.units :
+    #                 tempUnits[each] = self.units[each]
+    #             elif each in self.keys and ( each != 'DATES' and each != 'DATE' ) :
+    #                 if self.results.unit(each) is None :
+    #                     tempUnits[each] = self.results.unit(each)
+    #                 else :
+    #                     tempUnits[each] = self.results.unit(each).strip('( )').strip("'").strip('"')
+    #             elif each in self.keys and ( each == 'DATES' or each == 'DATE' ) :
+    #                 tempUnits[each] = 'DATE'
+    #             else :
+    #                 if KeyDict[each] in self.units :
+    #                     tempUnits[each] = self.units[KeyDict[each]]
+    #                 elif KeyDict[each] in self.keys :
+    #                     if self.results.unit(KeyDict[each]) is None :
+    #                         tempUnits[each] = self.results.unit(KeyDict[each])
+    #                     else :
+    #                         tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
+    #         return tempUnits
+    #     elif type(Key) in [list,tuple] :
+    #         tempUnits = {}
+    #         for each in Key :
+    #             if type(each) is str :
+    #                 tempUnits[each] = self.get_Unit(each)
+    #         return tempUnits
