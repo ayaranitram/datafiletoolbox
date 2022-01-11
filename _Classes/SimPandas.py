@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.70.10'
-__release__ = 211124
+__version__ = '0.70.15'
+__release__ = 220111
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from sys import getsizeof
@@ -360,7 +360,7 @@ class SimSeries(Series) :
         # set the provided name
         if self.name is None and name is not None:
             self.name = name
-        if self.name is None and 'columns' in kwargsB and type(kwargsB['columns']) is not str and hasattr(kwargsB['columns'],'__iter__') and len(kwargsB['columns']) == 1:
+        if self.name is None and 'columns' in kwargsB and type(kwargsB['columns']) is not str and hasattr(kwargsB['columns'],'__iter__') and type(kwargsB['columns']) is not dict and len(kwargsB['columns']) == 1:
             self.name = kwargsB['columns'][0]
         if self.name is None and 'columns' in kwargsB and type(kwargsB['columns']) is str and len(kwargsB['columns'].strip()) > 0:
             self.name = kwargsB['columns'].strip()
@@ -1554,8 +1554,8 @@ class SimSeries(Series) :
                 raise TypeError("units must be a string.")
 
         elif type(self.units) is dict:
-            if type(units) is not str and hasattr(units,'__iter__'):
-                if type(item) is not str and hasattr(item,'__iter__'):
+            if type(units) not in (str,dict) and hasattr(units,'__iter__'):
+                if item is not None and type(item) not in (str,dict) and hasattr(item,'__iter__'):
                     if len(item) == len(units):
                         return self.set_Units( dict(zip(item,units)) )
                     else:
@@ -1567,6 +1567,9 @@ class SimSeries(Series) :
                         raise ValueError("units list must be the same length of columns in the SimSeries or must be followed by a list of items.")
                 else:
                     raise TypeError("if units is a list, items must be a list of the same length.")
+            elif type(units) is dict:
+                for k,u in units.items():
+                    self.set_Units(u,k)
 
             if item is None and len(self.columns) > 1:
                 raise ValueError("More than one column in this SimSeries, item must not be None")
@@ -2263,24 +2266,31 @@ class SimDataFrame(DataFrame) :
             # for key in list(self.columns) :
             #     self.units[ key ] = units
             self.units = dict(zip(list(self.columns), [units]*len(list(self.columns))))
-        elif hasattr(units,'__iter__'):
+        elif hasattr(units,'__iter__') and type(units) not in (str,dict):
             if self.transposed:
-                if len(units) == len(self.index) :
+                if len(units) == len(self.index):
                     self.units = dict(zip(list(self.index), units))
             elif not self.transposed:
-                if len(units) == len(self.columns) :
+                if len(units) == len(self.columns):
                     self.units = dict(zip(list(self.columns), units))
-        elif type(units) is dict and len(units)>0 :
+        elif type(units) is str:
+            if self.transposed:
+                if len(self.index) == 1:
+                    self.units = {self.index[0]: units}
+            elif not self.transposed:
+                if len(self.columns) == 1:
+                    self.units = {self.columns[0]:units}
+        elif type(units) is dict and len(units)>0:
             self.units = {}
             if self.transposed:
                 for key in list(self.index):
-                    if key is not None and key in units :
+                    if key is not None and key in units:
                         self.units[key] = units[key]
                     else :
                         self.units[key] = 'UNITLESS'
             elif not self.transposed:
                 for key in list(self.columns):
-                    if key is not None and key in units :
+                    if key is not None and key in units:
                         self.units[key] = units[key]
                     else :
                         self.units[key] = 'UNITLESS'
@@ -2873,7 +2883,7 @@ Copy of input object, shifted.
                     valid = True
             if valid :
                 return result
-        if type(units) is not str and hasattr(units,'__iter__'):
+        if type(units) not in (str,dict) and hasattr(units,'__iter__'):
             result = self.copy()
             valid = False
             for col in self.columns :
@@ -5282,8 +5292,8 @@ Copy of input object, shifted.
         """
         if item is not None and item not in self.columns and item != self.index.name and item not in self.index.names:
             raise ValueError("the required item '" + str(item) + "' is not in this SimDataFrame.")
-        if type(units) is not str and hasattr(units,'__iter__'):
-            if type(item) is not str and hasattr(item,'__iter__'):
+        if type(units) not in (str,dict) and hasattr(units,'__iter__'):
+            if item is not None and type(item) is not str and hasattr(item,'__iter__'):
                 if len(item) == len(units):
                     return self.set_Units( dict(zip(item,units)) )
                 else:
@@ -5297,30 +5307,59 @@ Copy of input object, shifted.
                 raise TypeError("if units is a list, items must be a list of the same length.")
 
         if type(units) is dict:
-            for k,u in units.items():
-                self.set_Units(u,k)
-            return None
+            if len([ k for k in units.keys() if k in (self.index if self.transposed else self.columns) ]) >= len([ u for u in units.values() if u in (self.index if self.transposed else self.columns) ]):
+                ku = True
+            else:
+                ku = False
+            if ku:
+                for k,u in units.items():
+                    self.set_Units(u,k)
+                return None
+            else:
+                for u,k in units.items():
+                    self.set_Units(u,k)
+                return None
 
         if self.units is None:
             self.units = {}
+
         if type(self.units) is dict:
-            if item is None and len(self.columns) > 1:
-                raise ValueError("item must not be None")
-            elif item is None and len(self.columns) == 1:
-                return self.set_Units(units,[list(self.columns)[0]])
-            elif item is not None:
-                if item in self.columns:
-                    if units is None:
-                        self.units[item] = None
-                    elif type(units) is str:
+            if not self.transposed:
+                if item is None and len(self.columns) > 1:
+                    raise ValueError("item must not be None")
+                elif item is None and len(self.columns) == 1:
+                    return self.set_Units(units,[list(self.columns)[0]])
+                elif item is not None:
+                    if item in self.columns:
+                        if units is None:
+                            self.units[item] = None
+                        elif type(units) is str:
+                            self.units[item] = units.strip()
+                        else:
+                            raise TypeError("units must be a string.")
+                    if item == self.index.name:
+                        self.indexUnits = units.strip()
                         self.units[item] = units.strip()
-                    else:
-                        raise TypeError("units must be a string.")
-                if item == self.index.name:
-                    self.indexUnits = units.strip()
-                    self.units[item] = units.strip()
-                if item in self.index.names:
-                    self.units[item] = units.strip()
+                    if item in self.index.names:
+                        self.units[item] = units.strip()
+            else:  # if self.transposed:
+                if item is None and len(self.index) > 1:
+                    raise ValueError("item must not be None")
+                elif item is None and len(self.index) == 1:
+                    return self.set_Units(units,[list(self.index)[0]])
+                elif item is not None:
+                    if item in self.index:
+                        if units is None:
+                            self.units[item] = None
+                        elif type(units) is str:
+                            self.units[item] = units.strip()
+                        else:
+                            raise TypeError("units must be a string.")
+                    if item == self.index.name:
+                        self.indexUnits = units.strip()
+                        self.units[item] = units.strip()
+                    if item in self.index.names:
+                        self.units[item] = units.strip()
 
     def keysByUnits(self) :
         """
