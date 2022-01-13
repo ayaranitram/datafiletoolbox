@@ -6,7 +6,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = '0.60.7'
-__release__ = 220111
+__release__ = 220112
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -4370,28 +4370,28 @@ class SimResult(object):
             overwrite = False
 
         # validating Key
-        if type(Key) is str :
+        if type(Key) is str:
             Key = Key.strip()
         else :
             raise TypeError(' <set_Vector> Key must be a string')
 
-        if Key in self.vectors and overwrite is False :
+        if Key in self.vectors and overwrite is False:
             raise OverwrittingError(' <set_Vector> the Key ' + Key + ' already exists in the dataset and overwrite parameter is set to False. Set overwrite=True to avoid this message and change the DataVector.')
 
         # validating VectorData
-        if type(VectorData) in (list,tuple) :
+        if type(VectorData) in (list,tuple):
             if len(VectorData) == 0 :
                 raise TypeError(' <set_Vector> VectorData must not be empty')
             VectorData = np.array(VectorData)
-        elif type(VectorData) is np.ndarray :
+        elif type(VectorData) is np.ndarray:
             if DataType == 'auto' :
-                if 'int' in str(VectorData.dtype) :
+                if 'int' in str(VectorData.dtype):
                     DataType = 'int'
                     _verbose(self.speak, 1, Key + ' <set_Vector> vector detected as numpy.array of dtype ' + DataType + '.' )
-                elif 'float' in str(VectorData.dtype) :
+                elif 'float' in str(VectorData.dtype):
                     DataType = 'float'
                     _verbose(self.speak, 1, Key + ' <set_Vector> vector detected as numpy.array of dtype ' + DataType + '.' )
-                elif 'datetime' in str(VectorData.dtype) :
+                elif 'datetime' in str(VectorData.dtype):
                     DataType = 'datetime'
                     _verbose(self.speak, 1, Key + ' <set_Vector> vector detected as numpy.array of dtype ' + DataType + '.' )
             if VectorData.size == 0 :
@@ -4399,21 +4399,21 @@ class SimResult(object):
             if len(VectorData.shape) == 1:
                 pass  # OK
             elif len(VectorData.shape) == 2:
-                if VectorData.shape[0] == 1 or VectorData.shape[1] == 1 :
+                if VectorData.shape[0] == 1 or VectorData.shape[1] == 1:
                     VectorData = VectorData.reshape(-1,)
                 else:
                     pass  # is a matrix
             else:
                 pass  # is a multidimensional matrix!!!
-        elif isinstance(VectorData, (Series)) :
+        elif isinstance(VectorData, Series):
             if DataType == 'auto' :
-                if 'int' in str(VectorData.dtype) :
+                if 'int' in str(VectorData.dtype):
                     DataType = 'int'
                     _verbose(self.speak, 1, Key + ' <set_Vector> vector detected as pandas.series of dtype ' + DataType + '.' )
-                elif 'float' in str(VectorData.dtype) :
+                elif 'float' in str(VectorData.dtype):
                     DataType = 'float'
                     _verbose(self.speak, 1, Key + ' <set_Vector> vector detected as pandas.series of dtype ' + DataType + '.' )
-                elif 'datetime' in str(VectorData.dtype) :
+                elif 'datetime' in str(VectorData.dtype):
                     DataType = 'datetime'
                     _verbose(self.speak, 1, Key + ' <set_Vector> vector detected as pandas.series of dtype ' + DataType + '.' )
             if VectorData.size == 0 :
@@ -4429,22 +4429,22 @@ class SimResult(object):
         # validating Units
         if Units is None:
             Units = 'dimensionless'
-        elif type(Units) is str :
+        elif type(Units) is str:
             Units = Units.strip()
-            if Units.startswith('(') and Units.endswith(')') and Units.count('(') == 1 and Units.count(')') == 1 :
+            if Units.startswith('(') and Units.endswith(')') and Units.count('(') == 1 and Units.count(')') == 1:
                 Units = Units.strip('()')
-            if unit.isUnit(Units) :
+            if unit.isUnit(Units):
                 pass
-            elif Units == 'DEGREES' and 'API' in _mainKey(Key).upper() :
+            elif Units == 'DEGREES' and 'API' in _mainKey(Key).upper():
                 Units = 'API'
                 _verbose(self.speak, 2, ' <set_Vector>\nIMPORTANT: the selected Units: ' + Units + ' were chaged to "API" for the vector with key name ' + Key + '.')
-            elif (' / ' in Units and unit.isUnit(Units.replace(' / ', '/')) ) or ('/ ' in Units and unit.isUnit(Units.replace('/ ', '/')) ) or (' /' in Units and unit.isUnit(Units.replace(' /', '/')) ) :
+            elif (' / ' in Units and unit.isUnit(Units.replace(' / ', '/')) ) or ('/ ' in Units and unit.isUnit(Units.replace('/ ', '/')) ) or (' /' in Units and unit.isUnit(Units.replace(' /', '/')) ):
                 _verbose(self.speak, 1, " <set_Vector>\nMESSAGE: the selected Units: '" + Units +"' were chaged to " + Units.replace(' /', '/').replace('/ ', '/')  + ' for the vector with key name ' + Key + '.')
                 Units = Units.replace('/ ', '/').replace(' /', '/')
             else :
                 _verbose(self.speak, 3, " <set_Vector>\nIMPORTANT: the selected Units: '" + Units +"' are not recognized by the programm and will not be able to convert this Vector " + str(Key) +' into other units.' )
-        elif type(Units) is dict :
-            if isinstance(VectorData, (SimSeries)) :
+        elif type(Units) is dict:
+            if isinstance(VectorData, SimSeries):
                 Units = VectorData.get_UnitsString()
             elif Key in Units :
                 Units = Units[Key]
@@ -4521,14 +4521,14 @@ class SimResult(object):
                 _verbose(self.speak, 2, ' <set_Vector> not able to cast the VectorData ' + Key + ', kept as received: ' + DataType + '.' )
 
         # ensure VectorData is numpy.array
-        if isinstance(VectorData,Series):
+        if isinstance(VectorData, Series):
             VectorData = VectorData.to_numpy()
 
         # save restart vector part
-        if len(self.get_vectorTemplate()[self.get_vectorTemplate()==-1]) > 0 :
-            if len(VectorData[self.get_vectorTemplate() == -1]) == len(self.checkRestarts(self.keys[0])[self.keys[0]]) :
+        if len(self.get_vectorTemplate()[self.get_vectorTemplate()==-1]) > 0:
+            if len(VectorData[self.get_vectorTemplate() == -1]) == len(self.checkRestarts(self.keys[0])[self.keys[0]]):
                 self.vectorsRestart[Key] = VectorData[self.get_vectorTemplate() == -1]
-            elif len(VectorData[self.get_vectorTemplate() == -1]) < len(self.checkRestarts(self.keys[0])[self.keys[0]]) :
+            elif len(VectorData[self.get_vectorTemplate() == -1]) < len(self.checkRestarts(self.keys[0])[self.keys[0]]):
                 # a filter is applied
                 filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate()==-1]
                 filteredDF = DataFrame({'SelfTime':filteredTime, Key:VectorData[self.get_vectorTemplate()==-1]}).set_index('SelfTime')
@@ -4538,15 +4538,15 @@ class SimResult(object):
                 rawDF = rawDF.replace(np.nan, self.null)
                 newRawVector = rawDF[Key].to_numpy()
                 self.vectorsRestart[Key] = newRawVector
-            elif len(VectorData[self.get_vectorTemplate() == -1]) > len(self.checkRestarts(self.keys[0])[self.keys[0]]) :
+            elif len(VectorData[self.get_vectorTemplate() == -1]) > len(self.checkRestarts(self.keys[0])[self.keys[0]]):
                 raise ValueError('something went wrong')
 
         # save this simulation vector part
-        if len(self.get_vectorTemplate()[self.get_vectorTemplate()==0]) > 0 :
-            if len(VectorData[self.get_vectorTemplate() == 0]) == len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
+        if len(self.get_vectorTemplate()[self.get_vectorTemplate()==0]) > 0:
+            if len(VectorData[self.get_vectorTemplate() == 0]) == len(self.get_RawVector(self.keys[0])[self.keys[0]]):
                 # no filter seems to be applied
                 self.vectors[Key] = VectorData[self.get_vectorTemplate() == 0]
-            elif len(VectorData[self.get_vectorTemplate() == 0]) < len(self.get_RawVector(self.keys[0])[self.keys[0]]) :
+            elif len(VectorData[self.get_vectorTemplate() == 0]) < len(self.get_RawVector(self.keys[0])[self.keys[0]]):
                 # a filter is applied
                 filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate()==0]
                 filteredDF = SimDataFrame({'SelfTime':filteredTime, Key:VectorData[self.get_vectorTemplate()==0]}).set_index('SelfTime')
@@ -4999,26 +4999,26 @@ class SimResult(object):
         CalcData, CalcUnits, i, firstNeg = [], [], 0, False
 
         def _getValues(Key) :
-            if len(self.find_Keys(Key )) == 0 :
-                if Key[0] == '-' :
-                    if self.find_Keys(Key[1:] ) :
-                        CalcData.append(self(Key[1:] ) * -1 )
-                        CalcUnits.append(self.get_Unit(Key[1:] ) )
-            elif self.is_Key(Key ) :
-                CalcData.append(self[[Key]] )
-                CalcUnits.append(self.get_Unit(Key ) )
-            elif self.is_Attribute(Key ) :
-                CalcData.append(self[[Key]] )
-                CalcUnits.append(self.get_Unit(Key ) )
-            elif len(self.find_Keys(Key )) == 1 :
-                CalcData.append(self[Key] )
-                CalcUnits.append(self.get_Unit(Key ) )
-            elif len(self.find_Keys(Key )) > 1 :
-                CalcData.append(self[[Key]] )
-                CalcUnits.append(self.get_Unit(Key ) )
-            else : # len(self.find_Keys(Key )) > 1 :
-                CalcData.append(self[[Key]] )
-                CalcUnits.append(self.get_Unit(Key ) )
+            if len(self.find_Keys(Key)) == 0:
+                if Key[0] == '-':
+                    if self.find_Keys(Key[1:]):
+                        CalcData.append(self(Key[1:]) * -1)
+                        CalcUnits.append(self.get_Unit(Key[1:]))
+            elif self.is_Key(Key):
+                CalcData.append(self[[Key]])
+                CalcUnits.append(self.get_Unit(Key))
+            elif self.is_Attribute(Key) :
+                CalcData.append(self[[Key]])
+                CalcUnits.append(self.get_Unit(Key))
+            elif len(self.find_Keys(Key)) == 1:
+                CalcData.append(self[Key])
+                CalcUnits.append(self.get_Unit(Key))
+            elif len(self.find_Keys(Key)) > 1:
+                CalcData.append(self[[Key]])
+                CalcUnits.append(self.get_Unit(Key))
+            else : # len(self.find_Keys(Key)) > 1:
+                CalcData.append(self[[Key]])
+                CalcUnits.append(self.get_Unit(Key))
 
         # supported operators:
         operators = [' ', '**', '--', '+-', '-+', '++', '*-', '/-', '//', '=', '+', '*', '/', '^', '.abs','.sum', '.avg', '.mean', '.median', '.min', '.max', '.mode', '.prod', '.var', '.std', '.sum0', '.avg0', '.mean0', '.median0', '.min0', '.max0', '.std0', '.mode0', '.prod0', '.var0', '>', '<', '>=', '<=', '!=', '==', '<>', '><', '=>', '=<']
@@ -5148,16 +5148,16 @@ class SimResult(object):
 
         # prepare the data
         i=0
-        while i < len(CalculationTuple) :
+        while i < len(CalculationTuple):
 
             # a string Key, must be interpreted
-            if type(CalculationTuple[i]) is str and CalculationTuple[i] not in operators :
+            if type(CalculationTuple[i]) is str and CalculationTuple[i] not in operators:
                _getValues(CalculationTuple[i])
 
             # string operator
             elif type(CalculationTuple[i]) is str and CalculationTuple[i] in operators:
-                if i == 0 and CalculationTuple[i] == '-' :
-                    CalcData.append(-1 )
+                if i == 0 and CalculationTuple[i].strip() == '-':
+                    CalcData.append(-1)
                     CalcUnits.append(None)
                     firstNeg = True
                 else :
@@ -5179,23 +5179,23 @@ class SimResult(object):
         # initialize calculation with first item
         Stack = []
         # StackUnits = []
-        for i in range(len(CalcData)) :
+        for i in range(len(CalcData)):
             # following the operations sequence
 
-            if type(CalcData[i]) is str and CalcData[i] not in operators :
+            if type(CalcData[i]) is str and CalcData[i] not in operators:
                 Stack.append(CalcData[i])
                 # StackUnits.append(CalcUnits[i])
                 continue
-            elif type(CalcData[i]) is not str :
+            elif type(CalcData[i]) is not str:
                 Stack.append(CalcData[i])
                 # StackUnits.append(CalcUnits[i])
                 continue
 
-            else :
-                if len(Stack) >= 2 :
+            else:
+                if len(Stack) >= 2:
                     operandB = Stack.pop()
                     operandA = Stack.pop()
-                elif len(Stack) == 1 :
+                elif len(Stack) == 1:
                     operandB = Stack.pop()
                     operandA = 0
                 else :
@@ -5209,27 +5209,27 @@ class SimResult(object):
 
                 if CalculationTuple[i] == substractionSign :  # '-' or ' -'
                     Stack.append(operandA - operandB)
-                elif CalculationTuple[i] == '+' :
+                elif CalculationTuple[i] == '+':
                     Stack.append(operandA + operandB)
-                elif CalculationTuple[i] == '*' :
+                elif CalculationTuple[i] == '*':
                     Stack.append(operandA * operandB)
-                elif CalculationTuple[i] == '/' :
+                elif CalculationTuple[i] == '/':
                     Stack.append(operandA / operandB)
-                elif CalculationTuple[i] == '//' :
+                elif CalculationTuple[i] == '//':
                     Stack.append(operandA // operandB)
-                elif CalculationTuple[i] == '^' :
+                elif CalculationTuple[i] == '^':
                     Stack.append(operandA ** operandB)
-                elif CalculationTuple[i] == '>' :
+                elif CalculationTuple[i] == '>':
                     Stack.append(operandA > operandB)
-                elif CalculationTuple[i] == '<' :
+                elif CalculationTuple[i] == '<':
                     Stack.append(operandA < operandB)
-                elif CalculationTuple[i] == '>=' :
+                elif CalculationTuple[i] == '>=':
                     Stack.append(operandA >= operandB)
-                elif CalculationTuple[i] == '<=' :
+                elif CalculationTuple[i] == '<=':
                     Stack.append(operandA <= operandB)
-                elif CalculationTuple[i] == '!=' :
+                elif CalculationTuple[i] == '!=':
                     Stack.append(operandA != operandB)
-                elif CalculationTuple[i] == '==' :
+                elif CalculationTuple[i] == '==':
                     Stack.append(operandA == operandB)
                 elif CalculationTuple[i] in ['.sum', '.avg', '.mean', '.min', '.max', '.mode', '.prod', '.std', '.var', '.sum0', '.avg0', '.mean0', '.min0', '.max0', '.mode0', '.prod0', '.std0', '.var0'] :
                     if isinstance(operandB, (DataFrame, Series)) :
@@ -5268,29 +5268,29 @@ class SimResult(object):
             Result = Result.to_SimSeries()
 
         # save the result
-        self.set_Vector(str(CalculationTuple), Result, Result.get_units(), 'auto', True )
+        self.set_Vector(str(CalculationTuple), Result, Result.get_units(), 'auto', True)
 
         # if a name was given, link the data to the new name
-        if ResultName != str(CalculationTuple) :
+        if ResultName != str(CalculationTuple):
             if isinstance(Result, Series) or (isinstance(Result, DataFrame) and len(Result.columns)==1):
-                if str(CalculationTuple ) in self.vectors :
+                if str(CalculationTuple ) in self.vectors:
                     self.vectors[ResultName] = self.vectors[ str(CalculationTuple) ]
                     self.units[ResultName] = self.units[ str(CalculationTuple) ]
                 else :
                     item = ':'+str(list(Result.columns)[0].split(':')[-1])
-                    if str(CalculationTuple )+item in self.vectors :
+                    if str(CalculationTuple )+item in self.vectors:
                         self.vectors[ResultName] = self.vectors[ str(CalculationTuple)+item ]
                         self.units[ResultName] = self.units[ str(CalculationTuple)+item ]
                     else :
                         self.set_Vector(ResultName, Result.to_numpy(), Result.get_UnitsString(), 'auto', True )
-                if not self.is_Key(ResultName) :
+                if not self.is_Key(ResultName):
                     self.add_Key(ResultName)
-            elif isinstance(Result, DataFrame) :
+            elif isinstance(Result, DataFrame):
                 for each in Result.columns :
                     item = ':'+str(each.split(':')[-1])
                     self.vectors[ResultName+item] = self.vectors[ str(CalculationTuple )+item ]
                     self.units[ResultName+item] = self.units[ str(CalculationTuple )+item ]
-                    if not self.is_Key(ResultName+item) :
+                    if not self.is_Key(ResultName+item):
                         self.add_Key(ResultName+item)
             self.get_Attributes(reload=True)
             return None
