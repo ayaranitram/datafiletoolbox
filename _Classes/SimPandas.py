@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.70.16'
-__release__ = 220112
+__version__ = '0.70.17'
+__release__ = 220113
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from sys import getsizeof
@@ -169,8 +169,12 @@ class _SimLocIndexer(indexing._LocIndexer):
                 if key[1] not in self.spd.columns or self.spd.get_Units(key[1])[key[1]] is None or self.spd.get_Units(key[1])[key[1]].lower() in ('dimensionless', 'unitless', 'none', ''):
                     newUnits = True
                 else:
-                    if convertibleUnits(units, self.spd.get_Units(key[1])):
-                        value = convertUnits(value,units,self.spd.get_Units(key[1]))
+                    if units == self.spd.get_Units(key[1])[key[1]]:
+                        pass
+                    elif convertibleUnits(units, self.spd.get_Units(key[1])[key[1]]):
+                        value = convertUnit(value,units,self.spd.get_Units(key[1])[key[1]],self.spd.speak)
+                    else:
+                        warn(' Not able to convert ' + str(units) + ' to ' + str(self.spd.get_Units(key[1])[key[1]]))
         super().__setitem__(key, value)
         if newUnits:
             self.spd.set_Units({key[1]:units})
