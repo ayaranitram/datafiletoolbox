@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.70.15'
-__release__ = 220111
+__version__ = '0.70.16'
+__release__ = 220112
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from sys import getsizeof
@@ -155,21 +155,72 @@ class _SimLocIndexer(indexing._LocIndexer):
             return result
 
     def __setitem__(self, key, value):  #, units=None):
-        #########################################################################################################################
-        # units to be considered ONLY when passing a SimSeries or SimDataFrame because the shape of the structure must be known #
-        #########################################################################################################################
-        # if type(value) is tuple and len(value) == 2 and units is None:
-        #     value, units = value[0], value[1]
-        # if type(value) in (list,tuple,np.array) and units is not None:
-        #     if type(units) is dict:
-        #         value = SimDataFrame(data=value, columns=list(units.keys()), units=units)
-        #     else:
-        #         value = SimDataFrame(data=value, columns=self.spd.columns, units=units)
         if type(value) in (SimSeries,SimDataFrame):
             value = value.to(self.spd.get_Units())
         if type(value) is SimDataFrame and len(value.index) == 1:
             value = value.to_SimSeries()
+
+        # check if received value is tuple (value,units)
+        newUnits = False
+        if type(value) is tuple and len(value) == 2:
+            if key[1] not in self.spd.columns or not isinstance(self.spd.loc[key],(Series,SimSeries,DataFrame,SimDataFrame)) or (
+                    isinstance(self.spd.loc[key],(Series,SimSeries,DataFrame,SimDataFrame)) and type(value[0]) is not str and hasattr(value[0],'__iter__') and len(self.spd.loc[key]) == len(value[0])):
+                value, units = value[0], value[1]
+                if key[1] not in self.spd.columns or self.spd.get_Units(key[1])[key[1]] is None or self.spd.get_Units(key[1])[key[1]].lower() in ('dimensionless', 'unitless', 'none', ''):
+                    newUnits = True
+                else:
+                    if convertibleUnits(units, self.spd.get_Units(key[1])):
+                        value = convertUnits(value,units,self.spd.get_Units(key[1]))
         super().__setitem__(key, value)
+        if newUnits:
+            self.spd.set_Units({key[1]:units})
+
+
+# class _iSimLocIndexer(indexing._iLocIndexer):
+#     def __init__(self, *args):
+#         self.spd = args[1]
+#         super().__init__(*args)
+
+#     def __getitem__(self, *args):
+#         result = super().__getitem__(*args)
+#         if isinstance(result,(Series,DataFrame)):
+#             if type(self.spd) is SimSeries:
+#                 return self.spd._class(data=result, **self.spd._SimParameters)
+
+#             elif type(self.spd) is SimDataFrame and type(*args) is not tuple and isinstance(result,Series):
+#                 return self.spd._class(data=dict(zip(result.index,result.values)),index=[result.name], **self.spd._SimParameters)
+#             elif type(self.spd) is SimDataFrame and type(*args) is not tuple and isinstance(result,DataFrame):
+#                 return self.spd._class(data=result, **self.spd._SimParameters)
+#             elif type(self.spd) is SimDataFrame and type(*args) is tuple and len(*args) > 1 and type(args[0][-1]) in (list,tuple,slice) and isinstance(result,DataFrame):
+#                 return self.spd._class(data=result, **self.spd._SimParameters)
+#             else:
+#                 result = self.spd._class(data=result.values,index=result.index, **self.spd._SimParameters)
+#                 result.rename(columns=dict(zip(result.columns,self.spd[[args[0][-1]]].columns)),inplace=True)
+#                 result.set_units(self.spd.get_units(self.spd[[args[0][-1]]].columns))
+#                 return result
+#         else:
+#             return result
+
+#     def __setitem__(self, key, value):  #, units=None):
+#         if type(value) in (SimSeries,SimDataFrame):
+#             value = value.to(self.spd.get_Units())
+#         if type(value) is SimDataFrame and len(value.index) == 1:
+#             value = value.to_SimSeries()
+
+#         # check if received value is tuple (value,units)
+#         if type(value) is tuple and len(value) == 2:
+#             if not isinstance(self.spd.loc[key],(Series,SimSeries,DataFrame,SimDataFrame)) or (
+#                     isinstance(self.spd.loc[key],(Series,SimSeries,DataFrame,SimDataFrame)) and type(value[0]) is not str and not hasattr(value[0],'__iter__') and len(self.spd.loc[key]) == len(value[0])):
+#                 value, units = value[0], value[1]
+#                 if key[1] not in self.spd.columns or self.spd.get_Units(key[1])[key[1]] is None or self.spd.get_Units(key[1])[key[1]].lower() in ('dimensionless', 'unitless', 'none', ''):
+#                     newUnits = True
+#                 else:
+#                     newUnits = False
+#                     if convertibleUnits(units, self.spd.get_Units(key[1])):
+#                         value = convertUnits(value,units,self.spd.get_Units(key[1]))
+#         super().__setitem__(key, value)
+#         if newUnits:
+#             self.spd.set_Units({key[1]:units})
 
 
 # class SimRolling(Rolling):
@@ -229,7 +280,7 @@ class SimSeries(Series) :
         self.autoAppend = False
         self.operatePerName = False
         self.spdLocator = _SimLocIndexer("loc", self)
-        # self.spdiLocator = _SimLocIndexer("iloc", self)
+        # self.spdiLocator = _iSimLocIndexer("iloc", self)
 
         # validaton
         if isinstance(data, DataFrame) and len(data.columns)>1 :
@@ -394,7 +445,7 @@ class SimSeries(Series) :
         return self.spdLocator
 
     # @property
-    # def iloc(self) -> _SimLocIndexer:
+    # def iloc(self) -> _iSimLocIndexer:
     #     """
     #     wrapper for .iloc indexing
     #     """
@@ -2190,8 +2241,8 @@ class SimDataFrame(DataFrame) :
         self.autoAppend = False
         self.operatePerName = False
         self.spdLocator = _SimLocIndexer("loc", self)
+        # self.spdiLocator = _iSimLocIndexer("iloc", self)
         self.transposed = bool(transposed)
-        # self.spdiLocator = _SimLocIndexer("iloc", self)
 
 
         indexInput = None
@@ -2348,7 +2399,7 @@ class SimDataFrame(DataFrame) :
         return self.spdLocator
 
     # @property
-    # def iloc(self) -> _SimLocIndexer:
+    # def iloc(self) -> _iSimLocIndexer:
     #     """
     #     wrapper for .iloc indexing
     #     """
