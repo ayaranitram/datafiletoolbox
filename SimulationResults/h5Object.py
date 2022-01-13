@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.0'
-__release__ = 220111
+__version__ = '0.1.2'
+__release__ = 220113
 __all__ = ['H5']
 
 from .mainObject import SimResult as _SimResult
@@ -15,6 +15,7 @@ from .._common.inout import _extension
 from .._common.inout import _verbose
 # from .._common.stringformat import isnumeric as _isnumeric
 from .._Classes.Errors import CorruptedFileError
+from .._Classes.Errors import InvalidKeyError
 import numpy as np
 import os
 import h5py
@@ -86,15 +87,18 @@ class H5(_SimResult):
         """
         if type(smspecPath) is str :
             smspecPath = smspecPath.strip()
-            if _extension(smspecPath)[0].lower() != '.SMSPEC' :
+            if _extension(smspecPath)[0].upper() != '.SMSPEC':
                 newPath = _extension(smspecPath)[2] + _extension(smspecPath)[1] + '.SMSPEC'
                 if os.path.isfile(newPath):
                     smspecPath = newPath
             if os.path.isfile(smspecPath):
                 if os.path.getsize(smspecPath) == 0:
-                    warnings.warn("\nThe .SMSPEC file seems to be empty")
+                    warnings.warn("\nThe .SMSPEC file seems to be empty:\n  -> "  + smspecPath )
             else :
-                warnings.warn( "the file doesn't exist:\n  -> " + smspecPath )
+                warnings.warn( "the SMSPEC file doesn't exist:\n  -> " + smspecPath )
+        if not os.path.isfile(smspecPath) or os.path.getsize(smspecPath) == 0:
+            warnings.warn( "the SMSPEC file doesn't exist or is empty:\n  -> " + smspecPath + "\n  Units and well names will be unkown.")
+
         with open(smspecPath, 'r', errors='surrogateescape') as file:
             smspec = file.read()
 
@@ -151,13 +155,13 @@ class H5(_SimResult):
         """
         main , item = _mainKey(key) , _itemKey(key)
         item_pos = 0
-        if main[0] == 'F':
-            item_pos = 0
-        elif main in self.keynames:
-            if item in self.keynames[main]:
+        if main in self.keynames:
+            if item is not None and item in self.keynames[main]:
                 item_pos = self.keynames[main].index(item)
+            elif item is not None:
+                raise InvalidKeyError("'" + str(key) +"' is not a valid Key in this dataset.\nThe item '" + str(item) + "' does not have a " + str(main))
         else:
-            item_pos =  None
+            raise InvalidKeyError("'" + str(key) + "' is not a valid Key in this dataset")
         item_h5 = list(self.results['summary_vectors'][main].keys())[item_pos]
         return np.array(self.results['summary_vectors'][main][item_h5]['values'])
 
