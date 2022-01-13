@@ -6,7 +6,7 @@ Created on Wed May 13 15:34:04 2020
 """
 
 __version__ = '0.1.0'
-__release__ = 210225
+__release__ = 220113
 
 from datafiletoolbox.SimulationResults.mainObject import SimResult
 from datafiletoolbox.common.inout import extension
@@ -254,7 +254,7 @@ class VIP(SimResult):
             SimResult.CSV_Verbose2Variable[ self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i] ] = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]
             CSVkeys += [ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] +':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] ]
             ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i], CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i], MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i], speak=self.speak )
-            if ECLkey != None :
+            if ECLkey is not None :
                 ECLkeys += [ ECLkey ]
                 VIPkey, keyType, keyName = fromECLtoVIP( ECLkey, self.speak )
                 VIPkeys += [ VIPkey + ':' + keyName ]
@@ -285,7 +285,7 @@ class VIP(SimResult):
                 Unit = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
                 verbose( self.speak, 1, ' Setting vector for CSV key ' + CSVkey )
                 self.set_Vector( Key=CSVkey, VectorData=Vector, Units=Unit, DataType='auto', overwrite=True)
-                if ECLkey != None and len(ECLkey) > 0 :
+                if ECLkey is not None and len(ECLkey) > 0 :
                     verbose( self.speak, 1, ' Setting vector for ECL key ' + ECLkey )
                     self.set_Vector( Key=ECLkey, VectorData=Vector, Units=Unit, DataType='auto', overwrite=True)
 
@@ -487,7 +487,7 @@ class VIP(SimResult):
                         Unit = self.CSV[CSVname]['[HEADERS]']['UNITS'][col]
                         verbose( self.speak, 1, ' Setting vector for CSV key ' + CSVkey )
                         self.set_Vector( Key=CSVkey, VectorData=Vector, Units=Unit, DataType='auto', overwrite=True)
-                        if ECLkey != None and len(ECLkey) > 0 :
+                        if ECLkey is not None and len(ECLkey) > 0 :
                             verbose( self.speak, 1, ' Setting vector for ECL key ' + ECLkey )
                             self.set_Vector( Key=ECLkey, VectorData=Vector, Units=Unit, DataType='auto', overwrite=True)
                         FOUNDflag = True
@@ -849,7 +849,7 @@ class VIP(SimResult):
         areaList.sort()
         self.groups = tuple( areaList )
         # preparing list to return
-        if pattern != None :
+        if pattern is not None :
             areaList = []
             for group in self.groups :
                 if pattern in group :
@@ -871,7 +871,7 @@ class VIP(SimResult):
         regionsList.sort()
         self.regions = tuple( regionsList )
         # preparing list to return
-        if pattern != None :
+        if pattern is not None :
             regionsList = []
             for region in self.regions :
                 if pattern in region :
@@ -1077,7 +1077,7 @@ class VIP(SimResult):
         keysListECL.sort()
         self.keysECL = tuple( keysListECL )
         # preparing list to return
-        if pattern != None :
+        if pattern is not None :
             keysList = []
             for key in self.keysVIP :
                 if pattern in key :
@@ -1214,7 +1214,7 @@ class VIP(SimResult):
                 else :
                     if self.ECLstyle == True :
                         ECLkey = fromVIPtoECL( Vector, self.results[sss][0], self.speak )
-                        if ECLkey != None :
+                        if ECLkey is not None :
                             self.units[ ECLkey ] = self.results[sss][1]['Units'][Vector].strip('( )').strip("'").strip('"')
                     if self.VIPstyle == True :
                         self.units[Vector] = self.results[sss][1]['Units'][Vector].strip('( )').strip("'").strip('"')

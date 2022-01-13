@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.7'
-__release__ = 220112
+__version__ = '0.60.8'
+__release__ = 220113
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -2546,7 +2546,7 @@ class SimResult(object):
         copy the units from other object to this object
         """
         for key in self.units :
-            if other.get_Unit(key) != None:
+            if other.get_Unit(key) is not None:
                 self.units[key] = other.get_Unit(key)
 
     def get_aggregatedWells(self, WellsToGroup=[], WellKeys=[], AggregatedKeyName='', aggregate_by='default', force=False) :
@@ -3294,13 +3294,13 @@ class SimResult(object):
         """
         return self.start
 
-    def isKey(self, Key) :
+    def isKey(self, Key):
         return self.is_Key(Key)
 
-    def is_Key(self, Key) :
-        if type(Key) != str or len(Key)==0 :
+    def is_Key(self, Key):
+        if type(Key) is not str or len(Key)==0 :
             return False
-        if Key in self.get_Keys() :
+        if Key in self.get_Keys():
             return True
         else :
             return False
@@ -3347,7 +3347,7 @@ class SimResult(object):
                     self.attributes[ each.strip() ] = []
 
             for each in list(self.attributes.keys() ) :
-                if self.attributes[ each ] != None :
+                if self.attributes[ each ] is not None :
                     self.attributes[ each ] = list(set(self.attributes[ each ] ))
                 else :
                     self.attributes[ each ] = []
@@ -4154,7 +4154,7 @@ class SimResult(object):
             a list or tuple containing the keys names as strings.
         """
         returnVectors = {}
-        if self.results != None :
+        if self.results is not None :
             if type(key) is str :
                 returnVectors[key] = self.checkIfLoaded(key, reload)
             if type(key) is list or type(key) is tuple :
@@ -4333,7 +4333,7 @@ class SimResult(object):
             a list or tuple containing the keys names as strings.
         """
         returnVectors = {}
-        if self.results != None :
+        if self.results is not None :
             if type(key) is str :
                 returnVectors[key] = self.checkIfLoaded(key, reload)
             if type(key) is list or type(key) is tuple :

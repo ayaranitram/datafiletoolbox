@@ -6,7 +6,7 @@ Created on Wed May 13 15:45:12 2020
 """
 
 __version__ = '0.25.6'
-__release__ = 220110
+__release__ = 220113
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
@@ -172,7 +172,7 @@ class ECL(_SimResult):
         regionsList.sort()
         self.regions = tuple( regionsList )
         # preparing list to return
-        if pattern != None :
+        if pattern is not None :
             regionsList = []
             for region in self.regions :
                 if pattern in region :

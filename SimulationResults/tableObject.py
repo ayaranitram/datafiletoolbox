@@ -6,7 +6,7 @@ Created on Thu Jan 21 11:00:20 2021
 """
 
 __version__ = '0.20.2'
-__release__ = 210907
+__release__ = 220113
 __all__ = ['TABLE']
 
 from .mainObject import SimResult as _SimResult
@@ -303,7 +303,7 @@ class TABLE(_SimResult):
     #     groupsList = list( set( groupsList ) )
     #     groupsList.sort()
     #     self.groups = tuple( groupsList )
-    #     if pattern != None :
+    #     if pattern is not None :
     #         results = []
     #         for group in self.groups :
     #             if pattern in group :
@@ -318,7 +318,7 @@ class TABLE(_SimResult):
     #     regionsList = list( set( regionsList ) )
     #     regionsList.sort()
     #     self.groups = tuple( regionsList )
-    #     if pattern != None :
+    #     if pattern is not None :
     #         results = []
     #         for group in self.groups :
     #             if pattern in group :

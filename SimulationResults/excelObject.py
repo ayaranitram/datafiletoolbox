@@ -6,7 +6,7 @@ Created on Thu Jan 21 11:00:20 2021
 """
 
 __version__ = '0.21.5'
-__release__ = 211102
+__release__ = 211103
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -519,7 +519,7 @@ class XLSX(_SimResult):
     #     groupsList = list( set( groupsList ) )
     #     groupsList.sort()
     #     self.groups = tuple( groupsList )
-    #     if pattern != None :
+    #     if pattern is not None :
     #         results = []
     #         for group in self.groups :
     #             if pattern in group :
@@ -534,7 +534,7 @@ class XLSX(_SimResult):
     #     regionsList = list( set( regionsList ) )
     #     regionsList.sort()
     #     self.groups = tuple( regionsList )
-    #     if pattern != None :
+    #     if pattern is not None :
     #         results = []
     #         for group in self.groups :
     #             if pattern in group :
