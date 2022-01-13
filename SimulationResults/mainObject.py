@@ -1265,7 +1265,7 @@ class SimResult(object):
             self.DTindex = Key
             return self
         else:
-            raise InvalidKeyError(Key,'is not a valid Key in this dataset')
+            raise InvalidKeyError("'" + Key + "' is not a valid Key in this dataset")
 
     def get_index(self):
         return self.get_Index()
