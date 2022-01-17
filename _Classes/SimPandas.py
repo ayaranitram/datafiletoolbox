@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.70.17'
-__release__ = 220113
+__version__ = '0.70.18'
+__release__ = 220117
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from sys import getsizeof
@@ -6143,7 +6143,7 @@ Copy of input object, shifted.
                 kwargs['ylabel'] = ('\n').join([ str(yi) + (' [' + str(self.get_units(yi)[yi]) +']' ) if self.get_units(yi)[yi] is not None else '' for yi in y ])
             if x is not None:
                 if x in self.columns:
-                    fig = self.set_index(x,drop=True).DF.plot(**kwargs)
+                    fig = self.DF.plot(x=x,y=y,**kwargs)
                     plt.tight_layout()
                     return fig
                 else:
