@@ -780,7 +780,7 @@ class SimSeries(Series) :
                     commonNames[name] = name
         return SDF1C, SDF2C, commonNames
 
-    def rename(self,index=None, **kwargs) :
+    def rename(self, index=None, *, axis=None, copy=True, inplace=False, level=None, errors='ignore'):
         """
         wrapper of rename function from Pandas.
 
@@ -811,19 +811,19 @@ class SimSeries(Series) :
         """
         if type(index) is dict :
             if len(index) == 1 and list(index.keys()) not in self.index :
-                return self.rename(list(index.values())[0],**kwargs)
+                return self.rename(list(index.values())[0], axis=axis, copy=copy, inplace=inplace, level=level, errors=errors)
             cBefore = list(self.index)
-            if 'inplace' in kwargs and kwargs['inplace'] :
-                super().rename(**kwargs)
+            if inplace:
+                super().rename(index=index, axis=axis, copy=copy, inplace=inplace, level=level, errors=errors)
                 cAfter = list(self.index)
             else :
-                catch = super().rename(**kwargs)
+                catch = super().rename(index=index, axis=axis, copy=copy, inplace=inplace, level=level, errors=errors)
                 cAfter = list(catch.index)
 
             newUnits = {}
             for i in range(len(cBefore)) :
                 newUnits[cAfter[i]] = self.units[cBefore[i]]
-            if 'inplace' in kwargs and kwargs['inplace'] :
+            if inplace:
                 self.units = newUnits
                 self.spdLocator = _SimLocIndexer("loc", self)
                 return None
@@ -832,7 +832,7 @@ class SimSeries(Series) :
                 catch.spdLocator = _SimLocIndexer("loc", catch)
                 return catch
         elif type(index) is str :
-            if 'inplace' in kwargs and kwargs['inplace'] :
+            if inplace:
                 self.name = index.strip()
                 self.spdLocator = _SimLocIndexer("loc", self)
                 return None
@@ -3573,7 +3573,7 @@ Copy of input object, shifted.
         axis = _cleanAxis(axis)
         return SimDataFrame(data=self.DF.reindex(labels=labels, axis=axis, **kwargs), **self._SimParameters )
 
-    def rename(self, **kwargs) :
+    def rename(self, mapper=None, index=None, columns=None, axis=None, copy=True, inplace=False, level=None, errors='ignore') :
         """
         wrapper of rename function from Pandas.
 
@@ -3615,17 +3615,17 @@ Copy of input object, shifted.
                 If ‘ignore’, existing keys will be renamed and extra keys will be ignored.
         """
         cBefore = list(self.columns)
-        if 'inplace' in kwargs and kwargs['inplace'] :
-            super().rename(**kwargs)
+        if inplace:
+            super().rename(mapper=mapper, index=index, columns=columns, axis=axis, copy=copy, inplace=inplace, level=level, errors=errors)
             cAfter = list(self.columns)
         else :
-            catch = super().rename(**kwargs)
+            catch = super().rename(mapper=mapper, index=index, columns=columns, axis=axis, copy=copy, inplace=inplace, level=level, errors=errors)
             cAfter = list(catch.columns)
         newUnits = {}
         for i in range(len(cBefore)) :
             if cBefore[i] in self.units:
                 newUnits[cAfter[i]] = self.units[cBefore[i]]
-        if 'inplace' in kwargs and kwargs['inplace'] :
+        if inplace:
             self.units = newUnits
             self.spdLocator = _SimLocIndexer("loc", self)
             return None
