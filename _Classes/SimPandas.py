@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.70.17'
-__release__ = 220113
+__version__ = '0.70.18'
+__release__ = 220117
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from sys import getsizeof
@@ -308,15 +308,15 @@ class SimSeries(Series) :
             self.indexUnits = data.indexUnits.copy() if type(data.indexUnits) is dict else data.indexUnits
 
         # catch units or get from data if it is SimDataFrame or SimSeries
-        if type(units) is dict :
+        if type(units) is dict and len(units) > 0:
             Udict, units = units, None
             if len(Udict) == 1 :
                 if type(Udict[ list(Udict.keys())[0] ] ) is str :
                     Uname = list(Udict.keys())[0]
                     units = Udict[ Uname ]
-        elif type(units) is str :
+        elif type(units) is str:
             self.units = units
-        elif units is None and type(data) is SimSeries :
+        elif ( units is None or ( type(units) is dict and len(units) > 0 )) and ( type(data) is SimSeries and SimSeries.units is not None ):
             if type(data.units) is str:
                 units = data.units
                 if indexUnits is None:
@@ -326,6 +326,9 @@ class SimSeries(Series) :
                 units = data.units.copy()
                 if data.index.name not in units:
                         units[data.index.name] = data.indexUnits
+        else:
+            self.units = 'UNITLESS'
+
 
         # remove arguments not known by Pandas
         kwargsB = kwargs.copy()
@@ -4643,6 +4646,8 @@ Copy of input object, shifted.
                     uDic = { str(key) : value.units }
                 elif type(value.units) is dict :
                     uDic = value.units
+                else:
+                    uDic = { str(key) : 'UNITLESS' }
                 if self.indexUnits is None and value.indexUnits is not None:
                     self.indexUnits = value.indexUnits
             elif isinstance(value, SimDataFrame) :
@@ -6138,7 +6143,7 @@ Copy of input object, shifted.
                 kwargs['ylabel'] = ('\n').join([ str(yi) + (' [' + str(self.get_units(yi)[yi]) +']' ) if self.get_units(yi)[yi] is not None else '' for yi in y ])
             if x is not None:
                 if x in self.columns:
-                    fig = self.set_index(x,drop=True).DF.plot(**kwargs)
+                    fig = self.DF.plot(x=x,y=y,**kwargs)
                     plt.tight_layout()
                     return fig
                 else:
