@@ -574,11 +574,12 @@ class SimResult(object):
                     calcStr = Key + '=' + Value[Value.index('=')+1:]
                 else :
                     calcStr = Key + '=' + Value
-                try :
-                    return self.RPNcalculator(calcStr)
-                except :
-                    _verbose(self.speak, 2, "failed to treat '" + Value + "' as a calculation string." )
-                    return None
+                return self.RPNcalculator(calcStr)
+                # try :
+                #     return self.RPNcalculator(calcStr)
+                # except :
+                #     _verbose(self.speak, 2, "failed to treat '" + Value + "' as a calculation string." )
+                #     return None
 
         elif type(Value) in (list,tuple) :
             if self.is_Attribute(Key) and not self.is_Key(Key) :
