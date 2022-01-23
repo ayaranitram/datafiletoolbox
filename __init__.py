@@ -13,7 +13,7 @@ __version__ = '0.44.8'
 __release__ = 220123
 __author__ = 'Martin Carlos Araya <martinaraya@gmail.com>'
 __all__ = ['stringformat', 'extension', 'Alternate', 'convert', 'SimPandas',
-           'SimSeries', 'SimDataFrame', 'loadSimulationResults','melt','unify']
+           'SimSeries', 'SimDataFrame', 'loadSimulationResults','melt','unify','slope']
 
 _msg = """     implementing libecl 2.9.1 from pypi, released on Aug 2020"""
 
@@ -30,6 +30,7 @@ from ._common.stringformat import date as strDate, isDate, multisplit, isnumeric
 from ._common import stringformat
 from ._common.units import convertUnit as convert
 from ._common.unify import unify
+from ._common.slope import slope
 
 from .SimulationResults.loader import loadSimulationResults
 
