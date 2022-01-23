@@ -2249,7 +2249,7 @@ class SimSeries(Series) :
         """
         if window is None and x is not None and y is None:
             window, x = x, None
-        return slope(self,x , y, window, intercep)
+        return slope(self,x , y, window, intercept)
 
 class SimDataFrame(DataFrame) :
     """
@@ -6183,7 +6183,7 @@ Copy of input object, shifted.
             The array containing the desired output.
 
         """
-        return slope(self, x, y, window, intercep)
+        return slope(self, x, y, window, intercept)
 
     def plot(self, y=None, x=None, others=None,**kwargs):
         """
