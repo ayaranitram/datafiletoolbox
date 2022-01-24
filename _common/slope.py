@@ -11,7 +11,7 @@ __all__ = ['slope']
 
 import numpy as np
 import pandas as pd
-
+import warnings
 
 def slope(df,x=None, y=None, window=None, slope=True, intercept=False):
     """
@@ -48,6 +48,8 @@ def slope(df,x=None, y=None, window=None, slope=True, intercept=False):
         The array containing the desired output.
 
     """
+    warnings.simplefilter('ignore', np.RankWarning)
+
     if x is not None and y is None:
         x, y = None, x
     elif x is not None and window is None and y is not None and y not in df.columns:
@@ -131,6 +133,8 @@ def slope(df,x=None, y=None, window=None, slope=True, intercept=False):
 
     s = np.array(s)
     s, i = s[:,0], s[:,1]
+
+    warnings.simplefilter('default', np.RankWarning)
 
     if intercept and slope:
         return s, i
