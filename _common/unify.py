@@ -46,6 +46,11 @@ def unify(filepath,overwrite=None):
     pathS = filepath if _extension(filepath)[0] == '' else _extension(filepath)[2] + _extension(filepath)[1]
     listS = glob.glob(pathS+'.S*')
     listS = [ S for S in listS if _extension(S)[0][2:].isdigit() ]
+
+    if len(listS) == 0:
+        print('No multi-output files found.')
+        return None
+
     listS.sort()
 
     unsmry_path = _extension(filepath)[2] + _extension(filepath)[1] + '.UNSMRY'
