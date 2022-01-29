@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.21.5'
-__release__ = 211103
+__version__ = '0.21.6'
+__release__ = 220128
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -223,6 +223,8 @@ class XLSX(_SimResult):
                 del pdkwargs[k]
         try :
             NewFrames = pd.read_excel(inputFile, sheet_name=sheet_name, header=header, **pdkwargs)
+        except OSError:
+            raise OSError("[Errno 24] Too many open files: " + str(inputFile) + '\nPlease close some other files.')
         except ImportError:
             raise ImportError("Missing optional dependencies 'xlrd' and 'openpyxl'.\nInstall xlrd and openpyxl for Excel support.\nUse pip or conda to install xlrd and install openpyxl.")
         except :
