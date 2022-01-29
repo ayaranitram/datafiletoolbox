@@ -6,7 +6,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = '0.60.8'
-__release__ = 220113
+__release__ = 220127
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -1928,7 +1928,7 @@ class SimResult(object):
 
         return fig
 
-    def _common_dataprep_for_seaborn(self,Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True,
+    def _common_dataprep_for_seaborn(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True,
                                      hue='--auto', label='--auto', sort='item', ascending=True, resample='daily'):
         """
         support function for box and violin plots data preprocessing
@@ -2067,14 +2067,20 @@ class SimResult(object):
         """
         alias of boxplot method
         """
-        return self.boxplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid, sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout, resample=resample, row=row, col=col, returnFig=returnFig, returnDF=returnDF, logY=logY,logX=logX,**kwargs)
+        return self.boxplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros,
+                            hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid,
+                            sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout, resample=resample,
+                            row=row, col=col,
+                            returnFig=returnFig, returnDF=returnDF, logY=logY, logX=logX,
+                            style="ticks", palette="pastel", **kwargs)
 
     def boxplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True,
                 hue='--auto', label='--auto',
                 figsize=(8, 6), dpi=100, grid=False,
                 sort='item', ascending=True, rotation=True, tight_layout=True, resample='daily',
                 row=None, col=None,
-                returnFig=True, returnDF=False, logY=False,logX=False,**kwargs) :
+                returnFig=True, returnDF=False, logY=False, logX=False,
+                style="ticks", palette="pastel", **kwargs):
         """
         creates a boxplot for the desired keys
 
@@ -2091,7 +2097,7 @@ class SimResult(object):
         """
         import seaborn as sns
         import matplotlib.pyplot as plt
-        sns.set_theme(style="ticks", palette="pastel")
+        sns.set_theme(style=style, palette=palette)
 
         df, hue, label, itemLabel, values = self._common_dataprep_for_seaborn(Keys=Keys,
                                                                               objects=objects,
@@ -2147,13 +2153,26 @@ class SimResult(object):
                sort='item', ascending=True, rotation=True, tight_layout=True, scale='width',
                split=True, resample='daily',
                row=None, col=None, inner=None, logY=False, logX=False,
-               returnFig=True, returnDF=False, **kwargs) :
+               returnFig=True, returnDF=False,
+               style="ticks",palette="pastel", **kwargs):
         """
         wrapper for violinplot method
         """
-        return self.violinplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid, sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout, scale=scale, split=split, resample=resample, row=row, col=col, inner=inner, logY=logY, logX=logX, returnFig=returnFig, returnDF=returnDF, **kwargs)
+        return self.violinplot(Keys=Keys, objects=objects, otherSims=otherSims, cleanAllZeros=cleanAllZeros, ignoreZeros=ignoreZeros,
+                               hue=hue, label=label,
+                               figsize=figsize, dpi=dpi, grid=grid,
+                               sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout, scale=scale,
+                               split=split, resample=resample,
+                               row=row, col=col, inner=inner, logY=logY, logX=logX,
+                               returnFig=returnFig, returnDF=returnDF,
+                               style=style, palette=palette, **kwargs)
 
-    def violinplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True, hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True, tight_layout=True, scale='width', split=True, resample='daily', row=None, col=None, inner=None, logY=False, logX=False, returnFig=True, returnDF=False, **kwargs) :
+    def violinplot(self, Keys=[], objects=None, otherSims=None, cleanAllZeros=True, ignoreZeros=True,
+                   hue='--auto', label='--auto', figsize=(8, 6), dpi=100, grid=False,
+                   sort='item', ascending=True, rotation=True, tight_layout=True, scale='width', split=True, resample='daily',
+                   row=None, col=None, inner=None, logY=False, logX=False,
+                   returnFig=True, returnDF=False,
+                   style="ticks", palette="pastel", **kwargs):
         """
         creates a violin plot for the desired keys
 
@@ -2168,7 +2187,7 @@ class SimResult(object):
         """
         import seaborn as sns
         import matplotlib.pyplot as plt
-        sns.set_theme(style="ticks", palette="pastel")
+        sns.set_theme(style=style, palette=palette)
 
         df, hue, label, itemLabel, values = self._common_dataprep_for_seaborn(Keys=Keys,
                                                                               objects=objects,
