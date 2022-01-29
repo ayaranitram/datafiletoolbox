@@ -5,8 +5,8 @@ Created on Wed Jan 19 18:55:24 2022
 @author: MCARAYA
 """
 
-__version__ = '0.1.0'
-__release__ = 220119
+__version__ = '0.1.1'
+__release__ = 220127
 __author__ = 'Martin Carlos Araya <martinaraya@gmail.com>'
 __all__ = ['unify']
 

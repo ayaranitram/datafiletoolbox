@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.2'
-__release__ = 220113
+__version__ = '0.1.3'
+__release__ = 220127
 __all__ = ['H5']
 
 from .mainObject import SimResult as _SimResult
@@ -70,7 +70,8 @@ class H5(_SimResult):
                 self.get_Regions(reload=True)
                 self.get_Keys(reload=True)
                 self.units = self.get_Unit(self.keys)
-                _verbose( self.speak, 1, 'simulation runs from ' +  str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
+                if self.get_Dates() is not None:
+                    _verbose( self.speak, 1, 'simulation runs from ' +  str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
                 self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), DataType='datetime', overwrite=True)
                 self.stripUnits()
                 self.get_Attributes(reload=True)
