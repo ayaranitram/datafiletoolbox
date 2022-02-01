@@ -951,7 +951,7 @@ def convertUnit(value, fromUnit, toUnit, PrintConversionPath=True ) :
             PrintConversionPath = True
 
     conv = converter( value, fromUnit, toUnit, PrintConversionPath )#[0]
-    if type(conv) != None :
+    if type(conv) is not None :
         return conv
     else:
         if PrintConversionPath :
@@ -968,7 +968,12 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=
     returns the received value (string, float or numpy array) and transform it
     from the units 'fromUnit' to the units 'tuUnits
     """
+    if value is None:
+        return None
 
+    if type(fromUnit) is str and type(toUnit) is str and fromUnit.lower().strip() == toUnit.lower().strip():
+        return value
+    
     if Start==True :
         unit.previous=[]
 
