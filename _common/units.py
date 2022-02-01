@@ -6,8 +6,8 @@ Created on Sat Dec  7 21:48:37 2019
 @author: martin
 """
 
-__version__ = '0.5.4'
-__release__ = 210906
+__version__ = '0.5.5'
+__release__ = 220201
 
 import numpy
 # import pandas
