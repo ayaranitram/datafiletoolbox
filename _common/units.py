@@ -1029,7 +1029,12 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=
                 else :
                     partA = converter(  1, fromUnit.split('/')[0], toUnit.split('/')[0], PrintConversionPath, AllowRecursion, Start=False ) # numerator
                     unit.Memory[ ( fromUnit.split('/')[0], toUnit.split('/')[0] ) ] = partA
-                    PartA = value * unit.Memory[ ( fromUnit.split('/')[0], toUnit.split('/')[0] ) ]
+                    
+                    if partA is None:
+                        partA = value
+                        print('no conversion found from',fromUnit,'to',toUnit)
+                    else:
+                        partA = value * unit.Memory[ ( fromUnit.split('/')[0], toUnit.split('/')[0] ) ]
                 if ( fromUnit.split('/')[1], toUnit.split('/')[1] ) in unit.Memory :
                     partB = unit.Memory[ ( fromUnit.split('/')[1], toUnit.split('/')[1] ) ]
                 else :
