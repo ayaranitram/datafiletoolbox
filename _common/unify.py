@@ -17,7 +17,7 @@ from .._common.inout import _extension
 from .._Classes.Errors import OverwrittingError
 
 
-def unify(filepath,overwrite=None):
+def unify(filepath,overwrite=None,min_input=None):
     """
     Converts multioutput summary files from eclipse .S0001 to unifies output file .UNSMRY
 
@@ -31,6 +31,8 @@ def unify(filepath,overwrite=None):
             If False will raise OverwrittingError.
             If True will overwrite the existing file.
             The default is None.
+    min_input : int or None, optional
+        If int provided, will raise ValueError if there are not enogth input files.
 
     Raises
     ------
@@ -50,6 +52,10 @@ def unify(filepath,overwrite=None):
     if len(listS) == 0:
         print('No multi-output files found.')
         return None
+
+    min_input = -1 if min_input is None else int(min_input)
+    if len(listS) < min_input:
+        raise ValueError('not enougth input files')
 
     listS.sort()
 
