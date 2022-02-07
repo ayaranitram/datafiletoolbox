@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.8'
-__release__ = 220127
+__version__ = '0.60.9'
+__release__ = 220201
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -419,6 +419,10 @@ class SimResult(object):
     @property
     def index(self) :
         return self[[ self.keys[0] ]].index
+
+    @property
+    def columns(self):
+        return list(self.keys)
 
     def __call__(self, Key=None, Index=None) :
         if Key is None and Index is None:
