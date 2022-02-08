@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.3'
-__release__ = 220127
+__version__ = '0.1.4'
+__release__ = 220207
 __all__ = ['H5']
 
 from .mainObject import SimResult as _SimResult
@@ -86,6 +86,8 @@ class H5(_SimResult):
         """
         read the SMSPEC file and extract the well and group names
         """
+        import string
+
         if type(smspecPath) is str :
             smspecPath = smspecPath.strip()
             if _extension(smspecPath)[0].upper() != '.SMSPEC':
@@ -104,7 +106,7 @@ class H5(_SimResult):
             smspec = file.read()
 
         keywords_index =  smspec.index('\x00\x00\x10KEYWORDS')
-        keywords_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x03H') + 4
+        keywords_index = keywords_index + smspec[keywords_index:].index('@CHAR') + 5 + 8
         last_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x10')
         keywords = smspec[keywords_index:last_index]
         keywords = [ keywords[i:i+8].strip() for i in range(0,len(keywords),8) ]
@@ -120,15 +122,45 @@ class H5(_SimResult):
             names_index = smspec.index('\x00\x00\x10GNAMES  ')
         else:
             names_index = smspec.index('NAMES')
-        names_index = names_index + smspec[names_index:].index('\x00\x00\x03H') + 4
+
+        if '@C0' in smspec[names_index:]:
+            name_len = smspec[names_index + smspec[names_index:].index('@C0') + 2:names_index + smspec[names_index:].index('@C0') + 5]
+
+            if name_len.isdigit():
+                name_len = int(name_len)
+                names_index = names_index + smspec[names_index:].index('@C0') + 5 + 8  # 8 bits
+            else:
+                name_len = 8
+                names_index = names_index + smspec[names_index:].index('@CHAR') + 5 + 8  #.index('\x00\x00\x03H')
+        else:
+            name_len = 8
+            names_index = names_index + smspec[names_index:].index('@CHAR') + 5 + 8
+
+        # names_index = names_index + smspec[names_index:].index('\x00\x00\x03H') + 4
         last_index = names_index + smspec[names_index:].index('\x00\x00\x10')
         names = smspec[names_index:last_index]
-        names = [ names[i:i+8].strip() for i in range(0,len(names),8) ]
+
+        if name_len == 8:
+            names = [ names[i:i+name_len].strip() for i in range(0,len(names),name_len) ]
+        else:
+            namesList = []
+            i = 0
+            while i < len(names):
+                if names[i] in string.printable:
+                    namesList.append(names[i:i+name_len].strip())
+                    i += name_len
+                else:
+                    f = i
+                    while f < len(names) and names[f] not in string.ascii_letters + string.digits + '-.+,:;':
+                        f += 1
+                    namesList.append(names[i:f])
+                    i = f
+            names = namesList
 
         # nums_index = smspec.index('\x00\x00\x10NUMS    ')
 
         units_index = smspec.index('\x00\x00\x10UNITS   ')
-        units_index = units_index + smspec[units_index:].index('\x00\x00\x03H') + 4
+        units_index = units_index + smspec[units_index:].index('@CHAR') + 5 + 8
         last_index = units_index + smspec[units_index:].index('\x00\x00\x10')
         units = smspec[units_index:last_index]
         units = [ units[i:i+8].strip() for i in range(0,len(units),8) ]
