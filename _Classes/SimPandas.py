@@ -1163,6 +1163,8 @@ class SimSeries(Series) :
                     params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
                 except ValueError:
                     params['dtype'] = result.dtype
+                except TypeError:
+                    params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
             else :
