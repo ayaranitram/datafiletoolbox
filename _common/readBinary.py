@@ -6,6 +6,8 @@ Created on Tue Jan 11 09:46:24 2022
 """
 
 import string
+import os.path
+from .._common.inout import _extension
 
 def readSMSPEC(smspecPath):
     """
@@ -46,17 +48,63 @@ def readSMSPEC(smspecPath):
         data[temp2[h]] = [temp2[h+1:f],temp2[f+1:d+1]]
         i = f + 1
 
-    for k in ['KEYWORDS','']
+    for k in ['KEYWORDS','']:
         if k in data:
             data[k] = data[k][1][2]
 
     keywords_index =  smspec.index('\x00\x00\x10KEYWORDS')
     keywords_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x03H') + 4
-    names_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x10NAMES   ')
-    keywords = smspec[keywords_index:names_index]
+    last_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x10NAMES   ')
+    keywords = smspec[keywords_index:last_index]
     keywords = [ keywords[i:i+8].strip() for i in range(0,len(keywords),8) ]
 
     names_index = names_index + smspec[names_index:].index('\x00\x00\x03H') + 4
+
+    # names_index = last_index + smspec[last_index:].index('\x00\x00\x10NAMES   ')
+    if '\x00\x00\x10NAMES   ' in smspec:
+        names_index = smspec.index('\x00\x00\x10NAMES   ')
+    elif '\x00\x00\x10WGNAMES ' in smspec:
+        names_index = smspec.index('\x00\x00\x10WGNAMES ')
+    elif '\x00\x00\x10WNAMES  ' in smspec:
+        names_index = smspec.index('\x00\x00\x10WNAMES  ')
+    elif '\x00\x00\x10GNAMES  ' in smspec:
+        names_index = smspec.index('\x00\x00\x10GNAMES  ')
+    else:
+        names_index = smspec.index('NAMES')
+
+    if '@C0' in smspec[names_index:]:
+        name_len = smspec[names_index + smspec[names_index:].index('@C0') + 2:names_index + smspec[names_index:].index('@C0') + 5]
+
+        if name_len.isdigit():
+            name_len = int(name_len)
+            names_index = names_index + smspec[names_index:].index('@C0') + 5 + 8  # 8 bits
+        else:
+            name_len = 8
+            names_index = names_index + smspec[names_index:].index('@CHAR') + 5 + 8  #.index('\x00\x00\x03H')
+    else:
+        name_len = 8
+        names_index = names_index + smspec[names_index:].index('@CHAR') + 5 + 8
+
+    # names_index = names_index + smspec[names_index:].index('\x00\x00\x03H') + 4
+    last_index = names_index + smspec[names_index:].index('\x00\x00\x10')
+    names = smspec[names_index:last_index]
+
+    if name_len == 8:
+        names = [ names[i:i+name_len].strip() for i in range(0,len(names),name_len) ]
+    else:
+        namesList = []
+        i = 0
+        while i < len(names):
+            if names[i] in string.printable:
+                namesList.append(names[i:i+name_len].strip())
+                i += name_len
+            else:
+                f = i
+                while f < len(names) and names[f] not in string.ascii_letters + string.digits + '-.+,:;':
+                    f += 1
+                namesList.append(names[i:f])
+                i = f
+        names = namesList
 
     nums_index = names_index + smspec[names_index:].index('NUMS    ')
 
