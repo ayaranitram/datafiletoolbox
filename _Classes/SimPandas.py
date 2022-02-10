@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.72.18'
+__version__ = '0.72.19'
 __release__ = 220210
 __all__ = ['SimSeries', 'SimDataFrame']
 
@@ -1112,6 +1112,8 @@ class SimSeries(Series) :
                     params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
                 except ValueError:
                     params['dtype'] = result.dtype
+                except TypeError:
+                    params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
             else :
@@ -1224,6 +1226,8 @@ class SimSeries(Series) :
                     params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
                 except ValueError:
                     params['dtype'] = result.dtype
+                except TypeError:
+                    params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
             else :
@@ -1268,6 +1272,8 @@ class SimSeries(Series) :
                 try:
                     params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
                 except ValueError:
+                    params['dtype'] = result.dtype
+                except TypeError:
                     params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
@@ -1350,6 +1356,8 @@ class SimSeries(Series) :
                     params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
                 except ValueError:
                     params['dtype'] = result.dtype
+                except TypeError:
+                    params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
             else :
@@ -1387,6 +1395,8 @@ class SimSeries(Series) :
                 try:
                     params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
                 except ValueError:
+                    params['dtype'] = result.dtype
+                except TypeError:
                     params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params )
