@@ -571,11 +571,13 @@ class SimSeries(Series) :
 
     @property
     def right(self) :
-        if self.nameSeparator in [None, '', False] :
+        if self.nameSeparator is None or self.nameSeparator is False or self.nameSeparator in ['']:
             return tuple(self.columns)
         objs = []
         for each in list(self.columns) :
-            if self.nameSeparator in each :
+            if each is None:
+                objs += [each]
+            elif self.nameSeparator in each :
                 objs += [each.split(self.nameSeparator)[-1]]
             else :
                 objs += [each]
@@ -583,11 +585,13 @@ class SimSeries(Series) :
 
     @property
     def left(self) :
-        if self.nameSeparator in [None, '', False] :
+        if self.nameSeparator is None or self.nameSeparator is False or self.nameSeparator in ['']:
             return tuple(self.columns)
         objs = []
         for each in list(self.columns) :
-            if self.nameSeparator in each :
+            if each is None:
+                objs += [each]
+            elif self.nameSeparator in each :
                 objs += [each.split(self.nameSeparator)[0]]
             else :
                 objs += [each]
@@ -682,36 +686,40 @@ class SimSeries(Series) :
         """
         return self.to_SimDataFrame().to_excel(excel_writer, split_by=split_by, sheet_name=sheet_name, na_rep=na_rep, float_format=float_format, columns=columns, header=header, units=units, index=index, index_label=index_label, startrow=startrow, startcol=startcol, engine=engine, merge_cells=merge_cells, encoding=encoding, inf_rep=inf_rep, verbose=verbose, freeze_panes=freeze_panes, sort=sort)
 
-    def renameRight(self, inplace=False) :
-        if self.nameSeparator in [None, '', False] :
+    def renameRight(self, inplace=False):
+        if self.nameSeparator in [None, '', False]:
             return self  # raise ValueError("name separator must not be None")
         objs = {}
-        for each in list(self.columns ) :
-            if self.nameSeparator in each :
+        for each in list(self.columns):
+            if each is None:
+                objs[each] = each
+            elif self.nameSeparator in each:
                 objs[each] = each.split(self.nameSeparator )[-1]
                 # self.units[ each.split(self.nameSeparator )[-1] ] = self.units[ each ]
                 # del(self.units[each])
             else :
                 objs[each] = each
-        if len(self.columns) == 1 :
+        if len(self.columns) == 1:
             objs = list(objs.values())[0]
         if inplace :
             self.rename(objs, inplace=True)
         else :
             return self.rename(objs, inplace=False)
 
-    def renameLeft(self, inplace=False) :
+    def renameLeft(self, inplace=False):
         if self.nameSeparator in [None, '', False] :
             return self  # raise ValueError("name separator must not be None")
         objs = {}
-        for each in list(self.columns ) :
-            if self.nameSeparator in each :
+        for each in list(self.columns):
+            if each is None:
+                objs[each] = each
+            elif self.nameSeparator in each:
                 objs[each] = each.split(self.nameSeparator)[0]
                 # self.units[ each.split(self.nameSeparator )[0] ] = self.units[ each ]
                 # del(self.units[each])
-            else :
+            else:
                 objs[each] = each
-        if len(self.columns) == 1 :
+        if len(self.columns) == 1:
             objs = list(objs.values())[0]
         if inplace :
             self.rename(objs, inplace=True)
@@ -747,12 +755,12 @@ class SimSeries(Series) :
             commonNames = {}
             for c in SDF1C.columns :
                 if c in SDF2C.columns :
-                    commonNames[c] = SDF1.left[0] + cha + SDF2.left[0] + SDF1.nameSeparator + c
+                    commonNames[c] = str(SDF1.left[0]) + str(cha) + str(SDF2.left[0]) + str(SDF1.nameSeparator) + str(c)
                 else :
-                    commonNames[c] = SDF1.left[0] + SDF1.nameSeparator + c
+                    commonNames[c] = str(SDF1.left[0]) + str(SDF1.nameSeparator) + str(c)
             for c in SDF2C.columns :
                 if c not in SDF1C.columns :
-                    commonNames[c] = SDF2.left[0] + SDF1.nameSeparator + c
+                    commonNames[c] = str(SDF2.left[0]) + str(SDF1.nameSeparator) + str(c)
             if LR is None and len(commonNames) > 1 :
                 alternative = self._CommonRename(SDF1, SDF2, LR='R')
                 if len(alternative[2]) < len(commonNames) :
@@ -766,12 +774,12 @@ class SimSeries(Series) :
             commonNames = {}
             for c in SDF1C.columns :
                 if c in SDF2C.columns :
-                    commonNames[c] = c + SDF1.nameSeparator + SDF1.right[0] + cha + SDF2.right[0]
+                    commonNames[c] = str(c) + str(SDF1.nameSeparator) + str(SDF1.right[0]) + str(cha) + str(SDF2.right[0])
                 else :
-                    commonNames[c] = c + SDF1.nameSeparator + SDF1.right[0]
+                    commonNames[c] = str(c) + str(SDF1.nameSeparator) + str(SDF1.right[0])
             for c in SDF2C.columns :
                 if c not in SDF1C.columns :
-                    commonNames[c] = c + SDF1.nameSeparator + SDF2.right[0]
+                    commonNames[c] = str(c) + str(SDF1.nameSeparator) + str(SDF2.right[0])
             if LR is None and len(commonNames) > 1 :
                 alternative = self._CommonRename(SDF1, SDF2, LR='L')
                 if len(alternative[2]) < len(commonNames) :
@@ -3743,7 +3751,7 @@ Copy of input object, shifted.
 
     @property
     def right(self) :
-        if self.nameSeparator in [None, '', False]:
+        if self.nameSeparator is None or self.nameSeparator is False or self.nameSeparator in ['']:
             return tuple(self.columns)
         objs = []
         for each in list(self.columns):
@@ -3755,7 +3763,7 @@ Copy of input object, shifted.
 
     @property
     def left(self) :
-        if self.nameSeparator in [None, '', False] :
+        if self.nameSeparator is None or self.nameSeparator is False or self.nameSeparator in ['']:
             return tuple(self.columns)
         objs = []
         for each in list(self.columns):
@@ -4900,7 +4908,7 @@ Copy of input object, shifted.
                     indexFilter = self.filter(filters, returnFilter=True)
                 except :
                     raise Warning('filter conditions are not valid:\n   '+ ' and '.join(filters))
-                if not indexFilter.any() :
+                if indexFilter is not None and not indexFilter.any() :
                     raise Warning('filter conditions removed every row :\n   '+ ' and '.join(filters))
 
         ### attempt to get the desired keys, first as column names, then as indexes
