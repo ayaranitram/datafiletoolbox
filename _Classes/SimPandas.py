@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.72.19'
-__release__ = 220210
+__version__ = '0.73.25'
+__release__ = 220211
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from sys import getsizeof
@@ -1481,6 +1481,33 @@ class SimSeries(Series) :
     def var0(self, axis=0, **kwargs) :
         return self.replace(0,np.nan).var(axis=axis, **kwargs)
 
+    def znorm(self):
+        """
+        return standard normalization
+
+        """
+        return znorm(self)
+
+    def znorm0(self):
+        """
+        return standard normalization ignoring zeroes
+
+        """
+        return znorm(self.replace(0,np.nan))
+
+    def minmaxnorm(self):
+        """
+        return min-max normalization
+        """
+        return minmaxnorm(self)
+
+    def minmaxnorm(self):
+        """
+        return min-max normalization
+        """
+        return minmaxnorm(self.replace(0,np.nan))
+        return minmaxnorm(self)
+
     def __repr__(self) -> str :
         """
         Return a string representation for a particular Series, with Units.
@@ -2271,6 +2298,7 @@ class SimSeries(Series) :
         if window is None and x is not None and y is None:
             window, x = x, None
         return _slope(df=self, x=x, y=y, window=window, slope=slope, intercept=intercept)
+
 
 class SimDataFrame(DataFrame) :
     """
@@ -4731,6 +4759,33 @@ Copy of input object, shifted.
             params['units'] = units
             return SimDataFrame(data=data, **params)
 
+    def znorm(self):
+        """
+        return standard normalization
+
+        """
+        return znorm(self)
+
+    def znorm0(self):
+        """
+        return standard normalization ignoring zeroes
+
+        """
+        return znorm(self.replace(0,np.nan))
+
+    def minmaxnorm(self):
+        """
+        return min-max normalization
+        """
+        return minmaxnorm(self)
+
+    def minmaxnorm(self):
+        """
+        return min-max normalization
+        """
+        return minmaxnorm(self.replace(0,np.nan))
+
+
     def copy(self, **kwargs) :
         return SimDataFrame(data=self.as_DataFrame().copy(True), **self._SimParameters)
 
@@ -7067,3 +7122,9 @@ def merge(left, right, how='inner', on=None, left_on=None, right_on=None, left_i
     mergeddata = pd.merge(ileft, iright, how=how, on=on, left_on=left_on, right_on=right_on, left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, copy=copy, indicator=indicator, validate=validate)
     params['units'] = merge_units(left, right, suffixes=suffixes)
     return SimDataFrame(data=mergeddata,**params)
+
+def znorm(df):
+    return (df - df.mean()) / df.std()
+
+def minmaxnorm(df):
+    return (df - df.min()) / (df.max() - df.min())
