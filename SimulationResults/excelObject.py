@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.21.6'
-__release__ = 220128
+__version__ = '0.21.7'
+__release__ = 220216
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -21,7 +21,7 @@ class XLSX(_SimResult):
     object to contain data read from .xlsx files
 
     """
-    def __init__(self, inputFile=None, verbosity=2, sheet_name=None, header=[0, 1], units=1, overwrite=True, combine_SheetName_ColumnName=True, sheetName_auto='R', nameSeparator=':', **kwargs) :
+    def __init__(self, inputFile=None, verbosity=2, sheet_name=None, header=[0, 1], units=1, overwrite=True, combine_SheetName_ColumnName=False, sheetName_auto='R', nameSeparator=':', **kwargs) :
         _SimResult.__init__(self, verbosity=verbosity)
         self.kind = XLSX
         self.results = {}
@@ -189,7 +189,7 @@ class XLSX(_SimResult):
         self.name = 'from SimDataFrame'
         self.keys = frame.columns
 
-    def readSimExcel(self, inputFile, sheet_name=None, header=[0, 1], units=1, combine_SheetName_ColumnName=True, **kwargs) :
+    def readSimExcel(self, inputFile, sheet_name=None, header=[0, 1], units=1, combine_SheetName_ColumnName=False, **kwargs) :
         """
         internal function to read an excel file with SimDataFrame format (header in first row, units in second row)
         """
@@ -243,7 +243,7 @@ class XLSX(_SimResult):
 
         if bool(combine_SheetName_ColumnName):
             if type(combine_SheetName_ColumnName) in (int,float):
-                combine_SheetName_ColumnName = bool(combine_SheetName_ColumnName)
+                combine_SheetName_ColumnName = [combine_SheetName_ColumnName]
             elif type(combine_SheetName_ColumnName) is str and combine_SheetName_ColumnName.upper().strip() in ['RIGHT','LEFT','R','L']:
                 if combine_SheetName_ColumnName in NewFrames:
                     _verbose(self.speak, 3, "WARNING: The paramater combine_SheetName_ColumnName is set to " + combine_SheetName_ColumnName +
@@ -252,11 +252,15 @@ class XLSX(_SimResult):
                 combine_SheetName_ColumnName = combine_SheetName_ColumnName.upper()[0]
             elif type(combine_SheetName_ColumnName) is str:
                 combine_SheetName_ColumnName = [combine_SheetName_ColumnName]
+            elif combine_SheetName_ColumnName is True:
+                if len(NewFrames.keys()) == 1:
+                    _verbose(self.speak, 2, " > You have requested to combine the name of the sheets with the names of the columns, but this excel file has only ONE sheet.\n If prefer not to combine the sheet name '" + str(list(NewFrames.keys())[0]) + "' with the name of every column set the parameter combine_SheetName_ColumnName=False")
+                combine_SheetName_ColumnName = list(NewFrames.keys())
             else:
                 try:
                     combine_SheetName_ColumnName = list(combine_SheetName_ColumnName)
                 except:
-                    TypeError("not able to understand combine_SheetName_ColumnName parameter.")
+                    raise TypeError("not able to understand combine_SheetName_ColumnName parameter.")
         else:
             combine_SheetName_ColumnName = False
 
@@ -289,7 +293,7 @@ class XLSX(_SimResult):
                         #     if min( self.Frames[ self.FramesIndex[NewKey][0] ][ self.FramesIndex[NewKey][1] ) <= min( NewFrames[each][col] ) and max( self.Frames[ self.FramesIndex[NewKey][0] ][ self.FramesIndex[NewKey][1] ) >= max( NewFrames[each][col] ):
                         #         _verbose(self.speak, 1, " > skipping key: '" + NewKey + "' contained in data from previous key." )
                         else:
-                            if combine_SheetName_ColumnName is True:
+                            if bool(combine_SheetName_ColumnName) is True:
                                 cleaningList.append(NewKey)  # to later remove the key
 
                                 # rename the other Key
@@ -336,7 +340,7 @@ class XLSX(_SimResult):
                         self.set_Unit( NewKey, NewUnits )
                         _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage)
                         # _foundNewKey()
-                        if combine_SheetName_ColumnName is True:
+                        if bool(combine_SheetName_ColumnName) is True:
                             cleaningList.append(NewKey)  # to later remove the key
 
                             # rename the other Key
