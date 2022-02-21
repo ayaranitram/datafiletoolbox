@@ -411,13 +411,14 @@ class XLSX(_SimResult):
         #         if K in self.FramesIndex:
         #             del self.FramesIndex[K]
 
+            columnsList = [ str(col[0] if type(col) is tuple else col) for frame in self.Frames for col in self.Frames[frame].columns  ]
             commonIndex = None
             for timeK in ['DATE','DATES','TIME','DAYS','MONTHS','YEARS']:
-                if timeK in list(map(str.upper,map(_mainKey,cleaningList))):
+                if timeK in list(map(str.upper,map(_mainKey,columnsList))):
                     commonIndex = None
                     commonTimeK = timeK
                     for frame in self.Frames:
-                        if timeK in [ str(col[0]).strip().upper() for col in self.Frames[frame].columns ]:
+                        if timeK in [ str(col[0] if type(col) is tuple else col).strip().upper() for col in self.Frames[frame].columns ]:
                             candidate = self.Frames[frame][ [ col for col in self.Frames[frame].columns if str(col[0]).strip().upper() == timeK ][0] ]
                             candidate.rename(timeK, inplace=True)
                             if commonIndex is None:
@@ -437,24 +438,34 @@ class XLSX(_SimResult):
                     if commonIndex is not None:
                         break
             if commonIndex is not None:
-                self.commonIndex = ( commonTimeK, commonIndex.set_index(commonTimeK).index )
+                if isinstance(commonIndex,pd.Series):
+                    self.commonIndex = ( commonTimeK, pd.Index(commonIndex.values) )
+                elif isinstance(commonIndex,pd.DataFrame):
+                    self.commonIndex = ( commonTimeK, commonIndex.set_index(commonTimeK).index )
                 self.FramesIndex[self.commonIndex[0]] = ( list(self.Frames.keys())[0], self.commonIndex[0] )
                 for frame in self.Frames:
                     thisTimeK = [ col for col in self.Frames[frame].columns if str(col[0]).strip().upper() == self.commonIndex[0] ][0]
-                    self.Frames[frame] = self.Frames[frame].set_index(thisTimeK, drop=True).reindex(index=self.commonIndex[1], method=None).reset_index().rename(columns={thisTimeK:self.commonIndex[0]})
+                    self.Frames[frame] = self.Frames[frame].set_index(thisTimeK, drop=True).reindex(index=self.commonIndex[1], method=None)
+                    colsBefore = list(self.Frames[frame].columns)
+                    self.Frames[frame] = self.Frames[frame].reset_index()
+                    colsAfter = list(self.Frames[frame].columns)
+                    indexName = [ c for c in colsAfter if c not in colsBefore ][0]
+                    if type(indexName) is tuple:
+                        indexName = indexName[0]
+                    self.Frames[frame] = self.Frames[frame].rename(columns={indexName:self.commonIndex[0]})
                     if type(thisTimeK) is tuple:
                         partK = str(thisTimeK[0]).strip()
                     else:
                         partK = str(thisTimeK)
 
-                    if partK + self.nameSeparator + frame in self.FramesIndex :
+                    if partK + self.nameSeparator + frame in self.FramesIndex:
                         del self.FramesIndex[ partK + self.nameSeparator + frame ]
-                    elif frame + self.nameSeparator + partK in self.FramesIndex :
+                    elif frame + self.nameSeparator + partK in self.FramesIndex:
                         del self.FramesIndex[ frame + self.nameSeparator + partK ]
 
-                    if partK + self.nameSeparator + frame in self.units :
+                    if partK + self.nameSeparator + frame in self.units:
                         del self.units[ partK + self.nameSeparator + frame ]
-                    elif frame + self.nameSeparator + partK in self.units :
+                    elif frame + self.nameSeparator + partK in self.units:
                         del self.units[ frame + self.nameSeparator + partK ]
 
                     self.keys = tuple([ K for K in self.keys if K != (partK + self.nameSeparator + frame) and K != (frame + self.nameSeparator + partK) ])
@@ -487,24 +498,24 @@ class XLSX(_SimResult):
         """
         internal function to return a numpy vector from the Frame files
         """
-        if Frame is None and key not in self.FramesIndex :
+        if Frame is None and key not in self.FramesIndex:
             if ':' in key:
                 if key.split(':')[0] in self.FramesIndex and key.split(':')[-1] in self.Frames:
                     return self.loadVector(key.split(':')[0], key.split(':')[-1])
                 elif key.split(':')[-1] in self.FramesIndex and key.split(':')[0] in self.Frames:
                     return self.loadVector(key.split(':')[-1], key.split(':')[0])
-        elif Frame is None and key in self.FramesIndex :
+        elif Frame is None and key in self.FramesIndex:
             Frame = self.FramesIndex[key][0]
-        elif Frame in self.Frames :
+        elif Frame in self.Frames:
             pass # OK
         else :
             _verbose(self.speak, 1, "the key '"+key+"' is not present in these frames.")
             return None
-        if self.lastFrame == '' :
+        if self.lastFrame == '':
             self.lastFrame = Frame
 
-        if key == self.DTindex :
-            if self.lastFrame in self.Frames and key in self.Frames[self.lastFrame] :
+        if key == self.DTindex:
+            if self.lastFrame in self.Frames and key in self.Frames[self.lastFrame]:
                 return self.Frames[self.lastFrame][self.FramesIndex[key][1]].to_numpy()
             elif key in self.FramesIndex :
                 result = self.Frames[Frame][self.FramesIndex[key][1]]
@@ -514,7 +525,7 @@ class XLSX(_SimResult):
                     return self.Frames[self.lastFrame].index.to_numpy()
             else :
                 return None
-        elif key in self.FramesIndex :
+        elif key in self.FramesIndex:
             result = self.Frames[Frame][self.FramesIndex[key][1]].to_numpy()
             self.lastFrame = Frame
             return result
