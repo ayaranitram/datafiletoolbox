@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.21.7'
-__release__ = 220216
+__version__ = '0.22.0'
+__release__ = 220221
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -21,7 +21,7 @@ class XLSX(_SimResult):
     object to contain data read from .xlsx files
 
     """
-    def __init__(self, inputFile=None, verbosity=2, sheet_name=None, header=[0, 1], units=1, overwrite=True, combine_SheetName_ColumnName=False, sheetName_auto='R', nameSeparator=':', **kwargs) :
+    def __init__(self, inputFile=None, verbosity=2, sheet_name=None, header=[0, 1], units=1, overwrite=True, combine_SheetName_ColumnName=None, sheetName_auto='R', nameSeparator=':', **kwargs) :
         _SimResult.__init__(self, verbosity=verbosity)
         self.kind = XLSX
         self.results = {}
@@ -76,25 +76,26 @@ class XLSX(_SimResult):
         if self.is_Key('TIME') and ( self.get_Unit('TIME') is None or self.get_Unit('TIME').upper() in ['', 'NONE'] ) :
             self.set_Unit('TIME', 'DAYS', overwrite=True)
 
-    def find_index(self,**kwargs) :
+    def find_index(self,**kwargs):
         """
         identify the column that is common to all the frames, to be used as index.
         If there is a single frame the first column is used.
         """
 
-        possibleKeys = ('DATE', 'DATES', 'TIME', 'DAYS', 'MONTHS', 'YEARS') + self.keys
+        possibleKeys = ('DATE', 'DATES', 'Date', 'date', 'Dates', 'dates', 'TIME', 'Time', 'time', 'DAYS', 'Days', 'days', 'MONTHS', 'Months', 'months', 'YEARS', 'Years', 'years') + self.keys  # + tuple(map(_mainKey,self.FramesIndex.keys()))
         if 'index' in kwargs and kwargs['index'] in self.FramesIndex:
-            possibleKeys = (kwargs['index'],) + ('DATE', 'DATES', 'Date', 'date', 'Dates', 'dates', 'TIME', 'Time', 'time', 'DAYS', 'Days', 'days', 'MONTHS', 'Months', 'months', 'YEARS', 'Years', 'years') + self.keys
+            possibleKeys = (kwargs['index'],) + possibleKeys
             self.DTindex = kwargs['index']
+        # possibleKeys = tuple(set(possibleKeys))
 
         # check current KeyIndex
         KeyIndex = True
         IndexVector = None
         _verbose(self.speak, 1, "looking for a common index column.")
         _verbose(self.speak, 1, " default index name is: " + str(self.DTindex))
-        for frame in self.Frames :
+        for frame in self.Frames:
             _verbose(self.speak, 1, "checking frame: " + str(frame))
-            if self.DTindex not in self.FramesIndex :
+            if self.DTindex not in self.FramesIndex:
                 KeyIndex = False
                 break
             elif self.FramesIndex[self.DTindex][1] not in self.Frames[frame] :
@@ -102,29 +103,31 @@ class XLSX(_SimResult):
                 break
             elif IndexVector is None :
                 IndexVector = self.Frames[frame][self.FramesIndex[self.DTindex][1]]
-            elif not IndexVector.equals( self.Frames[frame][self.FramesIndex[self.DTindex][1]] ) :
+            elif not IndexVector.equals( self.Frames[frame][self.FramesIndex[self.DTindex][1]] ):
                 KeyIndex = False
                 break
-        if KeyIndex :
-            _verbose(self.speak, 1, "found the commong index: " + str(self.DTindex))
+        if KeyIndex:
+            _verbose(self.speak, 1, "found the common index: " + str(self.DTindex))
             return self.DTindex
 
         # look for other identical index
         for Key in possibleKeys:
-            KeyIndex = True
+
             IndexVector = None
-            for frame in self.Frames :
-                if Key not in self.FramesIndex :
-                    KeyIndex = False
-                    break
-                if self.FramesIndex[Key][1] not in self.Frames[frame].columns :
-                    KeyIndex = False
-                    break
-                elif IndexVector is None :
-                    IndexVector = self.Frames[frame][self.FramesIndex[Key][1]]
-                elif not IndexVector.equals( self.Frames[frame][self.FramesIndex[Key][1]] ) :
-                    KeyIndex = False
-                    break
+            if Key not in self.FramesIndex:  # and Key not in map(_mainKey,self.FramesIndex):
+                KeyIndex = False
+            else:
+                KeyIndex = True
+                for frame in self.Frames :
+                    if self.FramesIndex[Key][1] not in self.Frames[frame].columns:
+                        KeyIndex = False
+                        break
+                    elif IndexVector is None :
+                        IndexVector = self.Frames[frame][self.FramesIndex[Key][1]]
+                    elif not IndexVector.equals( self.Frames[frame][self.FramesIndex[Key][1]] ):
+                        KeyIndex = False
+                        break
+
             if KeyIndex :
                 self.DTindex = Key
                 break
@@ -151,7 +154,7 @@ class XLSX(_SimResult):
         #             break
 
         if KeyIndex :
-            _verbose(self.speak, 1, "found the commong index: " + str(self.DTindex))
+            _verbose(self.speak, 1, "found the common index: " + str(self.DTindex))
             # create result vector for the common index
             IndexVector = None
             for frame in self.Frames:
@@ -164,7 +167,7 @@ class XLSX(_SimResult):
             _ = self.set_Vector(Key=self.DTindex, VectorData=IndexVector.to_numpy().reshape(-1,), Units=self.get_Units(self.DTindex), DataType='auto', overwrite=True)
             return self.DTindex
         else :
-            _verbose(self.speak, 3, "not a commong index name found.")
+            _verbose(self.speak, 3, "not a common index name found.")
             self.DTindex = None
 
     def otherDateNames(self):
@@ -189,7 +192,7 @@ class XLSX(_SimResult):
         self.name = 'from SimDataFrame'
         self.keys = frame.columns
 
-    def readSimExcel(self, inputFile, sheet_name=None, header=[0, 1], units=1, combine_SheetName_ColumnName=False, **kwargs) :
+    def readSimExcel(self, inputFile, sheet_name=None, header=[0, 1], units=1, combine_SheetName_ColumnName=None, **kwargs) :
         """
         internal function to read an excel file with SimDataFrame format (header in first row, units in second row)
         """
@@ -261,6 +264,24 @@ class XLSX(_SimResult):
                     combine_SheetName_ColumnName = list(combine_SheetName_ColumnName)
                 except:
                     raise TypeError("not able to understand combine_SheetName_ColumnName parameter.")
+        elif combine_SheetName_ColumnName is None:
+            if len(NewFrames.keys()) == 1:
+                combine_SheetName_ColumnName = False
+            else:
+                allColumns = []
+                for nf in NewFrames:
+                    allColumns += list(NewFrames[nf].columns)
+                if len(set(allColumns)) == len(allColumns):
+                    combine_SheetName_ColumnName = False
+                else:
+                    columnsKeys, sheetnameKeys = 0, 0
+                    for k in ['OPR','GPR','WPR','GIR','WIR','BHP','THP']:
+                        sheetnameKeys += len( [ sn for sn in NewFrames.keys() if k in str(sn) ] )
+                        columnsKeys += len( [ co for sn in NewFrames.keys() for co in NewFrames[sn] if k in str(co) ] )
+                    if columnsKeys >= sheetnameKeys:
+                        combine_SheetName_ColumnName = 'R'
+                    else:
+                        combine_SheetName_ColumnName = 'L'
         else:
             combine_SheetName_ColumnName = False
 
@@ -293,7 +314,7 @@ class XLSX(_SimResult):
                         #     if min( self.Frames[ self.FramesIndex[NewKey][0] ][ self.FramesIndex[NewKey][1] ) <= min( NewFrames[each][col] ) and max( self.Frames[ self.FramesIndex[NewKey][0] ][ self.FramesIndex[NewKey][1] ) >= max( NewFrames[each][col] ):
                         #         _verbose(self.speak, 1, " > skipping key: '" + NewKey + "' contained in data from previous key." )
                         else:
-                            if bool(combine_SheetName_ColumnName) is True:
+                            if bool(combine_SheetName_ColumnName) is True and self.nameSeparator not in str(NewKey):
                                 cleaningList.append(NewKey)  # to later remove the key
 
                                 # rename the other Key
@@ -314,7 +335,7 @@ class XLSX(_SimResult):
                                 else:
                                     NewKey = NewKey + self.nameSeparator + str(each).strip()
 
-                            elif combine_SheetName_ColumnName is False:
+                            elif combine_SheetName_ColumnName is False or self.nameSeparator in str(otherFrame):
                                 NewKey = NewKey + '_' + str( list(self.FramesIndex.keys()).count(NewKey) +1 )
 
                             self.FramesIndex[NewKey] = ( each, col )
@@ -340,7 +361,7 @@ class XLSX(_SimResult):
                         self.set_Unit( NewKey, NewUnits )
                         _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage)
                         # _foundNewKey()
-                        if bool(combine_SheetName_ColumnName) is True:
+                        if bool(combine_SheetName_ColumnName) is True and self.nameSeparator not in str(NewKey):
                             cleaningList.append(NewKey)  # to later remove the key
 
                             # rename the other Key
@@ -382,17 +403,17 @@ class XLSX(_SimResult):
                         self.speak = userVerbose
                         _verbose(self.speak, 1, " > found key: '"+NewKey+"'" + unitsMessage )
 
-        if len(cleaningList) > 0:
-            self.keys = tuple(set( [ K for K in self.keys if K not in set(cleaningList) ] ))
-            for K in cleaningList:
-                if K in self.units:
-                    del self.units[K]
-                if K in self.FramesIndex:
-                    del self.FramesIndex[K]
+        # if len(cleaningList) > 0:
+        #     self.keys = tuple(set( [ K for K in self.keys if K not in set(cleaningList) ] ))
+        #     for K in cleaningList:
+        #         if K in self.units:
+        #             del self.units[K]
+        #         if K in self.FramesIndex:
+        #             del self.FramesIndex[K]
 
             commonIndex = None
             for timeK in ['DATE','DATES','TIME','DAYS','MONTHS','YEARS']:
-                if timeK in list(map(str.upper,cleaningList)):
+                if timeK in list(map(str.upper,map(_mainKey,cleaningList))):
                     commonIndex = None
                     commonTimeK = timeK
                     for frame in self.Frames:
