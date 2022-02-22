@@ -5,8 +5,8 @@ Created on Wed May 13 00:45:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.54.2'
-__release__ = 220111
+__version__ = '0.54.3'
+__release__ = 220221
 __all__ = ['loadSimulationResults']
 
 from .._common.inout import _extension
@@ -18,6 +18,7 @@ from .excelObject import XLSX as _XLSX
 from .tableObject import TABLE as _TABLE
 from .rsmObject import RSM as _RSM
 from .h5Object import H5 as _H5
+import pickle
 
 
 okECL = False
