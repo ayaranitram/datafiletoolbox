@@ -6,7 +6,7 @@ Created on Wed May 13 15:45:12 2020
 """
 
 __version__ = '0.1.4'
-__release__ = 220207
+__release__ = 220223
 __all__ = ['H5']
 
 from .mainObject import SimResult as _SimResult
@@ -29,7 +29,7 @@ class H5(_SimResult):
     object to contain HDF5 format results read from h5 file using h5py
     """
 
-    def __init__(self, inputFile=None, verbosity=2, **kwargs) :
+    def __init__(self, inputFile=None, verbosity=2, **kwargs):
         _SimResult.__init__(self, verbosity=verbosity)
         self.kind = H5
         self.keynames = None
@@ -43,17 +43,17 @@ class H5(_SimResult):
             self.initialize(**kwargs)
 
     def loadSummary(self, h5FilePath, **kwargs):
-        if type(h5FilePath) is str :
+        if type(h5FilePath) is str:
             h5FilePath = h5FilePath.strip()
-            if self.path is None :
+            if self.path is None:
                 self.path = h5FilePath
-            if _extension(h5FilePath)[0].lower() != '.h5' :
+            if _extension(h5FilePath)[0].lower() != '.h5':
                 newPath = _extension(h5FilePath)[2] + _extension(h5FilePath)[1] + '.h5'
                 if os.path.isfile(newPath):
                     h5FilePath = newPath
                 else:
                     newPath = _extension(h5FilePath)[2] + _extension(h5FilePath)[1] + '.H5'
-                    if os.path.isfile( newPath ) :
+                    if os.path.isfile( newPath ):
                         h5FilePath = newPath
 
             if os.path.isfile(h5FilePath):
@@ -77,9 +77,9 @@ class H5(_SimResult):
                 self.get_Attributes(reload=True)
                 self.fill_FieldBasics()
 
-            else :
+            else:
                 raise FileNotFoundError( "the file doesn't exist:\n  -> " + h5FilePath )
-        else :
+        else:
             print("h5FilePath must be a string")
 
     def readSMSPEC(self,smspecPath):
@@ -88,7 +88,7 @@ class H5(_SimResult):
         """
         import string
 
-        if type(smspecPath) is str :
+        if type(smspecPath) is str:
             smspecPath = smspecPath.strip()
             if _extension(smspecPath)[0].upper() != '.SMSPEC':
                 newPath = _extension(smspecPath)[2] + _extension(smspecPath)[1] + '.SMSPEC'
@@ -97,7 +97,7 @@ class H5(_SimResult):
             if os.path.isfile(smspecPath):
                 if os.path.getsize(smspecPath) == 0:
                     warnings.warn("\nThe .SMSPEC file seems to be empty:\n  -> "  + smspecPath )
-            else :
+            else:
                 warnings.warn( "the SMSPEC file doesn't exist:\n  -> " + smspecPath )
         if not os.path.isfile(smspecPath) or os.path.getsize(smspecPath) == 0:
             warnings.warn( "the SMSPEC file doesn't exist or is empty:\n  -> " + smspecPath + "\n  Units and well names will be unkown.")
@@ -179,7 +179,7 @@ class H5(_SimResult):
             if names[i] not in self.keynames[keywords[i]]:
                 self.keynames[keywords[i]].append(names[i])
 
-    def reload(self) :
+    def reload(self):
         self.loadSummary(self.path)
 
     def readH5(self, key):
@@ -208,10 +208,10 @@ class H5(_SimResult):
                 self.get_Dates()
                 if self.start is not None:
                     return self.numpy_dates
-            else :
+            else:
                 return self.readH5(key)
 
-    def get_Dates(self) :
+    def get_Dates(self):
         try:
             self.start = np.datetime64(str(self.results['general']['start_date'][2]) + '-' +
                                        str(self.results['general']['start_date'][1]).zfill(2) + '-' +
@@ -231,15 +231,15 @@ class H5(_SimResult):
             self.end = self.numpy_dates[-1]
         return self.numpy_dates
 
-    def extract_Wells(self, pattern=None) :
+    def extract_Wells(self, pattern=None):
         """
         Will return a list of all the well names in case.
         """
         # preparing object attribute
         outList = list( self.wells )
-        for key in self.get_Keys() :
-            if key[0] == 'W' :
-                if ':' in key :
+        for key in self.get_Keys():
+            if key[0] == 'W':
+                if ':' in key:
                     item = key.split(':')[1]
                     outList.append( item )
         self.wells = tuple( set( outList ) )
@@ -249,7 +249,7 @@ class H5(_SimResult):
         else:
             return tuple(fnmatch.filter(self.wells, pattern))
 
-    def extract_Groups(self, pattern=None, reload=False) :
+    def extract_Groups(self, pattern=None, reload=False):
         """
         calls group method from libecl:
 
@@ -261,9 +261,9 @@ class H5(_SimResult):
         """
         # preparing object attribute
         outList = list( self.groups )
-        for key in self.get_Keys() :
-            if key[0] == 'G' :
-                if ':' in key :
+        for key in self.get_Keys():
+            if key[0] == 'G':
+                if ':' in key:
                     item = key.split(':')[1]
                     outList.append( item )
         self.groups = tuple( set( outList ) )
@@ -273,7 +273,7 @@ class H5(_SimResult):
         else:
             return tuple(fnmatch.filter(self.groups, pattern))
 
-    def list_Keys(self, pattern=None, reload=False) :
+    def list_Keys(self, pattern=None, reload=False):
         """
         Return a StringList of summary keys matching @pattern.
 
@@ -285,7 +285,7 @@ class H5(_SimResult):
         If pattern is None you will get all the keys of summary
         object.
         """
-        if len(self.keys) == 0 or reload is True :
+        if len(self.keys) == 0 or reload is True:
             listOfKeys = []
             for key in list(self.results['summary_vectors'].keys()):
                 if key not in self.keynames or len(self.keynames[key]) == 1:
@@ -294,20 +294,20 @@ class H5(_SimResult):
                     for item in self.keynames[key]:
                         listOfKeys.append(key+':'+item)
             self.keys = tuple( set(listOfKeys) )
-            for extra in ( 'TIME', 'DATE', 'DATES' ) :
-                if extra not in self.keys :
+            for extra in ( 'TIME', 'DATE', 'DATES' ):
+                if extra not in self.keys:
                     self.keys = tuple( [extra] + list(self.keys) )
         if pattern is None:
             return self.keys
         else:
             return tuple(fnmatch.filter(self.keys, pattern))
 
-    def extract_Regions(self, pattern=None) :
+    def extract_Regions(self, pattern=None):
         # preparing object attribute
         outList = list( self.regions )
-        for key in self.get_Keys() :
-            if key[0] == 'R' :
-                if ':' in key :
+        for key in self.get_Keys():
+            if key[0] == 'R':
+                if ':' in key:
                     item = key.split(':')[1]
                     outList.append( item )
         self.regions = tuple( set( outList ) )
@@ -316,99 +316,3 @@ class H5(_SimResult):
             return self.regions
         else:
             return tuple(fnmatch.filter(self.regions, pattern))
-
-    # def get_Unit(self, Key='--EveryType--') :
-    #     """
-    #     returns a string identifiying the unit of the requested Key
-
-    #     Key could be a list containing Key strings, in this case a dictionary
-    #     with the requested Keys and units will be returned.
-    #     the Key '--EveryType--' will return a dictionary Keys and units
-    #     for all the keys in the results file
-
-    #     """
-    #     if type(Key) is str and Key.strip() != '--EveryType--' :
-    #         Key = Key.strip().upper()
-    #         if Key in self.units :
-    #             return self.units[Key]
-    #         if Key in ['DATES','DATE']:
-    #                 self.units[Key] = 'DATE'
-    #                 return 'DATE'
-    #         if Key in self.keys :
-    #             return self.results.unit(Key)
-    #         else:
-    #             if Key[0] == 'W' :
-    #                 UList=[]
-    #                 for W in self.get_Wells() :
-    #                     if Key+':'+W in self.units :
-    #                         UList.append(self.units[Key+':'+W])
-    #                     elif Key in self.keys :
-    #                         UList.append( self.results.unit(Key+':'+W) )
-    #                 if len(set(UList)) == 1 :
-    #                     self.units[Key] = UList[0]
-    #                     return UList[0]
-    #                 else :
-    #                     return None
-    #             elif Key[0] == 'G' :
-    #                 UList=[]
-    #                 for G in self.get_Groups() :
-    #                     if Key+':'+G in self.units :
-    #                         UList.append(self.units[Key+':'+G])
-    #                     elif Key in self.keys :
-    #                         UList.append( self.results.unit(Key+':'+G) )
-    #                 if len(set(UList)) == 1 :
-    #                     self.units[Key] = UList[0]
-    #                     return UList[0]
-    #                 else :
-    #                     return None
-    #             elif Key[0] == 'R' :
-    #                 UList=[]
-    #                 for R in self.get_Regions() :
-    #                     if Key+':'+R in self.units :
-    #                         UList.append(self.units[Key+':'+R])
-    #                     elif Key in self.keys :
-    #                         UList.append( self.results.unit(Key+':'+R) )
-    #                 if len(set(UList)) == 1 :
-    #                     self.units[Key] = UList[0]
-    #                     return UList[0]
-    #                 else :
-    #                     return None
-    #             UList = None
-
-    #     elif type(Key) is str and Key.strip() == '--EveryType--' :
-    #         Key = []
-    #         KeyDict = {}
-    #         for each in self.keys :
-    #             if ':' in each :
-    #                 Key.append( _mainKey(each) )
-    #                 KeyDict[ _mainKey(each) ] = each
-    #             else :
-    #                 Key.append(each)
-    #         Key = list( set (Key) )
-    #         Key.sort()
-    #         tempUnits = {}
-    #         for each in Key :
-    #             if each in self.units :
-    #                 tempUnits[each] = self.units[each]
-    #             elif each in self.keys and ( each != 'DATES' and each != 'DATE' ) :
-    #                 if self.results.unit(each) is None :
-    #                     tempUnits[each] = self.results.unit(each)
-    #                 else :
-    #                     tempUnits[each] = self.results.unit(each).strip('( )').strip("'").strip('"')
-    #             elif each in self.keys and ( each == 'DATES' or each == 'DATE' ) :
-    #                 tempUnits[each] = 'DATE'
-    #             else :
-    #                 if KeyDict[each] in self.units :
-    #                     tempUnits[each] = self.units[KeyDict[each]]
-    #                 elif KeyDict[each] in self.keys :
-    #                     if self.results.unit(KeyDict[each]) is None :
-    #                         tempUnits[each] = self.results.unit(KeyDict[each])
-    #                     else :
-    #                         tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
-    #         return tempUnits
-    #     elif type(Key) in [list,tuple] :
-    #         tempUnits = {}
-    #         for each in Key :
-    #             if type(each) is str :
-    #                 tempUnits[each] = self.get_Unit(each)
-    #         return tempUnits

@@ -7,7 +7,7 @@ Created on Sat Dec  7 21:48:37 2019
 """
 
 __version__ = '0.5.5'
-__release__ = 220201
+__release__ = 220223
 
 import numpy
 # import pandas
@@ -388,7 +388,7 @@ def get_fvf() :
             unit.fvf = input(' FVF (rV/stV) = ')
             if not valid_fvf(unit.fvf) :
                 unit.fvf = None
-            else :
+            else:
                 unit.fvf = valid_fvf(unit.fvf)
 
     return unit.fvf
@@ -402,7 +402,7 @@ def valid_fvf(FVF) :
     if type(FVF) is int or type(FVF) is float :
         if FVF <= 0 :
             return False
-        else :
+        else:
             return FVF
     return False
 
@@ -424,7 +424,7 @@ class conversion(object):
     def getConvert(self):
         if self.rev and type(self.conv) != None :
             return lambda X: X/self.conv(1)
-        else :
+        else:
             return self.conv
     def __str__(self):
         return self.src.getName() + '->' + self.dest.getName()
@@ -553,7 +553,7 @@ def UnitConversions():
                             UC.addEdge(conversion(UC.getNode(secondName), UC.getNode(secondName.replace(' ', '-')), lambda X: X ))
                             unit.dictionary[unitKind.split('_')[0]].append(secondName)
                             unit.dictionary[unitKind.split('_')[0]].append(secondName.replace(' ', '-'))
-                else :
+                else:
                     for secondName in unit.dictionary[unitKind][unitName] :
                         # print('N   3: ' + unitName)
                         if ' ' in secondName :
@@ -649,7 +649,7 @@ def UnitConversions():
                     #     UC.addEdge(conversion(UC.getNode(secondName), UC.getNode(secondName+'s'), lambda X: X ))
                     #     UC.addEdge(conversion(UC.getNode(secondName+'s'), UC.getNode(secondName), lambda X: X ))
                     #     unit.dictionary[unitKind.split('_')[0]].append(secondName+'s')
-            else :
+            else:
                 for unitName in list( unit.dictionary[unitKind] ) :
                     # print('U  2: ' + unitName, unitKind.split('_')[0])
                     UC.addNode(unit(unitName))
@@ -674,7 +674,7 @@ def UnitConversions():
                         #     UC.addEdge(conversion(UC.getNode(secondName), UC.getNode(secondName.upper()+'S'), lambda X: X ))
                         #     UC.addEdge(conversion(UC.getNode(secondName.upper()+'S'), UC.getNode(secondName), lambda X: X ))
                         #     unit.dictionary[unitKind.split('_')[0]].append(secondName.upper()+'S')
-                else :
+                else:
                     for unitName in list( unit.dictionary[unitKind] ) :
                         # print('U  2: ' + unitName, unitKind.split('_')[0])
                         UC.addNode(unit(unitName))
@@ -699,7 +699,7 @@ def UnitConversions():
                         UC.addEdge(conversion(UC.getNode(secondName), UC.getNode(secondName.upper()), lambda X: X ))
                         UC.addEdge(conversion(UC.getNode(secondName.upper()), UC.getNode(secondName), lambda X: X ))
                         unit.dictionary[unitKind.split('_')[0]].append(secondName.upper())
-            else :
+            else:
                 for unitName in list( unit.dictionary[unitKind] ) :
                     # print('U  2: ' + unitName, unitKind.split('_')[0])
                     UC.addNode(unit(unitName))
@@ -861,7 +861,7 @@ def UnitConversions():
         if '_REVERSE' in unitKind :
             if type(unit.dictionary[unitKind]) == dict :
                 nameList = list(unit.dictionary[unitKind].keys())
-            else :
+            else:
                 nameList = list(unit.dictionary[unitKind])
             # print(nameList)
             for unitName in nameList :
@@ -898,7 +898,7 @@ def printPath(path):
     result = '  '
     if len(path) == 1 :
         result = result + str(path[0]) + ' = ' + str(path[0])
-    else :
+    else:
         for i in range(len(path)):
             if type(path[i]) == str :
                 result = result + ' ' +  path[i] + ' '
@@ -921,7 +921,7 @@ def BFS(graph, start, end, toPrint = False):
         if tmpPath in visited :
             if toPrint:
                 print(' <UnitsConv> ' + str(len(pathQueue)) + ' paths in queue. ' + 'Already visited BFS path:\n', printPath(tmpPath))
-        else :
+        else:
             if toPrint:
                 print(' <UnitsConv> ' + str(len(pathQueue)) + ' paths in queue. ' + 'Current BFS path:\n', printPath(tmpPath))
             lastNode = tmpPath[-1]
@@ -945,9 +945,9 @@ def convertUnit(value, fromUnit, toUnit, PrintConversionPath=True ) :
         if type(PrintConversionPath) == int or type(PrintConversionPath) == float :
             if PrintConversionPath > 1 :
                 PrintConversionPath = False
-            else :
+            else:
                 PrintConversionPath = bool( PrintConversionPath )
-        else :
+        else:
             PrintConversionPath = True
 
     conv = converter( value, fromUnit, toUnit, PrintConversionPath )#[0]
@@ -973,7 +973,7 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=
 
     if type(fromUnit) is str and type(toUnit) is str and fromUnit.lower().strip() == toUnit.lower().strip():
         return value
-    
+
     if Start==True :
         unit.previous=[]
 
@@ -997,11 +997,11 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=
                 if '/' in pair[1] :
                     if pair[1].split('/')[0] == pair[1].split('/')[1] :
                         return value
-                    else :
+                    else:
                         unit.previous=(fromUnit, toUnit)
                         if ( pair[1].split('/')[0], pair[1].split('/')[1] ) in unit.Memory :
                             conv = unit.Memory[ ( pair[1].split('/')[0], pair[1].split('/')[1] ) ]
-                        else :
+                        else:
                             conv = converter( 1, pair[1].split('/')[0], pair[1].split('/')[1], AllowRecursion, Start=False )
                             unit.Memory[ ( pair[1].split('/')[0], pair[1].split('/')[1] ) ] = conv
                         if type(conv) != None:
@@ -1031,10 +1031,10 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=
                 operator = ' / '
                 if ( fromUnit.split('/')[0], toUnit.split('/')[0] ) in unit.Memory :
                     partA = value * unit.Memory[ ( fromUnit.split('/')[0], toUnit.split('/')[0] ) ] # numerator
-                else :
+                else:
                     partA = converter(  1, fromUnit.split('/')[0], toUnit.split('/')[0], PrintConversionPath, AllowRecursion, Start=False ) # numerator
                     unit.Memory[ ( fromUnit.split('/')[0], toUnit.split('/')[0] ) ] = partA
-                    
+
                     if partA is None:
                         partA = value
                         print('no conversion found from',fromUnit,'to',toUnit)
@@ -1042,7 +1042,7 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=
                         partA = value * unit.Memory[ ( fromUnit.split('/')[0], toUnit.split('/')[0] ) ]
                 if ( fromUnit.split('/')[1], toUnit.split('/')[1] ) in unit.Memory :
                     partB = unit.Memory[ ( fromUnit.split('/')[1], toUnit.split('/')[1] ) ]
-                else :
+                else:
                     partB = converter(    1, fromUnit.split('/')[1], toUnit.split('/')[1], PrintConversionPath, AllowRecursion, Start=False ) # denominator
                     unit.Memory[ ( fromUnit.split('/')[1], toUnit.split('/')[1] ) ]  = partB
                 if type(partA) is None or type(partB) is None :
@@ -1066,7 +1066,7 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=
                             return converter( middle, str(middleTo), toUnit, PrintConversionPath, AllowRecursion, Start=False )
 
                     # return value
-                else :
+                else:
                     # if returnPath :
                     #     return ( partA, operator, partB)
                     # else:
@@ -1079,7 +1079,7 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=
                     if type(middle) is not None :
                         return converter(middle, str(middleUnit), toUnit, PrintConversionPath, AllowRecursion, Start=False )
 
-            else : # elif '/' in toUnit :
+            else: # elif '/' in toUnit :
                 # print('if / in toUnit ')
                 for middleUnit in UnCo.childrenOf(UnCo.getNode(fromUnit)) :
                     # print('from ' + fromUnit + ' to ' + str(middleUnit))
@@ -1125,7 +1125,7 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=
                             return converter( middle, str(middleTo), toUnit, PrintConversionPath, AllowRecursion, Start=False )
 
                     # return value
-                else :
+                else:
                     # if returnPath :
                     #     return ( partA, operator, partB)
                     # else:
@@ -1138,7 +1138,7 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=
                     if type(middle) is not None :
                         return converter(middle, str(middleUnit), toUnit, PrintConversionPath, AllowRecursion, Start=False )
 
-            else : # elif '*' in toUnit :
+            else: # elif '*' in toUnit :
                 # print('if * in toUnit ')
                 for middleUnit in UnCo.childrenOf(UnCo.getNode(fromUnit)) :
                     # print('from ' + fromUnit + ' to ' + str(middleUnit))
@@ -1173,7 +1173,7 @@ def convertible(fromUnit, toUnit, PrintPath=False) :
     try :
         if converter(1, fromUnit, toUnit, PrintPath) is not None :
             return True
-        else :
+        else:
             return False
     except :
         return False
@@ -1220,7 +1220,7 @@ def unitBasePower(unit):
             oth = ''
         elif c in ['-', '+', '.'] :
             oth += c
-        else :
+        else:
             Ubas += oth + c
             oth = ''
     Upow = 1 if Upow == '' else float(Upow) if '.' in Upow else int(Upow)
@@ -1249,7 +1249,7 @@ def unitProduct(unit1, unit2):
     if unit1.lower().strip(' ()') in unit.dictionary['dimensionless'] :
         if unit2.lower().strip(' ()') not in unit.dictionary['dimensionless'] :
             return unit2
-        else :
+        else:
             return unit1
 
     if unit1 != unit2 and convertible(unit1, unit2) :
@@ -1264,7 +1264,7 @@ def unitProduct(unit1, unit2):
             oth = ''
         elif c in ['-', '+', '.'] :
             oth += c
-        else :
+        else:
             U1bas += oth + c
             oth = ''
     U1pow = 1 if U1pow == '' else float(U1pow) if '.' in U1pow else int(U1pow)
@@ -1272,7 +1272,7 @@ def unitProduct(unit1, unit2):
     for c in unit2 :
         if c.isdigit() :
             U2pow += c
-        else :
+        else:
             U2bas += c
     U2pow = 1 if U2pow == '' else float(U2pow) if '.' in U2pow else int(U2pow)
 
@@ -1284,14 +1284,14 @@ def unitProduct(unit1, unit2):
             result = U1bas
         elif Upow == 0 :
             result = 'dimensionless'
-        else :
+        else:
             for c in ['+', '-', '*', '/', '^'] :
                 if c in U1bas :
                     U1bas = '('+U1bas+')'
                     break
             result = U1bas + str(Upow)
 
-    else :
+    else:
         for c in ['+', '-', '*', '/', '^'] :
             if c in U1bas :
                 U1bas = '('+U1bas+')'
@@ -1325,7 +1325,7 @@ def unitDivision(unit1, unit2):
     if unit1.lower().strip(' ()') in unit.dictionary['dimensionless'] :
         if unit2.lower().strip(' ()') not in unit.dictionary['dimensionless'] :
             return '1/'+unit2
-        else :
+        else:
             return unit1
 
     # if '/' in unit1 and '/' in unit2:
@@ -1346,7 +1346,7 @@ def unitDivision(unit1, unit2):
             oth = ''
         elif c in ['-', '+', '.'] :
             oth += c
-        else :
+        else:
             U1bas += oth + c
             oth = ''
 
@@ -1354,7 +1354,7 @@ def unitDivision(unit1, unit2):
     for c in unit2 :
         if c.isdigit() :
             U2pow += c
-        else :
+        else:
             U2bas += c
     U2pow = 1 if U2pow == '' else float(U2pow) if '.' in U2pow else int(U2pow)
 
@@ -1366,14 +1366,14 @@ def unitDivision(unit1, unit2):
             result = U1bas
         elif Upow == 0 :
             result = 'dimensionless'
-        else :
+        else:
             for c in ['+', '-', '*', '/', '^'] :
                 if c in U1bas :
                     U1bas = '('+U1bas+')'
                     break
             result = U1bas + str(Upow)
 
-    else :
+    else:
         for c in ['+', '-', '*', '/', '^'] :
             if c in U1bas :
                 U1bas = '('+U1bas+')'
@@ -1411,7 +1411,7 @@ class basics(object) :
         if type(other) == type(self) :
             if self.unit != other.unit :
                 return self.name(self.value + converter(other.value, other.unit, self.unit), self.unit)
-            else :
+            else:
                 return self.name(self.value + other.value, self.unit)
         elif type(other) == int or type(other) == float :
             return self.name(self.value + other, self.unit)
@@ -1422,11 +1422,11 @@ class basics(object) :
     #     if type(other) == type(self) :
     #         if self.unit != other.unit :
     #             return makeUnit(self.value * converter(other.value, other.unit, self.unit), unitProduct2(self.unit, self.unit) )
-    #         else :
+    #         else:
     #             return makeUnit(self.value * other.value, unitProduct(self.unit, self.unit) )
     #     elif type(other) == int or type(other) == float or type(other) == numpy.ndarray :
     #         return self.name(self.value * other, self.unit)
-    #     else :
+    #     else:
     #         return basicsProduct(self.name, other.name)(self.value * other.value, unitProduct(self.unit, other.unit))
 
 
@@ -1440,15 +1440,15 @@ class basics(object) :
         if type(other) == type(self):
             if self.unit != other.unit :
                 return basicsProduct(self.name, other.name)(self.value * converter(other.value, other.unit, self.unit), unitProduct(self.unit, self.unit))
-            else :
+            else:
                 return basicsProduct(self.name, other.name)(self.value * other.value, unitProduct(self.unit, other.unit))
         elif type(other) == int or type(other) == float or type(other) == numpy.ndarray :
             return self.name(self.value * other, self.unit)
-        else :
+        else:
             try:
                 if other.name == dimensionless :
                     return self.name(self.value * other.value, self.unit)
-                else :
+                else:
                     return basicsProduct(self.name, other.name)(self.value * other.value, unitProduct(self.unit, other.unit))
             except :
                 return basicsProduct(self.name, other.name)(self.value * other.value, unitProduct(self.unit, other.unit))
@@ -1462,48 +1462,48 @@ class basics(object) :
         if type(other) == type(self) :
             if self.unit != other.unit :
                 return self.value / converter(other.value, other.unit, self.unit)
-            else :
+            else:
                 return self.value / other.value
         elif type(other) == int or type(other) == float :
             return self.__mul__(1/other)
-        else :
+        else:
             pass
     def __rtruediv__(self, other):
         return self.__truediv__(other)
     def __lt__(self, other) :
         if type(self) == type(other) :
             return self.value < other.convert(self.unit).value
-        else :
+        else:
             msg = "'<' not supported between instances of '" +   (str(type(self))[str(type(self)).index("'")+1:len(str(type(self))) - str(type(self))[::-1].index("'")-1]).replace('__main__.', '')   + "' and '" +   (str(type(other))[str(type(other)).index("'")+1:len(str(type(other))) - str(type(other))[::-1].index("'")-1]).replace('__main__.', '')   + "'"
             raise TypeError(msg)
     def __le__(self, other) :
         if type(self) == type(other) :
             return self.value <= other.convert(self.unit).value
-        else :
+        else:
             msg = "'<=' not supported between instances of '" +   (str(type(self))[str(type(self)).index("'")+1:len(str(type(self))) - str(type(self))[::-1].index("'")-1]).replace('__main__.', '')   + "' and '" +   (str(type(other))[str(type(other)).index("'")+1:len(str(type(other))) - str(type(other))[::-1].index("'")-1]).replace('__main__.', '')   + "'"
             raise TypeError(msg)
     def __eq__(self, other) :
         if type(self) == type(other) :
             return self.value == other.convert(self.unit).value
-        else :
+        else:
             msg = "'==' not supported between instances of '" +   (str(type(self))[str(type(self)).index("'")+1:len(str(type(self))) - str(type(self))[::-1].index("'")-1]).replace('__main__.', '')   + "' and '" +   (str(type(other))[str(type(other)).index("'")+1:len(str(type(other))) - str(type(other))[::-1].index("'")-1]).replace('__main__.', '')   + "'"
             raise TypeError(msg)
     def __ne__(self, other) :
         if type(self) == type(other) :
             return self.value != other.convert(self.unit).value
-        else :
+        else:
             msg = "'!=' not supported between instances of '" +   (str(type(self))[str(type(self)).index("'")+1:len(str(type(self))) - str(type(self))[::-1].index("'")-1]).replace('__main__.', '')   + "' and '" +   (str(type(other))[str(type(other)).index("'")+1:len(str(type(other))) - str(type(other))[::-1].index("'")-1]).replace('__main__.', '')   + "'"
             raise TypeError(msg)
     def __ge__(self, other) :
         if type(self) == type(other) :
             return self.value >= other.convert(self.unit).value
-        else :
+        else:
             msg = "'>=' not supported between instances of '" +   (str(type(self))[str(type(self)).index("'")+1:len(str(type(self))) - str(type(self))[::-1].index("'")-1]).replace('__main__.', '')   + "' and '" +   (str(type(other))[str(type(other)).index("'")+1:len(str(type(other))) - str(type(other))[::-1].index("'")-1]).replace('__main__.', '')   + "'"
             raise TypeError(msg)
     def __gt__(self, other) :
         if type(self) == type(other) :
             return self.value > other.convert(self.unit).value
-        else :
+        else:
             msg = "'>' not supported between instances of '" +   (str(type(self))[str(type(self)).index("'")+1:len(str(type(self))) - str(type(self))[::-1].index("'")-1]).replace('__main__.', '')   + "' and '" +   (str(type(other))[str(type(other)).index("'")+1:len(str(type(other))) - str(type(other))[::-1].index("'")-1]).replace('__main__.', '')   + "'"
             raise TypeError(msg)
     def __len__(self) :
@@ -1515,13 +1515,13 @@ class basics(object) :
         if type(item) == int :
             if item >= len(self) :
                 raise IndexError
-        else :
+        else:
             raise ValueError
         return self.value[item]
     def __iter__(self) :
         if type(self.value) == int or type(self.value) == float :
             return numpy.array((self.value, )).__iter__()
-        else :
+        else:
             return self.value.__iter__()
     # def __next__(self) :
     #     pass
@@ -1538,7 +1538,7 @@ class basics(object) :
             return value
         # elif type(value) == pandas.core.frame.DataFrame :
         #     return value
-        else :
+        else:
             raise WrongValue
     def checkUnit(self, units) :
         if type(units) != str :
@@ -1548,7 +1548,7 @@ class basics(object) :
                 raise WrongUnits
         if units in self.name.classUnits :
             return units
-        else :
+        else:
             raise WrongUnits
 
 class time(basics):
@@ -1682,14 +1682,14 @@ class dimensionless(basics):
 #             return volumeRatio(value, units)
 #         elif units in unit.dictionary['rate'] :
 #             return rate(value, units)
-#         else :
+#         else:
 #             print('WARNING: unit "' + str(units) + '" not found in library, using customUnits.\n         Unit conversion is not possible.')
 #             unit.dictionary['customUnits'].append(units)
 #             return userUnits(value, units)
 #     elif value != None or units != None :
 #         if units == None :
 #             raise WrongUnits('missing units, must be a string')
-#         else :
+#         else:
 #             raise WrongValue('missing value, may be float, integer, list, tuple or numpy.array')
-#     else :
+#     else:
 #         raise WrongValue

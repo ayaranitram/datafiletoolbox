@@ -6,7 +6,7 @@ Created on Wed May 13 00:45:52 2020
 """
 
 __version__ = '0.54.3'
-__release__ = 220221
+__release__ = 220223
 __all__ = ['loadSimulationResults']
 
 from .._common.inout import _extension
@@ -22,10 +22,10 @@ import pickle
 
 
 okECL = False
-try :
+try:
     from .eclObject import ECL as _ECL
     okECL = True
-except ImportError :
+except ImportError:
     print ( 'failed import ECL, usually due to fail to import libecl')
 
 
@@ -51,7 +51,7 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
         pass
     elif type(Verbosity) in [bool,float] :
         Verbosity = int(Verbosity)
-    else :
+    else:
         Verbosity = 2
 
     if FullPath is None :
@@ -85,7 +85,7 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
         if okECL is True :
             _loadingECLfile[0] = True
             OBJ = _ECL(FullPath,verbosity=Verbosity,**kwargs)
-        else :
+        else:
             print( 'ECL object not loaded')
     elif Simulator in ['VIP'] :
         OBJ = _VIP(FullPath,verbosity=Verbosity,**kwargs)

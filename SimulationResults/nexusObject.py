@@ -6,7 +6,7 @@ Created on Wed May 13 15:34:04 2020
 """
 
 __version__ = '0.1.1'
-__release__ = 220113
+__release__ = 220223
 __all__ = ['NEXUS']
 
 from .mainObject import SimResult as _SimResult
@@ -79,7 +79,7 @@ class NEXUS(_SimResult):
                     break
             if sssFile is not None :
                 self.loadSSS(sssFile)
-            else :
+            else:
                 _verbose( self.speak, 3, " not possible to find SSS file for the .dat file\n   '" + inputFile + "'")
 
     def use_ECLstyle(self):
@@ -91,7 +91,7 @@ class NEXUS(_SimResult):
             self.ECLstyle = True
             self.VIPstyle = False
             _verbose( self.speak, 3, ' Using ECL style keys')
-        else :
+        else:
             self.VIPstyle = 'ERROR'
             _verbose( self.speak, 3, ' Unable to convert to ECL style keys')
             if type(self.ECLstyle) is bool :
@@ -107,7 +107,7 @@ class NEXUS(_SimResult):
             self.ECLstyle = False
             self.VIPstyle = True
             _verbose( self.speak, 3, ' Using VIP style keys')
-        else :
+        else:
             self.ECLstyle = 'ERROR'
             _verbose( self.speak, 3, ' Unable to get VIP style keys.')
             if type(self.VIPstyle) is bool :
@@ -140,13 +140,13 @@ class NEXUS(_SimResult):
             self.get_Keys(reload=True)
             self.units = self.get_Unit(self.keys)
             _verbose( self.speak, 1, 'simulation runs from ' +  str( self.get_Dates()[0] ) + ' to ' + str( self.get_Dates()[-1] ) )
-        else :
+        else:
             print("SummaryFilePath must be a string")
 
     def correction_for_LPG_from_VIPsss(self) :
         if self.LPGcorrected :
             _verbose( self.speak, 2, 'LPG correction for VIP sss reports is already applied.')
-        else :
+        else:
             for LPGkey in ( 'LPG LIQ RATE', 'FULPGLR'  ) :
                 if self.is_Key( LPGkey ) :
                     Before = self.get_Vector(LPGkey)[LPGkey]
@@ -158,7 +158,7 @@ class NEXUS(_SimResult):
     def reload(self) :
         # if self.CSV is False :
         #     self.loadSSS(self.path)
-        # else :
+        # else:
         #     self.loadCSV(self.path)
         self.loadSSS(self.path)
 
@@ -188,10 +188,10 @@ class NEXUS(_SimResult):
                     return tuple( SSSfiles )
             if os.path.isfile(SSSFilePath) : # if this line is reached, implicitly len( SSSfiles ) == 0
                 return tuple ( SSSFilePath )
-            else :
+            else:
                 raise FileNotFoundError('No such file or related VIP files found for: ' + str(SSSFilePath) )
 
-        else : # if _extension(SSSFilePath)[0] != '.SSS' :
+        else: # if _extension(SSSFilePath)[0] != '.SSS' :
             SSSroot = _extension(SSSFilePath)[2] + _extension(SSSFilePath)[1]
             for Case in expectedParts :
                 for part in Case :
@@ -254,7 +254,7 @@ class NEXUS(_SimResult):
             if ':' in key :
                 VIPkey = key[:key.index(':')]
                 keyName = key[key.index(':')+1:]
-            else :
+            else:
                 VIPkey = key
                 if key in wellVIPkeys :
                     keyName = list(self.get_Wells())
@@ -262,15 +262,15 @@ class NEXUS(_SimResult):
                 elif VIPkey in _UniversalKeys :
                     keyName = 'ROOT'
                     SSStype = ['FIELD']
-                else :
+                else:
                     keyName = 'ROOT'
             if len( SSStype ) > 1 :
                 if keyName == 'ROOT' :
                     keyType = 'FIELD'
-                else :
+                else:
                     _verbose( self.speak, 2, 'none or more than one type summary were selected, ')
                     keyType = SSStype
-            else :
+            else:
                 keyType = SSStype[0]
 
             _verbose( self.speak, 1, 'identified VIP key ' + VIPkey + ' for ' + str(keyType) + ' summary for the item ' + keyName )
@@ -289,26 +289,26 @@ class NEXUS(_SimResult):
             _verbose( self.speak, 1, 'forced to use inputs as VIP keywords')
         if self.ECLstyle is True and forceVIP is False:
             # if key in self.keysECL :
-            try :
+            try:
                 VIPkey, keyType, keyName = _fromECLtoVIP( key, self.speak )
-            except :
-                try :
+            except:
+                try:
                     VIPkey, keyType, keyName = alreadyVIP(key, SSStype)
-                except :
+                except:
                     pass
 
-        else : # VIP style first
-            try :
+        else: # VIP style first
+            try:
                 VIPkey, keyType, keyName = alreadyVIP(key, SSStype)
-            except :
-                try :
+            except:
+                try:
                     VIPkey, keyType, keyName = _fromECLtoVIP( key, self.speak )
-                except :
+                except:
                     pass
 
         if type(keyType) == str :
             keyTypeList = tuple([keyType])
-        else :
+        else:
             keyTypeList = tuple(keyType[:])
 
 
@@ -326,17 +326,17 @@ class NEXUS(_SimResult):
                             if VIPkey in self.results[sss][1]['Data'].keys() :
                                 RawCol = np.array( self.results[sss][1]['Data'][ VIPkey ] )
                                 _verbose( self.speak, 1, 'extracted ' + VIPkey + ' from ' + keyType + ' with lenght ' + str(len(RawCol)) )
-                                try :
+                                try:
                                     RawCol = RawCol.astype(int)
                                     _verbose( self.speak, 1, 'the values were converted to integer type')
-                                except :
-                                    try :
+                                except:
+                                    try:
                                         RawCol = RawCol.astype(float)
                                         _verbose( self.speak, 1, 'the values were converted to floating point type')
-                                    except :
+                                    except:
                                         _verbose( self.speak, 1, 'the values are treated as string type')
                                 return RawCol
-                else :
+                else:
                     for sss in list(self.results.keys()) :
                         if self.results[sss][0] == keyType :
                             if VIPkey in self.results[sss][1]['Data'].keys() :
@@ -346,14 +346,14 @@ class NEXUS(_SimResult):
                                 _verbose( self.speak, 1, 'extracted ' + VIPkey + ' from ' + keyType + ' with lenght ' + str(len(RawCol)) )
                                 _verbose( self.speak, 0, 'extracted ' + 'NAME' + ' from ' + keyType + ' with lenght ' + str(len(NameCol)) )
                                 _verbose( self.speak, 0, 'extracted ' + 'TIME' + ' from ' + keyType + ' with lenght ' + str(len(NameCol)) )
-                                try :
+                                try:
                                     RawCol = RawCol.astype(int)
                                     _verbose( self.speak, 1, 'the values were converted to integer type')
-                                except :
-                                    try :
+                                except:
+                                    try:
                                         RawCol = RawCol.astype(float)
                                         _verbose( self.speak, 1, 'the values were converted to floating point type')
-                                    except :
+                                    except:
                                         _verbose( self.speak, 1, 'the values are treated as string type')
 
                                 if type(keyName) == str :
@@ -368,7 +368,7 @@ class NEXUS(_SimResult):
                                     CleanCol = np.extract( np.char.equal( NameCol, keyName ), RawCol )
                                     CleanTime = np.extract( np.char.equal( NameCol, keyName ), TimeCol )
                                     _verbose( self.speak, 1, 'cleaned ' + VIPkey + ' with lenght ' + str(len(CleanCol)) + ' for item ' + keyName + '.' )
-                                else :
+                                else:
                                     _verbose( self.speak, 2, 'multiple ( ' + str(len(keyName)) + ' ) item options found for the key : ' + key + ':\n' + str(keyName) )
                                     CleanCol = np.array([], dtype='float')
                                     CleanTime = np.array([], dtype='float')
@@ -381,7 +381,7 @@ class NEXUS(_SimResult):
     def set_FieldTime(self) :
         if len( self.get_Restart() ) > 0 :
             FieldTime = self.checkRestarts('TIME')['TIME']
-        else :
+        else:
             FieldTime = self.loadVector('TIME', SSStype=['FIELD'])
         if FieldTime is None :
             if self.get_Vector('TIME')['TIME'] is not None :
@@ -390,9 +390,9 @@ class NEXUS(_SimResult):
             self.fieldtime = ( min(FieldTime), max(FieldTime), FieldTime )
 
     def get_Dates(self) :
-        try :
+        try:
             DateVector = _strDate( list( self.loadVector('DATE', 'FIELD', True) ), speak=(self.speak==1))
-        except :
+        except:
             DateVector = _strDate( list( self.loadVector('DATE', 'FIELD', True) ), formatIN='DD-MM-YYYY', speak=(self.speak==1))
         self.set_Vector( 'DATES', np.array( pd.to_datetime( DateVector ), dtype='datetime64[s]'), self.get_Unit('DATE'), DataType='datetime64', overwrite=True )
         #self.set_Vector( 'DATES', np.array( pd.to_datetime( self.get_Vector('DATE')['DATE'] ), dtype='datetime64[s]'), self.get_Unit('DATE'), DataType='datetime64', overwrite=True )
@@ -408,7 +408,7 @@ class NEXUS(_SimResult):
         #     for sss in self.results :
         #         if self.results[sss][0] == 'WELL' :
         #             wellsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() )
-        # else :
+        # else:
         #     for CSVname in self.CSV :
         #         for i in range( len( self.CSV[CSVname]['[HEADERS]']['VARIABLE'] ) ):
         #             if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ) > 0 :
@@ -454,7 +454,7 @@ class NEXUS(_SimResult):
                 if pattern in group :
                     areaList.append(group)
             return tuple(areaList)
-        else :
+        else:
             return self.groups
 
     def extract_Regions(self, pattern=None) :
@@ -464,7 +464,7 @@ class NEXUS(_SimResult):
         #     for sss in self.results :
         #         if self.results[sss][0] == 'REGION' :
         #             regionsList += ( ' '.join( self.results[sss][1]['Data']['NAME'] ).split() )
-        # else :
+        # else:
         #     pass
         for sss in self.results :
             if self.results[sss][0] == 'REGION' :
@@ -479,7 +479,7 @@ class NEXUS(_SimResult):
                 if pattern in region :
                     regionsList.append(region)
             return tuple(regionsList)
-        else :
+        else:
             return self.regions
 
     def directSSS(self, Key, SSStype):
@@ -501,7 +501,7 @@ class NEXUS(_SimResult):
         if type(Key) is str :
             if Key in self.results[SSS][1]['Data'] :
                 return self.results[SSS][1]['Data'][Key]
-            else :
+            else:
                 print("Key '" + Key + "' not found in SSS " + SSStype )
                 return None
 
@@ -520,7 +520,7 @@ class NEXUS(_SimResult):
             if SSS is None :
                 print('SSS type ' + SSStype + ' not found')
                 return {}
-            else :
+            else:
                 SSS = [ _extension(SSS)[1] + _extension(SSS)[0] ]
         elif SSStype is None :
             SSS = []
@@ -579,7 +579,7 @@ class NEXUS(_SimResult):
                     prod = self[['WOPR']]
                 elif self.is_Attribute('WGPR') :
                     prod = self[['WGPR']]
-                else :
+                else:
                     self['WSIR'] = 'WSALINITY'
                     self.set_Unit('WSIT', 'CONCENTRATION')
                     return None
@@ -602,13 +602,13 @@ class NEXUS(_SimResult):
                 self.keysECL = tuple( set( list(self.get_Keys()) + [Key] ) )
                 VIPkey, keyType, keyName = _fromECLtoVIP( Key, self.speak )
                 self.keysVIP = tuple( set( list(self.get_Keys()) + [ VIPkey +':'+ keyName ] ) )
-            else :
+            else:
                 self.keys = tuple( set( list(self.get_Keys()) [Key] ) )
                 self.keysVIP = tuple( set( list(self.get_Keys()) + [Key] ) )
                 ECLkey = _fromVIPtoECL(Key, SSStype, self.speak)
                 self.keysECL = tuple( set( list(self.get_Keys()) + [ECLkey] ) )
 
-        else :
+        else:
             raise TypeError('Key must be string')
 
     def list_Keys(self, pattern=None, reload=False) :
@@ -625,7 +625,7 @@ class NEXUS(_SimResult):
         """
         # if self.ECLstyle :
         #     self.keys = self.keysECL
-        # else :
+        # else:
         #     self.keys = self.keysVIP
 
         if len(self.keys) == 0 or reload is True :
@@ -637,7 +637,7 @@ class NEXUS(_SimResult):
             keys = tuple( keys )
         if self.ECLstyle :
             self.keysECL = keys
-        else :
+        else:
             self.keysVIP = keys
 
         if pattern is None :
@@ -645,7 +645,7 @@ class NEXUS(_SimResult):
                 return self.keysECL
             elif self.VIPstyle is True :
                 return self.keysVIP
-            else :
+            else:
                 return self.keys
         else:
             return tuple( self.extract_Keys(pattern) )
@@ -697,12 +697,12 @@ class NEXUS(_SimResult):
                     keysList.append(key)
             if len(keysList) > 0 :
                 return tuple(keysList)
-        else :
+        else:
             if self.ECLstyle is True :
                 return self.keysECL
             elif self.VIPstyle is True :
                 return self.keysVIP
-            else :
+            else:
                 return self.keys
 
     def get_Unit(self, Key='--EveryType--') :
@@ -720,12 +720,12 @@ class NEXUS(_SimResult):
             if Key in self.units :
                 if self.units[Key] is not None:
                     return self.units[Key]
-                else : # if self.units[Key] is None:
+                else: # if self.units[Key] is None:
                     if ':' in Key :
                         if _mainKey(Key) in self.units :
                             if self.units[ _mainKey(Key) ] is not None :
                                 return self.units[ _mainKey(Key) ]
-                            else :
+                            else:
                                 return self.extract_Unit(Key)
             if Key == 'DATES' or Key == 'DATE' :
                     self.units[Key] = 'DATE'
@@ -743,7 +743,7 @@ class NEXUS(_SimResult):
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
-                    else :
+                    else:
                         return None
                 elif Key[0] == 'G' :
                     UList=[]
@@ -755,7 +755,7 @@ class NEXUS(_SimResult):
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
-                    else :
+                    else:
                         return None
                 elif Key[0] == 'R' :
                     UList=[]
@@ -767,7 +767,7 @@ class NEXUS(_SimResult):
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
-                    else :
+                    else:
                         return None
                 UList = None
 
@@ -778,7 +778,7 @@ class NEXUS(_SimResult):
                 if ':' in each :
                     Key.append( _mainKey(each) )
                     KeyDict[ _mainKey(each) ] = each
-                else :
+                else:
                     Key.append(each)
             Key = list( set (Key) )
             Key.sort()
@@ -790,13 +790,13 @@ class NEXUS(_SimResult):
                     tempUnits[each] = self.extract_Unit(each)
                 elif each in self.keys and ( each == 'DATES' or each == 'DATE' ) :
                     tempUnits[each] = 'DATE'
-                else :
+                else:
                     if KeyDict[each] in self.units :
                         tempUnits[each] = self.units[KeyDict[each]]
                     elif KeyDict[each] in self.keys :
                         if self.extract_Unit(KeyDict[each]) is None :
                             tempUnits[each] = self.extract_Unit(KeyDict[each])
-                        else :
+                        else:
                             tempUnits[each] = self.extract_Unit(KeyDict[each]).strip('( )').strip("'").strip('"')
             return tempUnits
         elif type(Key) in [list,tuple] :
@@ -809,7 +809,7 @@ class NEXUS(_SimResult):
                 elif type(each) == str and each.strip() in self.keys :
                     if self.extract_Unit(each.strip()) is None :
                         tempUnits[each] = self.extract_Unit(each.strip())
-                    else :
+                    else:
                         tempUnits[each] = self.extract_Unit(each.strip()).strip('( )').strip("'").strip('"')
             return tempUnits
 
@@ -818,7 +818,7 @@ class NEXUS(_SimResult):
             for Vector in list(self.results[sss][1]['Units'].keys()) :
                 if Vector == 'DATE' or Vector == 'DATES' :
                     self.units[Vector] = 'DATE'
-                else :
+                else:
                     if self.ECLstyle is True :
                         ECLkey = _fromVIPtoECL( Vector, self.results[sss][0], self.speak )
                         if ECLkey is not None :
@@ -852,9 +852,9 @@ class NEXUS(_SimResult):
                                     break
                     if self.units[key] is None :
                         _verbose( self.speak, 3, 'impossible to found unit system for key ' + key )
-                    else :
+                    else:
                         _verbose( self.speak, 1, 'found unit system ' + self.units[key] + ' for key ' + key )
-                else :
+                else:
                     self.units[key] = self.extract_Unit(key)
                     if self.units[key] is None :
                         VIPkey = _fromECLtoVIP( key, self.speak )
@@ -864,7 +864,7 @@ class NEXUS(_SimResult):
                                     break
                     if self.units[key] is None :
                         _verbose( self.speak, 3, 'impossible to found unit system for key ' + key )
-                    else :
+                    else:
                         _verbose( self.speak, 1, 'found unit system ' + self.units[key] + ' for key ' + key )
 
     def OUTPAVG(self, KeyArguments=None, ECLkey=None) :
@@ -880,9 +880,9 @@ class NEXUS(_SimResult):
                         if ':' in ECLkey :
                             if self.is_Key( 'WBP:'+ECLkey.split(':')[1] ) :
                                 self.set_Vector( Key=ECLkey, VectorData=self('WBP:'+ECLkey.split(':')[1]), Units=self.get_Unit('WBP:'+ECLkey.split(':')[1]), DataType='float', overwrite=True )
-                            else :
+                            else:
                                 _verbose( self.speak, -1, " the corresponding well for the key '" + _mainKey(ECLkey) + "' does not have WBP here.")
-                        else :
+                        else:
                             _verbose( self.speak, -1, " the well name can not be found in the key '" + ECLkey + "'\n use .set_Vector() method to set an especific key")
                 elif self.is_Att(ECLkey) :
                     print(" WARNING: the attribute '" + ECLkey + "' already exists here, do you want to overwrite this attribute for all the wells?" )
@@ -892,7 +892,7 @@ class NEXUS(_SimResult):
                     if user in ['Y', 'YES', 'SI', 'SÍ', 'OUI'] :
                         for W in self.get_Wells() :
                             self.set_Vector( Key=W, VectorData=self('WBP:'+W), Units=self.get_Unit('WBP:'+W), DataType='float', overwrite=True )
-                else :
+                else:
                     for W in self.get_Wells() :
                         self.set_Vector( Key=W, VectorData=self('WBP:'+W), Units=self.get_Unit('WBP:'+W), DataType='float', overwrite=True )
         elif KeyArguments is not None :
@@ -902,7 +902,7 @@ class NEXUS(_SimResult):
                     if KeyArguments.upper() != 'WELL' and KeyArguments[0] == 'W' :
                         _verbose( self.speak, 2, " the KeyArguments '" + KeyArguments + "' seems to be a ECL style keyword...")
                         self.OUTPAVG(ECLkey=KeyArguments)
-                else :
+                else:
                     KeyArguments = KeyArguments.split()
                     WPAVE = ['WPAVE', '1st', '2nd', '3rd', '4th']
 

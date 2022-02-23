@@ -7,7 +7,7 @@ Created on Sun Oct 11 11:14:32 2020
 """
 
 __version__ = '0.73.25'
-__release__ = 220211
+__release__ = 220223
 __all__ = ['SimSeries', 'SimDataFrame']
 
 from sys import getsizeof
@@ -32,12 +32,12 @@ from .._common.units import convertUnit, unitProduct, unitDivision, convertible 
 from .._common.slope import slope as _slope
 
 
-try :
+try:
     from datafiletoolbox import multisplit, isDate, strDate
-except :
+except:
     try:
         from .._common.stringformat import multisplit, isDate, date as strDate
-    except :
+    except:
         raise ImportError("please install 'datafiletoolbox'.")
 
 _SERIES_WARNING_MSG = """\
@@ -65,7 +65,7 @@ def _simseries_constructor_with_fallback(data=None, index=None, units=None, **kw
         return Series(data=data, index=index, **kwargs)
 
 
-def _Series2Frame(aSimSeries) :
+def _Series2Frame(aSimSeries):
     """
     when a row is extracted from a DataFrame, Pandas returns a Series in wich
     the columns of the DataFrame are converted to the indexes of the Series and
@@ -75,40 +75,40 @@ def _Series2Frame(aSimSeries) :
 
     Works with SimSeries as well as with Pandas standard Series
     """
-    if isinstance(aSimSeries, DataFrame) :
+    if isinstance(aSimSeries, DataFrame):
         return aSimSeries
-    if type(aSimSeries) is SimSeries :
-        try :
+    if type(aSimSeries) is SimSeries:
+        try:
             return SimDataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list())), units=aSimSeries.get_Units(), index=aSimSeries.columns, speak=aSimSeries.speak, indexName=aSimSeries.index.name, indexUnits=aSimSeries.indexUnits, nameSeparator=aSimSeries.nameSeparator, intersectionCharacter=aSimSeries.intersectionCharacter, autoAppend=aSimSeries.autoAppend, operatePerName=aSimSeries.operatePerName)
-        except :
+        except:
             return aSimSeries
-    if type(aSimSeries) is Series :
-        try :
+    if type(aSimSeries) is Series:
+        try:
             return DataFrame(data=dict(zip(list(aSimSeries.index), aSimSeries.to_list())), index=aSimSeries.columns)
-        except :
+        except:
             return aSimSeries
 
-def _cleanAxis(axis=None) :
-    if axis is None :
+def _cleanAxis(axis=None):
+    if axis is None:
         return 0
-    if type(axis) is str and axis.lower() in ['row', 'rows', 'ind', 'index'] :
+    if type(axis) is str and axis.lower() in ['row', 'rows', 'ind', 'index']:
         return 0
-    if type(axis) is str and axis.lower() in ['col', 'cols', 'column', 'columns'] :
+    if type(axis) is str and axis.lower() in ['col', 'cols', 'column', 'columns']:
         return 1
-    if type(axis) is bool :
+    if type(axis) is bool:
         return int(axis)
-    if type(axis) is float :
+    if type(axis) is float:
         return int(axis)
     return axis
 
-def jitter(df,std=0.10) :
+def jitter(df,std=0.10):
     import numpy as np
     jit = np.random.randn(len(df),len(df.columns))
     jit = ( jit * std ) + 1
     return df*jit
 
 def _stringNewName(newName):
-    if len(newName) == 1 :
+    if len(newName) == 1:
         return list(newName.values())[0]
     else:
         return '∩'.join(map(str,set(newName.values())))
@@ -247,7 +247,7 @@ class _SimLocIndexer(indexing._LocIndexer):
 #         return out
 
 
-class SimSeries(Series) :
+class SimSeries(Series):
     """
     A Series object designed to store data with units.
 
@@ -274,7 +274,7 @@ class SimSeries(Series) :
     """
     _metadata = ["units", "speak", 'indexUnits', 'nameSeparator', 'intersectionCharacter', 'autoAppend', 'spdLocator', 'operatePerName']  #, 'spdiLocator']
 
-    def __init__(self, data=None, units=None, index=None, name=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩' , autoAppend=False, operatePerName=False, *args, **kwargs) :
+    def __init__(self, data=None, units=None, index=None, name=None, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩' , autoAppend=False, operatePerName=False, *args, **kwargs):
         Uname = None
         Udict = None
         self.units = None
@@ -288,31 +288,31 @@ class SimSeries(Series) :
         # self.spdiLocator = _iSimLocIndexer("iloc", self)
 
         # validaton
-        if isinstance(data, DataFrame) and len(data.columns)>1 :
+        if isinstance(data, DataFrame) and len(data.columns)>1:
             raise ValueError("'data' paramanter can be an instance of DataFrame but must have only one column.")
 
         indexInput = None
         # catch index keyword from input parameters
-        if index is not None :
+        if index is not None:
             indexInput = index
-        elif 'index' in kwargs and kwargs['index'] is not None :
+        elif 'index' in kwargs and kwargs['index'] is not None:
             indexInput = kwargs['index']
-        elif len(args) >= 3 and args[2] is not None :
+        elif len(args) >= 3 and args[2] is not None:
             indexInput = args[2]
         # if index is a Series, get the name
         elif isinstance(indexInput, Series):
-            if type(indexInput.name) is str :
+            if type(indexInput.name) is str:
                 indexInput = indexInput.name
         # if index is None and data is SimSeries or SimDataFrame get the name
-        elif type(data) in [SimSeries, SimDataFrame] and type(data.index.name) is str and len(data.index.name)>0 :
+        elif type(data) in [SimSeries, SimDataFrame] and type(data.index.name) is str and len(data.index.name)>0:
             indexInput = data.index.name
             self.indexUnits = data.indexUnits.copy() if type(data.indexUnits) is dict else data.indexUnits
 
         # catch units or get from data if it is SimDataFrame or SimSeries
         if type(units) is dict and len(units) > 0:
             Udict, units = units, None
-            if len(Udict) == 1 :
-                if type(Udict[ list(Udict.keys())[0] ] ) is str :
+            if len(Udict) == 1:
+                if type(Udict[ list(Udict.keys())[0] ] ) is str:
                     Uname = list(Udict.keys())[0]
                     units = Udict[ Uname ]
         elif type(units) is str:
@@ -323,7 +323,7 @@ class SimSeries(Series) :
                 if indexUnits is None:
                     indexUnits = data.indexUnits
                     self.indexUnits = indexUnits
-            elif type(data.units) is dict :
+            elif type(data.units) is dict:
                 units = data.units.copy()
                 if data.index.name not in units:
                         units[data.index.name] = data.indexUnits
@@ -343,77 +343,77 @@ class SimSeries(Series) :
         kwargs.pop('operatePerName',None)
         kwargs.pop('transposed',None)
         # convert to pure Pandas
-        if type(data) in [ SimDataFrame, SimSeries ] :
+        if type(data) in [ SimDataFrame, SimSeries ]:
             self.nameSeparator = data.nameSeparator
             data = data.to_Pandas()
         super().__init__(data=data, index=index, *args, **kwargs)
 
         # set the name of the index
-        if (self.index.name is None or(type(self.index.name) is str and len(self.index.name)==0 ) ) and (type(indexInput) is str and len(indexInput)>0 ) :
+        if (self.index.name is None or(type(self.index.name) is str and len(self.index.name)==0 ) ) and (type(indexInput) is str and len(indexInput)>0 ):
             self.index.name = indexInput
         # overwrite the index.name with input from the argument indexName
-        if indexName is not None and type(indexName) is str and len(indexName.strip())>0 :
+        if indexName is not None and type(indexName) is str and len(indexName.strip())>0:
             self.set_indexName(indexName)
-        elif 'indexName' in kwargsB and type(kwargsB['indexName']) is str and len(kwargsB['indexName'].strip())>0 :
+        elif 'indexName' in kwargsB and type(kwargsB['indexName']) is str and len(kwargsB['indexName'].strip())>0:
             self.set_indexName(kwargsB['indexName'])
 
         # set the units
-        if self.name is None and Uname is not None :
+        if self.name is None and Uname is not None:
             self.name = Uname
-        if self.name is not None and self.units is None and Udict is not None :
-            if self.name in Udict :
+        if self.name is not None and self.units is None and Udict is not None:
+            if self.name in Udict:
                 self.units = Udict[ self.name ]
-            else :
-                for each in self.index :
-                    if each in Udict :
-                        if type(self.units) is dict :
+            else:
+                for each in self.index:
+                    if each in Udict:
+                        if type(self.units) is dict:
                             self.units[each] = Udict[each]
-                        else :
+                        else:
                             self.units = { each:Udict[each] }
-                    else :
-                        if type(self.units) is dict :
+                    else:
+                        if type(self.units) is dict:
                             self.units[each] = 'UNITLESS'
-                        else :
+                        else:
                             self.units = { each:'UNITLESS' }
-        if Udict is not None and self.index.name is not None and self.index.name in Udict :
+        if Udict is not None and self.index.name is not None and self.index.name in Udict:
             self.indexUnits = Udict[self.index.name]
         # overwrite the indexUnits with input from the argument indexName
-        if indexUnits is not None and type(indexUnits) is str and len(indexUnits.strip())>0 :
+        if indexUnits is not None and type(indexUnits) is str and len(indexUnits.strip())>0:
             self.indexUnits = indexUnits
-        if 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is str and len(kwargsB['indexUnits'].strip())>0 :
+        if 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is str and len(kwargsB['indexUnits'].strip())>0:
             self.indexUnits = kwargsB['indexUnits']
-        elif 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is dict and len(kwargsB['indexUnits'])>0 :
+        elif 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is dict and len(kwargsB['indexUnits'])>0:
             self.indexUnits = kwargsB['indexUnits'].copy()
         if self.indexUnits is not None and self.index.name is not None and len(self.index.name) > 0 and type(self.units) is dict and self.index.name not in self.units:
             self.units[self.index.name] = self.indexUnits
 
         # get separator for the column names, 'partA'+'separator'+'partB'
-        if nameSeparator is not None and type(nameSeparator) is str and len(nameSeparator.strip())>0 :
+        if nameSeparator is not None and type(nameSeparator) is str and len(nameSeparator.strip())>0:
             self.nameSeparator = nameSeparator
-        elif 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0 :
+        elif 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0:
             self.set_NameSeparator(kwargsB['nameSeparator'])
-        elif (self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False ) and (type(self.name) is str and ':' in self.name ) :
+        elif (self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False ) and (type(self.name) is str and ':' in self.name ):
             self.nameSeparator = ':'
-        elif self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False :
+        elif self.nameSeparator is None or self.nameSeparator == '' or self.nameSeparator is False:
             self.nameSeparator = ''
-        elif self.nameSeparator is True :
+        elif self.nameSeparator is True:
             self.nameSeparator = ':'
-        else :
+        else:
             self.nameSeparator = ':'
 
         if intersectionCharacter is not None and type(intersectionCharacter) is str:
             self.intersectionCharacter = intersectionCharacter
 
         # catch autoAppend from kwargs
-        if autoAppend is not None :
+        if autoAppend is not None:
             self.autoAppend = bool(autoAppend)
-        elif 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None :
+        elif 'autoAppend' in kwargsB and kwargsB['autoAppend'] is not None:
             self.autoAppend = bool(kwargs['autoAppend'] )
 
         # catch operatePerName from kwargs
-        if operatePerName is not None :
+        if operatePerName is not None:
             self.operatePerName = bool(operatePerName)
-        elif 'operatePerName' in kwargsB and kwargsB['operatePerName'] is not None :
+        elif 'operatePerName' in kwargsB and kwargsB['operatePerName'] is not None:
             self.operatePerName = bool(kwargs['operatePerName'] )
 
         # set the provided name
@@ -433,7 +433,7 @@ class SimSeries(Series) :
         return SimDataFrame
 
     @property
-    def _SimParameters(self) :
+    def _SimParameters(self):
         return {'units':self.units.copy() if type(self.units) is dict else self.units,
                 'name':self.name,
                 'speak':self.speak if hasattr(self,'speak') else False,
@@ -468,13 +468,13 @@ class SimSeries(Series) :
             return self
         if type(key) is str and key.strip() == self.name and not key.strip() in self.index :
             return self
-        else :
-            try :
+        else:
+            try:
                 return self.loc[key]
-            except :
-                try :
+            except:
+                try:
                     return self.iloc[key]
-                except :
+                except:
                     raise KeyError("the requested Key is not a valid index or name: "+str(key))
 
     def __contains__(self, item) :
@@ -482,7 +482,7 @@ class SimSeries(Series) :
             return True
         elif item in self.index :
             return True
-        else :
+        else:
             return False
 
     def set_index(self, name) :
@@ -509,7 +509,7 @@ class SimSeries(Series) :
         if self.nameSeparator in [None, '', False] :
             warn(" NameSeparator is not defined.")
             return ''
-        else :
+        else:
             return self.nameSeparator
 
     def transpose(self):
@@ -579,7 +579,7 @@ class SimSeries(Series) :
                 objs += [each]
             elif self.nameSeparator in each :
                 objs += [each.split(self.nameSeparator)[-1]]
-            else :
+            else:
                 objs += [each]
         return tuple(set(objs))
 
@@ -593,7 +593,7 @@ class SimSeries(Series) :
                 objs += [each]
             elif self.nameSeparator in each :
                 objs += [each.split(self.nameSeparator)[0]]
-            else :
+            else:
                 objs += [each]
         return tuple(set(objs))
 
@@ -697,13 +697,13 @@ class SimSeries(Series) :
                 objs[each] = each.split(self.nameSeparator )[-1]
                 # self.units[ each.split(self.nameSeparator )[-1] ] = self.units[ each ]
                 # del(self.units[each])
-            else :
+            else:
                 objs[each] = each
         if len(self.columns) == 1:
             objs = list(objs.values())[0]
         if inplace :
             self.rename(objs, inplace=True)
-        else :
+        else:
             return self.rename(objs, inplace=False)
 
     def renameLeft(self, inplace=False):
@@ -723,7 +723,7 @@ class SimSeries(Series) :
             objs = list(objs.values())[0]
         if inplace :
             self.rename(objs, inplace=True)
-        else :
+        else:
             return self.rename(objs, inplace=False)
 
     def _CommonRename(self, SimSeries1, SimSeries2=None, LR=None) :
@@ -756,7 +756,7 @@ class SimSeries(Series) :
             for c in SDF1C.columns :
                 if c in SDF2C.columns :
                     commonNames[c] = str(SDF1.left[0]) + str(cha) + str(SDF2.left[0]) + str(SDF1.nameSeparator) + str(c)
-                else :
+                else:
                     commonNames[c] = str(SDF1.left[0]) + str(SDF1.nameSeparator) + str(c)
             for c in SDF2C.columns :
                 if c not in SDF1C.columns :
@@ -775,7 +775,7 @@ class SimSeries(Series) :
             for c in SDF1C.columns :
                 if c in SDF2C.columns :
                     commonNames[c] = str(c) + str(SDF1.nameSeparator) + str(SDF1.right[0]) + str(cha) + str(SDF2.right[0])
-                else :
+                else:
                     commonNames[c] = str(c) + str(SDF1.nameSeparator) + str(SDF1.right[0])
             for c in SDF2C.columns :
                 if c not in SDF1C.columns :
@@ -828,7 +828,7 @@ class SimSeries(Series) :
             if inplace:
                 super().rename(index=index, axis=axis, copy=copy, inplace=inplace, level=level, errors=errors)
                 cAfter = list(self.index)
-            else :
+            else:
                 catch = super().rename(index=index, axis=axis, copy=copy, inplace=inplace, level=level, errors=errors)
                 cAfter = list(catch.index)
 
@@ -839,7 +839,7 @@ class SimSeries(Series) :
                 self.units = newUnits
                 self.spdLocator = _SimLocIndexer("loc", self)
                 return None
-            else :
+            else:
                 catch.units = newUnits
                 catch.spdLocator = _SimLocIndexer("loc", catch)
                 return catch
@@ -848,7 +848,7 @@ class SimSeries(Series) :
                 self.name = index.strip()
                 self.spdLocator = _SimLocIndexer("loc", self)
                 return None
-            else :
+            else:
                 catch = self.copy()
                 catch.name = index
                 catch.spdLocator = _SimLocIndexer("loc", catch)
@@ -1024,9 +1024,9 @@ class SimSeries(Series) :
             if self.nameSeparator in each :
                 if each.split(self.nameSeparator )[0] in atts :
                     atts[each.split(self.nameSeparator )[0]] += [each.split(self.nameSeparator )[-1]]
-                else :
+                else:
                     atts[each.split(self.nameSeparator )[0]] = [each.split(self.nameSeparator )[-1]]
-            else :
+            else:
                 if each not in atts :
                     atts[each] = []
         for att in atts :
@@ -1037,7 +1037,7 @@ class SimSeries(Series) :
     def properties(self) :
         if len(self.attributes.keys()) > 0 :
             return tuple(self.attributes.keys())
-        else :
+        else:
             return tuple()
 
     def get_Attributes(self, pattern=None) :
@@ -1056,7 +1056,7 @@ class SimSeries(Series) :
         """
         if pattern is None :
             return tuple(self.attributes.keys())
-        else :
+        else:
             return tuple(fnmatch.filter(tuple(self.attributes.keys()), pattern ) )
 
     def get_Keys(self, pattern=None) :
@@ -1077,7 +1077,7 @@ class SimSeries(Series) :
             raise TypeError('pattern argument must be a string.\nreceived '+str(type(pattern))+' with value '+str(pattern))
         if type(self.name) is str :
             keys =(self.name, )
-        else :
+        else:
             keys = tuple(self.index )
         if pattern is None :
             return keys
@@ -1113,7 +1113,7 @@ class SimSeries(Series) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = other.S.add(selfC.S, fill_value=0)
                     params['units'] = other.units
-                else :
+                else:
                     result = self.S.add(other.S, fill_value=0)
                     params['units'] = self.units+'+'+other.units
                 try:
@@ -1124,7 +1124,7 @@ class SimSeries(Series) :
                     params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
-            else :
+            else:
                 raise NotImplementedError
 
         # other is Pandas Series
@@ -1166,7 +1166,7 @@ class SimSeries(Series) :
                     selfC = convertUnit(self, self.units, other.units, self.speak)
                     result = selfC.sub(other, fill_value=0)
                     params['units'] = other.units
-                else :
+                else:
                     result = self.sub(other, fill_value=0)
                     params['units'] = self.units+'-'+other.units
                 try:
@@ -1177,7 +1177,7 @@ class SimSeries(Series) :
                     params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
-            else :
+            else:
                 raise NotImplementedError
 
         # other is Pandas Series
@@ -1227,7 +1227,7 @@ class SimSeries(Series) :
                     selfC = convertUnit(self, self.units, unitBase(other.units), self.speak )
                     result = other.mul(selfC)
                     params['units'] = unitProduct(other.units, self.units)
-                else :
+                else:
                     result = self.mul(other)
                     params['units'] = self.units + '*' + other.units
                 try:
@@ -1238,7 +1238,7 @@ class SimSeries(Series) :
                     params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
-            else :
+            else:
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
@@ -1274,7 +1274,7 @@ class SimSeries(Series) :
                     selfC = convertUnit(self, self.units, unitBase(other.units), self.speak )
                     result = selfC.truediv(other)
                     params['units'] = unitDivision(other.units, self.units)
-                else :
+                else:
                     result = self.truediv(other)
                     params['units'] = self.units + '/' + other.units
                 try:
@@ -1285,7 +1285,7 @@ class SimSeries(Series) :
                     params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
-            else :
+            else:
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
@@ -1324,13 +1324,13 @@ class SimSeries(Series) :
                     selfC = convertUnit(self, self.units, unitBase(other.units), self.speak )
                     result = other.floordiv(selfC)
                     params['units'] = unitDivision(other.units, self.units)
-                else :
+                else:
                     result = self.floordiv(other)
                     params['units'] = self.units + '/' + other.units
                 params['dtype'] = result.dtype  # self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
-            else :
+            else:
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
@@ -1358,7 +1358,7 @@ class SimSeries(Series) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = other.mod(selfC)
                     params['units'] = other.units
-                else :
+                else:
                     result = self.mod(other)
                 try:
                     params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
@@ -1368,7 +1368,7 @@ class SimSeries(Series) :
                     params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
-            else :
+            else:
                 raise NotImplementedError
 
         # let's Pandas deal with other types, maintain units and dtype
@@ -1398,7 +1398,7 @@ class SimSeries(Series) :
                     selfC = convertUnit(self, self.units, other.units, self.speak )
                     result = other.pow(selfC)
                     params['units'] = other.units+'^'+other.units
-                else :
+                else:
                     result = self.pow(other)
                 try:
                     params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
@@ -1408,7 +1408,7 @@ class SimSeries(Series) :
                     params['dtype'] = result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params )
-            else :
+            else:
                 raise NotImplementedError
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
@@ -1591,7 +1591,7 @@ class SimSeries(Series) :
             for each in self.index:
                 if each in self.units:
                     uDic[each] = self.units[each]
-                else :
+                else:
                     uDic[each] = 'UNITLESS'
         else:
             return self.units.copy() if type(self.units) is dict else self.units
@@ -1756,7 +1756,7 @@ class SimSeries(Series) :
                     if filterStr[-1] == ' ' :
                         filterStr = filterStr.rstrip()
                     filterStr += key+'()'
-                else :
+                else:
                     for SO in specialOperation :
                         if key.strip().endswith(SO) :
                             key = key[:-len(SO)]
@@ -1765,7 +1765,7 @@ class SimSeries(Series) :
                 # catch particular operations performed by Numpy
                 if key in numpyOperation :
                     raise ValueError("wrong syntax for '"+key+"(blank space before) in:\n   "+conditions)
-                else :
+                else:
                     for NO in numpyOperation :
                         if key.strip().endswith(NO) :
                             key = key[:-len(NO)]
@@ -1776,7 +1776,7 @@ class SimSeries(Series) :
                 # catch aggregation operations performed by Pandas
                 if key in pandasAggregation :
                     PandasAgg = key+'(axis=1)'
-                else :
+                else:
                     for PA in pandasAggregation :
                         if key.strip().endswith(PA) :
                             PandasAgg = PA+'(axis=1)'
@@ -1797,7 +1797,7 @@ class SimSeries(Series) :
                     filterStr = filterStr.rstrip()
                     filterStr += " self.S["+ str(list(self.find_Keys(key)) ) +"]"
                     PandasAgg = '.any(axis=1)'
-                else :
+                else:
                     filterStr += ' ' + key
                 filterStr = filterStr.rstrip()
                 filterStr += foundSO + foundNO
@@ -1806,9 +1806,9 @@ class SimSeries(Series) :
 
         if type(conditions) is not str :
             if type(conditions) is not list :
-                try :
+                try:
                     conditions = list(conditions)
-                except :
+                except:
                     raise TypeError('conditions argument must be a string.')
             conditions = ' and '.join(conditions)
 
@@ -1848,14 +1848,14 @@ class SimSeries(Series) :
             # catch enclosed strings
             if conditions[i] in ['"', "'", '['] :
                 if conditions[i] in ['"', "'"] :
-                    try :
+                    try:
                         f = conditions.index(conditions[i], i+1 )
-                    except :
+                    except:
                         raise ValueError('wring syntax, closing ' + conditions[i] + ' not found in:\n   '+conditions)
-                else :
-                    try :
+                else:
+                    try:
                         f = conditions.index(']', i+1 )
-                    except :
+                    except:
                         raise ValueError("wring syntax, closing ']' not found in:\n   "+conditions)
                 if f > i+1 :
                     key = conditions[i+1:f]
@@ -1912,7 +1912,7 @@ class SimSeries(Series) :
                 continue
 
             # catch other characters
-            else :
+            else:
                 key += conditions[i]
                 i += 1
                 continue
@@ -1942,14 +1942,14 @@ class SimSeries(Series) :
 
         if len(retTuple ) == 1 :
             return retTuple[0]
-        else :
+        else:
             return tuple(retTuple )
 
     def sort_values(self, axis=0, ascending=True, inplace=False, kind='quicksort', na_position='last', ignore_index=False, key=None) :
         if inplace :
             super().sort_values(axis=axis, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
             return None
-        else :
+        else:
             return SimSeries(data=self.S.sort_values(axis=axis, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
 
     def head(self,n=5):
@@ -2201,7 +2201,7 @@ class SimSeries(Series) :
             if type(column) is str and column in self.columns:
                 if 'datetime' in str(self[column].dtype):
                     return realYear(self[column])
-                else :
+                else:
                     raise ValueError('selected column is not a valid date format')
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
@@ -2426,13 +2426,13 @@ class SimDataFrame(DataFrame) :
                 for key in list(self.index):
                     if key is not None and key in units:
                         self.units[key] = units[key]
-                    else :
+                    else:
                         self.units[key] = 'UNITLESS'
             elif not self.transposed:
                 for key in list(self.columns):
                     if key is not None and key in units:
                         self.units[key] = units[key]
-                    else :
+                    else:
                         self.units[key] = 'UNITLESS'
             if self.index.name in units:
                 self.units[self.index.name] = units[self.index.name]
@@ -2529,7 +2529,7 @@ class SimDataFrame(DataFrame) :
         if self.nameSeparator in [None, '', False] :
             warn(" NameSeparator is not defined.")
             return ''
-        else :
+        else:
             return self.nameSeparator
 
     def set_index(self, key, drop=False, append=False, inplace=False, verify_integrity=False, **kwargs) :
@@ -2682,7 +2682,7 @@ Copy of input object, shifted.
             columns = [columns]
         if columns is None :
             cols = list(self.columns)
-        else :
+        else:
             cols = columns.copy()
 
         # validate split_by parameter
@@ -2713,11 +2713,11 @@ Copy of input object, shifted.
                         names =('REGIONS', )
                     elif names == 'C' :
                         names =('CONNECTIONS', )
-                    else :
+                    else:
                         names =('Sheet1', )
-                else :
+                else:
                     names =('Sheet1', )
-            else : # use the provided sheet_name
+            else: # use the provided sheet_name
                 if type(sheet_name) is not str :
                     raise TypeError("'sheet_name' must be a string.")
                 if len(sheet_name) > 32 and verbose :
@@ -2737,10 +2737,10 @@ Copy of input object, shifted.
         elif type(split_by) is int :
             if split_by == 0 :
                 raise ValueError(" integer `split_by´ parameter must be positive or negative, not zero.")
-            else :
+            else:
                 names = tuple(sorted(set([iChar(c)(split_by) for c in cols] )))
 
-        else :
+        else:
             raise ValueError(" `split_by´ parameter must be 'left', 'right', 'first', 'last', an integer or None.")
 
         # initialize an instance of ExcelWriter or use the instance provided
@@ -2754,7 +2754,7 @@ Copy of input object, shifted.
                 if verbose :
                     print(" the file")
             SDFwriter = ExcelWriter(excel_writer, engine='xlsxwriter')
-        else :
+        else:
             raise ValueError(" `excel_writer´ parameter must be a string path to an .xlsx file or an ExcelWriter instance.")
 
         headerRows = 2 if header is True else 0
@@ -2764,7 +2764,7 @@ Copy of input object, shifted.
                 indexName =('', )
             if type(self.index) is pd.core.indexes.multi.MultiIndex :
                 indexName = tuple(self.index.names)
-            else :
+            else:
                 indexName =(self.index.name, )
             indexUnits = '' if self.indexUnits is None else self.indexUnits
             indexCols = len(self.index.names) if type(self.index) is pd.core.indexes.multi.MultiIndex else 1
@@ -3081,7 +3081,7 @@ Copy of input object, shifted.
                 self.replace(0, np.nan, inplace=True)
                 self.dropna(axis='columns', how='all', inplace=True)
                 self.replace(np.nan, 0, inplace=True)
-            else :
+            else:
                 raise ValueError(" valid `axis´ argument are 'index', 'columns' or 'both'.")
         else:
             if axis in ['both', 2] :
@@ -3090,7 +3090,7 @@ Copy of input object, shifted.
                 return self.replace(0, np.nan).dropna(axis='index', how='all').replace(np.nan, 0)
             elif axis in ['columns', 'column', 'col', 'cols', 1] :
                 return self.replace(0, np.nan).dropna(axis='columns', how='all').replace(np.nan, 0)
-            else :
+            else:
                 raise ValueError(" valid `axis´ argument are 'index', 'columns' or 'both'.")
 
 
@@ -3203,7 +3203,7 @@ Copy of input object, shifted.
         userby = by if len(by) > 0 else None
         by = [self.index.year, self.index.month, self.index.day] + by
 
-        try :
+        try:
             result = self.DF.groupby(by=by)  # [self.index.year, self.index.month, self.index.day]
         except:
             raise TypeError('index must be of datetime type.')
@@ -3236,7 +3236,7 @@ Copy of input object, shifted.
             values = result.first().append(result.last().iloc[-1] )
             deltavalues = np.diff(values.transpose())
             result = DataFrame(data=(deltavalues/deltaindex).transpose(), index=result.first().index, columns=self.columns)
-        else :
+        else:
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)
@@ -3351,7 +3351,7 @@ Copy of input object, shifted.
         userby = by if len(by) > 0 else None
         by = [self.index.year, self.index.month] + by
 
-        try :
+        try:
             result = self.DF.groupby(by=by)  # [self.index.year, self.index.month]
         except:
             raise TypeError('index must be of datetime type.')
@@ -3384,7 +3384,7 @@ Copy of input object, shifted.
             values = result.first().append(result.last().iloc[-1])
             deltavalues = np.diff(values.transpose())
             result = DataFrame(data=(deltavalues/deltaindex).transpose(), index=result.first().index, columns=self.columns)
-        else :
+        else:
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)
@@ -3554,7 +3554,7 @@ Copy of input object, shifted.
         if len(by) == 1:
             by = by[0]
 
-        try :
+        try:
             result = self.DF.groupby(by=by)  # self.index.year
         except:
             raise TypeError('index must be of datetime type.')
@@ -3587,7 +3587,7 @@ Copy of input object, shifted.
             values = result.first().append(result.last().iloc[-1] )
             deltavalues = np.diff(values.transpose())
             result = DataFrame(data=(deltavalues/deltaindex).transpose(), index=result.first().index, columns=self.columns)
-        else :
+        else:
             raise ValueError(" outBy parameter is not valid.")
 
         output = SimDataFrame(data=result, **self._SimParameters)
@@ -3653,7 +3653,7 @@ Copy of input object, shifted.
                 axis = 0
             elif len(labels) == len(self.columns) :
                 axis = 1
-            else :
+            else:
                 raise TypeError("labels does not match neither len(index) or len(columns).")
         axis = _cleanAxis(axis)
         return SimDataFrame(data=self.DF.reindex(labels=labels, axis=axis, **kwargs), **self._SimParameters )
@@ -3703,7 +3703,7 @@ Copy of input object, shifted.
         if inplace:
             super().rename(mapper=mapper, index=index, columns=columns, axis=axis, copy=copy, inplace=inplace, level=level, errors=errors)
             cAfter = list(self.columns)
-        else :
+        else:
             catch = super().rename(mapper=mapper, index=index, columns=columns, axis=axis, copy=copy, inplace=inplace, level=level, errors=errors)
             cAfter = list(catch.columns)
         newUnits = {}
@@ -3714,7 +3714,7 @@ Copy of input object, shifted.
             self.units = newUnits
             self.spdLocator = _SimLocIndexer("loc", self)
             return None
-        else :
+        else:
             catch.units = newUnits
             catch.spdLocator = _SimLocIndexer("loc", catch)
             return catch
@@ -3785,7 +3785,7 @@ Copy of input object, shifted.
         for each in list(self.columns):
             if self.nameSeparator in each:
                 objs += [each.split(self.nameSeparator)[-1]]
-            else :
+            else:
                 objs += [each]
         return tuple(set(objs))
 
@@ -3797,7 +3797,7 @@ Copy of input object, shifted.
         for each in list(self.columns):
             if self.nameSeparator in each :
                 objs += [each.split(self.nameSeparator)[0]]
-            else :
+            else:
                 objs += [each]
         return tuple(set(objs))
 
@@ -3810,13 +3810,13 @@ Copy of input object, shifted.
                 objs[each] = each.split(self.nameSeparator )[-1]
                 # self.units[ each.split(self.nameSeparator )[-1] ] = self.units[ each ]
                 # del(self.units[each])
-            else :
+            else:
                 objs[each] = each
         if len(set(objs.keys())) != len(set(objs.values())) :
             objs = dict( zip(objs.keys(),objs.keys()) )
         if inplace :
             self.rename(columns=objs, inplace=inplace)
-        else :
+        else:
             return self.rename(columns=objs, inplace=inplace)
 
     def renameLeft(self, inplace=False) :
@@ -3828,13 +3828,13 @@ Copy of input object, shifted.
                 objs[each] = each.split(self.nameSeparator )[0]
                 # self.units[ each.split(self.nameSeparator )[0] ] = self.units[ each ]
                 # del(self.units[each])
-            else :
+            else:
                 objs[each] = each
         if len(set(objs.keys())) != len(set(objs.values())) :
             objs = dict( zip(objs.keys(),objs.keys()) )
         if inplace :
             self.rename(columns=objs, inplace=inplace)
-        else :
+        else:
             return self.rename(columns=objs, inplace=inplace)
 
     def _CommonRename(self, SimDataFrame1, SimDataFrame2=None, LR=None) :
@@ -3867,7 +3867,7 @@ Copy of input object, shifted.
             for c in SDF1C.columns :
                 if c in SDF2C.columns :
                     commonNames[c] = SDF1.left[0] + cha + SDF2.left[0] + SDF1.nameSeparator + c
-                else :
+                else:
                     commonNames[c] = SDF1.left[0] + SDF1.nameSeparator + c
             for c in SDF2C.columns :
                 if c not in SDF1C.columns :
@@ -3886,7 +3886,7 @@ Copy of input object, shifted.
             for c in SDF1C.columns :
                 if c in SDF2C.columns :
                     commonNames[c] = c + SDF1.nameSeparator + SDF1.right[0] + cha + SDF2.right[0]
-                else :
+                else:
                     commonNames[c] = c + SDF1.nameSeparator + SDF1.right[0]
             for c in SDF2C.columns :
                 if c not in SDF1C.columns :
@@ -3896,7 +3896,7 @@ Copy of input object, shifted.
                 if len(alternative[2]) < len(commonNames) :
                     return alternative
 
-        else :
+        else:
             SDF1C, SDF2C = SDF1, SDF2.copy()
             commonNames = None
 
@@ -3916,7 +3916,7 @@ Copy of input object, shifted.
             return True
         elif item in self.index :
             return True
-        else :
+        else:
             return False
 
     def __neg__(self) :
@@ -3936,7 +3936,7 @@ Copy of input object, shifted.
             for col in otherI.columns :
                 if col in selfI.columns :
                     result[col] = selfI[col] + otherI[col]
-                else :
+                else:
                     notFount += 1
                     result[col] = otherI[col]
 
@@ -3948,18 +3948,18 @@ Copy of input object, shifted.
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
                             return selfC + otherC.to_SimSeries()
-                        else :
+                        else:
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
 
                     if (selfI.columns != selfC.columns).any() or (otherI.columns != otherC.columns).any() :
                         resultX = selfC + otherC
                         resultX.rename(columns=newNames, inplace=True)
-                    else :
+                    else:
                         resultX = result
                     if self.autoAppend :
                         for col in newNames.values() :
                             result[col] = resultX[col]
-                    else :
+                    else:
                         result = resultX
             return result
 
@@ -3973,7 +3973,7 @@ Copy of input object, shifted.
                 result[otherI.name] = selfI[otherI.name] + otherI
             elif selfI.autoAppend :  # elif selfI.autoAppend :
                 result[otherI.name] = otherI
-            else :
+            else:
                 for col in selfI.columns :
                     result[col] = selfI[col] + otherI
             return result
@@ -3986,7 +3986,7 @@ Copy of input object, shifted.
             return result if newNames is None else result.rename(columns=newNames)
 
         # let's Pandas deal with other types, maintain units and dtype
-        else :
+        else:
             result = self.as_DataFrame() + other
             return SimDataFrame(data=result, **self._SimParameters)
 
@@ -4006,7 +4006,7 @@ Copy of input object, shifted.
             for col in otherI.columns :
                 if col in selfI.columns :
                     result[col] = selfI[col] - otherI[col]
-                else :
+                else:
                     notFount += 1
                     result[col] = otherI[col] if selfI.intersectionCharacter in col else -otherI[col]
 
@@ -4018,7 +4018,7 @@ Copy of input object, shifted.
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
                             return selfC - otherC.to_SimSeries()
-                        else :
+                        else:
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
 
                     resultX = selfC - otherC
@@ -4026,7 +4026,7 @@ Copy of input object, shifted.
                     if self.autoAppend :
                         for col in newNames.values() :
                             result[col] = resultX[col]
-                    else :
+                    else:
                         result = resultX
             return result
 
@@ -4040,7 +4040,7 @@ Copy of input object, shifted.
                 result[otherI.name] = selfI[otherI.name] - otherI
             if self.autoAppend :  # elif self.autoAppend :
                 result[otherI.name] = -otherI
-            else :
+            else:
                 for col in selfI.columns :
                     result[col] = selfI[col] - otherI
             return result
@@ -4053,7 +4053,7 @@ Copy of input object, shifted.
             return result if newNames is None else result.rename(columns=newNames)
 
         # let's Pandas deal with other types, maintain units and dtype
-        else :
+        else:
             result = self.as_DataFrame() - other
             return SimDataFrame(data=result, **self._SimParameters)
 
@@ -4073,7 +4073,7 @@ Copy of input object, shifted.
             for col in otherI.columns :
                 if col in selfI.columns :
                     result[col] = selfI[col] * otherI[col]
-                else :
+                else:
                     notFount += 1
 
             if notFount == len(otherI.columns) :
@@ -4084,7 +4084,7 @@ Copy of input object, shifted.
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
                             return selfC * otherC.to_SimSeries()
-                        else :
+                        else:
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
 
                     resultX = selfC * otherC
@@ -4093,7 +4093,7 @@ Copy of input object, shifted.
                         for col in newNames.values() :
                             if self.intersectionCharacter in col :  # intersectionCharacter = '∩'
                                 result[col] = resultX[col]
-                    else :
+                    else:
                         result = resultX
 
             return result
@@ -4106,7 +4106,7 @@ Copy of input object, shifted.
             result = selfI.copy()
             if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = self[otherI.name] * otherI
-            else :
+            else:
                 for col in selfI.columns :
                     result[col] = selfI[col] * otherI
             return result
@@ -4116,7 +4116,7 @@ Copy of input object, shifted.
             return self.__mul__(SimDataFrame(data=other, **self._SimParameters))
 
         # let's Pandas deal with other types, maintain units and dtype
-        else :
+        else:
             result = self.as_DataFrame() * other
             return SimDataFrame(data=result, **self._SimParameters)
 
@@ -4136,7 +4136,7 @@ Copy of input object, shifted.
             for col in otherI.columns :
                 if col in selfI.columns :
                     result[col] = selfI[col] / otherI[col]
-                else :
+                else:
                     notFount += 1
 
             if notFount == len(otherI.columns) :
@@ -4147,7 +4147,7 @@ Copy of input object, shifted.
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the divisor
                             return selfC / otherC.to_SimSeries()
-                        else :
+                        else:
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
 
                     resultX = selfC / otherC
@@ -4156,7 +4156,7 @@ Copy of input object, shifted.
                         for col in newNames.values() :
                             if self.intersectionCharacter in col :  # intersectionCharacter = '∩'
                                 result[col] = resultX[col]
-                    else :
+                    else:
                         result = resultX
             return result
 
@@ -4168,7 +4168,7 @@ Copy of input object, shifted.
             result = selfI.copy()
             if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] / otherI
-            else :
+            else:
                 for col in selfI.columns :
                     result[col] = selfI[col] / otherI
             return result
@@ -4178,7 +4178,7 @@ Copy of input object, shifted.
             return self.__truediv__(SimDataFrame(data=other, **self._SimParameters))
 
         # let's Pandas deal with other types, maintain units and dtype
-        else :
+        else:
             result = self.as_DataFrame() / other
             return SimDataFrame(data=result, **self._SimParameters)
 
@@ -4198,7 +4198,7 @@ Copy of input object, shifted.
             for col in otherI.columns :
                 if col in selfI.columns :
                     result[col] = selfI[col] // otherI[col]
-                else :
+                else:
                     notFount += 1
 
             if notFount == len(otherI.columns) :
@@ -4209,7 +4209,7 @@ Copy of input object, shifted.
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
                             return selfC // otherC.to_SimSeries()
-                        else :
+                        else:
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
 
                     resultX = selfC // otherC
@@ -4218,7 +4218,7 @@ Copy of input object, shifted.
                         for col in newNames.values() :
                             if self.intersectionCharacter in col :  # intersectionCharacter = '∩'
                                 result[col] = resultX[col]
-                    else :
+                    else:
                         result = resultX
             return result
 
@@ -4230,7 +4230,7 @@ Copy of input object, shifted.
             result = selfI.copy()
             if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = selfI[otherI.name] // otherI
-            else :
+            else:
                 for col in self.columns :
                     result[col] = self[col] // other
             return result
@@ -4240,7 +4240,7 @@ Copy of input object, shifted.
             return self.__floordiv__(SimDataFrame(data=other, **self._SimParameters))
 
         # let's Pandas deal with other types, maintain units and dtype
-        else :
+        else:
             result = self.as_DataFrame() // other
             return SimDataFrame(data=result, **self._SimParameters)
 
@@ -4260,7 +4260,7 @@ Copy of input object, shifted.
             for col in otherI.columns :
                 if col in selfI.columns :
                     result[col] = selfI[col] % otherI[col]
-                else :
+                else:
                     notFount += 1
 
             if notFount == len(otherI.columns) :
@@ -4271,7 +4271,7 @@ Copy of input object, shifted.
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
                             return selfC % otherC.to_SimSeries()
-                        else :
+                        else:
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
 
                     resultX = selfC % otherC
@@ -4280,7 +4280,7 @@ Copy of input object, shifted.
                         for col in newNames.values() :
                             if self.intersectionCharacter in col :  # intersectionCharacter = '∩'
                                 result[col] = resultX[col]
-                    else :
+                    else:
                         result = resultX
 
             return result
@@ -4293,7 +4293,7 @@ Copy of input object, shifted.
             result = selfI.copy()
             if self.operatePerName and otherI.name in selfI.columns:
                 result[otherI.name] = selfI[other.name] % otherI
-            else :
+            else:
                 for col in selfI.columns :
                     result[col] = selfI[col] % otherI
             return result
@@ -4303,7 +4303,7 @@ Copy of input object, shifted.
             return self.__mod__(SimDataFrame(data=other, **self._SimParameters))
 
         # let's Pandas deal with other types, maintain units and dtype
-        else :
+        else:
             result = self.as_DataFrame() % other
             return SimDataFrame(data=result, **self._SimParameters )
 
@@ -4320,7 +4320,7 @@ Copy of input object, shifted.
             for col in otherI.columns :
                 if col in selfI.columns :
                     result[col] = selfI[col] ** otherI[col]
-                else :
+                else:
                     notFount += 1
 
             if notFount == len(otherI.columns) :
@@ -4331,7 +4331,7 @@ Copy of input object, shifted.
                     if newNames is None:
                         if len(otherC.columns) == 1:  # just in case there is only one column in the second operand
                             return selfC ** otherC.to_SimSeries()
-                        else :
+                        else:
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
 
                     resultX = selfC ** otherC
@@ -4340,7 +4340,7 @@ Copy of input object, shifted.
                         for col in newNames.values() :
                             if self.intersectionCharacter in col :  # intersectionCharacter = '∩'
                                 result[col] = resultX[col]
-                    else :
+                    else:
                         result = resultX
 
             return result
@@ -4353,7 +4353,7 @@ Copy of input object, shifted.
             result = selfI.copy()
             if self.operatePerName and otherI.name in selfI.columns :
                 result[otherI.name] = self[otherI.name] ** otherI
-            else :
+            else:
                 for col in selfI.columns :
                     result[col] = selfI[col] ** otherI
             return result
@@ -4363,7 +4363,7 @@ Copy of input object, shifted.
             return self.__pow__(SimDataFrame(data=other, **self._SimParameters))
 
         # let's Pandas deal with other types, maintain units and dtype
-        else :
+        else:
             result = self.as_DataFrame() ** other
             return SimDataFrame(data=result, **self._SimParameters)
 
@@ -4417,7 +4417,7 @@ Copy of input object, shifted.
             newName = '.max'
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
+            else:
                 units = 'dimensionless'
             if len(set(self.columns)) == 1 :
                 newName = list(set(self.columns ))[0]+newName
@@ -4443,7 +4443,7 @@ Copy of input object, shifted.
             newName = '.mean'
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
+            else:
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
@@ -4469,7 +4469,7 @@ Copy of input object, shifted.
             newName = '.median'
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
+            else:
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
@@ -4495,7 +4495,7 @@ Copy of input object, shifted.
             newName = '.min'
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
+            else:
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
@@ -4521,7 +4521,7 @@ Copy of input object, shifted.
             newName = '.mode'
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
+            else:
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
@@ -4547,7 +4547,7 @@ Copy of input object, shifted.
             newName = '.prod'
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
+            else:
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
@@ -4580,7 +4580,7 @@ Copy of input object, shifted.
             newName = '.Q'+str(round(q*100,namedecimals))
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
+            else:
                 units = 'dimensionless'
             if len(set(self.columns)) == 1 :
                 newName = list(set(self.columns ))[0]+newName
@@ -4632,7 +4632,7 @@ Copy of input object, shifted.
             newName = '.std'
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
+            else:
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
@@ -4657,7 +4657,7 @@ Copy of input object, shifted.
                 params = self._SimParameters
                 params['units'] = list(set(self.get_Units(self.columns).values()))[0]
                 return SimDataFrame(data=self.DF.sum(axis=axis, **kwargs).rename('.sum'), **params)
-            else :
+            else:
                 params = self._SimParameters
                 if type(params['units']) is dict:
                     params['units']['.sum'] = '*units per row'
@@ -4666,7 +4666,7 @@ Copy of input object, shifted.
             newName = '.sum'
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
+            else:
                 units = 'dimensionless'
             if len(set(self.columns)) == 1 :
                 newName = list(set(self.columns))[0]+newName
@@ -4679,11 +4679,11 @@ Copy of input object, shifted.
                 commonR = commonprefix(list(self.renameRight(inplace=False).columns))
                 if len(commonL) >= len(commonR) :
                     newName = commonL + newName
-                else :
+                else:
                     newName = commonR + newName
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 data = self.DF.sum(axis=axis, **kwargs)
-            else :
+            else:
                 result = self[self.columns[0]]
                 units = self.units[self.columns[0]]
                 for col in range(1,len(self.columns)):
@@ -4707,7 +4707,7 @@ Copy of input object, shifted.
             newName = '.var'
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
+            else:
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
@@ -4741,7 +4741,7 @@ Copy of input object, shifted.
             newName = '.diff'
             if len(set(self.get_Units(self.columns).values())) == 1 :
                 units = list(set(self.get_Units(self.columns).values()))[0]
-            else :
+            else:
                 units = 'dimensionless'
             if len(set(self.columns ) ) == 1 :
                 newName = list(set(self.columns ))[0]+newName
@@ -4821,9 +4821,9 @@ Copy of input object, shifted.
                 if len(value.columns) == 1 :
                     if value.columns[0] in value.units:
                         uDic = { str(key) : value.units[value.columns[0]] }
-                    else :
+                    else:
                         uDic = { str(key) : 'UNITLESS' }
-                else :
+                else:
                     uDic = value.units.copy() if type(value.units) is dict else { str(key) : value.units }
                     if value.index.name not in value.columns and value.index.name in uDic:
                         del uDic[value.index.name]
@@ -4840,13 +4840,13 @@ Copy of input object, shifted.
                         else:
                             print("WARNING: not able to convert the provided index to the units of this SimDataFrame index.")
 
-            else :
+            else:
                 uDic = { str(key) : 'UNITLESS' }
         elif type(units) is str :
             uDic = { str(key) : units.strip() }
         elif type(units) is dict :
             uDic = units
-        else :
+        else:
             raise NotImplementedError
 
         if isinstance(value, SimDataFrame) :
@@ -4872,7 +4872,7 @@ Copy of input object, shifted.
             for c in range(before, after ) :
                 if self.columns[c] in self.columns[ before : after ] and self.columns[c] in uDic:
                     self.new_Units(self.columns[c], uDic[ self.columns[c] ])
-                else :
+                else:
                     self.new_Units(self.columns[c], 'UNITLESS')
 
     def __getitem__(self, key) :
@@ -4891,7 +4891,7 @@ Copy of input object, shifted.
                     break
             if keyCols :
                 return SimDataFrame(data=self._getbyColumn(key), **self._SimParameters)
-            else :
+            else:
                 result = SimDataFrame(data=self._getbyIndex(key), **self._SimParameters)
                 if len(result) == 1 :
                     result = _Series2Frame(result)
@@ -4914,13 +4914,13 @@ Copy of input object, shifted.
                 key = list(self.find_Keys(key))
             elif key == self.indexName:  # key is the name of the index
                 result = self.index
-            else : # key is not a column name
-                try : # to evalue as a filter
+            else: # key is not a column name
+                try: # to evalue as a filter
                     result = self._getbyCriteria(key)
-                except :
-                    try : # to evaluate as an index value
+                except:
+                    try: # to evaluate as an index value
                         result = self._getbyIndex(key)
-                    except :
+                    except:
                         raise ValueError('requested key is not a valid column name, pattern, index or filter criteria:\n   ' + key)
                 if result is None :
                     try:
@@ -4941,27 +4941,27 @@ Copy of input object, shifted.
                 elif type(each) is str :
                     if bool(self.find_Keys(each) ) : # catch the column names this key represent
                         key += list(self.find_Keys(each) )
-                    else : # key is not a column name, might be a filter or index
-                        try : # to evalue as a filter
+                    else: # key is not a column name, might be a filter or index
+                        try: # to evalue as a filter
                             _ = self.filter(each, returnFilter=True)
                             filters += [each]
-                        except :
-                            try : # to evaluate as an index value
+                        except:
+                            try: # to evaluate as an index value
                                 _ = self._getbyIndex(each)
                                 indexes += [each]
-                            except :
+                            except:
                                 # discard this item
                                 print(' the paramenter '+str(each)+' is not valid.')
 
                 ### must be an index, not a column name o relative, not a filter, not in the index
-                else :
+                else:
                     indexes += [each]
 
             ### get the filter array, if filter criteria was provided
             if bool(filters) :
-                try :
+                try:
                     indexFilter = self.filter(filters, returnFilter=True)
-                except :
+                except:
                     raise Warning('filter conditions are not valid:\n   '+ ' and '.join(filters))
                 if indexFilter is not None and not indexFilter.any() :
                     raise Warning('filter conditions removed every row :\n   '+ ' and '.join(filters))
@@ -4974,12 +4974,12 @@ Copy of input object, shifted.
             params['columns'] = key if type(key) in (list,Index) else [key]
             result = SimDataFrame(data=result, **params)
         elif bool(key) or key == 0:
-            try :
+            try:
                 result = self._getbyColumn(key)
-            except :
+            except:
                 result = self._getbyIndex(key)
                 if result is not None : byIndex = True
-        else :
+        else:
             result = SimDataFrame(data=self, **self._SimParameters)
 
         ### convert returned object to SimDataFrame or SimSeries accordingly
@@ -4996,7 +4996,7 @@ Copy of input object, shifted.
                         resultUnits = self.get_Units(result.index)
                     except:
                         resultUnits = { result.name:'UNITLESS' }
-                else :
+                else:
                     resultUnits = self.get_Units(result.name)
             else:
                 resultUnits = { result.name:'UNITLESS' }
@@ -5008,7 +5008,7 @@ Copy of input object, shifted.
         if indexFilter is not None :
             if type(indexFilter) is np.ndarray :
                 result = result.iloc[indexFilter]
-            else :
+            else:
                 result = result[indexFilter.array]
 
         ### apply indexes and slices
@@ -5018,9 +5018,9 @@ Copy of input object, shifted.
             if len(indexeslices) > 1 :
                 for i in indexeslices[1:] :
                     iresult = iresult.append(_Series2Frame(result._getbyIndex(i)) )
-            try :
+            try:
                 result = iresult.sort_index()
-            except :
+            except:
                 result = iresult
 
         ### if is a single row return it as a DataFrame instead of a Series
@@ -5044,7 +5044,7 @@ Copy of input object, shifted.
             raise ValueError('Filter wrong length ' + str(len(key)) + ' instead of ' + str(len(self.DF)) )
         if not isinstance(key, (Series, SimSeries)) and type(key) is not np.ndarray :
             raise TypeError("Filter must be a Series or Array" )
-        else :
+        else:
             if str(key.dtype) != 'bool' :
                 raise TypeError("Filter dtype must be 'bool'" )
 
@@ -5075,19 +5075,19 @@ Copy of input object, shifted.
         """
         # if index is date try to undestand key as a date
         if type(self.index) is DatetimeIndex and type(key) not in [DatetimeIndex, Timestamp, int, float, np.ndarray] :
-            try :
+            try:
                 return self._getbyDateIndex(key)
-            except :
+            except:
                 pass
 
         # try to find key by index value using .loc
-        try :
+        try:
             return self.DF.loc[key]
-        except :
+        except:
             # try to find key by index position using .loc
-            try :
+            try:
                 return self.DF.iloc[key]
-            except :
+            except:
                 try:
                     return self.DF.loc[:,key]
                 except:
@@ -5104,31 +5104,31 @@ Copy of input object, shifted.
         """
         if type(self.index) is DatetimeIndex :
             if type(key) in [DatetimeIndex, Timestamp, np.datetime64, np.ndarray, dt.date] :
-                try :
+                try:
                     return self.DF.loc[key]
-                except :
+                except:
                     pass
 
             if type(key) is not str and(isDate(key) or type(key) not in [DatetimeIndex, Timestamp] ) :
                 try:
                     return self.DF.loc[key]
-                except :
-                    try :
+                except:
+                    try:
                         return self.DF.iloc[key]
-                    except :
+                    except:
                         pass
 
             if type(key) is str and len(multisplit(key, ('==', '!=', '>=', '<=', '<>', '><', '>', '<', '=', ' ')) ) == 1 and isDate(key) :
-                try :
+                try:
                     key = strDate(key )
-                except :
-                    try :
+                except:
+                    try:
                         key = strDate(key, formatIN=isDate(key, returnFormat=True), formatOUT='DD-MMM-YYYY' )
-                    except :
+                    except:
                         raise Warning('\n Not able to undertand the key as a date.\n')
-                try :
+                try:
                     return self.DF.loc[key]
-                except :
+                except:
                     pass
 
             if type(key) is str :
@@ -5142,12 +5142,12 @@ Copy of input object, shifted.
                         keySearch += ' D'+str(P)
                         datesDict['D'+str(P)] = keyParts[P]
                         temporal.__setitem__('D'+str(P), DatetimeIndex([ Timestamp(strDate(keyParts[P], formatIN=isDate(keyParts[P], returnFormat=True), formatOUT='YYYY-MMM-DD')) ] * datesN ).to_numpy() )
-                    else :
+                    else:
                         keySearch += ' '+keyParts[P]
                 datesFilter = temporal.filter(keySearch, returnFilter=True)
                 return self.DF.iloc[datesFilter.array]
 
-            else :
+            else:
                 return self.DF.iloc[key]
 
     def _columnsNameAndUnits2MultiIndex(self) :
@@ -5160,7 +5160,7 @@ Copy of input object, shifted.
         for col in self.columns :
             if col in units :
                 out.append((col,units[col]))  # out[col] = units[col]
-            else :
+            else:
                 out.append((col,None))  # out[col] = None
         out = pd.MultiIndex.from_tuples(out)  # out = pd.MultiIndex.from_tuples(out.items())
         return out
@@ -5306,9 +5306,9 @@ Copy of input object, shifted.
             if type(each) is str and self.nameSeparator in each :
                 if type(each) is str and each.split(self.nameSeparator )[0] in atts :
                     atts[each.split(self.nameSeparator )[0]] += [each.split(self.nameSeparator )[-1]]
-                else :
+                else:
                     atts[each.split(self.nameSeparator )[0]] = [each.split(self.nameSeparator )[-1]]
-            else :
+            else:
                 if each not in atts :
                     atts[each] = []
         for att in atts :
@@ -5319,7 +5319,7 @@ Copy of input object, shifted.
     def properties(self) :
         if len(self.attributes.keys()) > 0 :
             return tuple(self.attributes.keys())
-        else :
+        else:
             return tuple()
 
     def get_Attributes(self, pattern=None) :
@@ -5338,7 +5338,7 @@ Copy of input object, shifted.
         """
         if pattern is None :
             return tuple(self.attributes.keys())
-        else :
+        else:
             return tuple(fnmatch.filter(tuple(self.attributes.keys()), pattern ) )
 
     def get_Keys(self, pattern=None) :
@@ -5399,9 +5399,9 @@ Copy of input object, shifted.
                 return tuple(keys )
             criteria = [criteria]
         elif type(criteria) is not list :
-            try :
+            try:
                 criteria = list(criteria)
-            except :
+            except:
                 pass
         for key in criteria :
             if type(key) is str and key not in self.columns :
@@ -5409,11 +5409,11 @@ Copy of input object, shifted.
                     keys += list(self.get_Keys('*'+self.nameSeparator+key))
                 elif key in self.attributes :
                     keys += list(self.keyGen(key, self.attributes[key]))
-                else :
+                else:
                     keys += list(self.get_Keys(key))
             elif type(key) is str and key in self.columns :
                 keys += [ key ]
-            else :
+            else:
                 keys += list(self.find_Keys(key))
         return tuple(keys)
 
@@ -5454,7 +5454,7 @@ Copy of input object, shifted.
                 for att in self.keyGen(each, self.attributes[each]) :
                     if att in self.units :
                         uDic[att] = self.units[att]
-                    else :
+                    else:
                         uDic[att] = 'UNITLESS'
             elif len(self.get_Keys(each)) > 0 :
                 for key in self.get_Keys(each) :
@@ -5597,7 +5597,7 @@ Copy of input object, shifted.
         for k, v in self.units.items() :
             if v in kDic :
                 kDic[v] += [k]
-            else :
+            else:
                 kDic[v] = [k]
         return kDic
 
@@ -5612,7 +5612,7 @@ Copy of input object, shifted.
 
         if key not in self.units :
             self.units[key] = units
-        else :
+        else:
             if units != self.units[key] and self.speak :
                 print("overwritting existing units for key '" + key + "': " + self.units[key] + ' -> ' + units )
             self.units[key] = units
@@ -5622,7 +5622,7 @@ Copy of input object, shifted.
             return False
         if Key in self.get_Keys() :
             return True
-        else :
+        else:
             return False
 
     def keyGen(self, mainKeys=[], itemKeys=[]) :
@@ -5718,7 +5718,7 @@ Copy of input object, shifted.
                     if filterStr[-1] == ' ' :
                         filterStr = filterStr.rstrip()
                     filterStr += key+'()'
-                else :
+                else:
                     for SO in specialOperation :
                         if key.strip().endswith(SO) :
                             key = key[:-len(SO)]
@@ -5727,7 +5727,7 @@ Copy of input object, shifted.
                 # catch particular operations performed by Numpy
                 if key in numpyOperation :
                     raise ValueError("wrong syntax for '"+key+"(blank space before) in:\n   "+conditions)
-                else :
+                else:
                     for NO in numpyOperation :
                         if key.strip().endswith(NO) :
                             key = key[:-len(NO)]
@@ -5738,7 +5738,7 @@ Copy of input object, shifted.
                 # catch aggregation operations performed by Pandas
                 if key in pandasAggregation :
                     PandasAgg = key+'(axis=1)'
-                else :
+                else:
                     for PA in pandasAggregation :
                         if key.strip().endswith(PA) :
                             PandasAgg = PA+'(axis=1)'
@@ -5759,7 +5759,7 @@ Copy of input object, shifted.
                     filterStr = filterStr.rstrip()
                     filterStr += " self.DF["+ str(list(self.find_Keys(key)) ) +"]"
                     PandasAgg = '.any(axis=1)'
-                else :
+                else:
                     filterStr += ' ' + key
                 filterStr = filterStr.rstrip()
                 filterStr += foundSO + foundNO
@@ -5769,9 +5769,9 @@ Copy of input object, shifted.
 
         if type(conditions) is not str :
             if type(conditions) is not list :
-                try :
+                try:
                     conditions = list(conditions)
-                except :
+                except:
                     raise TypeError('conditions argument must be a string.')
             conditions = ' and '.join(conditions)
 
@@ -5813,14 +5813,14 @@ Copy of input object, shifted.
             # catch enclosed strings
             if conditions[i] in ['"', "'", '['] :
                 if conditions[i] in ['"', "'"] :
-                    try :
+                    try:
                         f = conditions.index(conditions[i], i+1 )
-                    except :
+                    except:
                         raise ValueError('wring syntax, closing ' + conditions[i] + ' not found in:\n   '+conditions)
-                else :
-                    try :
+                else:
+                    try:
                         f = conditions.index(']', i+1 )
-                    except :
+                    except:
                         raise ValueError("wring syntax, closing ']' not found in:\n   "+conditions)
                 if f > i+1 :
                     key = conditions[i+1:f]
@@ -5841,7 +5841,7 @@ Copy of input object, shifted.
                 if conditions[i] == ')' and filterStr.rstrip()[-1] == '(' :
                     filterStr = filterStr.rstrip()[:-1]
                     last.pop()
-                else :
+                else:
                     if last[-1] in ['cond', 'oper'] : key = 'self.DF.index'
                     filterStr, key, PandasAgg = KeyToString(filterStr, key, PandasAgg)
                     filterStr += conditions[i]
@@ -5887,7 +5887,7 @@ Copy of input object, shifted.
                 continue
 
             # catch other characters
-            else :
+            else:
                 key += conditions[i]
                 i += 1
                 continue
@@ -5900,7 +5900,7 @@ Copy of input object, shifted.
         elif filterStr[-1] in ['=', '>', '<', '!'] :
             filterStr = filterStr + ' self.DF.index'
         # close last parethesis and aggregation
-        filterStr += ' )' * bool(AndOrNot + bool(PandasAgg) ) + PandasAgg
+        filterStr += ' )' * bool(AndOrNot + bool(PandasAgg)) + PandasAgg
         # open parenthesis for aggregation, if needed
         if not AndOrNot and bool(PandasAgg) :
             filterStr = '(' + filterStr
@@ -5909,9 +5909,9 @@ Copy of input object, shifted.
         if returnString :
             retTuple += [ filterStr ]
         if returnFilter or returnFrame :
-            try :
-                filterArray = eval(filterStr )
-            except :
+            try:
+                filterArray = eval(filterStr)
+            except:
                 return None
         if returnFilter :
             retTuple += [ filterArray ]
@@ -5920,10 +5920,10 @@ Copy of input object, shifted.
 
         if len(retTuple ) == 1 :
             return retTuple[0]
-        else :
-            return tuple(retTuple )
+        else:
+            return tuple(retTuple)
 
-    def integrate(self, method='trapz') :
+    def integrate(self, method='trapz'):
         """
         Calculates numerical integration, using trapezoidal method,
         or constant value of the columns values over the index values.
@@ -5959,7 +5959,7 @@ Copy of input object, shifted.
                 newUnits[C] = None
             elif len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
                 newUnits[C] = U.split('/')[0]
-            else :
+            else:
                 newUnits[C] = U + '*' + dtUnits
 
         if str(dt.dtype).startswith('timedelta') :
@@ -5970,7 +5970,7 @@ Copy of input object, shifted.
         params['units'] = newUnits
         return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative)), **params)
 
-    def differenciate(self, na_position='last'):  #, method='trapz') :
+    def differenciate(self, na_position='last'):
         """
         Calculates numerical differentiation of the columns values over the index values.
 
@@ -5993,25 +5993,25 @@ Copy of input object, shifted.
 
         newUnits = {}
         if self.units is not None:
-            for C, U in self.units.items() :
+            for C, U in self.units.items():
                 if U is None:
                     newUnits[C] = str(U) + '/' + str(dtUnits)
-                elif len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
+                elif len(U.split('/')) == 2 and (U.split('/')[-1].upper() == dtUnits.upper() or (U.split('/')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ):
                     newUnits[C] = U + '/' + U.split('/')[-1]
-                elif len(U.split('*')) == 2 and (U.split('*')[-1].upper() == dtUnits.upper() or (U.split('*')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ) :
+                elif len(U.split('*')) == 2 and (U.split('*')[-1].upper() == dtUnits.upper() or (U.split('*')[-1].upper() in ['DAY', 'DAYS'] and dtUnits.upper() == 'DAYS' ) ):
                     newUnits[C] = U.split('*')[0]
-                else :
+                else:
                     newUnits[C] = str(U) + '/' + str(dtUnits)
 
         if na_position == 'first':
-            if str(dt.dtype).startswith('timedelta') :
+            if str(dt.dtype).startswith('timedelta'):
                 NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]))
             else:
                 NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=[self.index[0]])
             diff = DataFrame(data=diff, index=self.index[1:], columns=self.columns)
             diff = NaNRow.append(diff)
         else:
-            if str(dt.dtype).startswith('timedelta') :
+            if str(dt.dtype).startswith('timedelta'):
                 NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[-1]]))
             else:
                 NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=[self.index[-1]])
@@ -6023,9 +6023,9 @@ Copy of input object, shifted.
         params['indexUnits'] = self.indexUnits
         return SimDataFrame(data=diff, **params)
 
-    def sort_values(self,by=None, axis='--auto', ascending=True, inplace=False, kind='quicksort', na_position='last', ignore_index=False, key=None) :
-        if by is None and axis == '--auto' :
-            if len(self.index) == 1 and len(self.columns) > 1 :
+    def sort_values(self,by=None, axis='--auto', ascending=True, inplace=False, kind='quicksort', na_position='last', ignore_index=False, key=None):
+        if by is None and axis == '--auto':
+            if len(self.index) == 1 and len(self.columns) > 1:
                 result = SimDataFrame(data=self.DF.T[self.DF.T.columns[0]].sort_values(axis=0,
                                                                                   ascending=ascending,
                                                                                   inplace=False,
@@ -6033,32 +6033,32 @@ Copy of input object, shifted.
                                                                                   na_position=na_position,
                                                                                   ignore_index=ignore_index,
                                                                                   key=key).T, **self._SimParameters)
-                if inplace :
+                if inplace:
                     self = result
                     return result
-                else :
+                else:
                     return result
-            elif len(self.index) > 1 and len(self.columns) == 1 :
-                if inplace :
+            elif len(self.index) > 1 and len(self.columns) == 1:
+                if inplace:
                     super().sort_values(by=self.columns[0], axis=0, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
                     return None
-                else :
+                else:
                     return SimDataFrame(data=self.DF.sort_values(by=self.columns[0], axis=0, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
-            else :
-                if axis == '--auto' :
+            else:
+                if axis == '--auto':
                     axis = 0
-                if inplace :
+                if inplace:
                     super().sort_values(axis=axis, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
                     return None
-                else :
+                else:
                     return SimDataFrame(data=self.DF.sort_values(axis=axis, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
-        else :
-            if axis == '--auto' :
+        else:
+            if axis == '--auto':
                 axis = 0
-            if inplace :
+            if inplace:
                 super().sort_values(by=by, axis=axis, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key)
                 return None
-            else :
+            else:
                 return SimDataFrame(data=self.DF.sort_values(by=by, axis=axis, ascending=ascending, inplace=inplace, kind=kind, na_position=na_position, ignore_index=ignore_index, key=key), **self._SimParameters)
 
     def head(self,n=5):
@@ -6123,7 +6123,7 @@ Copy of input object, shifted.
         """
         return SimDataFrame(data=self.DF.cumsum(skipna=skipna, *args, **kwargs),**self._SimParameters)
 
-    def jitter(self,std=0.10) :
+    def jitter(self,std=0.10):
         """
         add jitter the values of the SimDataFrame
         """
@@ -6183,7 +6183,7 @@ Copy of input object, shifted.
         params['index'] = self.index
         if column is not None:
             if type(column) is str and column in self.columns:
-                if self[column].dtype in ('int','int64') and self[column].min() > 0 :
+                if self[column].dtype in ('int','int64') and self[column].min() > 0:
                     params['name'] = 'DaysInYear'
                     params['units'] = 'days'
                     return SimSeries( data=daysInYear(self[column].to_numpy()), **params )
@@ -6201,7 +6201,7 @@ Copy of input object, shifted.
                         result.set_Units('days',col)
                 return result
         else:
-            if self.index.dtype in ('int','int64') and self.index.min() > 0 :
+            if self.index.dtype in ('int','int64') and self.index.min() > 0:
                 params['name'] = 'DaysInYear'  # params['indexName'] = 'DaysInYear'
                 params['indexUnits'] = self.indexUnits
                 params['index'] = self.index  # params['index'] = list(daysInYear(self.index.to_numpy()))
@@ -6268,7 +6268,7 @@ Copy of input object, shifted.
             if type(column) is str and column in self.columns:
                 if 'datetime' in str(self[column].dtype):
                     return SimSeries(data=realYear(self[column]) , **params)
-                else :
+                else:
                     raise ValueError('selected column is not a valid date format')
             elif type(column) is str and column not in self.columns:
                 raise ValueError('the selected column is not in this SimDataFrame')
@@ -6649,7 +6649,7 @@ def daysInYear(year):
         return dt.date(year.year,12,31).timetuple().tm_yday
 
     if type(year) in (list,tuple,np.ndarray):
-        if np.array(year).dtype in ('int','int64','float','float64') :
+        if np.array(year).dtype in ('int','int64','float','float64'):
             return np.array([ dt.date(int(Y), 12, 31).timetuple().tm_yday for Y in year ], dtype=int)
         elif 'datetime' in str(np.array(year).dtype):
             return np.array([ dt.date(Y.astype(object).timetuple().tm_year, 12, 31).timetuple().tm_yday for Y in year ], dtype=int)
@@ -6756,7 +6756,7 @@ def daysInMonth(month,year=None):
         return daysInMonth(month.month, month.year)
 
     if type(month) in (list,tuple,np.ndarray):
-        if np.array(month).dtype in ('int','int64','float','float64') :
+        if np.array(month).dtype in ('int','int64','float','float64'):
             return np.array([ daysInMonth(M,year) for M in month ], dtype=int)
         elif 'datetime' in str(np.array(year).dtype):
             return np.array([ M.astype(object).timetuple().tm_mon for M in month ], dtype=int)

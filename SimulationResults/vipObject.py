@@ -6,7 +6,7 @@ Created on Wed May 13 15:34:04 2020
 """
 
 __version__ = '0.22.1'
-__release__ = 220113
+__release__ = 220223
 __all__ = ['VIP']
 
 from .mainObject import SimResult as _SimResult
@@ -81,7 +81,7 @@ class VIP(_SimResult):
                     break
             if sssFile is not None :
                 self.loadSSS(sssFile)
-            else :
+            else:
                 _verbose( self.speak, 3, " not possible to find SSS file for the .dat file\n   '" + inputFile + "'")
 
     def use_ECLstyle(self):
@@ -93,7 +93,7 @@ class VIP(_SimResult):
             self.ECLstyle = True
             self.VIPstyle = False
             _verbose( self.speak, 3, ' Using ECL style keys')
-        else :
+        else:
             self.VIPstyle = 'ERROR'
             _verbose( self.speak, 3, ' Unable to convert to ECL style keys')
             if type(self.ECLstyle) is bool :
@@ -109,7 +109,7 @@ class VIP(_SimResult):
             self.ECLstyle = False
             self.VIPstyle = True
             _verbose( self.speak, 3, ' Using VIP style keys')
-        else :
+        else:
             self.ECLstyle = 'ERROR'
             _verbose( self.speak, 3, ' Unable to get VIP style keys.')
             if type(self.VIPstyle) is bool :
@@ -131,7 +131,7 @@ class VIP(_SimResult):
     #         CSVFilePath = CSVFilePath.strip()
     #     if os.path.isfile( CSVFilePath ) is False :
     #         raise FileNotFoundError('No such file found for: ' + str(CSVFilePath) )
-    #     else :
+    #     else:
     #         Temporal = self.CSVread( CSVFilePath )
     #         if Temporal != {} :
     #             if self.CSV is False :
@@ -172,13 +172,13 @@ class VIP(_SimResult):
                 _verbose( self.speak, 1, 'simulation runs from ' +  str( dates[0] ) + ' to ' + str( dates[-1] ) )
             except:
                 pass
-        else :
+        else:
             print("SummaryFilePath must be a string")
 
     def correction_for_LPG_from_VIPsss(self) :
         if self.LPGcorrected :
             _verbose( self.speak, 2, 'LPG correction for VIP sss reports is already applied.')
-        else :
+        else:
             for LPGkey in ( 'LPG LIQ RATE', 'FULPGLR'  ) :
                 if self.is_Key( LPGkey ) :
                     Before = self.get_Vector(LPGkey)[LPGkey]
@@ -222,15 +222,15 @@ class VIP(_SimResult):
     #                 dataRows = len( CSVdict[section] ) / len( CSVdict['[HEADERS]']['VARIABLE'] )
     #                 if int(dataRows) == dataRows :
     #                     row = row + dataRows
-    #                 else :
+    #                 else:
     #                     pass
-    #             else :
+    #             else:
     #                 CSVdict[section] = ', '.join( CSVlines[row+1:] ).split(', ')
     #                 row = len(CSVlines)
-    #         else :
+    #         else:
     #             if '[' in CSVlines[ row ].split(', ')[0].split('=')[0][0] and ']' in CSVlines[ row ].split(', ')[0].split('=')[0][-1] :
     #                 section = CSVlines[ row ].split(', ')[0].split('=')[0]
-    #             else :
+    #             else:
     #                 CSVdict[section][ cell0 ] = [ CSVlines[ row ].split(', ')[0].split('=')[1] ] + CSVlines[ row ].split(', ')[1:]
     #         row += 1
     #     return CSVdict
@@ -242,29 +242,29 @@ class VIP(_SimResult):
     #     if self.name is None :
     #         try:
     #             self.name = self.CSV[CSVname]['[S3INFO]']['ORIGIN'][0]
-    #         except :
+    #         except:
     #             pass
     #     if self.start is None :
-    #         try :
+    #         try:
     #             self.start = np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ), 's')
     #         except:
     #             pass
-    #     else :
-    #         try :
+    #     else:
+    #         try:
     #             if self.start > np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ), 's') :
     #                 self.start = np.datetime64( pd.to_datetime( self.CSV[CSVname]['[S3INFO]']['DATE'][0] ), 's')
-    #         except :
+    #         except:
     #             pass
-    #     try :
+    #     try:
     #         self.null = self.CSV[CSVname]['[S3INFO]']['NULLVALUE'][0]
     #         nullSet = True
-    #     except :
+    #     except:
     #         nullSet = False
     #     if nullSet is True :
-    #         try :
+    #         try:
     #             self.null = int(self.null)
-    #         except :
-    #             try :
+    #         except:
+    #             try:
     #                 self.null = float(self.null)
     #             except:
     #                 pass
@@ -282,7 +282,7 @@ class VIP(_SimResult):
     #             self.units[ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] ] = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
     #             if self.CSV[CSVname]['[HEADERS]']['CLASS'][i].strip().upper() == 'WELL' :
     #                 CSVwells += [ self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ]
-    #         else :
+    #         else:
     #             self.units[ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] ] = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
     #         _SimResult.CSV_Variable2Verbose[ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] ] = self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i]
     #         _SimResult.CSV_Verbose2Variable[ self.CSV[CSVname]['[HEADERS]']['VERBOSE'][i] ] = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]
@@ -309,7 +309,7 @@ class VIP(_SimResult):
     #     for i in range( numHeaders ) :
     #         if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][i].strip() ) > 0 :
     #             CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][i]
-    #         else :
+    #         else:
     #             CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]
     #         ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i], CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][i], MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][i], speak=self.speak )
     #         Vector = self.CSV[CSVname]['[DATA]'][i::numHeaders]
@@ -382,19 +382,19 @@ class VIP(_SimResult):
     #                     Failed = True
     #                     if '.' in ' '.join(Vector) or 'E-' in ' '.join(Vector) or 'E+' in ' '.join(Vector):
     #                         for v in range(len(Vector)) :
-    #                             try :
+    #                             try:
     #                                 Temp.append( float(Vector[v]) )
     #                                 Failed = False
     #                             except:
     #                                 break
-    #                     else :
+    #                     else:
     #                         for v in range(len(Vector)) :
-    #                             try :
+    #                             try:
     #                                 if Vector[v].isdigit() :
     #                                     Temp.append( int(Vector[v]) )
     #                                     Failed = False
-    #                                 else :
-    #                                     try :
+    #                                 else:
+    #                                     try:
     #                                         Temp.append( float(Vector[v]) )
     #                                         Failed = False
     #                                     except:
@@ -403,7 +403,7 @@ class VIP(_SimResult):
     #                                 break
     #                     if not Failed :
     #                         Vector = np.array(Temp)
-    #                     else :
+    #                     else:
     #                         Vector = np.array(Vector)
     #                 if CSVname not in Results :
     #                     Results[CSVname] = {}
@@ -428,7 +428,7 @@ class VIP(_SimResult):
     #     if key in ( 'DATE', 'DATES' ) :
     #         DATEflag = key
     #         key = 'TIME'
-    #     else :
+    #     else:
     #         DATEflag = False
 
     #     keyword = key
@@ -441,7 +441,7 @@ class VIP(_SimResult):
     #     if keyName == '' :
     #         if ':' in key and len(key.split(':')[1])>0 :
     #             keyName = key.split(':')[1]
-    #     else :
+    #     else:
     #         keyName = keyName.strip()
 
     #     if keyType == '' :
@@ -464,7 +464,7 @@ class VIP(_SimResult):
     #         keyName = ''
     #         if key in _UniversalKeys :
     #             keyword = key
-    #         else :
+    #         else:
     #             keyword = VIPkey
 
     #     elif key in ( 'BHP', 'THP' ) or VIPkey in ( 'BHP', 'THP' ) :
@@ -484,7 +484,7 @@ class VIP(_SimResult):
     #                 _verbose( self.speak, -1, ' found vector for key: ' + str(key) + ' where variable=' + self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] + ', class=' + self.CSV[CSVname]['[HEADERS]']['CLASS'][col] + ' and member=' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] + '.' )
     #                 if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][col] ) > 0 :
     #                     CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col] + ':' + self.CSV[CSVname]['[HEADERS]']['MEMBER'][col]
-    #                 else :
+    #                 else:
     #                     CSVkey = self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col]
     #                 ECLkey = fromCSVtoECL( variableORkey=self.CSV[CSVname]['[HEADERS]']['VARIABLE'][col], CLASStype=self.CSV[CSVname]['[HEADERS]']['CLASS'][col], MEMBER=self.CSV[CSVname]['[HEADERS]']['MEMBER'][col], speak=self.speak )
     #                 Vector = self.CSV[CSVname]['[DATA]'][col::numHeaders]
@@ -495,19 +495,19 @@ class VIP(_SimResult):
     #                     Failed = True
     #                     if '.' in ' '.join(Vector) or 'E-' in ' '.join(Vector) or 'E+' in ' '.join(Vector):
     #                         for i in range(len(Vector)) :
-    #                             try :
+    #                             try:
     #                                 Temp.append( float(Vector[i]) )
     #                                 Failed = False
     #                             except:
     #                                 break
-    #                     else :
+    #                     else:
     #                         for i in range(len(Vector)) :
-    #                             try :
+    #                             try:
     #                                 if Vector[i].isdigit() :
     #                                     Temp.append( int(Vector[i]) )
     #                                     Failed = False
-    #                                 else :
-    #                                     try :
+    #                                 else:
+    #                                     try:
     #                                         Temp.append( float(Vector[i]) )
     #                                         Failed = False
     #                                     except:
@@ -516,7 +516,7 @@ class VIP(_SimResult):
     #                                 break
     #                     if not Failed :
     #                         Vector = np.array(Temp)
-    #                     else :
+    #                     else:
     #                         Vector = np.array(Vector)
     #                     Unit = self.CSV[CSVname]['[HEADERS]']['UNITS'][col]
     #                     _verbose( self.speak, 1, ' Setting vector for CSV key ' + CSVkey )
@@ -538,7 +538,7 @@ class VIP(_SimResult):
 
     #     if FOUNDflag is False :
     #         _verbose( self.speak, 2, 'vector corresponding to key ' + key + ' not found in CSV data.')
-    #     else :
+    #     else:
     #         if type(DATEflag) == str :
     #             return DATE
     #         else:
@@ -571,7 +571,7 @@ class VIP(_SimResult):
     #                 print('issue with rows', len(Vector), numRows )
     #             if len( self.CSV[CSVname]['[HEADERS]']['MEMBER'][i] ) > 0 :
     #                 Name = self.CSV[CSVname]['[HEADERS]']['MEMBER'][i]
-    #             else :
+    #             else:
     #                 Name = 'ROOT'
     #             self.results[ self.CSV[CSVname]['[HEADERS]']['CLASS'][i] + '@' + _extension(self.path)[1]+_extension(self.path)[0] ][1]['Data'][ self.CSV[CSVname]['[HEADERS]']['VARIABLE'][i]+':'+Name ] = Vector
     #         _verbose( self.speak, 3, '  > DONE! results dictionary generated.')
@@ -584,20 +584,20 @@ class VIP(_SimResult):
     #             KEYsLenght.append( len( self.results[CSV][1]['Data'][KEY] ) )
     #         if max(KEYsLenght) == min(KEYsLenght) :
     #             _verbose( self.speak, 3, '  > ' + str(CSV) + ' properly created with ' + str( numHeaders ) + ' columns and ' + str( max(KEYsLenght) ) + ' rows.')
-    #         else :
+    #         else:
     #             print( max(KEYsLenght), min(KEYsLenght), numRows)
     #             _verbose( self.speak, -1, '  > ' + str(CSV) + ' issue: ' + str( numHeaders ) + ' columns and ' + str( max(KEYsLenght) ) + ' rows.')
     #             OK = False
 
     #     if OK :
     #         _verbose( self.speak, 3, '  > DONE! results dictionary generated.')
-    #     else :
+    #     else:
     #         _verbose( self.speak, -1, '  > results dictionary generated with issues.')
 
     def reload(self) :
         # if self.CSV is False :
         #     self.loadSSS(self.path)
-        # else :
+        # else:
         #     self.loadCSV(self.path)
         self.loadSSS(self.path)
 
@@ -627,10 +627,10 @@ class VIP(_SimResult):
                     return tuple( SSSfiles )
             if os.path.isfile(SSSFilePath) : # if this line is reached, implicitly len( SSSfiles ) == 0
                 return tuple ( SSSFilePath )
-            else :
+            else:
                 raise FileNotFoundError('No such file or related VIP files found for: ' + str(SSSFilePath) )
 
-        else : # if _extension(SSSFilePath)[0] != '.SSS' :
+        else: # if _extension(SSSFilePath)[0] != '.SSS' :
             SSSroot = _extension(SSSFilePath)[2] + _extension(SSSFilePath)[1]
             for Case in expectedParts :
                 for part in Case :
@@ -697,7 +697,7 @@ class VIP(_SimResult):
             if ':' in key :
                 VIPkey = key[:key.index(':')]
                 keyName = key[key.index(':')+1:]
-            else :
+            else:
                 VIPkey = key
                 if key in wellVIPkeys :
                     keyName = list(self.get_Wells())
@@ -705,15 +705,15 @@ class VIP(_SimResult):
                 elif VIPkey in _UniversalKeys :
                     keyName = 'ROOT'
                     SSStype = ['FIELD']
-                else :
+                else:
                     keyName = 'ROOT'
             if len( SSStype ) > 1 :
                 if keyName == 'ROOT' :
                     keyType = 'FIELD'
-                else :
+                else:
                     _verbose( self.speak, 2, 'none or more than one type summary were selected, ')
                     keyType = SSStype
-            else :
+            else:
                 keyType = SSStype[0]
 
             _verbose( self.speak, 1, 'identified VIP key ' + VIPkey + ' for ' + str(keyType) + ' summary for the item ' + keyName )
@@ -739,26 +739,26 @@ class VIP(_SimResult):
             _verbose( self.speak, 1, 'forced to use inputs as VIP keywords')
         if self.ECLstyle is True and forceVIP is False:
             # if key in self.keysECL :
-            try :
+            try:
                 VIPkey, keyType, keyName = _fromECLtoVIP( key, self.speak )
-            except :
-                try :
+            except:
+                try:
                     VIPkey, keyType, keyName = alreadyVIP(key, SSStype)
-                except :
+                except:
                     pass
 
-        else : # VIP style first
-            try :
+        else: # VIP style first
+            try:
                 VIPkey, keyType, keyName = alreadyVIP(key, SSStype)
-            except :
-                try :
+            except:
+                try:
                     VIPkey, keyType, keyName = _fromECLtoVIP( key, self.speak )
-                except :
+                except:
                     pass
 
         if type(keyType) == str :
             keyTypeList = tuple([keyType])
-        else :
+        else:
             keyTypeList = tuple(keyType[:])
 
 
@@ -776,17 +776,17 @@ class VIP(_SimResult):
                             if VIPkey in self.results[sss][1]['Data'].keys() :
                                 RawCol = np.array( self.results[sss][1]['Data'][ VIPkey ] )
                                 _verbose( self.speak, 1, 'extracted ' + VIPkey + ' from ' + keyType + ' with lenght ' + str(len(RawCol)) )
-                                try :
+                                try:
                                     RawCol = RawCol.astype(int)
                                     _verbose( self.speak, 1, 'the values were converted to integer type')
-                                except :
-                                    try :
+                                except:
+                                    try:
                                         RawCol = RawCol.astype(float)
                                         _verbose( self.speak, 1, 'the values were converted to floating point type')
-                                    except :
+                                    except:
                                         _verbose( self.speak, 1, 'the values are treated as string type')
                                 return correctUnits(key, RawCol)
-                else :
+                else:
                     for sss in list(self.results.keys()) :
                         if self.results[sss][0] == keyType :
                             if VIPkey in self.results[sss][1]['Data'].keys() :
@@ -796,14 +796,14 @@ class VIP(_SimResult):
                                 _verbose( self.speak, 1, 'extracted ' + VIPkey + ' from ' + keyType + ' with lenght ' + str(len(RawCol)) )
                                 _verbose( self.speak, 0, 'extracted ' + 'NAME' + ' from ' + keyType + ' with lenght ' + str(len(NameCol)) )
                                 _verbose( self.speak, 0, 'extracted ' + 'TIME' + ' from ' + keyType + ' with lenght ' + str(len(NameCol)) )
-                                try :
+                                try:
                                     RawCol = RawCol.astype(int)
                                     _verbose( self.speak, 1, 'the values were converted to integer type')
-                                except :
-                                    try :
+                                except:
+                                    try:
                                         RawCol = RawCol.astype(float)
                                         _verbose( self.speak, 1, 'the values were converted to floating point type')
-                                    except :
+                                    except:
                                         _verbose( self.speak, 1, 'the values are treated as string type')
 
                                 if type(keyName) == str :
@@ -818,7 +818,7 @@ class VIP(_SimResult):
                                     CleanCol = np.extract( np.char.equal( NameCol, keyName ), RawCol )
                                     CleanTime = np.extract( np.char.equal( NameCol, keyName ), TimeCol )
                                     _verbose( self.speak, 1, 'cleaned ' + VIPkey + ' with lenght ' + str(len(CleanCol)) + ' for item ' + keyName + '.' )
-                                else :
+                                else:
                                     _verbose( self.speak, 2, 'multiple ( ' + str(len(keyName)) + ' ) item options found for the key : ' + key + ':\n' + str(keyName) )
                                     CleanCol = np.array([], dtype='float')
                                     CleanTime = np.array([], dtype='float')
@@ -831,7 +831,7 @@ class VIP(_SimResult):
     def set_FieldTime(self) :
         if len( self.get_Restart() ) > 0 :
             FieldTime = self.checkRestarts('TIME')['TIME']
-        else :
+        else:
             FieldTime = self.loadVector('TIME', SSStype=['FIELD'])
         if FieldTime is None :
             if self.get_Vector('TIME')['TIME'] is not None :
@@ -842,10 +842,10 @@ class VIP(_SimResult):
     def get_Dates(self):
         for sss in self.results :
             if self.results[sss][0] == 'FIELD' :
-                try :
+                try:
                     DateVector = _strDate( list( self.loadVector('DATE', 'FIELD', True) ), speak=(self.speak==1))
                     break
-                except :
+                except:
                     try:
                         DateVector = _strDate( list( self.loadVector('DATE', 'FIELD', True) ), formatIN='DD-MM-YYYY', speak=(self.speak==1))
                         break
@@ -859,10 +859,10 @@ class VIP(_SimResult):
         else:  # if DateVector is None:
             for sss in self.results :
                 if self.results[sss][0] != 'FIELD' :
-                    try :
+                    try:
                         DateVector = _strDate( list( self.loadVector('DATE', sss, True) ), speak=(self.speak==1))
                         break
-                    except :
+                    except:
                         try:
                             DateVector = _strDate( list( self.loadVector('DATE', sss, True) ), formatIN='DD-MM-YYYY', speak=(self.speak==1))
                             break
@@ -923,7 +923,7 @@ class VIP(_SimResult):
                 if pattern in group :
                     areaList.append(group)
             return tuple(areaList)
-        else :
+        else:
             return self.groups
 
     def extract_Regions(self, pattern=None) :
@@ -943,7 +943,7 @@ class VIP(_SimResult):
                 if pattern in region :
                     regionsList.append(region)
             return tuple(regionsList)
-        else :
+        else:
             return self.regions
 
     def directSSS(self, Key, SSStype):
@@ -966,7 +966,7 @@ class VIP(_SimResult):
         if type(Key) is str :
             if Key in self.results[SSS][1]['Data'] :
                 return self.results[SSS][1]['Data'][Key]
-            else :
+            else:
                 print("Key '" + Key + "' not found in SSS " + SSStype )
                 return None
 
@@ -985,7 +985,7 @@ class VIP(_SimResult):
             if SSS is None :
                 print(SSStype + ' SSS not found')
                 return {}
-            else :
+            else:
                 SSS = [ _extension(SSS)[1] + _extension(SSS)[0] ]
         elif SSStype is None :
             SSS = []
@@ -1046,7 +1046,7 @@ class VIP(_SimResult):
                     prod = self[['WOPR']]
                 elif self.is_Attribute('WGPR') :
                     prod = self[['WGPR']]
-                else :
+                else:
                     self['WSIR'] = 'WSALINITY'
                     self.set_Unit('WSIT', 'CONCENTRATION')
                     return None
@@ -1069,13 +1069,13 @@ class VIP(_SimResult):
                 self.keysECL = tuple( set( list(self.get_Keys()) + [Key] ) )
                 VIPkey, keyType, keyName = _fromECLtoVIP( Key, self.speak )
                 self.keysVIP = tuple( set( list(self.get_Keys()) + [ VIPkey +':'+ keyName ] ) )
-            else :
+            else:
                 self.keys = tuple( set( list(self.get_Keys()) [Key] ) )
                 self.keysVIP = tuple( set( list(self.get_Keys()) + [Key] ) )
                 ECLkey = _fromVIPtoECL(Key, SSStype, self.speak)
                 self.keysECL = tuple( set( list(self.get_Keys()) + [ECLkey] ) )
 
-        else :
+        else:
             raise TypeError('Key must be string')
 
     def list_Keys(self, pattern=None, reload=False) :
@@ -1100,7 +1100,7 @@ class VIP(_SimResult):
             keys = tuple( keys )
         if self.ECLstyle :
             self.keysECL = keys
-        else :
+        else:
             self.keysVIP = keys
 
         if pattern is None :
@@ -1108,7 +1108,7 @@ class VIP(_SimResult):
                 return self.keysECL
             elif self.VIPstyle is True :
                 return self.keysVIP
-            else :
+            else:
                 return self.keys
         else:
             return tuple( self.extract_Keys(pattern) )
@@ -1160,12 +1160,12 @@ class VIP(_SimResult):
                     keysList.append(key)
             if len(keysList) > 0 :
                 return tuple(keysList)
-        else :
+        else:
             if self.ECLstyle is True :
                 return self.keysECL
             elif self.VIPstyle is True :
                 return self.keysVIP
-            else :
+            else:
                 return self.keys
 
     def get_Unit(self, Key='--EveryType--') :
@@ -1185,12 +1185,12 @@ class VIP(_SimResult):
             if Key in self.units :
                 if self.units[Key] is not None:
                     return self.units[Key]
-                else : # if self.units[Key] is None:
+                else: # if self.units[Key] is None:
                     if ':' in Key :
                         if _mainKey(Key) in self.units :
                             if self.units[ _mainKey(Key) ] is not None :
                                 return self.units[ _mainKey(Key) ]
-                            else :
+                            else:
                                 return self.extract_Unit(Key)
             if Key in ['DATES','DATE']:
                     self.units[Key] = 'DATE'
@@ -1208,7 +1208,7 @@ class VIP(_SimResult):
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
-                    else :
+                    else:
                         return None
                 elif Key[0] == 'G' :
                     UList=[]
@@ -1220,7 +1220,7 @@ class VIP(_SimResult):
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
-                    else :
+                    else:
                         return None
                 elif Key[0] == 'R' :
                     UList=[]
@@ -1232,7 +1232,7 @@ class VIP(_SimResult):
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
-                    else :
+                    else:
                         return None
                 UList = None
 
@@ -1243,7 +1243,7 @@ class VIP(_SimResult):
                 if ':' in each :
                     Key.append( _mainKey(each) )
                     KeyDict[ _mainKey(each) ] = each
-                else :
+                else:
                     Key.append(each)
             Key = list( set (Key) )
             Key.sort()
@@ -1255,13 +1255,13 @@ class VIP(_SimResult):
                     tempUnits[each] = self.extract_Unit(each)
                 elif each in self.keys and ( each == 'DATES' or each == 'DATE' ) :
                     tempUnits[each] = 'DATE'
-                else :
+                else:
                     if KeyDict[each] in self.units :
                         tempUnits[each] = self.units[KeyDict[each]]
                     elif KeyDict[each] in self.keys :
                         if self.extract_Unit(KeyDict[each]) is None :
                             tempUnits[each] = self.extract_Unit(KeyDict[each])
-                        else :
+                        else:
                             tempUnits[each] = self.extract_Unit(KeyDict[each]).strip('( )').strip("'").strip('"')
             return tempUnits
         elif type(Key) in [list,tuple]:
@@ -1274,7 +1274,7 @@ class VIP(_SimResult):
                 elif type(each) is str and each.strip() in self.keys :
                     if self.extract_Unit(each.strip()) is None :
                         tempUnits[each] = self.extract_Unit(each.strip())
-                    else :
+                    else:
                         tempUnits[each] = self.extract_Unit(each.strip()).strip('( )').strip("'").strip('"')
             return tempUnits
 
@@ -1283,7 +1283,7 @@ class VIP(_SimResult):
             for Vector in list(self.results[sss][1]['Units'].keys()) :
                 if Vector == 'DATE' or Vector == 'DATES' :
                     self.units[Vector] = 'DATE'
-                else :
+                else:
                     if self.ECLstyle is True :
                         ECLkey = _fromVIPtoECL( Vector, self.results[sss][0], self.speak )
                         if ECLkey is not None :
@@ -1317,9 +1317,9 @@ class VIP(_SimResult):
                                     break
                     if self.units[key] is None :
                         _verbose( self.speak, 3, 'impossible to found unit system for key ' + key )
-                    else :
+                    else:
                         _verbose( self.speak, 1, 'found unit system ' + self.units[key] + ' for key ' + key )
-                else :
+                else:
                     self.units[key] = self.extract_Unit(key)
                     if self.units[key] is None :
                         VIPkey = _fromECLtoVIP( key, self.speak )
@@ -1329,7 +1329,7 @@ class VIP(_SimResult):
                                     break
                     if self.units[key] is None :
                         _verbose( self.speak, 3, 'impossible to found unit system for key ' + key )
-                    else :
+                    else:
                         _verbose( self.speak, 1, 'found unit system ' + self.units[key] + ' for key ' + key )
 
     def OUTPAVG(self, KeyArguments=None, ECLkey=None) :
@@ -1345,9 +1345,9 @@ class VIP(_SimResult):
                         if ':' in ECLkey :
                             if self.is_Key( 'WBP:'+ECLkey.split(':')[1] ) :
                                 self.set_Vector( Key=ECLkey, VectorData=self('WBP:'+ECLkey.split(':')[1]), Units=self.get_Unit('WBP:'+ECLkey.split(':')[1]), DataType='float', overwrite=True )
-                            else :
+                            else:
                                 _verbose( self.speak, -1, " the corresponding well for the key '" + _mainKey(ECLkey) + "' does not have WBP here.")
-                        else :
+                        else:
                             _verbose( self.speak, -1, " the well name can not be found in the key '" + ECLkey + "'\n use .set_Vector() method to set an especific key")
                 elif self.is_Att(ECLkey) :
                     print(" WARNING: the attribute '" + ECLkey + "' already exists here, do you want to overwrite this attribute for all the wells?" )
@@ -1357,7 +1357,7 @@ class VIP(_SimResult):
                     if user in ['Y', 'YES', 'SI', 'SÍ', 'OUI'] :
                         for W in self.get_Wells() :
                             self.set_Vector( Key=W, VectorData=self('WBP:'+W), Units=self.get_Unit('WBP:'+W), DataType='float', overwrite=True )
-                else :
+                else:
                     for W in self.get_Wells() :
                         self.set_Vector( Key=W, VectorData=self('WBP:'+W), Units=self.get_Unit('WBP:'+W), DataType='float', overwrite=True )
         elif KeyArguments is not None :
@@ -1367,7 +1367,7 @@ class VIP(_SimResult):
                     if KeyArguments.upper() != 'WELL' and KeyArguments[0] == 'W' :
                         _verbose( self.speak, 2, " the KeyArguments '" + KeyArguments + "' seems to be a ECL style keyword...")
                         self.OUTPAVG(ECLkey=KeyArguments)
-                else :
+                else:
                     KeyArguments = KeyArguments.split()
                     WPAVE = ['WPAVE', '1st', '2nd', '3rd', '4th']
 

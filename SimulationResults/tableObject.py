@@ -6,7 +6,7 @@ Created on Thu Jan 21 11:00:20 2021
 """
 
 __version__ = '0.20.2'
-__release__ = 220113
+__release__ = 220223
 __all__ = ['TABLE']
 
 from .mainObject import SimResult as _SimResult
@@ -46,7 +46,7 @@ class TABLE(_SimResult):
         if type(inputFile) is str and len(inputFile.strip()) > 0 :
             if os.path.isfile(inputFile) :
                 self.readTable(inputFile, sep=sep, header=header, units=units, names=names, index_col=index_col)
-            else :
+            else:
                 print("file doesn't exists")
         if len(self.Frames) > 0:
             self.name = _extension(inputFile)[1]
@@ -101,7 +101,7 @@ class TABLE(_SimResult):
                     if type(self.Frames[frame][col][0]) is str:
                         if _isDate(self.Frames[frame][col][0]):
                             continue
-                        else :
+                        else:
                             self.itemsCol[frame] = col
                             break
 
@@ -131,7 +131,7 @@ class TABLE(_SimResult):
             if type(header) is int:
                 if units == header:
                     units = None
-                else :
+                else:
                     header = [header,units]
             elif type(header) in (list,tuple):
                 if units in header:
@@ -143,11 +143,11 @@ class TABLE(_SimResult):
         if index_col is False and ( type(header) is not int and header != 'infer' ) :
             index_col = None
 
-        try :
+        try:
             NewFrame = pd.read_table(inputFile, sep=sep, header=header, engine='python', index_col=index_col)
         except ImportError:
             raise ImportError("Missing optional dependencies 'xlrd' and 'openpyxl'.\nInstall xlrd and openpyxl for Excel support.\nUse pip or conda to install xlrd and install openpyxl.")
-        except :
+        except:
             try:
                 import xlrd
                 try:
@@ -161,7 +161,7 @@ class TABLE(_SimResult):
         if inputFile in self.Frames:
             _verbose(self.speak, 2, "the file '"+str(inputFile)+"' will overwrite the previously loaded file with the same name.")
 
-        if user_index_col is False and ( type(header) is not int and header != 'infer' ) :
+        if user_index_col is False and ( type(header) is not int and header != 'infer' ):
             colNames = NewFrame.columns
             NewFrame.reset_index(inplace=True)
             NewFrame.drop(NewFrame.columns[-1],axis=1,inplace=True)
@@ -175,7 +175,7 @@ class TABLE(_SimResult):
                 if col[-1].startswith('Unnamed:') :
                     NewUnits = ''
                     unitsMessage = ''
-                else :
+                else:
                     NewUnits = col[-1].strip()
                     unitsMessage = " with units: '"+NewUnits+"'"
                 self.add_Key(NewKey)
@@ -309,7 +309,7 @@ class TABLE(_SimResult):
     #             if pattern in group :
     #                 results.append(group)
     #         return tuple(results)
-    #     else :
+    #     else:
     #         return self.groups
 
     # def extract_Regions(self, pattern=None) :
@@ -324,7 +324,7 @@ class TABLE(_SimResult):
     #             if pattern in group :
     #                 results.append(group)
     #         return tuple(results)
-    #     else :
+    #     else:
     #         return self.groups
 
     def extractDATE(self):
@@ -371,7 +371,7 @@ class TABLE(_SimResult):
         if KeyIndex :
             if self.DTindex in ['DATE','DATES']:
                 self.DTindexValues = self.dates
-            else :
+            else:
                 indexValues = []
                 for frame in self.Frames:
                     indexValues += self.Frames[frame][KeyIndex].to_list()
@@ -398,13 +398,13 @@ class TABLE(_SimResult):
         if KeyIndex :
             if Key in ['DATE','DATES']:
                 self.DTindexValues = self.dates
-            else :
+            else:
                 indexValues = []
                 for frame in self.Frames:
                     indexValues += self.Frames[frame][KeyIndex].to_list()
                 indexValues = np.array(sorted(set(indexValues)))
             return self.DTindex
-        else :
+        else:
             self.DTindex = None
 
     def get_Unit(self, Key='--EveryType--') :
@@ -445,7 +445,7 @@ class TABLE(_SimResult):
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
-                    else :
+                    else:
                         return None
                 elif Key[0] == 'G' :
                     UList=[]
@@ -455,7 +455,7 @@ class TABLE(_SimResult):
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
-                    else :
+                    else:
                         return None
                 elif Key[0] == 'R' :
                     UList=[]
@@ -465,7 +465,7 @@ class TABLE(_SimResult):
                     if len(set(UList)) == 1 :
                         self.units[Key] = UList[0]
                         return UList[0]
-                    else :
+                    else:
                         return None
                 UList = None
 
@@ -476,7 +476,7 @@ class TABLE(_SimResult):
                 if ':' in each :
                     Key.append( _mainKey(each) )
                     KeyDict[ _mainKey(each) ] = each
-                else :
+                else:
                     Key.append(each)
             Key = list( set (Key) )
             Key.sort()
@@ -487,17 +487,17 @@ class TABLE(_SimResult):
                 elif each in self.keys and ( each != 'DATES' and each != 'DATE' ) :
                     if self.results.unit(each) is None :
                         tempUnits[each] = self.results.unit(each)
-                    else :
+                    else:
                         tempUnits[each] = self.results.unit(each).strip('( )').strip("'").strip('"')
                 elif each in self.keys and ( each == 'DATES' or each == 'DATE' ) :
                     tempUnits[each] = 'DATE'
-                else :
+                else:
                     if KeyDict[each] in self.units :
                         tempUnits[each] = self.units[KeyDict[each]]
                     elif KeyDict[each] in self.keys :
                         if self.results.unit(KeyDict[each]) is None :
                             tempUnits[each] = self.results.unit(KeyDict[each])
-                        else :
+                        else:
                             tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
             return tempUnits
         elif type(Key) in [list,tuple]:
