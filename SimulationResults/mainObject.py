@@ -647,7 +647,7 @@ class SimResult(object):
         elif type(Value) is Series :
             if len(Value) == len(self.fieldtime[2]) :
                 Col = Value.name
-                if '!' in Col :
+                if type(Col) is str and '!' in Col:
                     Col, ThisUnits = Col.split('!')[0].strip(), Col.split('!')[1].strip()
                 elif Units is not None :
                     ThisUnits = Units
@@ -655,9 +655,9 @@ class SimResult(object):
                     ThisUnits = 'DIMENSIONLESS'
 
                 if ':' in Col :
-                    ThisMain, ThisItem = Key, Col.split(':')[1].strip()
+                    ThisMain, ThisItem = Key, Col.split(':')[1].strip() if type(Col) is str else Col
                 else :
-                    ThisMain, ThisItem = Key, Col.strip()
+                    ThisMain, ThisItem = Key, Col.strip() if type(Col) is str else Col
 
                 if Key is None :
                     ThisKey = Col
@@ -669,7 +669,7 @@ class SimResult(object):
                 elif ThisItem == Key :
                     ThisKey = Key
                 else :
-                    ThisKey = ThisMain + ':' + ThisItem
+                    ThisKey = str(ThisMain) + ':' + str(ThisItem)
 
                 self.set_Vector(Key, Value.to_numpy(), ThisUnits, DataType='auto', overwrite=True)
                 return None
