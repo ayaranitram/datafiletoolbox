@@ -5,11 +5,12 @@ Created on Wed May 13 00:46:05 2020
 @author: MCARAYA
 """
 
-__version__ = '0.2.0'
-__release__ = 210826
-__all__ = ['_mainKey', '_itemKey', '_keyType', '_wellFromAttribute', 'tamiz', '_meltDF']
+__version__ = '0.3.0'
+__release__ = 220223
+__all__ = ['_mainKey', '_itemKey', '_keyType', '_wellFromAttribute', 'tamiz', '_meltDF', '_pivotDF']
 
 import pandas
+import numpy
 from .._Classes.SimPandas import SimSeries, SimDataFrame
 
 def _is_SimulationResult(obj) :
@@ -177,7 +178,7 @@ def tamiz( ListOrTuple ) :
         others += [ListOrTuple]
     return strings, others
 
-def _meltDF(df, hue='--auto', label='--auto', SimObject=None, FullOutput=False,**kwargs) :
+def _meltDF(df, hue='--auto', label='--auto', SimObject=None, FullOutput=False, **kwargs) :
         """
         common procedure to melt and rename the dataframe
         """
@@ -322,3 +323,86 @@ def _meltDF(df, hue='--auto', label='--auto', SimObject=None, FullOutput=False,*
             return df
         else:
             return df
+
+def _pivotDF(df, item=None, index=None, values=None, nameSeparator=':'):
+    """
+    Procedure to convert a long table to wide table (pivot) integrating the data from
+    the item column into the column names.
+
+    Parameters
+    ----------
+    df : DataFrame
+        DESCRIPTION.
+    item : str, optional
+        The column name that contains the item (i.e. wells) names.
+        If not will try to guess from the object columns in the dataframe
+    index : str, optional
+        The column to be used as index in the pivoted table.
+        If None will use the first datetime column or column labeled 'time'.
+    values : str or list of str, optional
+        The columns to be pivoted.
+        The default is all the columns but index and item columns.
+    nameSeparator : str, optional
+        The string to be used separator in the new concatenated column names.
+        New column names will be:
+            original_column_name:item_name
+        The default is ':'.
+
+    Raises
+    ------
+    TypeError
+        If not able to guess item or index columns.
+
+    Returns
+    -------
+    newdf : DataFrame
+        The pivoted DataFrame.
+
+    """
+    resetIndex = False
+    if index is None:
+        resetIndex = True
+        for col in df:
+            if 'date' in str(df[col].dtype):
+                index = col
+                break
+    if index is None:
+        for col in df:
+            if str(col).upper().strip() == 'TIME' and ('int' in str(df[col].dtype) or 'float' in str(df[col].dtype)):
+                index = col
+                break
+    if index is None:
+        raise TypeError("Not able to find a column to be used as index, please provide 'index' parameter.")
+    else:
+        print(" >>> Identified column '" + str(index) + "' as index to pivot. <<<")
+        newindex = pandas.Index(numpy.sort(df[index].squeeze().unique()))
+    if item is None:
+        candidate = None
+        for col in df:
+            if 'object' == str(df[col].dtype):
+                if candidate is None:
+                    candidate = (col, len(df[col].squeeze().unique()))
+                elif len(df[col].squeeze().unique()) < candidate[1]:
+                    candidate = (col, len(df[col].squeeze().unique()))
+        if candidate is not None:
+            item = candidate[0]
+            print(" >>> Identified column '" + str(item) + "' as item to pivot. <<<")
+        else:
+            raise TypeError("Not able to find a column to be used as item, please provide 'item' parameter.")
+
+    names = {col[0] if type(col) is tuple else col:col for col in df.columns}
+    if item not in names:
+        names[item] = item
+    if index not in names:
+        names[index] = index
+    if values is None:
+        values = [cols for cols in df.columns if cols != names[item]] if index is None else [cols for cols in df.columns if cols != names[item] and cols != names[index]]
+
+    newdf = pandas.DataFrame(index=newindex)
+    for ite in df[item].squeeze().unique():
+        for col in values:
+            newdf[(str(col[0])+':'+str(ite),)+col[1:] if type(col) is tuple else str(col)+':'+str(ite)] = df[df[names[item]] == ite].set_index(names[index])[col]
+
+    if resetIndex:
+        newdf = newdf.reset_index()
+    return newdf
