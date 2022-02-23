@@ -6,7 +6,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = '0.60.9'
-__release__ = 220201
+__release__ = 220223
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -958,18 +958,18 @@ class SimResult(object):
         """
         if 'WaterProducers' not in self.wellsLists or reload is True:
             _verbose(self.printMessages, 1, '# extrating data to count water production wells' )
-            if self.is_Attribute('WWPR') :
+            if self.is_Attribute('WWPR'):
                 waterProducers = self[['WWPR']]
                 waterProducers = waterProducers.rename(columns=_wellFromAttribute(waterProducers.columns ) )
 
                 prodCheck = waterProducers * 0
 
-                if self.is_Attribute('WOPR') :
+                if self.is_Attribute('WOPR'):
                     oilProducers = self[['WOPR']]
                     oilProducers = oilProducers.rename(columns=_wellFromAttribute(oilProducers.columns ) )
                     prodCheck = oilProducers + prodCheck
 
-                if self.is_Attribute('WGPR') :
+                if self.is_Attribute('WGPR'):
                     gasProducers = self[['WGPR']]
                     gasProducers = gasProducers.rename(columns=_wellFromAttribute(gasProducers.columns ) )
                     prodCheck = gasProducers + prodCheck
@@ -978,13 +978,13 @@ class SimResult(object):
 
                 self.wellsLists['WaterProducers'] = list(prodCheck.columns )
 
-            elif self.is_Attribute('WWCT') :
+            elif self.is_Attribute('WWCT'):
                 waterCheck = self[['WWPR']]
                 waterCheck = waterCheck.rename(columns=_wellFromAttribute(waterCheck.columns ) )
                 waterCheck = (waterCheck >= self.WCcriteria ).replace(False, np.nan).dropna(axis=1, how='all')
                 self.wellsLists['WaterProducers'] = list(waterCheck.columns )
 
-            else :
+            else:
                 self.wellsLists['WaterProducers'] = []
 
             _ = self.get_WaterProducersHistory(reload=True)
@@ -4143,12 +4143,12 @@ class SimResult(object):
         """
         returnVectors = self.get_UnfilteredVector(key, reload)
 
-        if self.filter['filter'] is None :
+        if self.filter['filter'] is None:
             return returnVectors
         else :
             if self.filter['key'][-1] is not None :
                 _verbose(self.speak, 1, " filter by key '" + self.filter['key'][-1] + "'")
-            for each in returnVectors :
+            for each in returnVectors:
                 returnVectors[each] = returnVectors[each][self.get_Filter()]
             return returnVectors
 
@@ -4161,7 +4161,7 @@ class SimResult(object):
             a list or tuple containing the keys names as strings.
         """
         returnVectors = self.get_Vector(key=key, reload=reload)
-        for key in returnVectors :
+        for key in returnVectors:
             returnVectors[key] = (self.get_Unit(key), returnVectors[key] )
         return returnVectors
 
@@ -5383,10 +5383,10 @@ class SimResult(object):
             _verbose(self.speak, 3, "Not possible to create 'DAY' key, the requiered data is not available")
             return False
 
-    def createTIME(self, startDate=None) :
-        if self.is_Key('DATE') :
+    def createTIME(self, startDate=None):
+        if self.is_Key('DATE'):
             date = self('DATE')
-        elif self.is_Key('DATES') :
+        elif self.is_Key('DATES'):
             date = self('DATES')
         else :
             catch = self.createDATES()
@@ -5397,20 +5397,20 @@ class SimResult(object):
         if date is None :
             return False
         else :
-            if startDate is None :
-                startDate = date[0]
+            if startDate is None:
+                startDate = min(date)
             else :
                 import datetime as dt
-                if type(startDate) is str :
+                if type(startDate) is str:
                     try :
                         startDate = np.datetime64(pd.to_datetime(startDate))
                     except :
                         raise ValueError(" string date not understood: '"+startDate+"'")
-                elif isinstance(startDate, pd._libs.tslibs.timestamps.Timestamp) :
+                elif isinstance(startDate, pd._libs.tslibs.timestamps.Timestamp):
                     startDate = np.datetime64(startDate)
-                elif isinstance(startDate, dt.datetime) :
+                elif isinstance(startDate, dt.datetime):
                     startDate = np.datetime64(startDate)
-                elif type(startDate) is np.datetime64 :
+                elif type(startDate) is np.datetime64:
                     pass # ok
                 else :
                     raise TypeError(" not recognized startDate paramenter", startDate)
