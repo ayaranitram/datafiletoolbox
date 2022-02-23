@@ -9,11 +9,11 @@ Created on Tue Jul  9 21:23:27 2019
 @author: martin
 """
 
-__version__ = '0.45.0'
-__release__ = 220211
+__version__ = '0.46.0'
+__release__ = 220223
 __author__ = 'Martin Carlos Araya <martinaraya@gmail.com>'
 __all__ = ['stringformat', 'extension', 'Alternate', 'convert', 'SimPandas',
-           'SimSeries', 'SimDataFrame', 'loadSimulationResults','melt','unify','slope']
+           'SimSeries', 'SimDataFrame', 'loadSimulationResults','melt','pivot','unify','slope']
 
 _msg = """     implementing libecl 2.9.1 from pypi, released on Aug 2020"""
 
@@ -23,7 +23,7 @@ from ._Classes.SimPandas import SimSeries, SimDataFrame
 from ._Classes import SimPandas
 
 from ._common.eclDATES import simDate as ECLdate
-from ._common.functions import _mainKey as mainKey, _itemKey as itemKey, tamiz, _meltDF as melt
+from ._common.functions import _mainKey as mainKey, _itemKey as itemKey, tamiz, _meltDF as melt, _pivotDF as pivot
 from ._common.inout import _extension as extension
 from ._common.keywordsConversions import fromECLtoVIP, fromVIPtoECL, fromECLtoCSV, fromCSVtoECL
 from ._common.stringformat import date as strDate, isDate, multisplit, isnumeric, getnumber

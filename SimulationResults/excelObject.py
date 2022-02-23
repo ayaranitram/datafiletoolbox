@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.22.0'
-__release__ = 220221
+__version__ = '0.22.5'
+__release__ = 220223
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -21,7 +21,7 @@ class XLSX(_SimResult):
     object to contain data read from .xlsx files
 
     """
-    def __init__(self, inputFile=None, verbosity=2, sheet_name=None, header=[0, 1], units=1, overwrite=True, combine_SheetName_ColumnName=None, sheetName_auto='R', nameSeparator=':', **kwargs) :
+    def __init__(self, inputFile=None, verbosity=2, sheet_name=None, header=[0, 1], units=1, overwrite=True, combine_SheetName_ColumnName=None, sheetName_auto='R', nameSeparator=':', ignore_nameSeparator=False, long=False, **kwargs) :
         _SimResult.__init__(self, verbosity=verbosity)
         self.kind = XLSX
         self.results = {}
@@ -35,11 +35,12 @@ class XLSX(_SimResult):
             self.sheetName_auto = 'R'
         self.nameSeparator = str(nameSeparator)
         self.commonIndex = None
+        self.commonIndexVector = None
         if 'frames' in kwargs or ( type(inputFile) is str and len(inputFile.strip()) > 0 ):
             if 'frames' in kwargs and kwargs['frames'] is not None:
                 self.fromSimDataFrame(kwargs['frames'])
             elif os.path.isfile(inputFile) :
-                self.readSimExcel(inputFile, sheet_name=sheet_name, header=header, units=units, combine_SheetName_ColumnName=combine_SheetName_ColumnName, **kwargs)
+                self.readSimExcel(inputFile, sheet_name=sheet_name, header=header, units=units, combine_SheetName_ColumnName=combine_SheetName_ColumnName, ignore_nameSeparator=ignore_nameSeparator, long=long, **kwargs)
             else :
                 print("file doesn't exists")
         if len(self.Frames) > 0 and inputFile is not None:
@@ -47,6 +48,8 @@ class XLSX(_SimResult):
             # if 'TIME' not in self.keys :
             #     if 'DATE' in self.keys :
             #         TIME = np.array( [0] + list( self('DATE')[1:] - self('DATE')[:-1] ) )
+            if type(long) is dict and 'index' in long and self.is_Key(long['index']) and 'index' not in kwargs:
+                kwargs['index'] = long['index']
             self.initialize(**kwargs)
 
     def initialize(self, **kwargs) :
@@ -112,7 +115,6 @@ class XLSX(_SimResult):
 
         # look for other identical index
         for Key in possibleKeys:
-
             IndexVector = None
             if Key not in self.FramesIndex:  # and Key not in map(_mainKey,self.FramesIndex):
                 KeyIndex = False
@@ -125,33 +127,54 @@ class XLSX(_SimResult):
                     elif IndexVector is None :
                         IndexVector = self.Frames[frame][self.FramesIndex[Key][1]]
                     elif not IndexVector.equals( self.Frames[frame][self.FramesIndex[Key][1]] ):
-                        KeyIndex = False
-                        break
-
+                        if 'date' in str(IndexVector.dtype) and IndexVector.dtype is self.Frames[frame][self.FramesIndex[Key][1]].dtype:
+                            pass  # ii is a date, can be merged
+                        else:
+                            KeyIndex = False
+                            break
             if KeyIndex :
                 self.DTindex = Key
                 break
 
-        # # look for other not indentical but common index
-        # if not KeyIndex:
-        #     for Key in ('DATE', 'DATES', 'TIME', 'DAYS', 'MONTHS', 'YEARS') + self.keys :
-        #         KeyIndex = True
-        #         IndexVector = None
-        #         for frame in self.Frames :
-        #             if Key not in self.FramesIndex :
-        #                 KeyIndex = False
-        #                 break
-        #             if self.FramesIndex[Key][1] not in self.Frames[frame].columns :
-        #                 KeyIndex = False
-        #                 break
-        #             elif IndexVector is None :
-        #                 IndexVector = self.Frames[frame][self.FramesIndex[Key][1]]
-        #             elif not IndexVector.equals( self.Frames[frame][self.FramesIndex[Key][1]] ) :
-        #                 KeyIndex = False
-        #                 break
-        #         if KeyIndex :
-        #             self.DTindex = Key
-        #             break
+        # look for other not indentical but common index
+        if not KeyIndex:
+            for Key in possibleKeys + self.keys :
+                IndexVector = None
+                if Key not in self.FramesIndex and Key not in map(_mainKey,self.FramesIndex):
+                    KeyIndex = False
+                    continue
+                else:
+                    KeyIndex = True
+                    for frame in self.Frames :
+                        if Key in self.FramesIndex :
+                            if self.FramesIndex[Key][1] in self.Frames[frame].columns:
+                                if IndexVector is None :
+                                    IndexVector = self.Frames[frame][self.FramesIndex[Key][1]]
+                                elif IndexVector.equals( self.Frames[frame][self.FramesIndex[Key][1]] ):
+                                    pass
+                                elif IndexVector.dtype is self.Frames[frame][self.FramesIndex[Key][1]].dtype and 'date' in str(IndexVector.dtype):
+                                    pass
+                                elif IndexVector.dtype is self.Frames[frame][self.FramesIndex[Key][1]].dtype and _mainKey(Key).upper().strip() == 'TIME':
+                                    pass
+                                else:
+                                    KeyIndex = False
+                                    break
+                        elif _mainKey(Key) in self.FramesIndex:
+                            if self.FramesIndex[_mainKey(Key)][1] in self.Frames[frame].columns:
+                                if IndexVector is None :
+                                    IndexVector = self.Frames[frame][self.FramesIndex[Key][1]]
+                                elif IndexVector.equals( self.Frames[frame][self.FramesIndex[Key][1]] ):
+                                    pass
+                                elif str(IndexVector.dtype) == str(self.Frames[frame][self.FramesIndex[Key][1]].dtype) and 'date' in str(IndexVector.dtype):
+                                    pass
+                                elif str(IndexVector.dtype) == str(self.Frames[frame][self.FramesIndex[Key][1]].dtype) and _mainKey(Key).upper().strip() == 'TIME':
+                                    pass
+                                else:
+                                    KeyIndex = False
+                                    break
+                if KeyIndex :
+                    self.DTindex = Key
+                    break
 
         if KeyIndex :
             _verbose(self.speak, 1, "found the common index: " + str(self.DTindex))
@@ -159,9 +182,11 @@ class XLSX(_SimResult):
             IndexVector = None
             for frame in self.Frames:
                 if IndexVector is None:
-                    IndexVector = self.Frames[frame][self.DTindex]
+                    IndexVector = self.Frames[frame][self.FramesIndex[self.DTindex][1]]
+                elif IndexVector.equals(self.Frames[frame][self.FramesIndex[self.DTindex][1]]):
+                    pass  # OK
                 else:
-                    IndexVector = pd.merge_ordered(IndexVector,self.Frames[frame][self.DTindex],on=self.DTindex,how='outer')
+                    IndexVector = pd.merge_ordered(IndexVector,self.Frames[frame][self.FramesIndex[self.DTindex][1]],how='outer').squeeze()
             self.add_Key(self.DTindex)
             self.TimeVector = self.DTindex
             _ = self.set_Vector(Key=self.DTindex, VectorData=IndexVector.to_numpy().reshape(-1,), Units=self.get_Units(self.DTindex), DataType='auto', overwrite=True)
@@ -171,15 +196,19 @@ class XLSX(_SimResult):
             self.DTindex = None
 
     def otherDateNames(self):
-        if not self.is_Key('DATE') and not self.is_Key('DATES') :
-            for datename in ['Date','date','Dates','dates','FECHA','Fecha','fecha','DATA','Data','data']:
+        """
+        Looks for keys with 'datetime' or 'date' kind of data, merge all of them and creates a general DATE key.
+        """
+        if not self.is_Key('DATE') and not self.is_Key('DATES'):
+            vector = None
+            for datename in ('Date','date','Dates','dates','FECHA','Fecha','fecha','DATA','Data','data') + self.keys:
                 if self.is_Key(datename):
                     if 'date' in str(self.get_RawVector(datename)[datename].dtype):
-                        try:
-                            _ = self.set_Vector(Key='DATE', VectorData=self.get_RawVector(datename)[datename].reshape(-1,), Units='date', DataType='datetime', overwrite=True)
-                            return
-                        except:
-                            pass
+                        if vector is None:
+                            vector = pd.Series(self.get_RawVector(datename)[datename],name='DATE')
+                        else:
+                            vector = pd.merge_ordered(vector, pd.Series(self.get_RawVector(datename)[datename],name='DATE'), how='outer').squeeze()
+            _ = self.set_Vector(Key='DATE', VectorData=vector, Units='date', DataType='datetime', overwrite=True)
 
     def fromSimDataFrame(self,frame):
         self.units = frame.get_units()
@@ -192,11 +221,12 @@ class XLSX(_SimResult):
         self.name = 'from SimDataFrame'
         self.keys = frame.columns
 
-    def readSimExcel(self, inputFile, sheet_name=None, header=[0, 1], units=1, combine_SheetName_ColumnName=None, **kwargs) :
+    def readSimExcel(self, inputFile, sheet_name=None, header=[0, 1], units=1, combine_SheetName_ColumnName=None, ignore_nameSeparator=False, long=False, **kwargs) :
         """
         internal function to read an excel file with SimDataFrame format (header in first row, units in second row)
         """
         from .._dictionaries import ECL2VIPkey
+        import numpy as np
         ECLkeys = tuple(ECL2VIPkey.keys())
         cleaningList = []
         # def _foundNewKey():
@@ -211,26 +241,50 @@ class XLSX(_SimResult):
         #     self.set_Unit( NewKey, NewUnits )
         #     _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage )
 
+        ### prepare header parameter
         if type(header) is int :
-            if type(units) is int :
-                if header != units :
-                    header = [header, units]
-        elif type(header) in [list, tuple] :
-            if type(units) is int :
-                if units not in header :
-                    header = list(header)+[units]
+            if header < 0:
+                raise ValueError("'header' parameter must be positive")
+            header = [header]
+        elif type(header) is not str and hasattr(header,'__iter__'):
+            if not np.array([ h >= 0 for h in header]).all():
+                raise ValueError("'header' parameter must be positive")
+            header = list(header)
+        else:
+            raise TypeError("'header' parameter must be a positive integer or a list of positive integers.")
+        ### prepare units parameter
+        if type(units) is int:
+            if units < 0:
+                raise ValueError("'units' parameter must be positive")
+            if units in header:
+                if len(header) == 1:
+                    _verbose(self.speak, 2, " > same row will be used as header and as units.")
+                    header += [units]
+                elif len(header) > 1:
+                    header.pop(header.index(units))
+                    header += [units]
+            else:
+                header += [units]
+        elif units is None:
+            header = header + [-1]
+        else:
+            raise TypeError("'units' parameter must be positive integer or None.")
+        ### prepare a list of the labels rows parameter
+        labels = [ r for r in header if r != units ]
 
         pdkwargs = kwargs.copy()
         for k in ['speak','verbosity','verbose','reload','preload','unload','ignoreSMSPEC','index','frames']:
             if k in pdkwargs:
                 del pdkwargs[k]
-        try :
+
+        ### read the excel file using Pandas
+        try:
             NewFrames = pd.read_excel(inputFile, sheet_name=sheet_name, header=header, **pdkwargs)
         except OSError:
             raise OSError("[Errno 24] Too many open files: " + str(inputFile) + '\nPlease close some other files.')
         except ImportError:
             raise ImportError("Missing optional dependencies 'xlrd' and 'openpyxl'.\nInstall xlrd and openpyxl for Excel support.\nUse pip or conda to install xlrd and install openpyxl.")
-        except :
+        except:
             try:
                 import xlrd
                 try:
@@ -241,115 +295,279 @@ class XLSX(_SimResult):
                 raise ModuleNotFoundError("Missing optional dependency 'xlrd'.\nInstall xlrd for Excel support.\nUse pip or conda to install xlrd.")
             raise TypeError('Not able to read the excel file, please check input parameters and excel sheets format.')
 
-        if sheet_name is not None and type(NewFrames) is not dict :
+        ### check if only 1 sheet has been loaded, then put it into a dictionary
+        if sheet_name is not None and type(NewFrames) is not dict:
             NewFrames = {str(sheet_name):NewFrames}
 
+        ### if input file contains long format tables, pivot them to convert to wide tables
+        if bool(long):
+            from .._common.functions import _pivotDF
+            if type(long) is dict:
+                NewFrames = { sheet_name:_pivotDF(dataframe, **long) for sheet_name, dataframe in NewFrames.items() }
+            elif type(long) is str:
+                NewFrames = { sheet_name:_pivotDF(dataframe, long) for sheet_name, dataframe in NewFrames.items() }
+            else:
+                NewFrames = { sheet_name:_pivotDF(dataframe) for sheet_name, dataframe in NewFrames.items() }
+
+        ### prepare combine_SheetName_ColumnName method
+        ## the user has passed a parameter
         if bool(combine_SheetName_ColumnName):
-            if type(combine_SheetName_ColumnName) in (int,float):
+
+            # a number must be the name of the sheet, put the number in a list
+            if type(combine_SheetName_ColumnName) in (int, float):
                 combine_SheetName_ColumnName = [combine_SheetName_ColumnName]
-            elif type(combine_SheetName_ColumnName) is str and combine_SheetName_ColumnName.upper().strip() in ['RIGHT','LEFT','R','L']:
+
+            # a keyword string
+            elif type(combine_SheetName_ColumnName) is str and combine_SheetName_ColumnName.upper().strip() in ['RIGHT','LEFT','R','L','MAIN','ITEM']:
+                # shout a message saying that the keyword could also be the name of a sheet
                 if combine_SheetName_ColumnName in NewFrames:
                     _verbose(self.speak, 3, "WARNING: The paramater combine_SheetName_ColumnName is set to " + combine_SheetName_ColumnName +
                              " but this is also the name a sheet in the workbook.\n It will be considered as the " + combine_SheetName_ColumnName +
                              " option of the parameter. To set it as the sheet name provide the name of the sheet in a list: [" + combine_SheetName_ColumnName + "]")
-                combine_SheetName_ColumnName = combine_SheetName_ColumnName.upper()[0]
+
+                if combine_SheetName_ColumnName.upper().strip() in ['LEFT','L','MAIN']:
+                    combine_SheetName_ColumnName = 'L'
+                elif combine_SheetName_ColumnName.upper().strip() in ['RIGHT','R','ITEM']:
+                    combine_SheetName_ColumnName = 'R'
+
+            # a string that is the name of a sheet
             elif type(combine_SheetName_ColumnName) is str:
+                if combine_SheetName_ColumnName not in NewFrames:
+                    if combine_SheetName_ColumnName.strip() in NewFrames:
+                        combine_SheetName_ColumnName = combine_SheetName_ColumnName.strip()
+                    else:
+                        raise ValueError("The sheetname '" + combine_SheetName_ColumnName + "' is not a sheet in the excel file \n " + str(inputFile))
                 combine_SheetName_ColumnName = [combine_SheetName_ColumnName]
+
+            # simply the boolean True, meaning to do it for every sheet in the workbook
             elif combine_SheetName_ColumnName is True:
+                # shout a message saying there is only 1 sheet
                 if len(NewFrames.keys()) == 1:
                     _verbose(self.speak, 2, " > You have requested to combine the name of the sheets with the names of the columns, but this excel file has only ONE sheet.\n If prefer not to combine the sheet name '" + str(list(NewFrames.keys())[0]) + "' with the name of every column set the parameter combine_SheetName_ColumnName=False")
                 combine_SheetName_ColumnName = list(NewFrames.keys())
+
+            # a list with the names of the sheets to be combined
+            elif type(combine_SheetName_ColumnName) is list:
+                for csn in range(len(combine_SheetName_ColumnName)):
+                    # the list contains tuples of (sheetname, left or right) for each sheetname
+                    if type(combine_SheetName_ColumnName[csn]) is tuple:
+                        if combine_SheetName_ColumnName[csn][0] not in NewFrames:
+                            if str(combine_SheetName_ColumnName[csn][0]) in NewFrames:
+                                combine_SheetName_ColumnName[csn] = ( str(combine_SheetName_ColumnName[csn][0]) , str(combine_SheetName_ColumnName[csn][1]) )
+                            elif str(combine_SheetName_ColumnName[csn][0]).strip() in NewFrames:
+                                combine_SheetName_ColumnName[csn] = ( str(combine_SheetName_ColumnName[csn][0]).strip() , str(combine_SheetName_ColumnName[csn][1]) )
+                            else:
+                                raise ValueError("The sheetname '" + str(combine_SheetName_ColumnName[csn][0]) + "' is not a sheet in the excel file \n " + str(inputFile))
+                    else:
+                        if combine_SheetName_ColumnName[csn] not in NewFrames:
+                            if str(combine_SheetName_ColumnName[csn]) in NewFrames:
+                                combine_SheetName_ColumnName[csn] = str(combine_SheetName_ColumnName[csn])
+                            elif str(combine_SheetName_ColumnName[csn]).strip() in NewFrames:
+                                combine_SheetName_ColumnName[csn] = str(combine_SheetName_ColumnName[csn]).strip()
+                            else:
+                                raise ValueError("The sheetname '" + str(combine_SheetName_ColumnName[csn]) + "' is not a sheet in the excel file \n " + str(inputFile))
+
+            # something different, try to cast into a list assuming there will be names of sheets...
             else:
                 try:
                     combine_SheetName_ColumnName = list(combine_SheetName_ColumnName)
                 except:
                     raise TypeError("not able to understand combine_SheetName_ColumnName parameter.")
+                for csn in range(len(combine_SheetName_ColumnName)):
+                    if combine_SheetName_ColumnName[csn] not in NewFrames:
+                        if str(combine_SheetName_ColumnName[csn]) in NewFrames:
+                            combine_SheetName_ColumnName[csn] = str(combine_SheetName_ColumnName[csn])
+                        elif str(combine_SheetName_ColumnName[csn]).strip() in NewFrames:
+                            combine_SheetName_ColumnName[csn] = str(combine_SheetName_ColumnName[csn]).strip()
+                        else:
+                            raise ValueError("The sheetname '" + str(combine_SheetName_ColumnName[csn]) + "' is not a sheet in the excel file \n " + str(inputFile))
+
+        ## default automatic option
         elif combine_SheetName_ColumnName is None:
+
+            # only 1 sheet, not combine
             if len(NewFrames.keys()) == 1:
                 combine_SheetName_ColumnName = False
+
+            # more than one sheet
             else:
+                # list all the column names in the workook
                 allColumns = []
                 for nf in NewFrames:
                     allColumns += list(NewFrames[nf].columns)
+
+                # if all the column names are different, no combination with sheetname is needed
                 if len(set(allColumns)) == len(allColumns):
                     combine_SheetName_ColumnName = False
+
+                # there are some repeated column names
                 else:
+                    # count the number of recognized keywords to try to guess if sheetname or column names are attributes
                     columnsKeys, sheetnameKeys = 0, 0
-                    for k in ['OPR','GPR','WPR','GIR','WIR','BHP','THP']:
+                    for k in ECLkeys + tuple([ I+str(ek)+H for I in 'FWGR' for ek in ECLkeys for H in ['','H']]):
                         sheetnameKeys += len( [ sn for sn in NewFrames.keys() if k in str(sn) ] )
                         columnsKeys += len( [ co for sn in NewFrames.keys() for co in NewFrames[sn] if k in str(co) ] )
-                    if columnsKeys >= sheetnameKeys:
+
+                    if columnsKeys >= sheetnameKeys:  # sheetnames are item names
                         combine_SheetName_ColumnName = 'R'
                     else:
-                        combine_SheetName_ColumnName = 'L'
+                        combine_SheetName_ColumnName = 'L'  # column names are item names
+
+        ## any other option will be considered as False, no combination is mandated
         else:
             combine_SheetName_ColumnName = False
 
-        for each in NewFrames :
-            if each not in self.Frames :
+        ### process every frame read from the excel file
+        for each in NewFrames:
+
+            ## it's a new frame
+            if each not in self.Frames:
                 self.Frames[str(each)] = NewFrames[each]
-                for col in NewFrames[each].columns :
-                    NewKey = ' '.join(col[0:-1]).strip()
 
-                    if combine_SheetName_ColumnName == 'R':
+                # define the name for every column
+                for col in NewFrames[each].columns:
+                    skip = False
+                    NewKey = ' '.join(col[0:-1]).strip()  # all the column row but the units, units is put at the end... I think...
+                    # NewKey = ' '.join([c for c in col if c in labels]).strip()
+
+                    if bool(combine_SheetName_ColumnName) is True and self.nameSeparator in NewKey and not ignore_nameSeparator:
+                        # nameSeparator already in the column name and ignore_nameSeparator=False
+                        _verbose(self.speak, 2, " > identified 'MAIN:ITEM' structure in the column name '" + str(NewKey) + "' from sheet '" + str(each))
+
+                    elif combine_SheetName_ColumnName == 'R':
+                        # sheetname is ITEM name
+                        _verbose(self.speak, 2, " > combined 'ColumnName:SheetName' to create MAIN:ITEM name structure for the column '" + str(NewKey) + "' from sheet '" + str(each))
                         NewKey = NewKey + self.nameSeparator + str(each).strip()
-                    elif combine_SheetName_ColumnName == 'L':
-                        NewKey = str(each).strip() + self.nameSeparator + NewKey
-                    elif type(combine_SheetName_ColumnName) is list:
-                        if ( each in combine_SheetName_ColumnName and self.sheetName_auto == 'R' ) \
-                            or (each,'R') in combine_SheetName_ColumnName or (each,'r') in combine_SheetName_ColumnName \
-                                or ('R', each) in combine_SheetName_ColumnName or('r', each) in combine_SheetName_ColumnName:
-                                    NewKey = NewKey + self.nameSeparator + str(each).strip()
-                        if ( each in combine_SheetName_ColumnName and self.sheetName_auto == 'L' ) \
-                            or (each,'R') in combine_SheetName_ColumnName or (each,'r') in combine_SheetName_ColumnName \
-                                or ('R', each) in combine_SheetName_ColumnName or ('r', each) in combine_SheetName_ColumnName:
-                                    NewKey = str(each).strip() + self.nameSeparator + NewKey
 
+                    elif combine_SheetName_ColumnName == 'L':
+                        # columnname is ITEM name
+                        _verbose(self.speak, 2, " > combined 'SheetName:ColumnName' to create MAIN:ITEM name structure for sheet '" + str(each) + "' and the column '" + str(NewKey))
+                        NewKey = str(each).strip() + self.nameSeparator + NewKey
+
+                    elif type(combine_SheetName_ColumnName) is list:
+                        # a list of sheetnames to be applied the combination of names
+                        if ( each in combine_SheetName_ColumnName and self.sheetName_auto == 'R' ) \
+                            or (each,'R') in combine_SheetName_ColumnName or (each,'r') in combine_SheetName_ColumnName:
+                                _verbose(self.speak, 2, " > combined 'ColumnName:SheetName' to create MAIN:ITEM name structure for the column '" + str(NewKey) + "' from sheet '" + str(each))
+                                NewKey = NewKey + self.nameSeparator + str(each).strip()
+
+                        elif ( each in combine_SheetName_ColumnName and self.sheetName_auto == 'L' ) \
+                            or (each,'L') in combine_SheetName_ColumnName or (each,'l') in combine_SheetName_ColumnName:
+                                _verbose(self.speak, 2, " > combined 'SheetName:ColumnName' to create MAIN:ITEM name structure for sheet '" + str(each) + "' and the column '" + str(NewKey))
+                                NewKey = str(each).strip() + self.nameSeparator + NewKey
+                        else:
+                            raise ValueError("Combination tuple of (sheetname, L or R) not understood for sheet " + str(each))
+
+                    # defined the name of the column, write it in the index dictionary
                     if NewKey in self.FramesIndex:
-                        #if ( NewFrames[each][col].values == self.Frames[ self.FramesIndex[NewKey][0] ][ self.FramesIndex[NewKey][1] ].values ).all():
+                        # this column name already exist in the index
+
                         if NewFrames[each][col].equals( self.Frames[ self.FramesIndex[NewKey][0] ][ self.FramesIndex[NewKey][1] ] ):
                             # both columns contains the same data
-                            _verbose(self.speak, 1, " > skipping duplicated key: '" + NewKey + "' with duplicated data." )
-                        # elif NewKey.strip().upper() in ('TIME','DATE','YEAR','YEARS','MONTH','MONTHS','DAY','DAYS'):
-                        #     if min( self.Frames[ self.FramesIndex[NewKey][0] ][ self.FramesIndex[NewKey][1] ) <= min( NewFrames[each][col] ) and max( self.Frames[ self.FramesIndex[NewKey][0] ][ self.FramesIndex[NewKey][1] ) >= max( NewFrames[each][col] ):
-                        #         _verbose(self.speak, 1, " > skipping key: '" + NewKey + "' contained in data from previous key." )
+                            skip = True
+                            _verbose(self.speak, 2, " > skipping duplicated key: '" + NewKey + "' with duplicated data." )
+
+                        elif NewKey.strip().upper() in ('TIME','DATE','YEAR','YEARS','MONTHS','DAYS'):
+                            if min( self.Frames[ self.FramesIndex[NewKey][0] ][ self.FramesIndex[NewKey][1] ] ) <= min( NewFrames[each][col] ) and max( self.Frames[ self.FramesIndex[NewKey][0] ][ self.FramesIndex[NewKey][1] ] ) >= max( NewFrames[each][col] ):
+                                skip = True
+                                _verbose(self.speak, 1, " > skipping key: '" + NewKey + "' contained in data from previously loaded key." )
+
                         else:
-                            if bool(combine_SheetName_ColumnName) is True and self.nameSeparator not in str(NewKey):
-                                cleaningList.append(NewKey)  # to later remove the key
+                            # this new column contains new data
+                            if bool(combine_SheetName_ColumnName) is False or self.nameSeparator in NewKey:
+                                # not allowed to combine sheetname, iterate over a counter to append to the name
+                                i = 1
+                                while str(NewKey) + '_' + str(i).zfill(2) in self.FramesIndex:
+                                    i += 1
+                                _verbose(self.speak, 2, " > duplicated key: '" + NewKey + "' from sheet '" + str(each) + "' with new data was renamed to '" + str(NewKey) + '_' + str(i).zfill(2))
+                                NewKey = str(NewKey) + '_' + str(i).zfill(2)
 
-                                # rename the other Key
-                                otherFrame = self.FramesIndex[NewKey][0]
-                                if str(otherFrame) in ECLkeys or str(otherFrame)[1:4] in ECLkeys:
-                                    NewOtherKey = str(otherFrame).strip() + self.nameSeparator + NewKey
+                            elif combine_SheetName_ColumnName == 'R':
+                                i = None
+                                if NewKey + self.nameSeparator + str(each).strip() in self.FrameIndex:
+                                    i = 1
+                                    while str(NewKey) + self.nameSeparator + str(each).strip() + '_' + str(i).zfill(2) in self.FramesIndex:
+                                        i += 1
+                                _verbose(self.speak, 2, " > duplicated key: '" + NewKey + "' from sheet '" + str(each) + "' with new data was renamed to '" + NewKey + self.nameSeparator + str(each).strip() + '_' + str(i).zfill(2))
+                                NewKey = NewKey + self.nameSeparator + str(each).strip() + ('' if i is None else ('_' + str(i).zfill(2)))
+
+                            elif combine_SheetName_ColumnName == 'L':
+                                i = None
+                                if str(each).strip() + self.nameSeparator + NewKey in self.FrameIndex:
+                                    i = 1
+                                    while str(each).strip() + self.nameSeparator + NewKey + '_' + str(i).zfill(2) in self.FramesIndex:
+                                        i += 1
+                                _verbose(self.speak, 2, " > duplicated key: '" + NewKey + "' from sheet '" + str(each) + "' with new data was renamed to '" + str(each).strip() + self.nameSeparator + NewKey + '_' + str(i).zfill(2))
+                                NewKey = NewKey + self.nameSeparator + str(each).strip() + ('' if i is None else ('_' + str(i).zfill(2)))
+
+                            elif type(combine_SheetName_ColumnName) is list:
+                                # a list of sheetnames
+                                if each in combine_SheetName_ColumnName:
+                                    if self.sheetName_auto == 'R':
+                                        i = None
+                                        if NewKey + self.nameSeparator + str(each).strip() in self.FrameIndex:
+                                            i = 1
+                                            while str(NewKey) + self.nameSeparator + str(each).strip() + '_' + str(i).zfill(2) in self.FramesIndex:
+                                                i += 1
+                                        _verbose(self.speak, 2, " > duplicated key: '" + NewKey + "' from sheet '" + str(each) + "' with new data was renamed to '" + NewKey + self.nameSeparator + str(each).strip() + '_' + str(i).zfill(2))
+                                        NewKey = NewKey + self.nameSeparator + str(each).strip() + ('' if i is None else ('_' + str(i).zfill(2)))
+
+                                    elif self.sheetName_auto == 'L':
+                                        i = None
+                                        if str(each).strip() + self.nameSeparator + NewKey in self.FrameIndex:
+                                            i = 1
+                                            while str(each).strip() + self.nameSeparator + NewKey + '_' + str(i).zfill(2) in self.FramesIndex:
+                                                i += 1
+                                        _verbose(self.speak, 2, " > duplicated key: '" + NewKey + "' from sheet '" + str(each) + "' with new data was renamed to '" + str(each).strip() + self.nameSeparator + NewKey + '_' + str(i).zfill(2))
+                                        NewKey = NewKey + self.nameSeparator + str(each).strip() + ('' if i is None else ('_' + str(i).zfill(2)))
+
+                                # might be a list of tuples with left or right for each sheet
                                 else:
-                                    NewOtherKey = NewKey + self.nameSeparator + str(otherFrame).strip()
-                                if NewOtherKey not in self.FramesIndex:
-                                    self.FramesIndex[NewOtherKey] = ( self.FramesIndex[NewKey][0] , self.FramesIndex[NewKey][1] )
-                                    self.add_Key( NewOtherKey )
-                                    self.set_Unit( NewOtherKey, self.get_Unit(NewKey) )
-                                    _verbose(self.speak, 1, " > renamed key: '" + NewKey + "' to '" + NewOtherKey + "'")
+                                    raise NotImplemented("automatic choose for list of tuples (sheetName, left or right) not yet implemented...")
 
-                                # rename this frame key
-                                if str(each) in ECLkeys or str(each)[1:4] in ECLkeys:
-                                    NewKey = str(each).strip() + self.nameSeparator + NewKey
-                                else:
-                                    NewKey = NewKey + self.nameSeparator + str(each).strip()
+                            else:
+                                # at this point there should not be other options for combine_SheetName_ColumnName
+                                raise TypeError("CODE ERROR: type of combine_SheetName_ColumnName variable not recognized: " + str(type(combine_SheetName_ColumnName)))
 
-                            elif combine_SheetName_ColumnName is False or self.nameSeparator in str(otherFrame):
-                                NewKey = NewKey + '_' + str( list(self.FramesIndex.keys()).count(NewKey) +1 )
+                            #     cleaningList.append(NewKey)  # to later remove the key
 
-                            self.FramesIndex[NewKey] = ( each, col )
-                            if col[-1].startswith('Unnamed:') :
-                                NewUnits = ''
-                                unitsMessage = ''
-                            else :
-                                NewUnits = col[-1].strip()
-                                unitsMessage = " with units: '"+NewUnits+"'"
-                            self.add_Key( NewKey )
-                            self.set_Unit( NewKey, NewUnits )
-                            _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage)
+                            #     # rename the other Key
+                            #     otherFrame = self.FramesIndex[NewKey][0]
+                            #     if str(otherFrame) in ECLkeys or str(otherFrame)[1:4] in ECLkeys:
+                            #         NewOtherKey = str(otherFrame).strip() + self.nameSeparator + NewKey
+                            #     else:
+                            #         NewOtherKey = NewKey + self.nameSeparator + str(otherFrame).strip()
+                            #     if NewOtherKey not in self.FramesIndex:
+                            #         self.FramesIndex[NewOtherKey] = ( self.FramesIndex[NewKey][0] , self.FramesIndex[NewKey][1] )
+                            #         self.add_Key( NewOtherKey )
+                            #         self.set_Unit( NewOtherKey, self.get_Unit(NewKey) )
+                            #         _verbose(self.speak, 1, " > renamed key: '" + NewKey + "' to '" + NewOtherKey + "'")
 
-                    else:
+                            #     # rename this frame key
+                            #     if str(each) in ECLkeys or str(each)[1:4] in ECLkeys:
+                            #         NewKey = str(each).strip() + self.nameSeparator + NewKey
+                            #     else:
+                            #         NewKey = NewKey + self.nameSeparator + str(each).strip()
+
+                            # elif combine_SheetName_ColumnName is False or self.nameSeparator in str(otherFrame):
+                            #     NewKey = NewKey + '_' + str( list(self.FramesIndex.keys()).count(NewKey) +1 )
+
+                            # self.FramesIndex[NewKey] = ( each, col )
+                            # if col[-1].startswith('Unnamed:') :
+                            #     NewUnits = ''
+                            #     unitsMessage = ''
+                            # else :
+                            #     NewUnits = col[-1].strip()
+                            #     unitsMessage = " with units: '"+NewUnits+"'"
+                            # self.add_Key( NewKey )
+                            # self.set_Unit( NewKey, NewUnits )
+                            # _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage)
+
+                    else:  # it is a new key, just put it in the index
+                        pass  # nothing to do
+
+                    if not skip:
+                        # write the new key in the index
                         self.FramesIndex[NewKey] = ( each, col )
                         if col[-1].startswith('Unnamed:') :
                             NewUnits = ''
@@ -360,26 +578,31 @@ class XLSX(_SimResult):
                         self.add_Key( NewKey )
                         self.set_Unit( NewKey, NewUnits )
                         _verbose(self.speak, 1, " > found key: '" + NewKey + "'" + unitsMessage)
-                        # _foundNewKey()
-                        if bool(combine_SheetName_ColumnName) is True and self.nameSeparator not in str(NewKey):
-                            cleaningList.append(NewKey)  # to later remove the key
+                        # # _foundNewKey()
+                        # if bool(combine_SheetName_ColumnName) is True and self.nameSeparator not in str(NewKey):
+                        #     cleaningList.append(NewKey)  # to later remove the key
 
-                            # rename the other Key
-                            otherFrame = self.FramesIndex[NewKey][0]
-                            if str(otherFrame) in ECLkeys or str(otherFrame)[1:4] in ECLkeys:
-                                NewOtherKey = str(otherFrame).strip() + self.nameSeparator + NewKey
-                            else:
-                                NewOtherKey = NewKey + self.nameSeparator + str(otherFrame).strip()
-                            if NewOtherKey not in self.FramesIndex:
-                                self.FramesIndex[NewOtherKey] = ( self.FramesIndex[NewKey][0] , self.FramesIndex[NewKey][1] )
-                                self.add_Key( NewOtherKey )
-                                self.set_Unit( NewOtherKey, self.get_Unit(NewKey) )
-                                _verbose(self.speak, 1, " > renamed key: '" + NewKey + "' to '" + NewOtherKey + "'")
+                        #     # rename the other Key
+                        #     otherFrame = self.FramesIndex[NewKey][0]
+                        #     if str(otherFrame) in ECLkeys or str(otherFrame)[1:4] in ECLkeys:
+                        #         NewOtherKey = str(otherFrame).strip() + self.nameSeparator + NewKey
+                        #     else:
+                        #         NewOtherKey = NewKey + self.nameSeparator + str(otherFrame).strip()
+                        #     if NewOtherKey not in self.FramesIndex:
+                        #         self.FramesIndex[NewOtherKey] = ( self.FramesIndex[NewKey][0] , self.FramesIndex[NewKey][1] )
+                        #         self.add_Key( NewOtherKey )
+                        #         self.set_Unit( NewOtherKey, self.get_Unit(NewKey) )
+                        #         _verbose(self.speak, 1, " > renamed key: '" + NewKey + "' to '" + NewOtherKey + "'")
 
+            ## the frame name is already loaded, check if they are the same
             elif self.Frames[str(each)].equals(NewFrames[each]) :
                 _verbose(self.speak, 2, "the sheet '"+each+"' was already loaded.")
 
+            ## the frame name is already loaded but they are not the same
             else :
+                ###############################################################
+                ######### TO BE REVISITED #####################################
+                ###############################################################
                 if self.overwrite :
                     _verbose(self.speak, 2, "the sheet '"+str(each)+"' will overwrite the previously loaded sheet.")
                 else :
@@ -402,14 +625,17 @@ class XLSX(_SimResult):
                         self.set_Unit( NewKey, NewUnits )
                         self.speak = userVerbose
                         _verbose(self.speak, 1, " > found key: '"+NewKey+"'" + unitsMessage )
+                ###############################################################
+                ######### END TO BE REVISITED #################################
+                ###############################################################
 
-        # if len(cleaningList) > 0:
-        #     self.keys = tuple(set( [ K for K in self.keys if K not in set(cleaningList) ] ))
-        #     for K in cleaningList:
-        #         if K in self.units:
-        #             del self.units[K]
-        #         if K in self.FramesIndex:
-        #             del self.FramesIndex[K]
+        if len(cleaningList) > 0:
+            self.keys = tuple(set( [ K for K in self.keys if K not in set(cleaningList) ] ))
+            for K in cleaningList:
+                if K in self.units:
+                    del self.units[K]
+                if K in self.FramesIndex:
+                    del self.FramesIndex[K]
 
             columnsList = [ str(col[0] if type(col) is tuple else col) for frame in self.Frames for col in self.Frames[frame].columns  ]
             commonIndex = None
@@ -514,21 +740,57 @@ class XLSX(_SimResult):
         if self.lastFrame == '':
             self.lastFrame = Frame
 
-        if key == self.DTindex:
-            if self.lastFrame in self.Frames and key in self.Frames[self.lastFrame]:
-                return self.Frames[self.lastFrame][self.FramesIndex[key][1]].to_numpy()
-            elif key in self.FramesIndex :
+        thisFrame = self.lastFrame if Frame is None else Frame
+
+        if key == self.DTindex or (self.FramesIndex[key][1] in self.Frames[thisFrame] and 'date' in str(self.Frames[thisFrame][self.FramesIndex[key][1]].dtype)):
+            if thisFrame in self.Frames and key in self.Frames[thisFrame]:
+                return self.Frames[thisFrame][self.FramesIndex[key][1]].to_numpy()
+            elif key in self.FramesIndex:
                 result = self.Frames[Frame][self.FramesIndex[key][1]]
-                if len(result) == len(self.Frames[self.lastFrame]) :
+                if len(result) == len(self.Frames[thisFrame]):
                     return result.to_numpy()
                 else :
-                    return self.Frames[self.lastFrame].index.to_numpy()
-            else :
+                    return self.Frames[thisFrame].index.to_numpy()
+            else:
                 return None
         elif key in self.FramesIndex:
-            result = self.Frames[Frame][self.FramesIndex[key][1]].to_numpy()
-            self.lastFrame = Frame
+            if len(self.Frames) == 1:
+                result = self.Frames[thisFrame][self.FramesIndex[key][1]].to_numpy()
+                self.lastFrame = thisFrame
+            else:
+                commonIndexVector = self.commonIndexVector
+                if self.DTindex in self.Frames[thisFrame]:
+                    result = self.Frames[thisFrame][[self.FramesIndex[key][1],self.DTindex]].set_index(self.DTindex)
+                    if self.commonIndex is None or self.DTindex != self.commonIndex:
+                        commonIndexVector = self.createCommonVector(self.DTindex)
+                elif self.FramesIndex[self.DTindex][1] in self.Frames[thisFrame]:
+                    result = self.Frames[thisFrame][[self.FramesIndex[key][1],self.FramesIndex[self.DTindex][1]]].set_index(self.FramesIndex[self.DTindex][1]).squeeze()
+                    if self.commonIndex is None or self.DTindex != self.commonIndex:
+                        commonIndexVector = self.createCommonVector(self.FramesIndex[self.DTindex][1])
+
+                if commonIndexVector is not None:
+                    self.commonIndex = self.DTindex
+                    self.commonIndexVector = commonIndexVector
+                    result = result.reindex(index=commonIndexVector)
+                else:
+                    result = self.Frames[thisFrame][self.FramesIndex[key][1]].to_numpy()
+                self.lastFrame = Frame
             return result
+
+    def createCommonVector(self, key):
+        """
+        look for the key on all the DataFrames and return a merged array
+        """
+        commonVector = None
+        for frame in self.Frames:
+            if key not in self.Frames[frame]:
+                _verbose(self.speak, 1, "The key '" + str(key) + "' is not common to all the sheets.")
+                return None
+            if commonVector is None:
+                commonVector = self.Frames[frame][key]
+            else:
+                commonVector = pd.merge_ordered(commonVector, self.Frames[frame][key], how='outer').squeeze()
+        return commonVector.values
 
     # def extract_Wells(self) :
     #     """
