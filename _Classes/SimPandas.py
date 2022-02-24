@@ -3858,7 +3858,7 @@ Copy of input object, shifted.
         if SDF1.nameSeparator is None or SDF2.nameSeparator is None:
             raise ValueError("the 'nameSeparator' must not be empty in both SimDataFrames.")
 
-        if LR == 'L' or (LR is None and len(SDF1.left) == 1 and len(SDF2.left) == 1 ):
+        if LR == 'L' or (LR is None and len(SDF1.left) == 1 and len(SDF2.left) == 1):
             SDF2C = SDF2.copy()
             SDF2C.renameRight(inplace=True)
             SDF1C = SDF1.copy()
@@ -3877,7 +3877,7 @@ Copy of input object, shifted.
                 if len(alternative[2]) < len(commonNames):
                     return alternative
 
-        elif LR == 'R' or (LR is None and len(SDF1.right) == 1 and len(SDF2.right) == 1 ):
+        elif LR == 'R' or (LR is None and len(SDF1.right) == 1 and len(SDF2.right) == 1):
             SDF2C = SDF2.copy()
             SDF2C.renameLeft(inplace=True)
             SDF1C = SDF1.copy()
@@ -3923,7 +3923,7 @@ Copy of input object, shifted.
 
     def __neg__(self):
         result = -self.as_DataFrame()
-        return SimDataFrame(data=result, **self._SimParameters )
+        return SimDataFrame(data=result, **self._SimParameters)
 
     def __add__(self, other):
         # both are SimDataFrame
