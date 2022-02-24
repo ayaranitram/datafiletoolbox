@@ -3916,6 +3916,8 @@ Copy of input object, shifted.
             return True
         elif item in self.index:
             return True
+        elif len(self.find_Keys(item)) > 0:
+            return True
         else:
             return False
 
