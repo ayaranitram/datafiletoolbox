@@ -7,7 +7,7 @@ Created on Sat Dec  7 21:48:37 2019
 """
 
 __version__ = '0.5.5'
-__release__ = 220223
+__release__ = 220303
 
 import numpy
 # import pandas
@@ -152,7 +152,7 @@ class unit(object) :
                                         'cubic foot' : ('cubic feet', 'ft3', 'cf'),
                                         'standard cubic foot' : ('scf', 'cf'),
                                         'cubic inch' : ('in3', 'cubic inches'),
-                                        'barrel' : ('bbl', 'stb'),
+                                        'barrel' : ('bbl', 'stb', 'bbls'),
                                         'reservoir barrel' : ('rb', ),
                                         'standard barrel' : ('stb', 'stbo', 'stbw', 'stbl', 'oil barrel'),
                                         }
