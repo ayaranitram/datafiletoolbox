@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.22.9'
-__release__ = 220223
+__version__ = '0.22.10'
+__release__ = 220229
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -565,11 +565,11 @@ class XLSX(_SimResult):
                     if not skip:
                         # write the new key in the index
                         self.FramesIndex[NewKey] = ( each, col )
-                        if col[-1].startswith('Unnamed:'):
+                        if str(col[-1]).startswith('Unnamed:'):
                             NewUnits = ''
                             unitsMessage = ''
                         else:
-                            NewUnits = col[-1].strip()
+                            NewUnits = str(col[-1]).strip()
                             unitsMessage = " with units: '"+NewUnits+"'"
                         self.add_Key( NewKey )
                         self.set_Unit( NewKey, NewUnits )
@@ -595,11 +595,11 @@ class XLSX(_SimResult):
                     for col in NewFrames[each].columns:
                         NewKey = ' '.join(list(map(str,col[0:-1]))).strip()
                         self.FramesIndex[NewKey] = ( str(each)+'_'+str(i).zfill(2), col )
-                        if col[-1].startswith('Unnamed:'):
+                        if str(col[-1]).startswith('Unnamed:'):
                             NewUnits = ''
                             unitsMessage = ''
                         else:
-                            NewUnits = col[-1].strip()
+                            NewUnits = str(col[-1]).strip()
                             unitsMessage = " with units: '"+NewUnits+"'"
                         self.add_Key( NewKey )
                         userVerbose, self.speak = self.speak, 0
