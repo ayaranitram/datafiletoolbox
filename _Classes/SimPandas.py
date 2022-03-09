@@ -2241,7 +2241,7 @@ class SimSeries(Series):
             else:
                 raise ValueError('index is not a valid date or year integer')
 
-    def integrate(self, method='trapz'):
+    def integrate(self, method='trapz', at=None):
         """
         Calculates numerical integration, using trapezoidal method,
         or constant value of the columns values over the index values.
@@ -2252,7 +2252,7 @@ class SimSeries(Series):
 
         Returns a new SimSeries
         """
-        return self.SDF.integrate(method=method).to_SimSeries()
+        return self.SDF.integrate(method=method, at=at).to_SimSeries()
 
     def differenciate(self, na_position='last'):
         """
@@ -5974,35 +5974,88 @@ Copy of input object, shifted.
         else:
             return tuple(retTuple)
 
-    def integrate(self, method='trapz'):
+    def integrate(self, method='trapz', at=None):
         """
         Calculates numerical integration, using trapezoidal method,
         or constant value of the columns values over the index values.
 
         method parameter can be: 'trapz' to use trapezoidal method
-                                 'const' to constant vale multiplied
+                                 'const' or 'avg' constant vale multiplied
                                          by delta-index
+                                 'month' constant value multiplied by days in month
+                                         index must be a datetime-index
+                                 'year'  constant value multiplied by days in year
+                                         index must be a datetime-index
+                                         or integer representing a year
+
+        at parameter defines the row where cumulative will written, only for the
+        'const' method
+            Possible values are: 'same' to write the cumulative in the same row
+                                        of the input value, considering the cumulative
+                                        is at the end of the period represented by the row index.
+                                 'next' to write the cumulative in the next row, considering the
+                                        cumulative is reached at the instant represented
+                                        by the row index.
 
         Returns a new SimDataFrame
         """
-        method=method.lower().strip()
+        method = method.lower().strip()
+
+        sl1 = slice(0,-1)
+        sl2 = slice(1,len(self))
+
+        if method[0] == 't':
+            pass
+            # sl1 = slice(0,-1)
+            # sl2 = slice(1,len(self))
+        elif method[0] in 'ac':
+            if at is None:
+                at = 'next'
+            elif str(at).lower().strip() not in ['same','next']:
+                raise ValueError("parameter 'at' must be 'same' or 'next'.")
+            else:
+                at = str(at).lower().strip()
+            # sl1 = slice(1,len(self))
+            # sl2 = slice(0,-1)
+        elif method[0] in 'my':
+            pass
+        else:
+            raise ValueError("'method' parameter must be 'trapz' or 'const'")
 
         if len(self) < 2:
             print("less than two rows, nothing to integrate.")
             return None
 
-        dt = np.diff(self.index)
-        dtUnits = self.indexUnits
-        if str(dt.dtype).startswith('timedelta'):
-            dt = dt.astype('timedelta64[s]').astype('float64')/60/60/24
+        if method[0] in 'tac':
+            dt = np.diff(self.index)
+            dtUnits = self.indexUnits
+            if str(dt.dtype).startswith('timedelta'):
+                dt = dt.astype('timedelta64[s]').astype('float64')/60/60/24
+                dtUnits = 'DAYS'
+        elif method[0] in 'm':
+            dt = daysInMonth(self.index)
+            dtUnits = 'DAYS'
+        elif method[0] in 'y':
+            dt = daysInYear(self.index)
             dtUnits = 'DAYS'
 
-        if method in ['trapz', 'trapeziod']:
-            Vmin = np.minimum(self.DF[:-1].set_index(self.index[1:]), self.DF[1:] )
-            Vmax = np.maximum(self.DF[:-1].set_index(self.index[1:]), self.DF[1:] )
+        # if method in ['trapz', 'trapeziod']:
+        #     Vmin = np.minimum(self.DF[:-1].set_index(self.index[1:]), self.DF[1:] )
+        #     Vmax = np.maximum(self.DF[:-1].set_index(self.index[1:]), self.DF[1:] )
+        #     Cumulative =(dt * Vmin.transpose() ).transpose() +(dt *(Vmax - Vmin ).transpose() / 2.0 ).transpose()
+        # elif method in ['const', 'constant']:
+        #     Cumulative = (dt *(self.DF[:-1]).transpose() ).transpose()[1:]
+        if method[0] in 't':
+            Vmin = np.minimum(self.DF[sl1].set_index(self.index[sl2]), self.DF[sl2] )
+            Vmax = np.maximum(self.DF[sl1].set_index(self.index[sl2]), self.DF[sl2] )
             Cumulative =(dt * Vmin.transpose() ).transpose() +(dt *(Vmax - Vmin ).transpose() / 2.0 ).transpose()
-        elif method in ['const', 'constant']:
-            Cumulative = (dt *(self.DF[:-1]).transpose() ).transpose()[1:]
+        elif method[0] in 'ac':
+            if at == 'same':
+                Cumulative = (dt *(self.DF[sl1]).transpose() ).transpose()  # [sl2]
+            if at == 'next':
+                Cumulative = (dt *(self.DF[sl1].set_index(self.index[sl2])).transpose() ).transpose()
+        elif method[0] in 'm':
+            Cumulative = ( dt * self.DF.transpose() ).transpose()
 
         newUnits = {}
         for C, U in self.units.items():
@@ -6013,13 +6066,23 @@ Copy of input object, shifted.
             else:
                 newUnits[C] = U + '*' + dtUnits
 
-        if str(dt.dtype).startswith('timedelta'):
-            firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]))
-        else:
-            firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=[self.index[0]])
         params = self._SimParameters
         params['units'] = newUnits
-        return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative)), **params)
+
+        if method[0] in 't' or (method[0] in 'ac' and at == 'next'):
+            if str(dt.dtype).startswith('timedelta'):
+                firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]))
+            else:
+                firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=[self.index[0]])
+            return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative)), **params)
+        elif method[0] in 'ac' and at == 'same':
+            if str(dt.dtype).startswith('timedelta'):
+                lastRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=[str(len(self)-1)]).set_index(DatetimeIndex([self.index[-1]]))
+            else:
+                lastRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=[self.index[-1]])
+            return SimDataFrame(data=np.cumsum(Cumulative.append(lastRow)), **params)
+        else:
+            return SimDataFrame(data=np.cumsum(Cumulative), **params)
 
     def differenciate(self, na_position='last'):
         """
