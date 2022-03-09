@@ -9,8 +9,8 @@ Created on Tue Jul  9 21:23:27 2019
 @author: martin
 """
 
-__version__ = '0.46.2'
-__release__ = 220223
+__version__ = '0.48.2'
+__release__ = 220309
 __author__ = 'Martin Carlos Araya <martinaraya@gmail.com>'
 __all__ = ['stringformat', 'extension', 'Alternate', 'convert', 'SimPandas',
            'SimSeries', 'SimDataFrame', 'loadSimulationResults','melt','pivot','unify','slope']
@@ -19,7 +19,7 @@ _msg = """     implementing libecl 2.9.1 from pypi, released on Aug 2020"""
 
 
 from ._Classes.Iterators import Alternate
-from ._Classes.SimPandas import SimSeries, SimDataFrame
+from ._Classes.SimPandas import SimSeries, SimDataFrame, read_excel
 from ._Classes import SimPandas
 
 from ._common.eclDATES import simDate as ECLdate
