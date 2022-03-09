@@ -565,6 +565,30 @@ class SimSeries(Series):
     def S(self):
         return self.as_Series()
 
+    def squeeze(self,axis=None):
+        """
+        wrapper of pandas.squeeze
+
+        SimSeries with a single element and no units (or unitless) are squeezed to a scalar.
+        SimSeries without units or unitless are squeezed to a Series.
+
+        Parameters
+        ----------
+        axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+            A specific axis to squeeze. By default, all length-1 axes are squeezed., optional
+
+        Returns
+        -------
+        SimSeries, Series, or scalar
+            The projection after squeezing axis or all the axes. and units
+
+        """
+        if len(self) == 1:
+            if len(self.get_Units()) == 0 or np.array([(u is None or str(u).lower().strip() in ['unitless','dimensionless']) for u in self.get_Units().values()]).all():
+                return self.iloc[0]
+        elif len(self.get_Units()) == 0 or np.array([(u is None or str(u).lower().strip() in ['unitless','dimensionless']) for u in self.get_Units().values()]).all():
+            return self.as_Series()
+
     @property
     def columns(self):
         return Index([self.name] )
@@ -2927,6 +2951,31 @@ Copy of input object, shifted.
     @property
     def df(self):
         return self.as_DataFrame()
+
+    def squeeze(self,axis=None):
+        """
+        wrapper of pandas.squeeze
+
+        SimDataFrame without units or unitless are squeezed to a DataFrame.
+        SimDataFrame with a single row or column are squeezed to a SimSeries.
+        SimDataFrame with a single row or column and without units or unitless are squeezed to a Series.
+        SimDataFrame with a single element and no units (or unitless) are squeezed to a scalar.
+
+        Parameters
+        ----------
+        axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+            A specific axis to squeeze. By default, all length-1 axes are squeezed., optional
+
+        Returns
+        -------
+        SimDataFrame, DataFrame, SimSeries, Series, or scalar
+            The projection after squeezing axis or all the axes. and units
+
+        """
+        if len(self.columns) == 1 or len(self.index) == 1::
+            return self.to_SimSeries().squeeze()
+        elif len(self.get_Units()) == 0 or np.array([(u is None or str(u).lower().strip() in ['unitless','dimensionless']) for u in self.get_Units().values()]).all():
+            return self.as_DataFrame()
 
     def to(self, units):
         """
