@@ -6,9 +6,9 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.74.0'
-__release__ = 220224
 __all__ = ['SimSeries', 'SimDataFrame']
+__version__ = '0.75.0'
+__release__ = 220309
 
 from sys import getsizeof
 from io import StringIO
