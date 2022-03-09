@@ -6806,24 +6806,35 @@ def daysInMonth(month,year=None):
     if type(month) is pd.Timestamp:
         return daysInMonth(month.month, month.year)
 
-    if type(month) in (list,tuple,np.ndarray):
-        if np.array(month).dtype in ('int','int64','float','float64'):
-            return np.array([ daysInMonth(M,year) for M in month ], dtype=int)
-        elif 'datetime' in str(np.array(year).dtype):
-            return np.array([ M.astype(object).timetuple().tm_mon for M in month ], dtype=int)
-        elif len(set(map(type,month))) == 1 and list(set(map(type,month)))[0] in (dt.date, dt.datetime):
-            return np.array([ M.timetuple().tm_mon for M in month ], dtype=int)
-        elif len(set(map(type,month))) == 2 and list(set(map(type,month)))[0] in (dt.date, dt.datetime) and list(set(map(type,month)))[1] in (dt.date, dt.datetime):
-            return np.array([ M.timetuple().tm_mon for M in month ], dtype=int)
-
     if isinstance(month,pd.DatetimeIndex):
-        return np.array([ M.month for M in month ], dtype=int)
+        return np.array([ daysInMonth(M.month, M.year) for M in month ], dtype=int)
+
+    if type(month) in (list,tuple):
+        month = np.array(month)
+
+    if str(month.dtype).startswith('date'):
+        return np.array([ daysInMonth(M.month, M.year) for M in pd.to_datetime(month) ], dtype=int)
+    if str(month.dtype) in ('int','int64','float','float64'):
+        if len(month.shape) == 1:
+            return np.array([ daysInMonth(M) for M in month ], dtype=int)
+        elif month.shape[1] == 2:
+            return np.array([ daysInMonth(M[0],M[1]) for M in month ], dtype=int)
+
+    # if type(month) is np.ndarray:
+    #     if np.array(month).dtype in ('int','int64','float','float64'):
+    #         return np.array([ daysInMonth(M,year) for M in month ], dtype=int)
+    #     elif 'datetime' in str(np.array(year).dtype):
+    #         return np.array([ M.astype(object).timetuple().tm_mon for M in month ], dtype=int)
+    #     elif len(set(map(type,month))) == 1 and list(set(map(type,month)))[0] in (dt.date, dt.datetime):
+    #         return np.array([ M.timetuple().tm_mon for M in month ], dtype=int)
+    #     elif len(set(map(type,month))) == 2 and list(set(map(type,month)))[0] in (dt.date, dt.datetime) and list(set(map(type,month)))[1] in (dt.date, dt.datetime):
+    #         return np.array([ M.timetuple().tm_mon for M in month ], dtype=int)
 
     if isinstance(month,SimSeries):
         params = month._SimParameters
         params['name'] = 'DaysInMonth'
         params['units'] = 'days'
-        return SimSeries(data=np.array([ M.month for M in month ], dtype=int), index=month.index, **params)
+        return SimSeries(data=np.array([ daysInMonth(M.month) for M in month ], dtype=int), index=month.index, **params)
 
     if isinstance(month,Series):
         return Series(data=np.array([ M.month for M in month ], dtype=int), index=month.index)
