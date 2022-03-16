@@ -5,8 +5,8 @@ Created on Wed May 13 00:31:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.4.2'
-__release__ = 210906
+__version__ = '0.4.3'
+__release__ = 220316
 __all__ = ['Plot']
 
 import time
@@ -67,7 +67,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
             kwargs.pop('ymin',None)
     elif 'ymax' in kwargs:
         if ylim == (None,None):
-            ylim = (kwargs[None,'ymax'])
+            ylim = (None,kwargs['ymax'])
             kwargs.pop('ymax',None)
 
     # validate plt.tight_layout() argument
