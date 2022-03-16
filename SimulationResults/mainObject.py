@@ -1546,7 +1546,7 @@ class SimResult(object):
 
         for k, u in keysDict.items() :
             if k in self.units :
-                if self.units[k] == 'None' or overwrite is True :
+                if self.units[k] is None or self.units[k].strip() in ['None',''] or overwrite is True :
                     self.units[k] = u
                     keysDict[k] = True
                 elif u == self.units[k] :
