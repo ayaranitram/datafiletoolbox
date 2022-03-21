@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.10'
-__release__ = 220316
+__version__ = '0.60.11'
+__release__ = 220317
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -2547,7 +2547,7 @@ class SimResult(object):
                 xmin = max(self(IndexList[i])) if max(self(IndexList[i])) < xmax else xmax
             hline = {'y':hline,'xmin':xmin,'xmax':xmax,'colors':'black','linestyle':'-'}
 
-        figure = Plot(SimResultObjects=SimsToPlot, Y_Keys=PlotKeys, X_Key=IndexList, DoNotRepeatColors=DoNotRepeatColors, Xgrid=Xgrid, Ygrid=Ygrid , fig=fig, show=show, hline=hline, singleYaxis=singleYaxis, **kwargs) #, X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[], graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={})
+        figure = Plot(SimResultObjects=SimsToPlot, Y_Keys=PlotKeys, X_Key=IndexList, DoNotRepeatColors=DoNotRepeatColors, Xgrid=Xgrid, Ygrid=Ygrid , fig=fig, show=show, hline=hline, singleYaxis=singleYaxis, figsize=figsize, dpi=dpi, num=num, **kwargs)
 
         return (figure, PlotKeys, IndexList )
 
