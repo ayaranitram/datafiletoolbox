@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.11'
-__release__ = 220317
+__version__ = '0.60.12'
+__release__ = 220323
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -4550,9 +4550,9 @@ class SimResult(object):
 
         # save restart vector part
         if len(self.get_vectorTemplate()[self.get_vectorTemplate()==-1]) > 0:
-            if len(VectorData[self.get_vectorTemplate() == -1]) == len(self.checkRestarts(self.keys[0])[self.keys[0]]):
+            if len(VectorData[self.get_vectorTemplate() == -1]) == len(self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]):  #len(self.get_RawVector(self.keys[0])[self.keys[0]]):
                 self.vectorsRestart[Key] = VectorData[self.get_vectorTemplate() == -1]
-            elif len(VectorData[self.get_vectorTemplate() == -1]) < len(self.checkRestarts(self.keys[0])[self.keys[0]]):
+            elif len(VectorData[self.get_vectorTemplate() == -1]) < len(self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]):  #len(self.get_RawVector(self.keys[0])[self.keys[0]]):
                 # a filter is applied
                 filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate()==-1]
                 filteredDF = DataFrame({'SelfTime':filteredTime, Key:VectorData[self.get_vectorTemplate()==-1]}).set_index('SelfTime')
@@ -4562,15 +4562,15 @@ class SimResult(object):
                 rawDF = rawDF.replace(np.nan, self.null)
                 newRawVector = rawDF[Key].to_numpy()
                 self.vectorsRestart[Key] = newRawVector
-            elif len(VectorData[self.get_vectorTemplate() == -1]) > len(self.checkRestarts(self.keys[0])[self.keys[0]]):
+            elif len(VectorData[self.get_vectorTemplate() == -1]) > len(self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]):  #len(self.get_RawVector(self.keys[0])[self.keys[0]]):
                 raise ValueError('something went wrong')
 
         # save this simulation vector part
         if len(self.get_vectorTemplate()[self.get_vectorTemplate()==0]) > 0:
-            if len(VectorData[self.get_vectorTemplate() == 0]) == len(self.get_RawVector(self.keys[0])[self.keys[0]]):
+            if len(VectorData[self.get_vectorTemplate() == 0]) == len(self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]):  #len(self.get_RawVector(self.keys[0])[self.keys[0]]):
                 # no filter seems to be applied
                 self.vectors[Key] = VectorData[self.get_vectorTemplate() == 0]
-            elif len(VectorData[self.get_vectorTemplate() == 0]) < len(self.get_RawVector(self.keys[0])[self.keys[0]]):
+            elif len(VectorData[self.get_vectorTemplate() == 0]) < len(self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]):  #len(self.get_RawVector(self.keys[0])[self.keys[0]]):
                 # a filter is applied
                 filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate()==0]
                 filteredDF = SimDataFrame({'SelfTime':filteredTime, Key:VectorData[self.get_vectorTemplate()==0]}).set_index('SelfTime')
@@ -4580,14 +4580,14 @@ class SimResult(object):
                 rawDF = rawDF.replace(np.nan, self.null)
                 newRawVector = rawDF[Key].to_numpy()
                 self.vectors[Key] = newRawVector
-            elif len(VectorData[self.get_vectorTemplate() == 0]) > len(self.get_RawVector(self.keys[0])[self.keys[0]]):
+            elif len(VectorData[self.get_vectorTemplate() == 0]) > len(self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]):  #len(self.get_RawVector(self.keys[0])[self.keys[0]]):
                 raise ValueError('something went wrong')
 
         # save contuation vector part
         if len(self.get_vectorTemplate()[self.get_vectorTemplate() == 1]) > 0:
-            if len(VectorData[self.get_vectorTemplate() == 1]) == len(self.checkContinuations(self.keys[0])[self.keys[0]]):
+            if len(VectorData[self.get_vectorTemplate() == 1]) == len(self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]):  #len(self.get_RawVector(self.keys[0])[self.keys[0]]):
                 self.vectorsContinue[Key] = VectorData[self.get_vectorTemplate() == 1]
-            elif len(VectorData[self.get_vectorTemplate() == 1]) < len(self.checkContinuations(self.keys[0])[self.keys[0]]):
+            elif len(VectorData[self.get_vectorTemplate() == 1]) < len(self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]):  #len(self.get_RawVector(self.keys[0])[self.keys[0]]):
                 # a filter is applied
                 filteredTime = self.get_Vector(self.get_TimeVector())[(self.get_TimeVector())][self.get_vectorTemplate() == 1]
                 filteredDF = DataFrame({'SelfTime': filteredTime, Key: VectorData[self.get_vectorTemplate() == 1]}).set_index('SelfTime')
@@ -4597,7 +4597,7 @@ class SimResult(object):
                 rawDF = rawDF.replace(np.nan, self.null)
                 newRawVector = rawDF[Key].to_numpy()
                 self.vectorsContinue[Key] = newRawVector
-            elif len(VectorData[self.get_vectorTemplate() == 1]) > len(self.checkContinuations(self.keys[0])[self.keys[0]]):
+            elif len(VectorData[self.get_vectorTemplate() == 1]) > len(self.get_RawVector(self.get_TimeVector())[self.get_TimeVector()]):  #len(self.get_RawVector(self.keys[0])[self.keys[0]]):
                 raise ValueError('something went wrong')
 
         self.units[Key] = Units
