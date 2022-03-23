@@ -60,6 +60,8 @@ class XLSX(_SimResult):
         self.get_Attributes(None, True)
         self.find_index(**kwargs)
         self.otherDateNames()
+        if self.DTindex != self.TimeVector:
+            self.DTindex = self.TimeVector
         _SimResult.initialize(self, **kwargs)
         if self.is_Key('DATES') and not self.is_Key('DATE'):
             self['DATE'] = 'DATES'
@@ -81,6 +83,7 @@ class XLSX(_SimResult):
         identify the column that is common to all the frames, to be used as index.
         If there is a single frame the first column is used.
         """
+        import numpy as np
 
         possibleKeys = ('DATE', 'DATES', 'Date', 'date', 'Dates', 'dates', 'TIME', 'Time', 'time', 'DAYS', 'Days', 'days', 'MONTHS', 'Months', 'months', 'YEARS', 'Years', 'years') + self.keys  # + tuple(map(_mainKey,self.FramesIndex.keys()))
         if 'index' in kwargs and kwargs['index'] in self.FramesIndex:
@@ -224,14 +227,19 @@ class XLSX(_SimResult):
             for frame in self.Frames:
                 if IndexVector is None:
                     IndexVector = pd.Series(self.Frames[frame][self.FramesIndex[self.DTindex][1]].squeeze(),name=self.DTindex)
+                    IndexName = self.DTindex
                 elif IndexVector.equals(self.Frames[frame][self.FramesIndex[self.DTindex][1]]):
                     pass  # OK
                 else:
                     IndexVector = pd.merge_ordered(IndexVector,pd.Series(self.Frames[frame][self.FramesIndex[self.DTindex][1]].squeeze(),name=self.DTindex),how='outer').squeeze()
-            self.add_Key(self.DTindex)
-            self.TimeVector = self.DTindex
-            _ = self.set_Vector(Key=self.DTindex, VectorData=IndexVector.to_numpy().reshape(-1,), Units=self.get_Units(self.DTindex), DataType='auto', overwrite=True)
-            return self.DTindex
+                    IndexName = 'MERGED_' + str(_mainKey(self.DTindex))
+            self.add_Key(IndexName)  # self.add_Key(self.DTindex)
+            self.set_Units(IndexName, self.get_Units(self.DTindex))
+            self.TimeVector = IndexName # self.DTindex
+            # _ = self.set_Vector(Key=self.DTindex, VectorData=IndexVector.to_numpy().reshape(-1,), Units=self.get_Units(self.DTindex), DataType='auto', overwrite=True)
+            self.vectors[IndexName.upper().strip()] = IndexVector.values
+            self.vectorTemplate = np.array([0]*len(IndexVector))
+            return self.TimeVector
         else:
             _verbose(self.speak, 3, "not a common index name found.")
             self.DTindex = None
@@ -244,7 +252,10 @@ class XLSX(_SimResult):
             vector = None
             for datename in ('Date','date','Dates','dates','FECHA','Fecha','fecha','DATA','Data','data') + self.keys:
                 if self.is_Key(datename):
-                    if 'date' in str(self.get_RawVector(datename)[datename].dtype):
+                    if self.get_RawVector(datename)[datename] is None:
+                        print(datename,'is None')
+                        # raise ValueError
+                    elif 'date' in str(self.get_RawVector(datename)[datename].dtype):
                         if vector is None:
                             vector = pd.Series(self.get_RawVector(datename)[datename],name='DATE')
                         else:
@@ -725,7 +736,7 @@ class XLSX(_SimResult):
 
         thisFrame = self.lastFrame if Frame is None else Frame
 
-        if key == self.DTindex or (self.FramesIndex[key][1] in self.Frames[thisFrame] and 'date' in str(self.Frames[thisFrame][self.FramesIndex[key][1]].dtype)):
+        if key == self.DTindex or (key in self.FramesIndex and self.FramesIndex[key][1] in self.Frames[thisFrame] and 'date' in str(self.Frames[thisFrame][self.FramesIndex[key][1]].dtype)):
             if thisFrame in self.Frames and key in self.Frames[thisFrame]:
                 return self.Frames[thisFrame][self.FramesIndex[key][1]].to_numpy()
             elif key in self.FramesIndex:
