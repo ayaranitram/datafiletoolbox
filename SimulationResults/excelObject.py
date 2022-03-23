@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.22.10'
-__release__ = 220229
+__version__ = '0.22.11'
+__release__ = 220323
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -310,6 +310,8 @@ class XLSX(_SimResult):
         ### read the excel file using Pandas
         try:
             NewFrames = pd.read_excel(inputFile, sheet_name=sheet_name, header=header, **pdkwargs)
+        except PermissionError:
+            raise PermissionError("[Errno 13] Permission denied, file is already open: " + str(inputFile))
         except OSError:
             raise OSError("[Errno 24] Too many open files: " + str(inputFile) + '\nPlease close some other files.')
         except ImportError:
