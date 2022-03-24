@@ -272,6 +272,7 @@ class SimResult(object):
         self.WCcriteria = 1
         self.wellsLists = {}
         self.printMessages = 0
+        self.zeroThreshold = 1e-6
 
     def initialize(self,**kwargs):
         """
@@ -974,7 +975,7 @@ class SimResult(object):
                     gasProducers = gasProducers.rename(columns=_wellFromAttribute(gasProducers.columns ) )
                     prodCheck = gasProducers + prodCheck
 
-                prodCheck = ((prodCheck == 0) & (waterProducers > 0)).replace(False, np.nan).dropna(axis=1, how='all')
+                prodCheck = ((prodCheck == 0) & (waterProducers > self.zeroThreshold)).replace(False, np.nan).dropna(axis=1, how='all')
 
                 self.wellsLists['WaterProducers'] = list(prodCheck.columns )
 
@@ -1015,7 +1016,7 @@ class SimResult(object):
                     gasProducers = gasProducers.rename(columns=_wellFromAttribute(gasProducers.columns ) )
                     prodCheck = gasProducers + prodCheck
 
-                prodCheck = ((prodCheck == 0) & (waterProducers > 0)).replace(False, np.nan).dropna(axis=1, how='all')
+                prodCheck = ((prodCheck == 0) & (waterProducers > self.zeroThreshold)).replace(False, np.nan).dropna(axis=1, how='all')
 
                 self.wellsLists['WaterProducers'] += list(prodCheck.columns)
                 if len(self.wellsLists['WaterProducers']) > 1:
@@ -1046,7 +1047,7 @@ class SimResult(object):
                 GAS = self[['WGPR']]
                 GAS.rename(columns=_wellFromAttribute(GAS.columns ), inplace=True )
 
-                rateCheck = ((OIL>0) | (GAS>0)) # rateCheck = ((OIL>0) + (GAS>0))
+                rateCheck = ((OIL>self.zeroThreshold) | (GAS>self.zeroThreshold)) # rateCheck = ((OIL>0) + (GAS>0))
 
                 GOR = GAS / OIL
                 GOR.replace(np.nan, 9E9, inplace=True)
@@ -1067,16 +1068,16 @@ class SimResult(object):
                 GOR = self[['WGOR']]
                 GOR = (GOR.rename(columns=_wellFromAttribute(GOR.columns )))
 
-                rateCheck = (GOR<0) & (GOR>0)  # to generate a dataframe full of False
+                rateCheck = (GOR<self.zeroThreshold) & (GOR>self.zeroThreshold)  # to generate a dataframe full of False
 
                 if self.is_Attribute('WOPR') :
                     OIL = self[['WOPR']]
                     OIL.rename(columns=_wellFromAttribute(OIL.columns ), inplace=True )
-                    rateCheck = rateCheck | (OIL>0)
+                    rateCheck = rateCheck | (OIL>self.zeroThreshold)
                 if self.is_Attribute('WGPR') :
                     GAS = self[['WGPR']]
                     GAS.rename(columns=_wellFromAttribute(GAS.columns ), inplace=True )
-                    rateCheck = rateCheck | (GAS>0)
+                    rateCheck = rateCheck | (GAS>self.zeroThreshold)
 
                 GOR = GOR[rateCheck].dropna(axis=1, how='all')
 
@@ -1122,7 +1123,7 @@ class SimResult(object):
                 GAS = self[['WGPRH']]
                 GAS.rename(columns=_wellFromAttribute(GAS.columns ), inplace=True )
 
-                rateCheck = ((OIL>0) | (GAS>0)) # rateCheck = ((OIL>0) + (GAS>0))
+                rateCheck = ((OIL>self.zeroThreshold) | (GAS>self.zeroThreshold)) # rateCheck = ((OIL>0) + (GAS>0))
 
                 GOR = GAS / OIL
                 GOR.replace(np.nan, 9E9, inplace=True)
@@ -1147,16 +1148,16 @@ class SimResult(object):
                 GOR = self[['WGORH']]
                 GOR = (GOR.rename(columns=_wellFromAttribute(GOR.columns)))
 
-                rateCheck = (GOR<0) & (GOR>0)  # to generate a dataframe full of False
+                rateCheck = (GOR<self.zeroThreshold) & (GOR>self.zeroThreshold)  # to generate a dataframe full of False
 
                 if self.is_Attribute('WOPRH') :
                     OIL = self[['WOPRH']]
                     OIL.rename(columns=_wellFromAttribute(OIL.columns ), inplace=True )
-                    rateCheck = rateCheck | (OIL>0)
+                    rateCheck = rateCheck | (OIL>self.zeroThreshold)
                 if self.is_Attribute('WGPRH') :
                     GAS = self[['WGPRH']]
                     GAS.rename(columns=_wellFromAttribute(GAS.columns ), inplace=True )
-                    rateCheck = rateCheck | (GAS>0)
+                    rateCheck = rateCheck | (GAS>self.zeroThreshold)
 
                 GOR = GOR[rateCheck].dropna(axis=1, how='all')
 
