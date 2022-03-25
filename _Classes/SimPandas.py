@@ -3195,12 +3195,13 @@ Copy of input object, shifted.
                 print('no columns could be to converted to the requested units.')
                 return self
         if type(units) is dict:
-            unitsDict = {}
-            for k, v in units.items():
-                keys = self.find_Keys(k)
-                if len(keys) > 0:
-                    for each in keys:
-                        unitsDict[each] = v
+            # unitsDict = {}
+            # for k, v in units.items():
+            #     keys = self.find_Keys(k)
+            #     if len(keys) > 0:
+            #         for each in keys:
+            #             unitsDict[each] = v
+            unitsDict = { i:v for k,v in units.items() for i in self.find_Keys(k) }
             result = self.copy()
             for col in self.columns:
                 if col in unitsDict and convertibleUnits(self.get_Units(col)[col], unitsDict[col] ):
