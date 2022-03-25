@@ -3876,6 +3876,47 @@ Copy of input object, shifted.
             catch.spdLocator = _SimLocIndexer("loc", catch)
             return catch
 
+    def rename_item(self, mapper=None, index=None, columns=None, axis=None, copy=True, inplace=False, level=None, errors='ignore'):
+        """
+        alias for renameItem method.
+
+        Like the regular rename method but renameItem change all the columns or indexes where the item appears.
+        The item is the right part of the column or index name:
+                main_part:item_part
+
+        Parameters
+        ----------
+        mapper : dict, optional
+            Dict-like transformations to apply to that axis’ values.
+            Use either mapper and axis to specify the axis to target with mapper, or index and columns.
+        index : TYPE, optional
+            Alternative to specifying axis (mapper, axis=0)
+        columns : dict, optional
+            Alternative to specifying axis (mapper, axis=1)
+        axis : {0 or ‘index’, 1 or ‘columns’}, default 1
+            Axis to target with mapper.
+            Can be either the axis name (‘index’, ‘columns’) or number (0, 1).
+            The default is ‘index’.
+        copy : bool, default True
+            Also copy underlying data.
+        inplace : bool, default False
+            Whether to return a new DataFrame. If True then value of copy is ignored.
+        level : int or level name, default None
+            In case of a MultiIndex, only rename labels in the specified level.
+            *** NOT YET IMPLEMENTED ***
+        errors : TYPE, optional
+            If ‘raise’, raise a KeyError when a dict-like mapper, index, or columns
+            contains labels that are not present in the Index being transformed.
+            If ‘ignore’, existing keys will be renamed and extra keys will be ignored.
+
+        Returns
+        -------
+        DataFrame or None
+            DataFrame with the renamed axis labels or None if inplace=True.
+
+        """
+        return self.renameItem(self, mapper=mapper, index=index, columns=columns, axis=axis, copy=copy, inplace=inplace, level=level, errors=errors)
+
     def renameItem(self, mapper=None, index=None, columns=None, axis=None, copy=True, inplace=False, level=None, errors='ignore'):
         """
         Like the regular rename method but renameItem change all the columns or indexes where the item appears.
