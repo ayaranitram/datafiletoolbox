@@ -6,7 +6,7 @@ Created on Wed May 13 15:14:35 2020
 """
 
 __version__ = '0.60.12'
-__release__ = 220323
+__release__ = 220324
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -6420,3 +6420,131 @@ class SimResult(object):
             ExcelDF.to_excel(filepath)
 
         return None
+
+    def to_schedule(self, path=None, units='FIELD', ControlMode=None, ShutStop=None, keys=None, wells=None, groups=None, as_history=False, as_forecast=False, dropZerosColumns=True):
+        """
+        export a eclipse style schedule file.
+
+        Parameters
+        ----------
+        path : str, optional
+            the full path to output file to be written.
+            Defeult is the name of the object in the same folder with the extension ".sch"
+        units : str or dict, optional
+            a string 'FIELD', 'METRIC', LAB or PVT-M will convert the data to the corresponding eclipse simulator units system.
+            a dictionary should contain desired units for all the columns to be converted. The default is None.
+        ControlMode : str or dict, optional
+            a string defining the control mode for the simulation:'ORAT','WRAT','GRAT'
+            a dictionary with pairs of item:ControlModel for each item (well or group).
+        ShutStop : str, optional
+            a string 'OPEN, 'SHUT' or 'STOP' indicating what to do with the wells when their rate is zero.
+            Default is 'STOP'
+        keys : list or dict, optional
+            the list of keywords to be exported to the schedule file.
+            if the keys in the data does not follow Eclipse names, a dict of pairs {key_name:ecl_name} should be provided.
+            Default is: 'WOPRH', 'WWPRH','WGPRH', 'WBHPH', 'WGIRH', 'WWIRH', 'WOPR', 'WWPR','WGPR', 'WBHP', 'WGIR', 'WWIR' if exist.
+        wells : list or dict
+            the list of wells to be exported, if None all the wells will be exported.
+            if needed to rename the wells, a dict of pairs {current_name:new_name} can be provided.
+        groups : list or dict
+            ** NOT IMPLEMENTED **
+            the list of groups to be exported, if None no groups will be exported.
+            if needed to rename the groups, a dict of pairs {current_name:new_name} can be provided.
+        as_history : bool
+            ** EXPERIMENTAL **
+            export the well forecast keys as history keywrods.
+        as_forecast : bool
+            ** NOT IMPLEMENTED **
+            export the well history keys as forecast keywords.
+        dropZerosColumns : bool
+            set True to remove columns filled entirely with zeroes.
+
+        Returns
+        -------
+        None.
+        """
+        import os.path
+        if path is None:
+            path = _extension(self.path)[2] + _extension(self.path)[1] + '.SCH'
+        if os.path.isfile(path):
+            raise OverwrittingError("The output file already exists:\n  '"+str(path)+"'")
+        if keys is None:
+            userKeys, keys = [], ['WOPRH', 'WWPRH','WGPRH', 'WBHPH', 'WGIRH', 'WWIRH', 'WOPR', 'WWPR','WGPR', 'WBHP', 'WGIR', 'WWIR']
+        elif type(keys) is str:
+            keys = [keys]
+            userKeys = tuple(keys)
+        elif type(keys) is dict:
+            userKeys, keys = keys, list(keys.keys())
+        if wells is None:
+            exportWells = list(self.wells)
+        else:
+            exportWells = [ w for w in wells if w in self.wells ]
+        if groups is None:
+            exportGroups = []
+
+        if (len(self.get_Producers()) + len(self.get_Injectors())) > 0:
+            exportKeys  = [ _mainKey(k)+':'+w for k in keys for w in exportWells if k[0] in 'wW' if _mainKey(k)[-2:].upper() in ('PR','PRH') if w in self.get_Producers()]
+            exportKeys += [ _mainKey(k)+':'+w for k in keys for w in exportWells if k[0] in 'wW' if _mainKey(k)[-2:].upper() in ('IR','IRH') if w in self.get_Injectors()]
+            exportKeys += [ _mainKey(k)+':'+w for k in keys for w in exportWells if _mainKey(k).upper() not in ('PR','PRH','IR','IRH') ]  # -> 'WBHPH','WTHPH', 'WALQH','WBHP','WTHP','WALQ', ...
+        elif len(self.wells) > 0:
+            exportKeys = [ _mainKey(k)+':'+w for k in keys for w in exportWells if k[0] in 'wW' ]
+        else:
+            _verbose(self.speak, 3, "WARNING: No wells found to be exported.")
+            exportKeys = []
+
+        # put all the keywords provided by the user
+        exportKeys += [ _mainKey(k)+':'+w for k in userKeys for w in exportWells if _itemKey(k) is not None ]
+        exportKeys += [ _mainKey(k) for k in userKeys if _itemKey(k) is None ]
+        # exportKeys += [ _mainKey(k)+':'+g for k in keys for g in exportGroups if k[0] == 'G' ]
+
+        # keep only valid keys, not duplicated
+        exportKeys = [ k for k in exportKeys if k in self.keys ]
+        exportKeys = list(set(exportKeys))
+
+        data = self[exportKeys]
+
+        if dropZerosColumns:
+            data = data.dropzeros()
+
+        if as_history:
+            histKeys = [ k for k in exportKeys if _mainKey(k)[-1] != 'H' ]
+            histKeys = { k:_mainKey(k)+'H:'+_itemKey(k) for k in histKeys }
+            dataHist = data.rename(columns=histKeys)[list(histKeys.values())]
+            dataExport = data.drop(columns=list(histKeys.keys()))
+            if len(dataExport.columns) == 0:
+                dataExport = dataHist
+            else:
+                dataExport = dataHist + dataOriginal
+        else:
+            dataExport = data
+
+        if as_forecast:
+            foreKeys = [ k for k in exportKeys if _mainKey(k)[-1] == 'H' ]
+            foreKeys = { k:_mainKey(k)+'H:'+_itemKey(k) for k in foreKeys }
+            dataFore = data.rename(columns=foreKeys)[list(foreKeys.values())]
+            dataClean = data.drop(columns=list(foreKeys.keys()))
+            if len(dataClean.columns) == 0:
+                if as_history:
+                    pass  # dataExport = dataExport from previos process
+                else:
+                    dataExport = dataFore
+            else:
+                if as_history:
+                    dataExport = dataFore + dataExport
+                else:
+                    dataExport = dataFore + dataClean
+            dataClean = None
+        elif as_history:
+            pass  # dataExport = dataExport from previos process
+        else:
+            dataExport = data
+
+        if type(userKeys) is dict:
+            mainUserKeys = { _mainKey(k):_mainKey(v) for k,v in userKeys.items() }
+            renameKeys = { _mainKey(k)+(':'+_itemKey(k) if _intemKey(k) is not None else '') : mainUserKeys[_mainKey(k)]+(':'+_itemKey(k) if _intemKey(k) is not None else '') for k in dataExport.columns }
+            dataExport = dataExport.rename(columns=renameKeys)
+        if type(wells) is dict:
+            wells = { w:nw for w,nw in wells.items() if w in dataExport.wells }
+            dataExport = dataExport.renameItem(columns=wells)
+
+        dataExport.to_schedule(path)

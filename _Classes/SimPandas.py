@@ -7,7 +7,7 @@ Created on Sun Oct 11 11:14:32 2020
 """
 
 __version__ = '0.75.0'
-__release__ = 220309
+__release__ = 220324
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel']
 
 from sys import getsizeof
@@ -6641,7 +6641,7 @@ Copy of input object, shifted.
                     raise TypeError("others must be SimDataFrame, DataFrame, SimSeries or Series")
             return kwargs['ax']
 
-    def to_schedule(self,units='FIELD',ControlMode=None,ShutStop='STOP'):
+    def to_schedule(self,path,units='FIELD',ControlMode=None,ShutStop=None):
         """
         export a eclipse style schedule file.
 
@@ -6650,12 +6650,23 @@ Copy of input object, shifted.
         units : str or dict, optional
             a string 'FIELD', 'METRIC', LAB or PVT-M will convert the data to the corresponding eclipse simulator units system.
             a dictionary should contain desired units for all the columns to be converted. The default is None.
+        ControlMode : str or dict, optional
+            a string defining the control mode for the simulation:'ORAT','WRAT','GRAT'
+            a dictionary with pairs of item:ControlModel for each item (well or group).
+        ShutStop : str, optional
+            a string 'OPEN, 'SHUT' or 'STOP' indicating what to do with the wells when their rate is zero.
+
 
         Returns
         -------
         None.
         """
         from .._common.stringformat import date as strDate
+        from .._Classes.Errors import OverwrittingError
+        import os
+
+        if os.path.isfile(path):
+            raise OverwrittingError("The output file already exists:\n  '"+str(path)+"'")
 
         eclipseUnits0 = {'FIELD':{'OPR':'stb/day',  # Oil rate
                                  'WPR':'stb/day',  # Water rate
@@ -6727,6 +6738,9 @@ Copy of input object, shifted.
                'WCONPROD':DataFrame(index=data[itemName].unique(), columns=range(2,21)),
                'WCONINJE':DataFrame(index=data[itemName].unique(), columns=range(2,16))}
 
+        if ShutStop is None:
+            ShutStop = 'STOP'
+
         if type(ControlMode) is str:
             ControlMode = { item:ControlMode for item in data[itemName].unique() }
 
@@ -6760,7 +6774,7 @@ Copy of input object, shifted.
                 injeh = keywords['keyword'] == 'WCONINJH'
                 keywords.loc[injeh,2] = [ 'OPEN' if each else ShutStop for each in (keywords.loc[injeh,4] > 0) ]
 
-                if ControlMode is None:
+                if ControlMode is None or item not in ControlModel:
                     keywords.loc[prodh,3] = keywords.loc[prodh,4:6].isna().values.astype(int) * np.array(['ORAT','WRAT','GRAT']).reshape(1,-1)
                 else:
                     keywords.loc[:,3] = [ ControlMode[item] for item in keywords.loc[:].index ]
