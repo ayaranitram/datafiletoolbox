@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.75.0'
-__release__ = 220324
+__version__ = '0.76.0'
+__release__ = 220326
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel']
 
 from sys import getsizeof
@@ -6897,6 +6897,46 @@ Copy of input object, shifted.
         print( 'memory usage: ' + str(int(getsizeof(self)/1024/1024*10)/10) + '+ MB')
 
         return None
+
+    def wellStatus(self, inplace=False):
+        """
+        define if a well if producer or injector at each row
+
+        Parameters
+        ----------
+        inplace : bool, optional
+            apply the results to the original dataframe. The default is False.
+
+        Returns
+        -------
+        SimDataFrame
+            with a new categorical column for each well 'WSTATUS'
+            containing the string 'PRODUCER' or 'INJECTOR'.
+
+        """
+        tempdf = SimDataFrame(self)
+
+        for w in tempdf.wells:
+            try:
+                temp = tempdf['W?PR*:'+str(w)]
+                tempdf['_PROD:'+str(w)] = (temp != 0).sum(axis=1)
+            except:
+                tempdf['_PROD:'+str(w)] = 0
+            try:
+                temp = tempdf['W?IR*:'+str(w)]
+                tempdf['_INJE:'+str(w)] = (temp != 0).sum(axis=1)
+            except:
+                tempdf['_INJE:'+str(w)] = 0
+
+            tempdf['WSTATUS:'+str(w)] = [ 'PRODUCER' if tempdf['_PROD:'+str(w)].iloc[i] > tempdf['_INJE:'+str(w)].iloc[i] else 'INJECTOR' if tempdf['_PROD:'+str(w)].iloc[i] < tempdf['_INJE:'+str(w)].iloc[i] else None for i in range(len(tempdf)) ]
+
+        tempdf['WSTATUS:'+str(w)] = tempdf['WSTATUS:'+str(w)].fillna(method='ffill').fillna(method='bfill').astype('category')
+
+        if inplace:
+            self['WSTATUS:'+str(w)] = tempdf['WSTATUS:'+str(w)]
+        else:
+            return tempdf.drop(columns=['_INJE:'+str(w), '_PROD:'+str(w)], inplace=True)
+
 
     # def rolling(self, window, min_periods=None, center=False, win_type=None, on=None, axis=0, closed=None, method='single'):
     #     return SimRolling(self.df, window, min_periods=min_periods, center=center, win_type=win_type, on=on, axis=axis, closed=closed, method=method,
