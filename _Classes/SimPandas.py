@@ -6715,15 +6715,17 @@ Copy of input object, shifted.
 
         # create dictionary for keyword parameters
         if units in eclipseUnits0:
-            eclipseUnits = {}
-            for each in eclipseUnits0[units]:
-                for X in 'FGW':
-                    for H in ' H':
-                        eclipseUnits[X+each+H.strip()] = eclipseUnits0[units][each]
+            # eclipseUnits = {}
+            # for each in eclipseUnits0[units]:
+            #     for X in 'FGW':
+            #         for H in ' H':
+            #             eclipseUnits[X+each+H.strip()] = eclipseUnits0[units][each]
+            # del eclipseUnits0
+            # units = eclipseUnits
+            units = { X+each+H.strip():eclipseUnits0[units][each] for each in eclipseUnits0[units] for X in 'FGW' for H in ' H' }
             del eclipseUnits0
-            units = eclipseUnits
 
-        data = self.to(units).melt()
+        data = self.to(units).wellStatus().melt()
 
         indexName = data.index.name
         itemName = data.columns[2]
@@ -6765,19 +6767,36 @@ Copy of input object, shifted.
                 # prepare keywords to write
                 out['WCONHIST']['keyword'] = 'WCONHIST'
                 out['WCONINJH']['keyword'] = 'WCONINJH'
-                keywords = out['WCONHIST'].append(out['WCONINJH'])
+                out['WCONPROD']['keyword'] = 'WCONPROD'
+                out['WCONINJE']['keyword'] = 'WCONINJE'
+                keywords = out['WCONHIST'].append(out['WCONINJH']).append(out['WCONPROD']).append(out['WCONINJE'])
                 keywords.dropna(axis=0, how='all',subset=range(2,13),inplace=True)
 
                 prodh = keywords['keyword'] == 'WCONHIST'
                 keywords.loc[prodh,2] = [ 'OPEN' if each else ShutStop for each in (keywords.loc[prodh,4:6].sum(axis=1) > 0) ]
 
                 injeh = keywords['keyword'] == 'WCONINJH'
-                keywords.loc[injeh,2] = [ 'OPEN' if each else ShutStop for each in (keywords.loc[injeh,4] > 0) ]
+                keywords.loc[injeh,3] = [ 'OPEN' if each else ShutStop for each in (keywords.loc[injeh,4] > 0) ]
+
+                prodf = keywords['keyword'] == 'WCONPROD'
+                keywords.loc[prodf,2] = [ 'OPEN' if each else ShutStop for each in (keywords.loc[prodf,4:7].sum(axis=1) > 0) ]
+
+                injef = keywords['keyword'] == 'WCONINJE'
+                keywords.loc[injef,3] = [ 'OPEN' if each else ShutStop for each in (keywords.loc[injef,5:6].sum(axis=1) > 0) ]
 
                 if ControlMode is None or item not in ControlModel:
-                    keywords.loc[prodh,3] = keywords.loc[prodh,4:6].isna().values.astype(int) * np.array(['ORAT','WRAT','GRAT']).reshape(1,-1)
+                    notnull = keywords.loc[prodh,[4,6,5]].notna()
+                    checkgor = DataFrame({4: keywords.loc[prodh,4].fillna(0) * GORcriteria > keywords.loc[prodh,6].fillna(0) , 5: (keywords.loc[prodh,5].notna()) & ((keywords.loc[prodh,4].isna()) & (keywords.loc[prodh,6].isna())) , 6: keywords.loc[prodh,4].fillna(0) * GORcriteria <= keywords.loc[prodh,6].fillna(0) })
+                    keywords.loc[prodh,3] = ((notnull*checkgor).astype(int) *   np.array(['ORAT','GRAT','WRAT']).reshape(1,-1)).sum(axis=1)
                 else:
                     keywords.loc[:,3] = [ ControlMode[item] for item in keywords.loc[:].index ]
+
+# working on how to select from the several keyword lines for each well which is the correct keyword to write
+
+                keywords['ranking'] = keywords.loc[:,4:20].count(axis=1)
+
+                keywords.reset_index().sort_values(['index','keyword','ranking'],axis=0,ascending=[True,True,False]).groupby('index').first()[['keyword']]
+
 
                 # write keywords
                 for kw in keywords['keyword'].unique():
@@ -6806,26 +6825,32 @@ Copy of input object, shifted.
                        'WCONINJE':DataFrame(index=data[itemName].unique(), columns=range(2,16))}
 
             # read the input table and put the values in the corresponding parameter of the keywords
-            if data.iloc[i,attCol] == 'WOPRH':
+            if data.iloc[i,attCol] == 'WSTATUS':  # oil production rate
+                out['WCONHIST'].loc[data.iloc[i,itemCol],'Status'] = data.iloc[i,valueCol]
+                out['WCONINJH'].loc[data.iloc[i,itemCol],'Status'] = data.iloc[i,valueCol]
+                out['WCONPROD'].loc[data.iloc[i,itemCol],'Status'] = data.iloc[i,valueCol]
+                out['WCONINJE'].loc[data.iloc[i,itemCol],'Status'] = data.iloc[i,valueCol]
+
+            elif data.iloc[i,attCol] == 'WOPRH':  # oil production rate
                 out['WCONHIST'].loc[data.iloc[i,itemCol],4] = data.iloc[i,valueCol]
-            elif data.iloc[i,attCol] == 'WWPRH':
+            elif data.iloc[i,attCol] == 'WWPRH':  # water production rate
                 out['WCONHIST'].loc[data.iloc[i,itemCol],5] = data.iloc[i,valueCol]
-            elif data.iloc[i,attCol] == 'WGPRH':
+            elif data.iloc[i,attCol] == 'WGPRH':  # gas production rate
                 out['WCONHIST'].loc[data.iloc[i,itemCol],6] = data.iloc[i,valueCol]
-            elif data.iloc[i,attCol] == 'WVFPH':
+            elif data.iloc[i,attCol] == 'WVFPH':  # well VFP table number
                 out['WCONHIST'].loc[data.iloc[i,itemCol],7] = data.iloc[i,valueCol]
                 out['WCONINJH'].loc[data.iloc[i,itemCol],7] = data.iloc[i,valueCol]
-            elif data.iloc[i,attCol] == 'WALQH':
+            elif data.iloc[i,attCol] == 'WALQH':  # Artificial lift quantity
                 out['WCONHIST'].loc[data.iloc[i,itemCol],8] = data.iloc[i,valueCol]
-            elif data.iloc[i,attCol] == 'WTHPH':
+            elif data.iloc[i,attCol] == 'WTHPH':  # tubing head pressure (THP)
                 out['WCONHIST'].loc[data.iloc[i,itemCol],9] = data.iloc[i,valueCol]
                 out['WCONINJH'].loc[data.iloc[i,itemCol],6] = data.iloc[i,valueCol]
-            elif data.iloc[i,attCol] == 'WBHPH':
+            elif data.iloc[i,attCol] == 'WBHPH':  # bottom hole pressure (BHP)
                 out['WCONHIST'].loc[data.iloc[i,itemCol],10] = data.iloc[i,valueCol]
                 out['WCONINJH'].loc[data.iloc[i,itemCol],5] = data.iloc[i,valueCol]
-            elif data.iloc[i,attCol] == 'WWGPRH':
+            elif data.iloc[i,attCol] == 'WWGPRH':  # wet gas production rate
                 out['WCONHIST'].loc[data.iloc[i,itemCol],11] = data.iloc[i,valueCol]
-            elif data.iloc[i,attCol] == 'WNPRH':
+            elif data.iloc[i,attCol] in ('WNPRH','WNLPRH'):  # NGL rate
                 out['WCONHIST'].loc[data.iloc[i,itemCol],12] = data.iloc[i,valueCol]
             elif data.iloc[i,attCol] == 'WOIRH':
                 out['WCONINJH'].loc[data.iloc[i,itemCol],4] = data.iloc[i,valueCol]
@@ -6839,6 +6864,64 @@ Copy of input object, shifted.
             elif data.iloc[i,attCol] == 'WCTRL':
                 out['WCONHIST'].loc[data.iloc[i,itemCol],3] = data.iloc[i,valueCol]
                 out['WCONINJH'].loc[data.iloc[i,itemCol],12] = data.iloc[i,valueCol]
+                out['WCONPROD'].loc[data.iloc[i,itemCol],3] = data.iloc[i,valueCol]
+                out['WCONINJE'].loc[data.iloc[i,itemCol],4] = data.iloc[i,valueCol]
+
+            elif data.iloc[i,attCol] == 'WOPR':  # oil production rate
+                out['WCONPROD'].loc[data.iloc[i,itemCol],4] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WWPR':  # water production rate
+                out['WCONPROD'].loc[data.iloc[i,itemCol],5] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WGPR':  # gas production rate
+                out['WCONPROD'].loc[data.iloc[i,itemCol],6] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WLPR':  # liquid production rate
+                out['WCONPROD'].loc[data.iloc[i,itemCol],7] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WVFP':  # Reservoir fluid volume rate
+                out['WCONPROD'].loc[data.iloc[i,itemCol],8] = data.iloc[i,valueCol]
+                # out['WCONINJH'].loc[data.iloc[i,itemCol],7] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WALQ':  # Artificial lift quantity
+                out['WCONPROD'].loc[data.iloc[i,itemCol],12] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WVFP':  # well VFP table number
+                out['WCONPROD'].loc[data.iloc[i,itemCol],11] = data.iloc[i,valueCol]
+                out['WCONINJE'].loc[data.iloc[i,itemCol],9] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WTHP':  # tubing head pressure (THP)
+                out['WCONPROD'].loc[data.iloc[i,itemCol],10] = data.iloc[i,valueCol]
+                out['WCONINJE'].loc[data.iloc[i,itemCol],8] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WBHP':  # bottom hole pressure (BHP)
+                out['WCONPROD'].loc[data.iloc[i,itemCol],9] = data.iloc[i,valueCol]
+                out['WCONINJE'].loc[data.iloc[i,itemCol],7] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WWGPR':  # wet gas production rate
+                out['WCONPROD'].loc[data.iloc[i,itemCol],13] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] in ('WNPR','WNLPR'):  # NGL rate
+                out['WCONPROD'].loc[data.iloc[i,itemCol],20] = data.iloc[i,valueCol]
+            # elif data.iloc[i,attCol] == 'WNPR':  # Total molar rate
+            #     out['WCONPROD'].loc[data.iloc[i,itemCol],14] = data.iloc[i,valueCol]
+            # elif data.iloc[i,attCol] == 'WNPR':  # Steam production rate
+            #     out['WCONPROD'].loc[data.iloc[i,itemCol],15] = data.iloc[i,valueCol]
+            # elif data.iloc[i,attCol] == 'WNPR':  # Calorific rate
+            #     out['WCONPROD'].loc[data.iloc[i,itemCol],18] = data.iloc[i,valueCol]
+            # elif data.iloc[i,attCol] == 'WNPR':  # Linearly combined rate
+            #     out['WCONPROD'].loc[data.iloc[i,itemCol],19] = data.iloc[i,valueCol]
+            elif data.iloc[i,attCol] == 'WOIR':  # Surface flow rate
+                out['WCONINJE'].loc[data.iloc[i,itemCol],5] = data.iloc[i,valueCol]
+                out['WCONINJE'].loc[data.iloc[i,itemCol],2] = 'OIL'
+            elif data.iloc[i,attCol] == 'WWIR':  # Surface flow rate
+                out['WCONINJE'].loc[data.iloc[i,itemCol],5] = data.iloc[i,valueCol]
+                out['WCONINJE'].loc[data.iloc[i,itemCol],2] = 'WATER'
+            elif data.iloc[i,attCol] == 'WGIR':  # Surface flow rate
+                out['WCONINJE'].loc[data.iloc[i,itemCol],5] = data.iloc[i,valueCol]
+                out['WCONINJE'].loc[data.iloc[i,itemCol],2] = 'GAS'
+            # elif data.iloc[i,attCol] == 'WGIR':  # Vaporized oil concentration in the injected gas, or dissolved gas concentration in the injected oil
+            #     out['WCONINJE'].loc[data.iloc[i,itemCol],10] = data.iloc[i,valueCol]
+            # elif data.iloc[i,attCol] == 'WGIR':  # Thermal: ratio of gas volume to steam volume (C.W.E.) for a STEAM-GAS injector
+            #     out['WCONINJE'].loc[data.iloc[i,itemCol],11] = data.iloc[i,valueCol]
+            # elif data.iloc[i,attCol] == 'WGIR':  # Surface volume proportion of oil in a multiphase injecto
+            #     out['WCONINJE'].loc[data.iloc[i,itemCol],12] = data.iloc[i,valueCol]
+            # elif data.iloc[i,attCol] == 'WGIR':  # Surface volume proportion of water in a multiphase injecto
+            #     out['WCONINJE'].loc[data.iloc[i,itemCol],13] = data.iloc[i,valueCol]
+            # elif data.iloc[i,attCol] == 'WGIR':  # Surface volume proportion of gas in a multiphase injecto
+            #     out['WCONINJE'].loc[data.iloc[i,itemCol],14] = data.iloc[i,valueCol]
+            # elif data.iloc[i,attCol] == 'WGIR':  # Ratio of oil volume to steam volume (C.W.E.) for a STEAM-OIL injector (for use with steam-solvent injection).
+            #     out['WCONINJE'].loc[data.iloc[i,itemCol],15] = data.iloc[i,valueCol]
 
             lastime = curtime
 

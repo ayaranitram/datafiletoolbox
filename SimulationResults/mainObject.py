@@ -6421,7 +6421,7 @@ class SimResult(object):
 
         return None
 
-    def to_schedule(self, path=None, units='FIELD', ControlMode=None, ShutStop=None, keys=None, wells=None, groups=None, as_history=False, as_forecast=False, dropZerosColumns=True):
+    def to_schedule(self, path=None, units='FIELD', ControlMode=None, ShutStop=None, keys=None, wells=None, groups=None, as_history=False, as_forecast=False, dropZerosColumns=True, useDates=True):
         """
         export a eclipse style schedule file.
 
@@ -6458,6 +6458,9 @@ class SimResult(object):
             export the well history keys as forecast keywords.
         dropZerosColumns : bool
             set True to remove columns filled entirely with zeroes.
+        useDates : bool
+            set True to use the 'DATE' key to generate DATES keywords.
+            set False to calculate time differences from TIME or DATES and generate TSTEP keywords.  ** NOT IMPLEMENTED **
 
         Returns
         -------
@@ -6501,7 +6504,24 @@ class SimResult(object):
         exportKeys = [ k for k in exportKeys if k in self.keys ]
         exportKeys = list(set(exportKeys))
 
+        if useDates:
+            if type(useDates) is str:
+                if useDates in self.keys:
+                    if 'datetime' in str(test('DATE').dtype):
+                        datekey = useDates
+                    else:
+                        raise TypeError("The key '" + str(useDates) +"' requested to be used as DATES is not a valid 'date' type.")
+                else:
+                    raise ValueError("The key '" + str(useDates) +"' requested to be used as DATES is not a key in this simulation results.")
+            else:
+                for datekey in ('DATE','DATES'):
+                    if datekey in self.keys and datekey not in exportKeys:
+                        exportKeys.append(datekey)
+                        break
+
         data = self[exportKeys]
+        if useDates:
+            data = data.set_index(datekey, drop=True)
 
         if dropZerosColumns:
             data = data.dropzeros()
