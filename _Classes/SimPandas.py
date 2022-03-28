@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.77.2'
+__version__ = '0.78.5'
 __release__ = 220328
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat']
 
@@ -6623,19 +6623,30 @@ Copy of input object, shifted.
         """
         return _slope(df=self, x=x, y=y, window=window, slope=slope, intercept=intercept)
 
-    def plot(self, y=None, x=None, others=None,**kwargs):
+    def plot(self, y=None, x=None, others=None, figsize=None, dpi=None, **kwargs):
         """
         wrapper of Pandas plot method, with some superpowers
 
         Parameters
         ----------
         y : string, list or index; optional
-            column name to plot. The default is None.
+            Column name to plot. The default is None.
         x : string, optional
-            the columns to be used for x coordinates. The default is the index.
+            The columns to be used for x coordinates. The default is the index.
         others : SimDataFrame, SimSeries, DataFrame or Series; optional
-            other Frames to include in the plot, for the same selected columns. The default is None.
-        **kwargs : TYPE
+            Other Frames to include in the plot, for the same selected columns. The default is None.
+        figsize : (float, float), optional
+            Width, height in inches.
+            It will be passed to matplotlib.pyplot.figure to create the figure.
+            Only valid for a new figure ('figure' keyword not found in kwargs).
+        dpi : float, optional
+            The resolution of the figure in dots-per-inch.
+            It will be passed to matplotlib.pyplot.figure to create the figure.
+            Only valid for a new figure ('figure' keyword not found in kwargs).
+        xMin, xMin, yMin, yMax : as per values of X or Y axes.
+            A shorcut to xlim and ylim matplotlib keywords,
+            must be provided as keyword arguments.
+        **kwargs : matplotlib_keyword='paramenter'
             any other keyword argument for matplolib.
 
         Returns
@@ -6644,18 +6655,77 @@ Copy of input object, shifted.
         """
         y = self.columns if y is None else [y] if type(y) is str else y
         y = [ i for i in y if i != x ] if x is not None else y
+
+        if 'xMin' in kwargs:
+            if 'xlim' in kwargs:
+                kwargs['xlim'] = (kwargs['xMin'], kwargs['xlim'][1])
+            else:
+                kwargs['xlim'] = (kwargs['xMin'], None)
+            del kwargs['xMin']
+        if 'xMax' in kwargs:
+            if 'xlim' in kwargs:
+                kwargs['xlim'] = (kwargs['xlim'][0], kwargs['xMax'])
+            else:
+                kwargs['xlim'] = (None, kwargs['xMax'])
+            del kwargs['xMax']
+        if 'yMin' in kwargs:
+            if 'ylim' in kwargs:
+                kwargs['ylim'] = (kwargs['yMin'], kwargs['ylim'][1])
+            else:
+                kwargs['ylim'] = (kwargs['yMin'], None)
+            del kwargs['yMin']
+        if 'yMax' in kwargs:
+            if 'ylim' in kwargs:
+                kwargs['ylim'] = (kwargs['ylim'][0], kwargs['yMax'])
+            else:
+                kwargs['ylim'] = (None, kwargs['yMax'])
+            del kwargs['yMax']
+
+        if type(others) is str:
+            marker = [m for m in '.,ov^<>12348spP*hH+xXDd|_' if m in others]
+            if len(marker) > 0:
+                kwargs['marker'] = marker[0]
+            linestyle = [l for l in ['--','-','-.',':'] if l in others]
+            if len(linestyle) > 0:
+                kwargs['linestyle'] = linestyle[0]
+            else:
+                kwargs['linestyle'] = 'None'
+            color = [c for c in 'bgrcmykw' if c in others]
+            if len(color) > 0:
+                if 'marker' in kwargs:
+                    kwargs['markerfacecolor'] = color[0]
+                kwargs['color'] = color[0]
+            others = None
+
+        if figsize is not None or dpi is not None:
+            if 'figure' not in kwargs and 'ax' not in kwargs:
+                kwargs['figure'], kwargs['ax'] = plt.subplots(figsize=figsize, dpi=dpi)
+
+        labels = None
         if others is None:
+            if 'labels' in kwargs:
+                if type(kwargs['labels']) is not list:
+                    kwargs['labels'] = [kwargs['labels']]
+                if len(kwargs['labels']) == len(y):
+                    labels = kwargs['labels']
+                del kwargs['labels']
             if 'ylabel' not in kwargs:
                 kwargs['ylabel'] = ('\n').join([ str(yi) + (' [' + str(self.get_units(yi)[yi]) +']' ) if self.get_units(yi)[yi] is not None else '' for yi in y ])
             if x is not None:
                 if x in self.columns:
-                    fig = self.DF.plot(x=x,y=y,**kwargs)
+                    if labels is None:
+                        fig = self.DF.plot(x=x, y=y, **kwargs)
+                    else:
+                        fig = self.DF.plot(x=x, y=y, label=labels, **kwargs)
                     plt.tight_layout()
                     return fig
                 else:
                     raise ValueError("Required 'x', " + str(x) + " is not a column name in this SimDataFrame")
             else:
-                fig = self[y].DF.plot(**kwargs)
+                if labels is None:
+                    fig = self[y].DF.plot(**kwargs)
+                else:
+                    fig = self[y].DF.plot(label=labels, **kwargs)
                 plt.tight_layout()
                 return fig
         else:
@@ -6663,20 +6733,43 @@ Copy of input object, shifted.
                 others = [others]
             if len(others) > 10 and 'legend' not in kwargs:
                 kwargs['legend'] = False
+            if 'labels' in kwargs:
+                if type(kwargs['labels']) is list:
+                    if len(kwargs['labels']) == len(others) + 1:
+                        if len(y) == 1:
+                            labels = [ (la if type(la) is list else [str(la)]) for la in kwargs['labels'] ]
+                        else:
+                            labels = [ (la if type(la) is list else [str(ys)+' '+str(la) for ys in y ]) for la in kwargs['labels'] ]
+                del kwargs['labels']
             if 'ax' in kwargs and kwargs['ax'] is not None:
-                kwargs['ax'] = self.plot(y=y, x=x, others=None, **kwargs)
+                if labels is None:
+                    kwargs['ax'] = self.plot(y=y, x=x, others=None, **kwargs)
+                else:
+                    kwargs['ax'] = self.plot(y=y, x=x, others=None, label=labels[0], **kwargs)
             else:
                 fig = self.plot(y=y, x=x, others=None, **kwargs)
                 kwargs['ax'] = fig
+
+            labcount = 0
             for oth in others:
+                labcount += 1
                 if type(oth) in (SimDataFrame,SimSeries):
                     newY = [ ny for ny in self.columns if ny in oth ]
-                    kwargs['ax'] = oth[newY].to(self.get_units()).plot(y=y, x=x, others=None, **kwargs)
+                    if labels is None:
+                        kwargs['ax'] = oth[newY].to(self.get_units()).plot(y=y, x=x, others=None, **kwargs)
+                    else:
+                        kwargs['ax'] = oth[newY].to(self.get_units()).plot(y=y, x=x, others=None, label=labels[labcount], **kwargs)
                 elif isinstance(oth,DataFrame):
                     newY = [ ny for ny in self.columns if ny in oth ]
-                    kwargs['ax'] = oth[newY].plot(**kwargs)
+                    if labels is None:
+                        kwargs['ax'] = oth[newY].plot(**kwargs)
+                    else:
+                        kwargs['ax'] = oth[newY].plot(label=labels[labcount], **kwargs)
                 elif isinstance(oth,Series):
-                    kwargs['ax'] = oth.plot(**kwargs)
+                    if labels is None:
+                        kwargs['ax'] = oth.plot(**kwargs)
+                    else:
+                        kwargs['ax'] = oth.plot(label=labels[labcount], **kwargs)
                 else:
                     raise TypeError("others must be SimDataFrame, DataFrame, SimSeries or Series")
             return kwargs['ax']
