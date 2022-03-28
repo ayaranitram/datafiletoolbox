@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.77.1'
+__version__ = '0.77.2'
 __release__ = 220328
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat']
 
@@ -660,6 +660,9 @@ class SimSeries(Series):
     def T(self):
         return self.transpose()
 
+    def as_Pandas(self):
+        return self.to_Series()
+
     def to_Pandas(self):
         return self.to_Series()
 
@@ -729,6 +732,8 @@ class SimSeries(Series):
                 return self.iloc[0]
         elif len(self.get_Units()) == 0 or np.array([(u is None or str(u).lower().strip() in ['unitless','dimensionless']) for u in self.get_Units().values()]).all():
             return self.as_Series()
+        else:
+            return self
 
     @property
     def columns(self):
@@ -3117,6 +3122,8 @@ Copy of input object, shifted.
             return self.to_SimSeries().squeeze()
         elif len(self.get_Units()) == 0 or np.array([(u is None or str(u).lower().strip() in ['unitless','dimensionless']) for u in self.get_Units().values()]).all():
             return self.as_DataFrame()
+        else:
+            return self
 
     def to(self, units):
         """
