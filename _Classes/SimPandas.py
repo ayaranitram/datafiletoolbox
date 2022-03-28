@@ -6,9 +6,9 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.76.0'
-__release__ = 220326
-__all__ = ['SimSeries', 'SimDataFrame', 'read_excel']
+__version__ = '0.77.0'
+__release__ = 220328
+__all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat']
 
 from sys import getsizeof
 from io import StringIO
@@ -46,11 +46,43 @@ _SERIES_WARNING_MSG = """\
     to raise a TypeError instead."""
 
 
+def concat(objs, axis=0, join='outer', ignore_index=False, keys=None, levels=None, names=None, verify_integrity=False, sort=False, copy=True, squeeze=True):
+    """
+    wrapper of pandas.concat enhaced with units support
+
+    Return:
+        SimDataFrame
+    """
+    if type(objs) is not list:
+        raise TypeError("objs must be a list of DataFrames or SimDataFrames")
+    if len(objs) == 1:
+        print("WARNING: only 1 DataFrame received.")
+        return [objs][0]
+
+    merged_units = merge_units([ob for ob in objs if type(ob) in (SimDataFrame,SimSeries)])
+    merged_SimParameters = merge_SimParameters([ob for ob in objs if type(ob) in (SimDataFrame,SimSeries)])
+
+    dfobjs = [ (ob.to(merged_units).as_Pandas() if type(ob) in (SimSeries, SimDataFrame) else ob) for ob in objs ]
+
+    if 'units' in merged_SimParameters:
+        del merged_SimParameters['units']
+
+    df = pd.concat(dfobjs, axis=axis, join=join, ignore_index=ignore_index, keys=keys, levels=levels, names=names, verify_integrity=verify_integrity, sort=sort, copy=copy)
+    sdf = SimDataFrame(data=df , units=merged_units, **merged_SimParameters )
+
+    if squeeze:
+        return sdf.squeeze()
+    else:
+        return sdf
+
+
 def read_excel(io, sheet_name=None, header=0, names=None, index_col=None, usecols=None, squeeze=None, dtype=None, engine=None, converters=None, true_values=None, false_values=None, skiprows=None, nrows=None, na_values=None, keep_default_na=True, na_filter=True, verbose=False, parse_dates=False, date_parser=None, thousands=None, decimal='.', comment=None, skipfooter=0, convert_float=None, mangle_dupe_cols=True, storage_options=None,
 units=1, speak=False, indexName=None, indexUnits=None, nameSeparator=None, intersectionCharacter='∩', autoAppend=False, transposed=False, operatePerName=False, *args, **kwargs):
     """
     wrapper of pandas.read_excel enhanced with units support
 
+    Return:
+        SimDataFrame
     """
     import pandas
 
