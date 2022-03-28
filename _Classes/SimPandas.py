@@ -7357,7 +7357,7 @@ def _MergeIndex(left, right, how='outer', *, drop_duplicates=True, keep='first')
             return mergeAppend(left, newIndex), mergeAppend(right, newIndex)
 
 
-def merge_units(left, right, suffixes=('_x', '_y')):
+def merge_units(left, right=None, suffixes=('_x', '_y')):
     """
     return a dictionary with the units of both SimDataFrames merged, corresponding to the merged DataFrame.
 
@@ -7372,6 +7372,12 @@ def merge_units(left, right, suffixes=('_x', '_y')):
     -------
     dict of units
     """
+    if type(left) in (list, tuple) and len(left) > 1 and right is None:
+        merged = left[0]
+        for i in range(1,len(left)):
+            merged = merge_units(merged,left[i])
+        return merged
+
     merged = {}
     if type(left) in [SimDataFrame, SimSeries] and type(right) in [SimDataFrame, SimSeries]:
         for col in left.columns:
@@ -7425,9 +7431,30 @@ def merge_units(left, right, suffixes=('_x', '_y')):
             else:
                 merged[col] = 'UNDEFINED'
 
+    else:
+        raise TypeError("'left' and 'right' paramenters most be SimDataFrame or SimSeries")
+
     return merged
 
-def merge_SimParameters(left,right):
+def merge_SimParameters(left,right=None):
+    """
+    return a dictionary with the SimParameters of both SimDataFrames merged, corresponding to the merged DataFrame.
+
+    Parameters
+    ----------
+    left : SimDataFrame
+    right : SimDataFrame
+
+    Returns
+    -------
+    dict of SimParameters
+    """
+    if type(left) in (list, tuple) and len(left) > 1 and right is None:
+        merged = left[0]
+        for i in range(1,len(left)):
+            merged = merge_SimParameters(merged,left[i])
+        return merged
+
     merged = {}
     if type(left) in [SimDataFrame, SimSeries] and type(right) in [SimDataFrame, SimSeries]:
         merged['speak'] = bool(int(left.speak) + int(right.speak))
@@ -7487,8 +7514,13 @@ def merge_SimParameters(left,right):
 
     elif type(left) in [SimDataFrame, SimSeries] and type(right) not in [SimDataFrame, SimSeries]:
         merged = left._SimParameters.copy()
+
     elif type(left) not in [SimDataFrame, SimSeries] and type(right) in [SimDataFrame, SimSeries]:
         merged = right._SimParameters.copy()
+
+    else:
+        raise TypeError("'left' and 'right' paramenters most be SimDataFrame or SimSeries")
+
     return merged
 
 def merge(left, right, how='inner', on=None, left_on=None, right_on=None, left_index=False, right_index=False, sort=False, suffixes=('_x', '_y'), copy=True, indicator=False, validate=None):
