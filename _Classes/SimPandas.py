@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.77.0'
+__version__ = '0.77.1'
 __release__ = 220328
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat']
 
@@ -158,8 +158,9 @@ units=1, speak=False, indexName=None, indexUnits=None, nameSeparator=None, inter
             dataunits = units
 
         if isinstance(df,pandas.DataFrame):
-            for col in df.columns:
-                if str(df[col].dtype).startswith('date'):
+            for colN in range(len(df.columns)):
+                if str(df.iloc[:,colN].dtype).startswith('date'):
+                    col = df.columns[colN]
                     if type(dataunits) is not dict:
                         dataunits = {c:dataunits for c in df.columns}
                     if col in dataunits:
