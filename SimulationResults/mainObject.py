@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.12'
-__release__ = 220324
+__version__ = '0.60.14'
+__release__ = 220401
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -413,9 +413,9 @@ class SimResult(object):
         TrueOrFalse = bool(TrueOrFalse)
         self.useSimPandas = bool(TrueOrFalse)
         if TrueOrFalse:
-            _verbose(1, self.speak, " using SimPandas")
+            _verbose(1, self.speak, "\n-> using SimPandas <-")
         else:
-            _verbose(1, self.speak, " using Pandas")
+            _verbose(1, self.speak, "\n-> using Pandas <-")
 
     @property
     def index(self):
@@ -2259,7 +2259,7 @@ class SimResult(object):
              DoNotRepeatColors=None,
              grid=False,
              show=True,
-             hline=False,
+             hline=None,
              fig=None,
              num=None,
              figsize=(6, 4),
@@ -2289,12 +2289,12 @@ class SimResult(object):
         elif not isinstance(fig, Figure):
                 raise TypeError('fig must be a matplotlib.pyplot Figure instance')
 
-        if hline is not None:
+        if hline is None:
             pass
-        elif hline is True:
-            hline = 0
-        elif hline is False:
-            hline = None
+        elif type(hline) is bool:
+            hline = int(hline)
+        # elif hline is False:
+        #     hline = None
         elif type(hline) not in [int,float]:
             raise ValueError('hline must be int, float or bool')
 
