@@ -3546,7 +3546,31 @@ class SimResult(object):
         else:
             return tuple(fnmatch.filter(self.keys, pattern))
 
-    def find_Keys(self, criteria=None, reload=False) :
+    def find_keys(self, criteria=None, reload=False):
+        """
+        Will return a tuple of all the key names in case.
+
+        If criteria is provided, only keys matching the pattern will be returned.
+        Accepted criterias can be:
+            > well, group or region names.
+              All the keys related to that name will be returned
+            > attributes.
+              All the keys related to that attribute will be returned
+            > a fmatch compatible pattern:
+                Pattern     Meaning
+                *           matches everything
+                ?           matches any single character
+                [seq]       matches any character in seq
+                [!seq]      matches any character not in seq
+
+            additionally, ! can be prefixed to a key to return other keys but
+            that particular one:
+                '!KEY'     will return every key but not 'KEY'.
+                           It will only work with a single key.
+        """
+        return self.find_Keys(criteria=criteria, reload=reload)
+
+    def find_Keys(self, criteria=None, reload=False):
         """
         Will return a tuple of all the key names in case.
 
