@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.78.5'
-__release__ = 220328
+__version__ = '0.78.6'
+__release__ = 220419
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat']
 
 from sys import getsizeof
@@ -7080,8 +7080,8 @@ Copy of input object, shifted.
         print( str(type(self.DF.index)).split('.')[-1][:-2] + ': ' + str(len(self)) + ' entries, ' + str(self.index[0]) + ' to ' + str(self.index[-1]))
 
         columns = [ str(col) for col in self.columns ]
-        notnulls = [ str(self[col].notnull().sum()) for col in self.columns ]
-        dtypes = [ str(self[col].dtype) for col in self.columns ]
+        notnulls = [ str(self.iloc[:,col].notnull().sum()) for col in range(len(self.columns)) ]
+        dtypes = [ str(self.iloc[:,col].dtype) for col in range(len(self.columns)) ]
         units = [ str(self.units[col]) for col in self.columns ]
 
         print('Data columns (total ' + str(len(columns)) + ' columns):')
