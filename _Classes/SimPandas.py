@@ -5759,6 +5759,8 @@ Copy of input object, shifted.
 
         """
         if item is not None and item not in self.columns and item != self.index.name and item not in self.index.names:
+            if units in self.columns or units == self.index.name or units in self.index.names:
+                return self.set_Units(item,units)
             raise ValueError("the required item '" + str(item) + "' is not in this SimDataFrame.")
         if type(units) not in (str,dict) and hasattr(units,'__iter__'):
             if item is not None and type(item) is not str and hasattr(item,'__iter__'):
@@ -5794,7 +5796,7 @@ Copy of input object, shifted.
         if type(self.units) is dict:
             if not self.transposed:
                 if item is None and len(self.columns) > 1:
-                    raise ValueError("item must not be None")
+                    raise ValueError("This SimDataFrame has multiple columns, item parameter must be provided.")
                 elif item is None and len(self.columns) == 1:
                     return self.set_Units(units,[list(self.columns)[0]])
                 elif item is not None:
