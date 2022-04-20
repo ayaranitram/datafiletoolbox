@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.78.6'
-__release__ = 220419
+__version__ = '0.78.8'
+__release__ = 220420
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat']
 
 from sys import getsizeof
@@ -2703,7 +2703,11 @@ class SimDataFrame(DataFrame):
             return self.nameSeparator
 
     def set_index(self, key, drop=False, append=False, inplace=False, verify_integrity=False, **kwargs):
-        if key not in self.columns:
+        if type(key) is list:
+            if False in [k in self.columns for k in key]:
+                k = [str(k) for k in key if k not in self.columns ]
+                raise ValueError("The key '"+', '.join(k)+"' is not a column name of this SimDataFrame.")
+        elif key not in self.columns:
             raise ValueError("The key '"+str(key)+"' is not a column name of this SimDataFrame.")
         if inplace:
             indexUnits = self.get_Units(key)
@@ -2713,7 +2717,7 @@ class SimDataFrame(DataFrame):
             params = self._SimParameters
             params['index'] = None
             params['indexName'] = None
-            params['indexUnits'] = self.get_Units(key)[key]
+            params['indexUnits'] = self.get_Units(key)#[key]
             return SimDataFrame(data=self.DF.set_index(key, drop=drop, append=append, inplace=inplace, verify_integrity=verify_integrity, **kwargs), **params)
 
     def describe(self,*args,**kwargs):
