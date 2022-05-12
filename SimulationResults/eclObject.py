@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.25.6'
-__release__ = 220223
+__version__ = '0.25.7'
+__release__ = 220512
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
@@ -60,7 +60,7 @@ class ECL(_SimResult):
                         _verbose( self.speak, 3, "\nWARNING: '.SMSPEC' file found in 'RESULTS' subdirectory, not in the same folder the '.DATA' is present.\n")
 
             if os.path.isfile(SummaryFilePath):
-                if not os.path.isfile(SummaryFilePath[:-6]+'UNSMRY') and len(findMultiSummaryFiles(SummaryFilePath))==0:
+                if not os.path.isfile(_extension(SummaryFilePath)[2] + _extension(SummaryFilePath)[1] + '.UNSMRY') and len(findMultiSummaryFiles(SummaryFilePath)) == 0 :
                     raise FileNotFoundError( "No Summary files found:\n  -> i.e.: " + _extension(SummaryFilePath)[2] + _extension(SummaryFilePath)[1] +'.UNSMRY' )
                 if os.path.getsize(SummaryFilePath) <= 680 and ( 'ignoreSMSPEC' not in kwargs or bool(kwargs['ignoreSMSPEC']) is False):
                     raise CorruptedFileError("\nThe SMSPEC file seems to be corrupted.\nIf you think this is not corrupted add the keyword\n   'ignoreSPSPEC=True'\nto skip this check, but if the file corrupted a fatal error will occur!")
@@ -83,12 +83,11 @@ class ECL(_SimResult):
                 self.fill_FieldBasics()
 
             else:
-                # print("\n ERROR the file doesn't exists:\n  -> " + SummaryFilePath)
-                if not os.path.isfile(SummaryFilePath[:-6]+"UNSMRY"):
-                    raise FileNotFoundError( "the files doesn't exist:\n  -> " + SummaryFilePath[:-5]+".UNSMRY\n  -> " + SummaryFilePath )
+                if not os.path.isfile(_extension(SummaryFilePath)[2] + _extension(SummaryFilePath)[1] + '.UNSMRY'):
+                    raise FileNotFoundError( "the files doesn't exist:\n  -> " + _extension(SummaryFilePath)[1] + '.UNSMRY\n  -> ' + SummaryFilePath )
                 raise FileNotFoundError( "the file doesn't exist:\n  -> " + SummaryFilePath )
         else:
-            print("SummaryFilePath must be a string")
+            raise TypeError("SummaryFilePath must be a string")
 
     def reload(self):
         self.loadSummary(self.path)
