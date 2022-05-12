@@ -6,7 +6,7 @@ Created on Thu Jan 21 11:00:20 2021
 """
 
 __version__ = '0.20.2'
-__release__ = 220223
+__release__ = 220512
 __all__ = ['TABLE']
 
 from .mainObject import SimResult as _SimResult
@@ -30,7 +30,7 @@ class TABLE(_SimResult):
     object to contain data read from generic table files, like .txt or csv
 
     """
-    def __init__(self, inputFile=None, verbosity=2, sep=None, header='infer', units='infer', names=None, overwrite=True, index_col=False, **kwargs) :
+    def __init__(self, inputFile=None, verbosity=2, sep=None, header='infer', units='infer', names=None, overwrite=True, index_col=False, **kwargs):
         _SimResult.__init__(self, verbosity=verbosity)
         self.kind = TABLE
         self.results = {}
@@ -43,8 +43,8 @@ class TABLE(_SimResult):
         self.overwrite = False
         self.itemsCol = {}
         self.dates = None
-        if type(inputFile) is str and len(inputFile.strip()) > 0 :
-            if os.path.isfile(inputFile) :
+        if type(inputFile) is str and len(inputFile.strip()) > 0:
+            if os.path.isfile(inputFile):
                 self.readTable(inputFile, sep=sep, header=header, units=units, names=names, index_col=index_col)
             else:
                 print("file doesn't exists")
@@ -52,7 +52,7 @@ class TABLE(_SimResult):
             self.name = _extension(inputFile)[1]
             self.initialize(**kwargs)
 
-    def initialize(self, **kwargs) :
+    def initialize(self, **kwargs):
         """
         run intensive routines, to have the data loaded and ready
         """
@@ -65,26 +65,26 @@ class TABLE(_SimResult):
         self.extract_Groups()
         self.extract_Regions()
         self.get_Attributes(None, True)
-        if self.is_Key('DATES') and not self.is_Key('DATE') :
+        if self.is_Key('DATES') and not self.is_Key('DATE'):
             self['DATE'] = 'DATES'
-        if not self.is_Key('DATE') :
+        if not self.is_Key('DATE'):
             self.createDATES()
-        elif self.get_Unit('DATE') is None or self.get_Unit('DATE') != 'DATE' :
+        elif self.get_Unit('DATE') is None or self.get_Unit('DATE') != 'DATE':
             self.set_Units('DATE', 'DATE', overwrite=True)
-        if not self.is_Key('DATES') and self.is_Key('DATE') :
+        if not self.is_Key('DATES') and self.is_Key('DATE'):
             self['DATES'] = 'DATE'
-        if self.is_Key('DATES') and ( self.get_Unit('DATES') is None or self.get_Unit('DATES') != 'DATE' ) :
+        if self.is_Key('DATES') and ( self.get_Unit('DATES') is None or self.get_Unit('DATES') != 'DATE' ):
             self.set_Unit('DATES', 'DATE', overwrite=True)
-        if not self.is_Key('TIME') and self.is_Key('DATE') :
+        if not self.is_Key('TIME') and self.is_Key('DATE'):
             self.createTIME()
             # self['TIME'] = ( self('DATE').astype('datetime64[s]') - self.start ).astype('int') / (60*60*24)
-        if self.is_Key('TIME') and ( self.get_Unit('TIME') is None or self.get_Unit('TIME').upper() in ['', 'NONE'] ) :
+        if self.is_Key('TIME') and ( self.get_Unit('TIME') is None or self.get_Unit('TIME').upper() in ['', 'NONE'] ):
             self.set_Unit('TIME', 'DAYS', overwrite=True)
-        if not self.is_Key('YEAR') and self.is_Key('DATE') :
+        if not self.is_Key('YEAR') and self.is_Key('DATE'):
             self.createYEAR()
-        if not self.is_Key('MONTH') and self.is_Key('DATE') :
+        if not self.is_Key('MONTH') and self.is_Key('DATE'):
             self.createMONTH()
-        if not self.is_Key('DAY') and self.is_Key('DATE') :
+        if not self.is_Key('DAY') and self.is_Key('DATE'):
             self.createDAY()
         _SimResult.initialize(self, **kwargs)
 
@@ -114,13 +114,13 @@ class TABLE(_SimResult):
         """
         internal function to read a generic table from a file (header in first row, units in second row)
         """
-        if type(header) is int :
-            if type(units) is int :
-                if header != units :
+        if type(header) is int:
+            if type(units) is int:
+                if header != units:
                     header = [header, units]
-        elif type(header) in [list, tuple] :
-            if type(units) is int :
-                if units not in header :
+        elif type(header) in [list, tuple]:
+            if type(units) is int:
+                if units not in header:
                     header = list(header)+[units]
         elif type(header) is str and header.strip().lower() == 'infer':
             pass  # to be implemented
@@ -140,7 +140,7 @@ class TABLE(_SimResult):
                     header = list(header) + [units]
 
         user_index_col = index_col
-        if index_col is False and ( type(header) is not int and header != 'infer' ) :
+        if index_col is False and ( type(header) is not int and header != 'infer' ):
             index_col = None
 
         try:
@@ -172,7 +172,7 @@ class TABLE(_SimResult):
             for col in NewFrame.columns:
                 NewKey = ' '.join(list(map(str,col[0:-1]))).strip().replace(' ','_').upper()
                 NewNames[col] = NewKey
-                if col[-1].startswith('Unnamed:') :
+                if col[-1].startswith('Unnamed:'):
                     NewUnits = ''
                     unitsMessage = ''
                 else:
@@ -194,7 +194,7 @@ class TABLE(_SimResult):
         self.Frames[inputFile] = NewFrame
 
     # support functions for get_Vector:
-    def loadVector(self, key, frame=None) :
+    def loadVector(self, key, frame=None):
         """
         internal function to return a numpy vector from the Frame files
         """
@@ -249,11 +249,11 @@ class TABLE(_SimResult):
                 if col != self.itemsCol[frame]:
                     for item in set(self.Frames[frame][self.itemsCol[frame]]):
                         if not self.Frames[frame][ self.Frames[frame][self.itemsCol[frame]] == item ][col].isna().all():
-                            if col not in ['DATE','DATES','TIME','YEARS','MONTHS','DAYS'] :
+                            if col not in ['DATE','DATES','TIME','YEARS','MONTHS','DAYS']:
                                 keys.append(str(col) + ':' + str(item))
         self.keys = tuple(sorted(set(keys)))
 
-    def list_Keys(self, pattern=None, reload=False) :
+    def list_Keys(self, pattern=None, reload=False):
         """
         Return a StringList of summary keys matching @pattern.
 
@@ -267,16 +267,16 @@ class TABLE(_SimResult):
         """
         if len(self.keys) == 0:
             self.extract_Keys()
-        if pattern is None :
+        if pattern is None:
             return self.keys
         else:
             keysList = []
             for key in self.keys:
-                if pattern in key :
+                if pattern in key:
                     keysList.append(key)
             return tuple( keysList )
 
-    # def extract_Wells(self) :
+    # def extract_Wells(self):
     #     """
     #     Will return a list of all the well names in case.
 
@@ -291,7 +291,7 @@ class TABLE(_SimResult):
 
     #     return self.wells
 
-    # def extract_Groups(self, pattern=None, reload=False) :
+    # def extract_Groups(self, pattern=None, reload=False):
     #     """
     #     Will return a list of all the group names in case.
 
@@ -303,25 +303,25 @@ class TABLE(_SimResult):
     #     groupsList = list( set( groupsList ) )
     #     groupsList.sort()
     #     self.groups = tuple( groupsList )
-    #     if pattern is not None :
+    #     if pattern is not None:
     #         results = []
-    #         for group in self.groups :
-    #             if pattern in group :
+    #         for group in self.groups:
+    #             if pattern in group:
     #                 results.append(group)
     #         return tuple(results)
     #     else:
     #         return self.groups
 
-    # def extract_Regions(self, pattern=None) :
+    # def extract_Regions(self, pattern=None):
     #     # preparing object attribute
     #     regionsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
     #     regionsList = list( set( regionsList ) )
     #     regionsList.sort()
     #     self.groups = tuple( regionsList )
-    #     if pattern is not None :
+    #     if pattern is not None:
     #         results = []
-    #         for group in self.groups :
-    #             if pattern in group :
+    #         for group in self.groups:
+    #             if pattern in group:
     #                 results.append(group)
     #         return tuple(results)
     #     else:
@@ -351,7 +351,7 @@ class TABLE(_SimResult):
             return True
         return False
 
-    def find_index(self) :
+    def find_index(self):
         """
         identify the column that is common to all the frames, to be used as index.
         If there is a single frame the first column is used.
@@ -359,16 +359,16 @@ class TABLE(_SimResult):
         # check current KeyIndex
         KeyIndex = True
         IndexVector = None
-        for frame in self.Frames :
-            if self.DTindex not in self.Frames[frame].columns :
+        for frame in self.Frames:
+            if self.DTindex not in self.Frames[frame].columns:
                 KeyIndex = False
                 break
-            elif IndexVector is None :
+            elif IndexVector is None:
                 IndexVector = self.Frames[frame][self.DTindex]
-            elif not IndexVector.equals( self.Frames[frame][IndexVector] ) :
+            elif not IndexVector.equals( self.Frames[frame][IndexVector] ):
                 KeyIndex = False
                 break
-        if KeyIndex :
+        if KeyIndex:
             if self.DTindex in ['DATE','DATES']:
                 self.DTindexValues = self.dates
             else:
@@ -379,23 +379,23 @@ class TABLE(_SimResult):
             return self.DTindex
 
         # look for other index
-        for Key in ('TIME', 'DATE', 'DATES', 'DAYS', 'MONTHS', 'YEARS') + self.keys :
+        for Key in ('TIME', 'DATE', 'DATES', 'DAYS', 'MONTHS', 'YEARS') + self.keys:
             KeyIndex = True
             IndexVector = None
-            for frame in self.Frames :
-                if Key not in self.Frames[frame].columns :
+            for frame in self.Frames:
+                if Key not in self.Frames[frame].columns:
                     KeyIndex = False
                     break
-                elif IndexVector is None :
+                elif IndexVector is None:
                     IndexVector = np.array(sorted(set(self.Frames[frame][Key].to_list())))
                 elif not IndexVector.equals( np.array(sorted(set(self.Frames[frame][Key]))) ):
                     KeyIndex = False
                     break
-            if KeyIndex :
+            if KeyIndex:
                 self.DTindex = Key
                 break
 
-        if KeyIndex :
+        if KeyIndex:
             if Key in ['DATE','DATES']:
                 self.DTindexValues = self.dates
             else:
@@ -407,7 +407,7 @@ class TABLE(_SimResult):
         else:
             self.DTindex = None
 
-    def get_Unit(self, Key='--EveryType--') :
+    def get_Unit(self, Key='--EveryType--'):
         """
         returns a string identifiying the unit of the requested Key
 
@@ -417,63 +417,63 @@ class TABLE(_SimResult):
         for all the keys in the results file
 
         """
-        if type(Key) is str and Key.strip() != '--EveryType--' :
+        if type(Key) is str and Key.strip() != '--EveryType--':
             Key = Key.strip().upper()
-            if Key in self.units :
+            if Key in self.units:
                 return self.units[Key]
-            if Key in ['DATES','DATE'] :
+            if Key in ['DATES','DATE']:
                     self.units[Key] = 'DATE'
                     return 'DATE'
-            if Key in self.keys :
-                if ':' in Key :
-                    if Key[0] == 'W' :
-                        if Key.split(':')[-1] in self.wells :
+            if Key in self.keys:
+                if ':' in Key:
+                    if Key[0] == 'W':
+                        if Key.split(':')[-1] in self.wells:
                             return self.get_Unit(Key.split(':')[0])
-                    if Key[0] == 'G' :
-                        if Key.split(':')[-1] in self.groups :
+                    if Key[0] == 'G':
+                        if Key.split(':')[-1] in self.groups:
                             return self.get_Unit(Key.split(':')[0])
-                    if Key[0] == 'R' :
-                        if Key.split(':')[-1] in self.regions :
+                    if Key[0] == 'R':
+                        if Key.split(':')[-1] in self.regions:
                             return self.get_Unit(Key.split(':')[0])
                 return None
             else:
-                if Key[0] == 'W' :
+                if Key[0] == 'W':
                     UList=[]
-                    for W in self.get_Wells() :
-                        if Key+':'+W in self.units :
+                    for W in self.get_Wells():
+                        if Key+':'+W in self.units:
                             UList.append(self.units[Key+':'+W])
-                    if len(set(UList)) == 1 :
+                    if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
                         return UList[0]
                     else:
                         return None
-                elif Key[0] == 'G' :
+                elif Key[0] == 'G':
                     UList=[]
-                    for G in self.get_Groups() :
-                        if Key+':'+G in self.units :
+                    for G in self.get_Groups():
+                        if Key+':'+G in self.units:
                             UList.append(self.units[Key+':'+G])
-                    if len(set(UList)) == 1 :
+                    if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
                         return UList[0]
                     else:
                         return None
-                elif Key[0] == 'R' :
+                elif Key[0] == 'R':
                     UList=[]
-                    for R in self.get_Regions() :
-                        if Key+':'+R in self.units :
+                    for R in self.get_Regions():
+                        if Key+':'+R in self.units:
                             UList.append(self.units[Key+':'+R])
-                    if len(set(UList)) == 1 :
+                    if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
                         return UList[0]
                     else:
                         return None
                 UList = None
 
-        elif type(Key) is str and Key.strip() == '--EveryType--' :
+        elif type(Key) is str and Key.strip() == '--EveryType--':
             Key = []
             KeyDict = {}
-            for each in self.keys :
-                if ':' in each :
+            for each in self.keys:
+                if ':' in each:
                     Key.append( _mainKey(each) )
                     KeyDict[ _mainKey(each) ] = each
                 else:
@@ -481,28 +481,28 @@ class TABLE(_SimResult):
             Key = list( set (Key) )
             Key.sort()
             tempUnits = {}
-            for each in Key :
-                if each in self.units :
+            for each in Key:
+                if each in self.units:
                     tempUnits[each] = self.units[each]
-                elif each in self.keys and ( each != 'DATES' and each != 'DATE' ) :
-                    if self.results.unit(each) is None :
+                elif each in self.keys and ( each != 'DATES' and each != 'DATE' ):
+                    if self.results.unit(each) is None:
                         tempUnits[each] = self.results.unit(each)
                     else:
                         tempUnits[each] = self.results.unit(each).strip('( )').strip("'").strip('"')
-                elif each in self.keys and ( each == 'DATES' or each == 'DATE' ) :
+                elif each in self.keys and ( each == 'DATES' or each == 'DATE' ):
                     tempUnits[each] = 'DATE'
                 else:
-                    if KeyDict[each] in self.units :
+                    if KeyDict[each] in self.units:
                         tempUnits[each] = self.units[KeyDict[each]]
-                    elif KeyDict[each] in self.keys :
-                        if self.results.unit(KeyDict[each]) is None :
+                    elif KeyDict[each] in self.keys:
+                        if self.results.unit(KeyDict[each]) is None:
                             tempUnits[each] = self.results.unit(KeyDict[each])
                         else:
                             tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
             return tempUnits
         elif type(Key) in [list,tuple]:
             tempUnits = {}
-            for each in Key :
-                if type(each) is str :
+            for each in Key:
+                if type(each) is str:
                     tempUnits[each] = self.get_Unit(each)
             return tempUnits

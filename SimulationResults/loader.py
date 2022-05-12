@@ -6,7 +6,7 @@ Created on Wed May 13 00:45:52 2020
 """
 
 __version__ = '0.54.3'
-__release__ = 220223
+__release__ = 220512
 __all__ = ['loadSimulationResults']
 
 from .._common.inout import _extension
@@ -29,7 +29,7 @@ except ImportError:
     print ( 'failed import ECL, usually due to fail to import libecl')
 
 
-def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
+def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs):
     """
     Loads the results of reservoir simulation into SimResult object.
     This library can read:
@@ -39,69 +39,69 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
         .XLSX files exported from datafiletoolbox
         .PKL files from previously saved SimResults instances
     """
-    for verbKey in  ['speak','verbosity','verbose'] :
-        if verbKey in kwargs and type(kwargs[verbKey]) in [bool,int,float] :
-            if Verbosity is None :
+    for verbKey in  ['speak','verbosity','verbose']:
+        if verbKey in kwargs and type(kwargs[verbKey]) in [bool,int,float]:
+            if Verbosity is None:
                 Verbosity = kwargs[verbKey]
                 del kwargs[verbKey]
 
-    if Verbosity is None :
+    if Verbosity is None:
         Verbosity = 2
-    elif type(Verbosity) in [int] :
+    elif type(Verbosity) in [int]:
         pass
-    elif type(Verbosity) in [bool,float] :
+    elif type(Verbosity) in [bool,float]:
         Verbosity = int(Verbosity)
     else:
         Verbosity = 2
 
-    if FullPath is None :
+    if FullPath is None:
         print( 'Please provide the path to the simulation results as string.')
         return None
-    if Simulator is None :
-        if _extension(FullPath)[0].upper() in ['.SMSPEC','.UNSMRY','.DATA','.AFI'] :
+    if Simulator is None:
+        if _extension(FullPath)[0].upper() in ['.SMSPEC','.UNSMRY','.DATA','.AFI']:
             Simulator = 'ECLIPSE'
-        elif _extension(FullPath)[0].upper() in ['.DAT','.SSS'] :
+        elif _extension(FullPath)[0].upper() in ['.DAT','.SSS']:
             Simulator = 'VIP'
-        elif _extension(FullPath)[0].upper() in ['.FSC','.SS_FIELD','.SS_WELLS','.SS_REGIONS','.SS_NETWORK'] :
+        elif _extension(FullPath)[0].upper() in ['.FSC','.SS_FIELD','.SS_WELLS','.SS_REGIONS','.SS_NETWORK']:
             Simulator = 'NEXUS'
-        elif _extension(FullPath)[0].upper() in ['.CSV'] :
+        elif _extension(FullPath)[0].upper() in ['.CSV']:
             Simulator = 'NexusDesktopSimResult'
-        elif _extension(FullPath)[0].upper() in ['.XLSX'] :
+        elif _extension(FullPath)[0].upper() in ['.XLSX']:
             Simulator = 'SimPandasExcel'
-        elif _extension(FullPath)[0].upper() in ['.TXT'] :
+        elif _extension(FullPath)[0].upper() in ['.TXT']:
             Simulator = 'DataTable'
-        elif _extension(FullPath)[0].upper() in ['.PKL'] :
+        elif _extension(FullPath)[0].upper() in ['.PKL']:
             Simulator = 'Pickle'
-        elif _extension(FullPath)[0].upper() in ['.RSM'] :
+        elif _extension(FullPath)[0].upper() in ['.RSM']:
             Simulator = 'RSM'
-        elif _extension(FullPath)[0].upper() in ['.H5'] :
+        elif _extension(FullPath)[0].upper() in ['.H5']:
             Simulator = 'H5'
-    elif type(Simulator) is str and len(Simulator.strip()) > 0 :
+    elif type(Simulator) is str and len(Simulator.strip()) > 0:
         Simulator = Simulator.strip().upper()
 
     _loadingECLfile[0] = False
     OBJ = None
-    if Simulator in ['ECL','E100','E300','ECLIPSE','IX','INTERSECT','TNAV','TNAVIGATOR'] :
-        if okECL is True :
+    if Simulator in ['ECL','E100','E300','ECLIPSE','IX','INTERSECT','TNAV','TNAVIGATOR']:
+        if okECL is True:
             _loadingECLfile[0] = True
             OBJ = _ECL(FullPath,verbosity=Verbosity,**kwargs)
         else:
             print( 'ECL object not loaded')
-    elif Simulator in ['VIP'] :
+    elif Simulator in ['VIP']:
         OBJ = _VIP(FullPath,verbosity=Verbosity,**kwargs)
-    elif Simulator in ['NX','NEXUS'] :
+    elif Simulator in ['NX','NEXUS']:
         OBJ = _VIP(FullPath,verbosity=Verbosity,**kwargs)
-    elif Simulator in ['NexusDesktopSimResult'] :
+    elif Simulator in ['NexusDesktopSimResult']:
         OBJ = _NexusDesktopCSV(FullPath,verbosity=Verbosity,**kwargs)
-    elif Simulator in ['SimPandasExcel'] :
+    elif Simulator in ['SimPandasExcel']:
         OBJ = _XLSX(FullPath,verbosity=Verbosity,**kwargs)
-    elif Simulator in ['DataTable'] :
+    elif Simulator in ['DataTable']:
         OBJ = _TABLE(FullPath,verbosity=Verbosity,**kwargs)
-    elif Simulator in ['RSM'] :
+    elif Simulator in ['RSM']:
         OBJ = _RSM(FullPath,verbosity=Verbosity,**kwargs)
-    elif Simulator in ['H5'] :
+    elif Simulator in ['H5']:
         OBJ = _H5(FullPath,verbosity=Verbosity,**kwargs)
-    elif Simulator in ['Pickle'] :
+    elif Simulator in ['Pickle']:
         import os
         if not os.path.isfile(FullPath):
             raise FileNotFoundError("File doesn't exists:\n  "+str(FullPath))
@@ -111,7 +111,7 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs) :
             OBJ.set_Verbosity(Verbosity)
 
     _loadingECLfile[0] = False
-    if OBJ is not None and Verbosity != 0 :
+    if OBJ is not None and Verbosity != 0:
         if ('preload' not in kwargs) or ('preload' in kwargs and kwargs['preload'] is True):
             try:
                 print(OBJ.__repr__())
