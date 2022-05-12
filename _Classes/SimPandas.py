@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.78.8'
-__release__ = 220420
+__version__ = '0.78.9'
+__release__ = 220511
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat']
 
 from sys import getsizeof
@@ -1287,7 +1287,7 @@ class SimSeries(Series):
                     result = self.S.add(other.S, fill_value=0)
                     params['units'] = self.units+'+'+other.units
                 try:
-                    params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                    params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
                 except ValueError:
                     params['dtype'] = result.dtype
                 except TypeError:
@@ -1302,7 +1302,7 @@ class SimSeries(Series):
             result = self.S.add(other, fill_value=0)
             newName = _stringNewName(self._CommonRename(SimSeries(other, **self._SimParameters))[2])
             try:
-                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
             except ValueError:
                 params['dtype'] = result.dtype
             params['name'] = newName
@@ -1311,7 +1311,7 @@ class SimSeries(Series):
         # let's Pandas deal with other types, maintain units, dtype and name
         result = self.as_Series() + other
         try:
-            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+            params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
         except ValueError:
             params['dtype'] = result.dtype
         return SimSeries(data=result, **params)
@@ -1340,7 +1340,7 @@ class SimSeries(Series):
                     result = self.sub(other, fill_value=0)
                     params['units'] = self.units+'-'+other.units
                 try:
-                    params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                    params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
                 except ValueError:
                     params['dtype'] = result.dtype
                 except TypeError:
@@ -1355,7 +1355,7 @@ class SimSeries(Series):
             result = self.S.sub(other, fill_value=0)
             newName = _stringNewName(self._CommonRename(SimSeries(other, **self._SimParameters))[2])
             try:
-                params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
             except ValueError:
                 params['dtype'] = result.dtype
             params['name'] = newName
@@ -1364,7 +1364,7 @@ class SimSeries(Series):
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() - other
         try:
-            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+            params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
         except ValueError:
             params['dtype'] = result.dtype
         return SimSeries(data=result, **params)
@@ -1401,7 +1401,7 @@ class SimSeries(Series):
                     result = self.mul(other)
                     params['units'] = self.units + '*' + other.units
                 try:
-                    params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                    params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
                 except ValueError:
                     params['dtype'] = result.dtype
                 except TypeError:
@@ -1413,7 +1413,7 @@ class SimSeries(Series):
 
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() * other
-        params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+        params['dtype'] = self.dtype if (result.astype(self.dtype).equals(result)) else result.dtype
         return SimSeries(data=result, **params )
 
     def __rmul__(self, other):
@@ -1448,7 +1448,7 @@ class SimSeries(Series):
                     result = self.truediv(other)
                     params['units'] = self.units + '/' + other.units
                 try:
-                    params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                    params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
                 except ValueError:
                     params['dtype'] = result.dtype
                 except TypeError:
@@ -1461,7 +1461,7 @@ class SimSeries(Series):
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() / other
         try:
-            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+            params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
         except ValueError:
             params['dtype'] = result.dtype
         return SimSeries(data=result, **params)
@@ -1497,7 +1497,7 @@ class SimSeries(Series):
                 else:
                     result = self.floordiv(other)
                     params['units'] = self.units + '/' + other.units
-                params['dtype'] = result.dtype  # self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                params['dtype'] = result.dtype  # self.dtype if result.astype(self.dtype).equals(result) else result.dtype
                 params['name'] = newName
                 return SimSeries(data=result, **params)
             else:
@@ -1531,7 +1531,7 @@ class SimSeries(Series):
                 else:
                     result = self.mod(other)
                 try:
-                    params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                    params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
                 except ValueError:
                     params['dtype'] = result.dtype
                 except TypeError:
@@ -1544,7 +1544,7 @@ class SimSeries(Series):
         # let's Pandas deal with other types, maintain units and dtype
         result = self.as_Series() % other
         try:
-            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+            params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
         except ValueError:
             params['dtype'] = result.dtype
         return SimSeries(data=result, **params)
@@ -1571,7 +1571,7 @@ class SimSeries(Series):
                 else:
                     result = self.pow(other)
                 try:
-                    params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+                    params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
                 except ValueError:
                     params['dtype'] = result.dtype
                 except TypeError:
@@ -1584,7 +1584,7 @@ class SimSeries(Series):
         # let's Pandas deal with other types(types with no units), maintain units and dtype
         result = self.as_Series() ** other
         try:
-            params['dtype'] = self.dtype if (result.astype(self.dtype) == result).all() else result.dtype
+            params['dtype'] = self.dtype if result.astype(self.dtype).equals(result) else result.dtype
         except ValueError:
             params['dtype'] = result.dtype
         return SimSeries(data=result, **params)
