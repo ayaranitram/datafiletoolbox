@@ -878,7 +878,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
                         print('<Plot> the Y vector ' + str( Y_Keys[y]) + ' from the model ' + str( SimResultObjects[s] ) + ' contains less than tha its X vector ' + str( X_Key[0] ) + '\n       len(Y):' + str(len(Y)) + ' != len(X):' + str(len(X)))
                     else:
                         Yax = Y_Axis[y]
-                        print('\n\ndebuging:','\nlen(sims)',len(SimResultObjects),'\nlen(Y_Keys)',len(Y_Keys),'\ns',s,'\ny',y,'\nObjectsColors',ObjectsColors,'\nSeriesColors',SeriesColors,'\nlinewidth',linewidth,'\nlinestyle',linestyle,'\nmarkers',markers,'\nmarkersize',markersize)
+                        # print('\n\ndebuging:','\nlen(sims)',len(SimResultObjects),'\nlen(Y_Keys)',len(Y_Keys),'\ns',s,'\ny',y,'\nObjectsColors',ObjectsColors,'\nSeriesColors',SeriesColors,'\nlinewidth',linewidth,'\nlinestyle',linestyle,'\nmarkers',markers,'\nmarkersize',markersize)
                         if len(SimResultObjects) == 1:
                             Lc = SeriesColors[y]
                             Lw = linewidth[y]
