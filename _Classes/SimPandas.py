@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.78.9'
-__release__ = 220511
+__version__ = '0.79.0'
+__release__ = 220518
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat']
 
 from sys import getsizeof
@@ -3362,7 +3362,8 @@ Copy of input object, shifted.
     #     selfGrouped = self.DF.groupby(by=by, axis=axis, level=level, as_index=as_index, sort=sort, group_keys=group_keys, squeeze=squeeze, observed=observed, dropna=dropna)
     #     return SimDataFrame(data=selfGrouped, **self._SimParameters )
 
-    def daily(self, outBy='mean', datetimeIndex=False, by=None):
+    def daily(self, outBy='mean', datetimeIndex=False, by=None,
+              complete_index=False, fillna_method=None, **kwargs):
         """
         return a dataframe with a single row per day.
         index must be a date type.
@@ -3378,7 +3379,7 @@ Copy of input object, shifted.
             sum : returns the summation of all the values per year
             count : returns the number of rows per year
 
-        by :  label, or list of labels
+        by :  label or list of labels, optional.
             Used to determine the groups for the groupby.
             If by is a function, it’s called on each value of the object’s index.
             If a dict or Series is passed, the Series or dict VALUES will be used
@@ -3386,9 +3387,55 @@ Copy of input object, shifted.
             If an ndarray is passed, the values are used as-is to determine the groups.
             A label or list of labels may be passed to group by the columns in self.
             Notice that a tuple is interpreted as a (single) key.
+
+        complete_index : bool, optional. Default False
+            Will reindex the dataframe to new index containing every day between
+            the first and the last dates in the input index.
+            If set to True, by default will autocomplete the null values using
+            linear interpolation considering the length of time intervals from
+            the index.
+            This behavior can be changed by setting the `fillna´ parameter.
+
+        fillna_method : str or False, optional. Default is False
+            If not False, will fill null values using the indicated method.
+            Available method to fill NA are the methods from Pandas fillna and
+            Pandas interpolate.
+            Methods from fillna:
+                'pad' / 'ffill': propagate last valid observation forward to
+                                 next valid observation.
+                'backfill' / 'bfill': use next valid observation to fill gap.
+            Methods from interpolate:
+                'linear': Ignore the index and treat the values as equally spaced.
+                'time': Works on daily and higher resolution data to interpolate given length of interval.
+                'index', 'values': use the actual numerical values of the index.
+            Methods from scipy.interpolate.interp1d (passed from interpolate):
+                'nearest'
+                'zero'
+                'slinear'
+                'quadratic'
+                'cubic'
+                'spline'
+                'barycentric'
+                'polynomial'
+                These methods use the numerical values of the index.
+                Both 'polynomial' and 'spline' require that you also specify
+                an order (int), e.g.
+                    df.daily(fillna_method='polynomial', order=5).
+
         """
-        if type(outBy) is bool:
+        if type(self.index) is not pd.DatetimeIndex:
+            raise TypeError('index must be of datetime type.')
+
+        if fillna_method in ['polynomial', 'spline']:
+            if 'order' not in kwargs:
+                raise ValueError("The '" + fillna_method + "' fillna_method requieres one additional parameter 'order':\n   df.daily(fillna_method='polynomial', order=5)")
+            if type(kwargs['order']) is not int:
+                raise ValueError("The 'order' parameter must be an integer:\n   df.daily(fillna_method='polynomial', order=5)")
+
+        if type(outBy) is bool and type(datetimeIndex) is bool:
             outBy, datetimeIndex = 'mean', outBy
+        elif type(outBy) is bool and type(datetimeIndex) is not bool:
+            outBy, datetimeIndex = datetimeIndex, outBy
 
         if by is None:
             by = []
@@ -3401,14 +3448,11 @@ Copy of input object, shifted.
         elif by in self.columns:
             by =  [by]
         else:
-            by =  [by]
+            by =  [by]  # raise ValueError(str(by) + ' is not a column in this dataframe')
         userby = by if len(by) > 0 else None
         by = [self.index.year, self.index.month, self.index.day] + by
 
-        try:
-            result = self.DF.groupby(by=by)  # [self.index.year, self.index.month, self.index.day]
-        except:
-            raise TypeError('index must be of datetime type.')
+        result = self.DF.groupby(by=by)
         if outBy == 'first':
             result = result.first()
         elif outBy == 'last':
@@ -3441,25 +3485,82 @@ Copy of input object, shifted.
         else:
             raise ValueError(" outBy parameter is not valid.")
 
+        if complete_index:
+            if len(by) > 3:  # user criteria to group by
+                indexBackup = pd.MultiIndex.from_tuples([(int(i[0]), int(i[1]), int(i[2])) for i in result.index])
+                result.index = pd.MultiIndex.from_tuples([tuple(i[3:]) for i in result.index]) if len(by) > 4 else [i[3] for i in result.index]
+                result.index.names = by[3:]
+                result = result.reset_index()
+            else:
+                indexBackup = result.index
+
+            result.index = pd.to_datetime([str(YYYY) + '-' + str(MM).zfill(2)+  '-' + str(DD).zfill(2) for YYYY, MM, DD in indexBackup])
+            result.index.name = 'DATE'
+            if len(by) == 4:
+                newDF = None
+                for group in result[by[3]].unique():
+                    groupDF = result[result[by[3]] == group]
+                    if len(groupDF) == 0:
+                        continue
+                    daily_index = pd.date_range(min(groupDF.index), max(groupDF.index), freq='D')
+                    groupDF = groupDF.reindex(index=daily_index)
+
+                    if fillna_method is False:
+                        pass
+                    elif fillna_method is None:
+                        groupDF = groupDF.interpolate(method='time').fillna(method='pad')
+                    elif fillna_method in ['pad', 'ffill', 'backfill', 'bfill']:
+                        groupDF = groupDF.fillna(method=fillna_method)
+                    elif fillna_method in ['linear', 'time', 'index', 'values', 'nearest',
+                                           'zero', 'slinear', 'quadratic', 'cubic', 'barycentric']:
+                        groupDF = groupDF.interpolate(method=fillna_method).fillna(method='pad')
+                    elif fillna_method in ['polynomial', 'spline']:
+                        groupDF = groupDF.interpolate(method=fillna_method, order=kwargs['order']).fillna(method='pad')
+                    if newDF is None:
+                        newDF = groupDF.copy()
+                    else:
+                        newDF = newDF.append(groupDF)
+
+            elif len(by) == 3:
+                daily_index = pd.date_range(min(result.index), max(result.index), freq='D')
+                result = result.reindex(index=daily_index)
+
+                if fillna_method is False:
+                    pass
+                elif fillna_method is None:
+                    result = result.interpolate(method='time')
+                elif fillna_method in ['pad', 'ffill', 'backfill', 'bfill']:
+                    result = result.fillna(method=fillna_method)
+                elif fillna_method in ['linear', 'time', 'index', 'values', 'nearest',
+                                       'zero', 'slinear', 'quadratic', 'cubic', 'barycentric']:
+                    result = result.interpolate(method=fillna_method)
+                elif fillna_method in ['polynomial', 'spline']:
+                    result = result.interpolate(method=fillna_method, order=kwargs['order'])
+            else:
+                raise ValueError('Not able to reindex grouping by more than one column.')
+
+            by = [result.index.year, result.index.month, result.index.day] + by[3:]
+            result = result.groupby(by=by).first()
+
         output = SimDataFrame(data=result, **self._SimParameters)
         if userby is None:
-            output.index = pd.MultiIndex.from_tuples([(int(y),int(m),int(d)) for y,m,d in output.index ])
+            output.index = pd.MultiIndex.from_tuples([(int(y) ,int(m), int(d)) for y, m, d in output.index])
         elif len(userby) == 1:
-            output.index = pd.MultiIndex.from_tuples([(int(i[0]),int(i[1]),int(i[2]),i[3]) for i in output.index ])
+            output.index = pd.MultiIndex.from_tuples([(int(i[0]), int(i[1]), int(i[2]),i[3]) for i in output.index])
         else:
-            output.index = pd.MultiIndex.from_tuples([(int(i[0]),int(i[1]),int(i[2]),) + tuple(i[3:]) for i in output.index ])
+            output.index = pd.MultiIndex.from_tuples([(int(i[0]), int(i[1]), int(i[2]),) + tuple(i[3:]) for i in output.index])
 
         if datetimeIndex:
             if userby is None:
-                output.index = pd.to_datetime( [ str(YYYY)+'-'+str(MM).zfill(2)+'-'+str(DD).zfill(2) for YYYY,MM,DD in output.index ] )
+                output.index = pd.to_datetime([str(YYYY) + '-' + str(MM).zfill(2)+  '-' + str(DD).zfill(2) for YYYY, MM, DD in output.index])
                 output.index.names = ['DATE']
                 output.index.name = 'DATE'
                 if 'DATE' not in output.get_Units():
                     output.set_Units('date','DATE')
             elif len(userby) == 1:
-                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-'+str(i[1]).zfill(2)+'-'+str(i[2]).zfill(2)),i[3]) for i in output.index ])
+                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0]) + '-' + str(i[1]).zfill(2) + '-' + str(i[2]).zfill(2)), i[3]) for i in output.index])
             else:
-                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0])+'-'+str(i[1]).zfill(2)+'-'+str(i[2]).zfill(2)),) + tuple(i[3:]) for i in output.index ])
+                output.index = pd.MultiIndex.from_tuples([(pd.to_datetime(str(i[0]) + '-' + str(i[1]).zfill(2) + '-' + str(i[2]).zfill(2)), ) + tuple(i[3:]) for i in output.index])
             if userby is not None:
                 output.index.names = ['DATE'] + userby
                 output.index.name = 'DATE' + '_' + '_'.join(map(str,userby))
@@ -3469,6 +3570,7 @@ Copy of input object, shifted.
         else:
             output.index.names = ['YEAR', 'MONTH', 'DAY'] + userby
             output.index.name = 'YEAR_MONTH_DAY' + '_' + '_'.join(map(str,userby))
+
         if not datetimeIndex:
             if 'YEAR' not in output.get_Units():
                 output.set_Units('year','YEAR')
@@ -6433,17 +6535,23 @@ Copy of input object, shifted.
         """
         return SimDataFrame(data=self.DF.cumsum(skipna=skipna, *args, **kwargs),**self._SimParameters)
 
-    def jitter(self,std=0.10):
+    def jitter(self, std=0.10):
         """
         add jitter the values of the SimDataFrame
         """
-        return jitter(self,std)
+        return jitter(self, std)
 
-    def melt(self,**kwargs):
+    def melt(self, **kwargs):
         from .._common.functions import _meltDF
-        return _meltDF(self,FullOutput=False)
+        melted = _meltDF(self, FullOutput=False)
+        if len(melted[melted.columns[-1]].unique()) == 1:
+            params = self._SimParameters
+            params['units'] = {melted.columns[0]:melted[melted.columns[-1]].unique()[0]}
+            return SimDataFrame(data=melted.iloc[:,:-1], **params)
+        else:
+            return melted
 
-    def DaysInYear(self,column=None):
+    def DaysInYear(self, column=None):
         """
         returns a SimSeries with the number of days in a particular year
 
@@ -6459,7 +6567,7 @@ Copy of input object, shifted.
         """
         return self.daysInYear(column=column)
 
-    def daysinyear(self,column=None):
+    def daysinyear(self, column=None):
         """
         returns a SimSeries with the number of days in a particular year
 
@@ -6475,7 +6583,7 @@ Copy of input object, shifted.
         """
         return self.daysInYear(column=column)
 
-    def daysInYear(self,column=None):
+    def daysInYear(self, column=None):
         """
         returns a SimSeries with the number of days in a particular year
 
