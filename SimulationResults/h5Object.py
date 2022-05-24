@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.4'
-__release__ = 220223
+__version__ = '0.1.5'
+__release__ = 220524
 __all__ = ['H5']
 
 from .mainObject import SimResult as _SimResult
@@ -106,7 +106,11 @@ class H5(_SimResult):
             smspec = file.read()
 
         keywords_index =  smspec.index('\x00\x00\x10KEYWORDS')
-        keywords_index = keywords_index + smspec[keywords_index:].index('@CHAR') + 5 + 8
+        # if '@CHAR' in smspec[keywords_index:]:
+        #     keywords_index = keywords_index + smspec[keywords_index:].index('@CHAR') + 5 + 8
+        # else:
+        #     keywords_index = keywords_index + smspec[keywords_index:].index('CHAR') + 4 + 8
+        keywords_index += 27
         last_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x10')
         keywords = smspec[keywords_index:last_index]
         keywords = [ keywords[i:i+8].strip() for i in range(0,len(keywords),8) ]
@@ -123,18 +127,27 @@ class H5(_SimResult):
         else:
             names_index = smspec.index('NAMES')
 
-        if '@C0' in smspec[names_index:]:
-            name_len = smspec[names_index + smspec[names_index:].index('@C0') + 2:names_index + smspec[names_index:].index('@C0') + 5]
+        # if '@C0' in smspec[names_index:]:
+        #     name_len = smspec[names_index + smspec[names_index:].index('@C0') + 2:names_index + smspec[names_index:].index('@C0') + 5]
 
-            if name_len.isdigit():
-                name_len = int(name_len)
-                names_index = names_index + smspec[names_index:].index('@C0') + 5 + 8  # 8 bits
-            else:
-                name_len = 8
-                names_index = names_index + smspec[names_index:].index('@CHAR') + 5 + 8  #.index('\x00\x00\x03H')
+        #     if name_len.isdigit():
+        #         name_len = int(name_len)
+        #         names_index = names_index + smspec[names_index:].index('@C0') + 5 + 8  # 8 bits
+        #     else:
+        #         name_len = 8
+        #         names_index = names_index + smspec[names_index:].index('@CHAR') + 5 + 8  #.index('\x00\x00\x03H')
+        # elif 'CHAR' in smspec[names_index:]:
+        #     name_len = 8
+        #     names_index = names_index + smspec[names_index:].index('CHAR') + 4 + 8
+        # else:
+        #     name_len = 8
+        #     names_index = names_index + smspec[names_index:].index('@CHAR') + 5 + 8
+        name_len = smspec[names_index+16:names_index+19]
+        if name_len.isdigit():
+            name_len = int(name_len)
         else:
             name_len = 8
-            names_index = names_index + smspec[names_index:].index('@CHAR') + 5 + 8
+        names_index += 27
 
         # names_index = names_index + smspec[names_index:].index('\x00\x00\x03H') + 4
         last_index = names_index + smspec[names_index:].index('\x00\x00\x10')
@@ -160,7 +173,14 @@ class H5(_SimResult):
         # nums_index = smspec.index('\x00\x00\x10NUMS    ')
 
         units_index = smspec.index('\x00\x00\x10UNITS   ')
-        units_index = units_index + smspec[units_index:].index('@CHAR') + 5 + 8
+        # if '@CHAR' in smspec[units_index:]:
+        #     units_index = units_index + smspec[units_index:].index('@CHAR') + 5 + 8
+        # elif 'CHAR' in smspec[units_index:]:
+        #     units_index = units_index + smspec[units_index:].index('CHAR') + 4 + 8
+        # else:
+        #     units_index = units_index + smspec[units_index:].index('CHAR') + 4 + 8
+        units_index += 27
+
         last_index = units_index + smspec[units_index:].index('\x00\x00\x10')
         units = smspec[units_index:last_index]
         units = [ units[i:i+8].strip() for i in range(0,len(units),8) ]
