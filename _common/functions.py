@@ -5,8 +5,8 @@ Created on Wed May 13 00:46:05 2020
 @author: MCARAYA
 """
 
-__version__ = '0.3.1'
-__release__ = 220223
+__version__ = '0.4.1'
+__release__ = 220523
 __all__ = ['_mainKey', '_itemKey', '_keyType', '_wellFromAttribute', 'tamiz', '_meltDF', '_pivotDF']
 
 import pandas
@@ -39,6 +39,8 @@ def _mainKey(Key, clean=True, nameSeparator=':'):
             return list(set(results))
         else:
             return list(results)
+    if isinstance(Key,(SimSeries, pandas.Series)):
+        return _mainKey(Key.name)
 
 def _itemKey(Key, clean=True, nameSeparator=':'):
     """
@@ -60,6 +62,8 @@ def _itemKey(Key, clean=True, nameSeparator=':'):
             return list(set(results))
         else:
             return list(results)
+    if isinstance(Key,(SimSeries, pandas.Series)):
+        return _itemKey(Key.name)
 
 def _keyType(Key):
     """
