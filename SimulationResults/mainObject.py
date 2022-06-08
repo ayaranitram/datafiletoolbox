@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.17'
-__release__ = 220518
+__version__ = '0.60.19'
+__release__ = 220602
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -3367,7 +3367,7 @@ class SimResult(object):
         """
         Will return a list of all the well names in the case.
         """
-        wellsList = [ K.split(self.nameSeparator)[-1].strip() for K in self.keys if ( K[0] == 'W' and self.nameSeparator in K) ]
+        wellsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys if (K[0] == 'W' and self.nameSeparator in K)]
         wellsList = sorted(list(set(wellsList)))
         self.wells = tuple(wellsList)
         return self.wells
@@ -3376,7 +3376,7 @@ class SimResult(object):
         """
         Will return a list of all the group names in the case.
         """
-        groupsList = [ K.split(self.nameSeparator)[-1].strip() for K in self.keys if ( K[0] == 'G' and self.nameSeparator in K) ]
+        groupsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys if ( K[0] == 'G' and self.nameSeparator in K)]
         groupsList = sorted(list(set(groupsList)))
         self.groups = tuple(groupsList)
         return self.groups
@@ -3386,7 +3386,7 @@ class SimResult(object):
         Will return a list of all the regions names or numbers in the case.
         """
         # preparing object attribute
-        regionsList = [ K.split(self.nameSeparator)[-1].strip() for K in self.keys if ( K[0] == 'G' and self.nameSeparator in K) ]
+        regionsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys if ( K[0] == 'G' and self.nameSeparator in K)]
         regionsList = sorted(list(set(regionsList)))
         return tuple(regionsList)
 
@@ -6554,3 +6554,6 @@ class SimResult(object):
             dataExport = dataExport.renameItem(columns=wells)
 
         dataExport.to_schedule(path)
+
+    def close(self):
+        print("close method not defined for this type of source.")

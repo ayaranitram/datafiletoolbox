@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.5'
-__release__ = 220524
+__version__ = '0.1.7'
+__release__ = 220602
 __all__ = ['H5']
 
 from .mainObject import SimResult as _SimResult
@@ -336,3 +336,6 @@ class H5(_SimResult):
             return self.regions
         else:
             return tuple(fnmatch.filter(self.regions, pattern))
+
+    def close(self):
+        self.results.close()
