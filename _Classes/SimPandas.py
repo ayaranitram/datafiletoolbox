@@ -6,9 +6,9 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.79.0'
-__release__ = 220518
-__all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat']
+__version__ = '0.79.2'
+__release__ = 220606
+__all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
 from sys import getsizeof
 from io import StringIO
@@ -458,7 +458,7 @@ class SimSeries(Series):
                     units = Udict[ Uname ]
         elif type(units) is str:
             self.units = units
-        elif ( units is None or ( type(units) is dict and len(units) > 0 )) and ( type(data) is SimSeries and SimSeries.units is not None ):
+        elif (units is None or (type(units) is dict and len(units) > 0)) and (type(data) is SimSeries and SimSeries.units is not None):
             if type(data.units) is str:
                 units = data.units
                 if indexUnits is None:
@@ -2532,7 +2532,7 @@ class SimDataFrame(DataFrame):
                     if data.index.name not in units:
                         units[data.index.name] = data.indexUnits
                 elif type(data.name) is str and type(data.units) is str:
-                    units = { data.name : data.units , data.index.name : data.indexUnits }
+                    units = {data.name:data.units , data.index.name:data.indexUnits}
 
         # remove arguments not known by Pandas
         kwargsB = kwargs.copy()
@@ -2553,17 +2553,17 @@ class SimDataFrame(DataFrame):
         super().__init__(data=data, index=index, *args, **kwargs)
 
         # set the name of the index
-        if(self.index.name is None or(type(self.index.name) is str and len(self.index.name)==0 ) ) and(type(indexInput) is str and len(indexInput)>0 ):
+        if(self.index.name is None or(type(self.index.name) is str and len(self.index.name) == 0)) and(type(indexInput) is str and len(indexInput) > 0):
             self.index.name = indexInput
         # overwrite the index.name with input from the argument indexName
-        if indexName is not None and type(indexName) is str and len(indexName.strip())>0:
+        if indexName is not None and type(indexName) is str and len(indexName.strip()) > 0:
             self.set_indexName(indexName)
-        elif 'indexName' in kwargsB and type(kwargsB['indexName']) is str and len(kwargsB['indexName'].strip())>0:
+        elif 'indexName' in kwargsB and type(kwargsB['indexName']) is str and len(kwargsB['indexName'].strip()) > 0:
             self.set_indexName(kwargsB['indexName'])
         # set units of the index
-        elif indexUnits is not None and type(indexUnits) is str and len(indexUnits.strip())>0:
+        elif indexUnits is not None and type(indexUnits) is str and len(indexUnits.strip()) > 0:
             self.set_indexUnits(indexUnits)
-        elif 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is str and len(kwargsB['indexUnits'].strip())>0:
+        elif 'indexUnits' in kwargsB and type(kwargsB['indexUnits']) is str and len(kwargsB['indexUnits'].strip()) > 0:
             self.set_indexUnits(kwargsB['indexUnits'])
         if self.indexUnits is not None and self.index.name is not None and len(self.index.name) > 0 and type(self.units) is dict and self.index.name not in self.units:
             self.units[self.index.name] = self.indexUnits
@@ -2583,14 +2583,16 @@ class SimDataFrame(DataFrame):
             elif not self.transposed:
                 if len(units) == len(self.columns):
                     self.units = dict(zip(list(self.columns), units))
+                else:
+                    raise ValueError('The number of items in the iterable provided by units argument must coincide with the number of columns.')
         elif type(units) is str:
             if self.transposed:
                 if len(self.index) == 1:
-                    self.units = {self.index[0]: units}
+                    self.units = {self.index[0]:units}
             elif not self.transposed:
                 if len(self.columns) == 1:
                     self.units = {self.columns[0]:units}
-        elif type(units) is dict and len(units)>0:
+        elif type(units) is dict and len(units) > 0:
             self.units = {}
             if self.transposed:
                 for key in list(self.index):
@@ -2619,9 +2621,9 @@ class SimDataFrame(DataFrame):
             self.units[self.index.name] = '' if self.indexUnits is None else self.indexUnits
 
         # get separator for the column names, 'partA'+'separator'+'partB'
-        if nameSeparator is not None and type(nameSeparator) is str and len(nameSeparator.strip())>0:
+        if nameSeparator is not None and type(nameSeparator) is str and len(nameSeparator.strip()) > 0:
             self.set_NameSeparator(nameSeparator)
-        elif 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip())>0:
+        elif 'nameSeparator' in kwargsB and type(kwargsB['nameSeparator']) is str and len(kwargsB['nameSeparator'].strip()) > 0:
             self.set_NameSeparator(kwargsB['nameSeparator'])
         if self.nameSeparator in [None, '', False] and ':' in ' '.join(list(map(str, self.columns))):
             self.nameSeparator = ':'
@@ -2682,11 +2684,11 @@ class SimDataFrame(DataFrame):
                 }
 
     def set_indexName(self, Name):
-        if type(Name) is str and len(Name.strip())>0:
+        if type(Name) is str and len(Name.strip()) > 0:
             self.index.name = Name.strip()
 
     def set_indexUnits(self, Units):
-        if type(Units) is str and len(Units.strip())>0:
+        if type(Units) is str and len(Units.strip()) > 0:
             self.indexUnits = Units.strip()
 
     def set_NameSeparator(self, separator):
