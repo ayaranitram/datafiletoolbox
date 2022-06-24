@@ -2467,7 +2467,15 @@ class SimSeries(Series):
         """
         if window is None and x is not None and y is None:
             window, x = x, None
-        return _slope(df=self, x=x, y=y, window=window, slope=slope, intercept=intercept)
+        params = self._SimParameters
+        if self.name is not None and len(self.get_Units(self.name)) == 1 and self.indexUnits is not None:
+            if type(params['units']) is dict:
+                params['units'][self.name] = str(self.get_Units(self.name)[self.name]) + '/' + str(self.indexUnits)
+            else:
+                params['units'] = str(self.get_Units(self.name)[self.name]) + '/' + str(self.indexUnits)
+        params['name'] = 'slope_of_' + (self.name)
+        slopeS = _slope(df=self, x=x, y=y, window=window, slope=slope, intercept=intercept)
+        return SimSeries(data=slopeS, index=self.index, **params)
 
 
 class SimDataFrame(DataFrame):
@@ -6737,7 +6745,20 @@ Copy of input object, shifted.
             The array containing the desired output.
 
         """
-        return _slope(df=self, x=x, y=y, window=window, slope=slope, intercept=intercept)
+        params = self._SimParameters
+        if x is not None and y is not None:
+            if x in self.columns and y in self.columns:
+                xUnits = str(self.get_Units(x)[x])
+            elif x in self.columns and y not in self.columns:
+                xUnits = str(self.indexUnits)
+        else:
+            xUnits = str(self.indexUnits)
+        for col in self.columns:
+            if col is not None and len(self.get_Units(col)) == 1:
+                params['units']['slope_of_' + str(col)] = str(self.get_Units(col)[col]) + '/' + xUnits
+        names = ['slope_of_' + str(col) for col in self.columns]
+        slopeDF = _slope(df=self, x=x, y=y, window=window, slope=slope, intercept=intercept)
+        return SimDataFrame(data=slopeDF, index=self.index, columns=names, **params)
 
     def plot(self, y=None, x=None, others=None, figsize=None, dpi=None, **kwargs):
         """
