@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.79.2'
-__release__ = 220606
+__version__ = '0.79.3'
+__release__ = 220719
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
 from sys import getsizeof
@@ -458,7 +458,7 @@ class SimSeries(Series):
                     units = Udict[ Uname ]
         elif type(units) is str:
             self.units = units
-        elif (units is None or (type(units) is dict and len(units) > 0)) and (type(data) is SimSeries and SimSeries.units is not None):
+        elif (units is None or (type(units) is dict and len(units) > 0)) and (type(data) is SimSeries and data.units is not None):
             if type(data.units) is str:
                 units = data.units
                 if indexUnits is None:
@@ -498,9 +498,10 @@ class SimSeries(Series):
         elif 'indexName' in kwargsB and type(kwargsB['indexName']) is str and len(kwargsB['indexName'].strip())>0:
             self.set_indexName(kwargsB['indexName'])
 
-        # set the units
+        # set the name
         if self.name is None and Uname is not None:
             self.name = Uname
+        # set the units
         if self.name is not None and self.units is None and Udict is not None:
             if self.name in Udict:
                 self.units = Udict[ self.name ]
@@ -558,7 +559,8 @@ class SimSeries(Series):
             self.operatePerName = bool(kwargs['operatePerName'] )
 
         # set the provided name
-        if self.name is None and name is not None:
+        #if self.name is None and name is not None:
+        if name is not None:
             self.name = name
         if self.name is None and 'columns' in kwargsB and type(kwargsB['columns']) is not str and hasattr(kwargsB['columns'],'__iter__') and type(kwargsB['columns']) is not dict and len(kwargsB['columns']) == 1:
             self.name = kwargsB['columns'][0]
