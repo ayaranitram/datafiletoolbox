@@ -5095,23 +5095,25 @@ Copy of input object, shifted.
             else:
                 return SimDataFrame(data=self.DF.diff(periods=periods, axis=axis), **self._SimParameters)
         if axis == 1:
-            newName = '.diff'
+            # newName = '.diff'
             if len(set(self.get_Units(self.columns).values())) == 1:
                 units = list(set(self.get_Units(self.columns).values()))[0]
             else:
                 units = 'dimensionless'
-            if len(set(self.columns ) ) == 1:
-                newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(inplace=False).columns ) ) == 1:
-                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
-            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1:
-                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
+            # if len(set(self.columns ) ) == 1:
+            #     newName = list(set(self.columns ))[0]+newName
+            # elif len(set(self.renameRight(inplace=False).columns ) ) == 1:
+            #     newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
+            # elif len(set(self.renameLeft(inplace=False).columns ) ) == 1:
+            #     newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
+            # else:
+            #     newName = [c+'.diff' for c in self.columns]
             if forward:
                 data=-1*self.DF.diff(periods=-1*periods, axis=axis)
             else:
                 data=self.DF.diff(periods=periods, axis=axis)
-            data.columns=[newName]
-            data.name = newName
+            # data.columns=newName
+            # data.name = newName
             params = self._SimParameters
             params['units'] = units
             return SimDataFrame(data=data, **params)
