@@ -6,8 +6,8 @@ Created on Sat Dec  7 21:48:37 2019
 @author: martin
 """
 
-__version__ = '0.5.5'
-__release__ = 220303
+__version__ = '0.5.6'
+__release__ = 220613
 
 import numpy
 # import pandas
@@ -970,6 +970,8 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=
     """
     if value is None:
         return None
+    if fromUnit is None or toUnit is None:
+        return value
 
     if type(fromUnit) is str and type(toUnit) is str and fromUnit.lower().strip() == toUnit.lower().strip():
         return value
