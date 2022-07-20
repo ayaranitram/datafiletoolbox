@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.79.3'
-__release__ = 220719
+__version__ = '0.79.5'
+__release__ = 220720
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
 from sys import getsizeof
@@ -734,6 +734,10 @@ class SimSeries(Series):
                 return self.iloc[0]
         elif len(self.get_Units()) == 0 or np.array([(u is None or str(u).lower().strip() in ['unitless','dimensionless']) for u in self.get_Units().values()]).all():
             return self.as_Series()
+        elif type(self.get_Units()) is dict and len(set(self.get_Units(self.index).values())) == 1:
+            params = self._SimParameters.copy()
+            params['units'] = list(set(self.get_Units(self.index).values()))[0]
+            return SimSeries(self.to_Series(), **params)
         else:
             return self
 
@@ -1820,7 +1824,7 @@ class SimSeries(Series):
         None.
 
         """
-        if item is not None and item not in self.columns:
+        if item is not None and type(item) in (str, int, float) and item not in self.columns:
             raise ValueError("the required item '" + str(item) + "' is not in this SimSeries")
 
         if self.units is None or type(self.units) is str:
@@ -1828,6 +1832,14 @@ class SimSeries(Series):
                 self.units = None
             elif type(units) is str:
                 self.units = units.strip()
+            elif type(units) is dict:
+                old_units = self.units
+                try:
+                    self.units = {}
+                    return self.set_Units(units)
+                except:
+                    self.units = old_units
+                    raise ValueError("not able to process dictionary of units.")
             else:
                 raise TypeError("units must be a string.")
 
@@ -1848,6 +1860,18 @@ class SimSeries(Series):
             elif type(units) is dict:
                 for k,u in units.items():
                     self.set_Units(u,k)
+            elif type(units) is str:
+                if item is None:
+                    self.units = units.strip()
+                else:
+                    if type(item) not in (str,dict) and hasattr(item,'__iter__'):
+                        units = units.strip()
+                        for i in item:
+                            if i in self.units:
+                                self.units[i] = units
+                    elif type(item) not in dict:
+                        if item in self.units:
+                            self.units[item] = units
 
             if item is None and len(self.columns) > 1:
                 raise ValueError("More than one column in this SimSeries, item must not be None")
