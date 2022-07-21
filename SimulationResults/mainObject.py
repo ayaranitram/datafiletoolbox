@@ -6547,7 +6547,7 @@ class SimResult(object):
 
         if type(userKeys) is dict:
             mainUserKeys = { _mainKey(k):_mainKey(v) for k,v in userKeys.items() }
-            renameKeys = { _mainKey(k)+(':'+_itemKey(k) if _intemKey(k) is not None else '') : mainUserKeys[_mainKey(k)]+(':'+_itemKey(k) if _intemKey(k) is not None else '') for k in dataExport.columns }
+            renameKeys = { _mainKey(k)+(':'+_itemKey(k) if _itemKey(k) is not None else '') : mainUserKeys[_mainKey(k)]+(':'+_itemKey(k) if _itemKey(k) is not None else '') for k in dataExport.columns }
             dataExport = dataExport.rename(columns=renameKeys)
         if type(wells) is dict:
             wells = { w:nw for w,nw in wells.items() if w in dataExport.wells }
