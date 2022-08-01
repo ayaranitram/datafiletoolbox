@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.79.5'
-__release__ = 220720
+__version__ = '0.79.6'
+__release__ = 220801
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
 from sys import getsizeof
@@ -4952,7 +4952,7 @@ Copy of input object, shifted.
         axis = _cleanAxis(axis)
         if axis == 0:
             return SimDataFrame(data=self.DF.quantile(q=q, axis=axis, **kwargs), **self._SimParameters)
-        if axis == 1:
+        if axis == 1 and hasattr(q, '__iter__'):  # q is a list
             namedecimals = 1
             if 'namedecimals' in kwargs:
                 if type(kwargs['namedecimals']) is int:
@@ -4960,17 +4960,43 @@ Copy of input object, shifted.
                 del kwargs['namedecimals']
             else:
                 namedecimals = len(str(q))-2
-            newName = '.Q'+str(round(q*100,namedecimals))
+            newNameLambda = lambda q : '.Q'+str(round(q*100, namedecimals))
+            newName = map(newNameLambda, q)
+            if len(set(self.get_Units(self.columns).values())) == 1:
+                units = list(set(self.get_Units(self.columns).values()))[0]
+            else:
+                units = 'dimensionless'
+            if len(set(self.columns)) == 1:
+                newName = [list(set(self.columns))[0] + nm for nm in newName]
+            elif len(set(self.renameRight(inplace=False).columns)) == 1:
+                newName = [list(set(self.renameRight(inplace=False).columns))[0] + nm for nm in newName]
+            elif len(set(self.renameLeft(inplace=False).columns)) == 1:
+                newName = [list(set(self.renameLeft(inplace=False).columns))[0] + nm for nm in newName]
+            data=self.DF.quantile(q=q, axis=axis, **kwargs).transpose()
+            data.columns = newName
+            #data.name = newName
+            params = self._SimParameters
+            params['units'] = units
+            return SimDataFrame(data=data, **params)
+        elif axis == 1:
+            namedecimals = 1
+            if 'namedecimals' in kwargs:
+                if type(kwargs['namedecimals']) is int:
+                    namedecimals = kwargs['namedecimals']
+                del kwargs['namedecimals']
+            else:
+                namedecimals = len(str(q))-2
+            newName = '.Q'+str(round(q*100, namedecimals))
             if len(set(self.get_Units(self.columns).values())) == 1:
                 units = list(set(self.get_Units(self.columns).values()))[0]
             else:
                 units = 'dimensionless'
             if len(set(self.columns)) == 1:
                 newName = list(set(self.columns ))[0]+newName
-            elif len(set(self.renameRight(inplace=False).columns ) ) == 1:
-                newName = list(set(self.renameRight(inplace=False).columns ))[0]+newName
-            elif len(set(self.renameLeft(inplace=False).columns ) ) == 1:
-                newName = list(set(self.renameLeft(inplace=False).columns ))[0]+newName
+            elif len(set(self.renameRight(inplace=False).columns)) == 1:
+                newName = list(set(self.renameRight(inplace=False).columns))[0]+newName
+            elif len(set(self.renameLeft(inplace=False).columns)) == 1:
+                newName = list(set(self.renameLeft(inplace=False).columns))[0]+newName
             data=self.DF.quantile(q=q, axis=axis, **kwargs)
             data.columns=[newName]
             data.name = newName
