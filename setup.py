@@ -11,7 +11,7 @@ setup(
       author="Martin Carlos Araya",
       description="A set of classes and utilities to read different simulation output files, text files and excel file in certain formats.",
       name="datafiletoolbox",
-      version='0.52.15',
+      version='0.52.16',
       packages=find_packages(include=['datafiletoolbox, datafiletoolbox.*']),
       install_requires=['numpy', 'pandas', 'matplotlib'],
       python_requires='>=3.5.0'

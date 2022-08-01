@@ -6979,7 +6979,7 @@ Copy of input object, shifted.
             return [objs][0]
         if type(objs) is not list:
             objs =  [objs]
-        return concat([self]+objs, axis=axis, join=join, ignore_index=ignore_index, keys=keys, levels=levels, names=names, verify_integrity=verify_integrity, sort=sort, copy=copy, squeeze=squeeze))
+        return concat([self]+objs, axis=axis, join=join, ignore_index=ignore_index, keys=keys, levels=levels, names=names, verify_integrity=verify_integrity, sort=sort, copy=copy, squeeze=squeeze)
 
     def to_schedule(self,path,units='FIELD',ControlMode=None,ShutStop=None):
         """
