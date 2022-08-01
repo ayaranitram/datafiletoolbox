@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: martin
 """
 
-__version__ = '0.79.6'
+__version__ = '0.80.0'
 __release__ = 220801
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
@@ -6964,6 +6964,22 @@ Copy of input object, shifted.
                 else:
                     raise TypeError("others must be SimDataFrame, DataFrame, SimSeries or Series")
             return kwargs['ax']
+
+    def concat(self, objs, axis=0, join='outer', ignore_index=False, keys=None, levels=None, names=None, verify_integrity=False, sort=False, copy=True, squeeze=True):
+        """
+        wrapper of pandas.concat enhaced with units support
+
+        Return:
+            SimDataFrame
+        """
+        if type(objs) not in [list, SimDataFrame, DataFrame, SimSeries, Series]:
+            raise TypeError("objs must be a list of DataFrames or SimDataFrames")
+        if len(objs) == 1:
+            print("WARNING: only 1 DataFrame received.")
+            return [objs][0]
+        if type(objs) is not list:
+            objs =  [objs]
+        return concat([self]+objs, axis=axis, join=join, ignore_index=ignore_index, keys=keys, levels=levels, names=names, verify_integrity=verify_integrity, sort=sort, copy=copy, squeeze=squeeze))
 
     def to_schedule(self,path,units='FIELD',ControlMode=None,ShutStop=None):
         """
