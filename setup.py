@@ -13,6 +13,6 @@ setup(
       name="datafiletoolbox",
       version='0.52.16',
       packages=find_packages(include=['datafiletoolbox, datafiletoolbox.*']),
-      install_requires=['numpy', 'pandas', 'matplotlib'],
+      install_requires=['numpy', 'pandas', 'matplotlib', 'h5py', 'cwrap', 'openpyxl'],
       python_requires='>=3.5.0'
       )
