@@ -5,9 +5,14 @@ Created on Tue Jan 11 09:46:24 2022
 @author: MCARAYA
 """
 
+__version__ = '0.0.0'
+__release__ = 20220825
+
+
 import string
 import os.path
 from .._common.inout import _extension
+import warnings
 
 def readSMSPEC(smspecPath):
     """
@@ -58,7 +63,7 @@ def readSMSPEC(smspecPath):
     keywords = smspec[keywords_index:last_index]
     keywords = [ keywords[i:i+8].strip() for i in range(0,len(keywords),8) ]
 
-    names_index = names_index + smspec[names_index:].index('\x00\x00\x03H') + 4
+    # names_index = names_index + smspec[names_index:].index('\x00\x00\x03H') + 4
 
     # names_index = last_index + smspec[last_index:].index('\x00\x00\x10NAMES   ')
     if '\x00\x00\x10NAMES   ' in smspec:
@@ -117,11 +122,13 @@ def readSMSPEC(smspecPath):
     units = smspec[units_index:measrmnt_index]
     units = [ units[i:i+8].strip() for i in range(0,len(units),8) ]
 
-    self.units = { keywords[i]+(':'+names[i] if len(names[i])>0 else '') : units[i] for i in range(len(keywords)) }
+    units = { keywords[i]+(':'+names[i] if len(names[i])>0 else '') : units[i] for i in range(len(keywords)) }
 
-    self.keynames = {}
+    keynames = {}
     for i in range(len(keywords)):
-        if keywords[i] not in self.keynames:
-            self.keynames[keywords[i]] = []
-        if names[i] not in self.keynames[keywords[i]]:
-            self.keynames[keywords[i]].append(names[i])
+        if keywords[i] not in keynames:
+            keynames[keywords[i]] = []
+        if names[i] not in keynames[keywords[i]]:
+            keynames[keywords[i]].append(names[i])
+        
+    return {'keywords':keywords, 'keynames':keynames, 'units':units}
