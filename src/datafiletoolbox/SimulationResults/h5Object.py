@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.7'
-__release__ = 220602
+__version__ = '0.1.8'
+__release__ = 20220901
 __all__ = ['H5']
 
 from .mainObject import SimResult as _SimResult
@@ -21,7 +21,7 @@ import os
 import h5py
 import warnings
 import datetime as dt
-
+import fnmatch
 
 
 class H5(_SimResult):
@@ -170,6 +170,8 @@ class H5(_SimResult):
                     i = f
             names = namesList
 
+        # names = [None if n != ':+:+:+:+' else n for n in names]
+        
         # nums_index = smspec.index('\x00\x00\x10NUMS    ')
 
         units_index = smspec.index('\x00\x00\x10UNITS   ')
@@ -256,13 +258,14 @@ class H5(_SimResult):
         Will return a list of all the well names in case.
         """
         # preparing object attribute
-        outList = list( self.wells )
+        outList = list(self.wells)
         for key in self.get_Keys():
             if key[0] == 'W':
                 if ':' in key:
                     item = key.split(':')[1]
-                    outList.append( item )
-        self.wells = tuple( set( outList ) )
+                    if item not in ('', ':+:+:+:+'):
+                        outList.append(item)
+        self.wells = tuple(set(outList))
         # preparing list to return
         if pattern is None:
             return self.wells
@@ -280,13 +283,14 @@ class H5(_SimResult):
         on fnmatch(), i.e. shell style wildcards.
         """
         # preparing object attribute
-        outList = list( self.groups )
+        outList = list(self.groups)
         for key in self.get_Keys():
             if key[0] == 'G':
                 if ':' in key:
                     item = key.split(':')[1]
-                    outList.append( item )
-        self.groups = tuple( set( outList ) )
+                    if item not in ('', ':+:+:+:+'):
+                        outList.append( item )
+        self.groups = tuple(set(outList))
         # preparing list to return
         if pattern is None:
             return self.groups
@@ -312,11 +316,12 @@ class H5(_SimResult):
                     listOfKeys.append(key)
                 else:  # key in self.keynames and len(self.keynames[key]) > 1:
                     for item in self.keynames[key]:
-                        listOfKeys.append(key+':'+item)
+                        if item not in ('', ':+:+:+:+'):
+                            listOfKeys.append(key+':'+item)
             self.keys = tuple( set(listOfKeys) )
             for extra in ( 'TIME', 'DATE', 'DATES' ):
                 if extra not in self.keys:
-                    self.keys = tuple( [extra] + list(self.keys) )
+                    self.keys = tuple([extra] + list(self.keys))
         if pattern is None:
             return self.keys
         else:
@@ -329,7 +334,8 @@ class H5(_SimResult):
             if key[0] == 'R':
                 if ':' in key:
                     item = key.split(':')[1]
-                    outList.append( item )
+                    if item not in ('', ':+:+:+:+'):
+                        outList.append( item )
         self.regions = tuple( set( outList ) )
         # preparing list to return
         if pattern is None:
