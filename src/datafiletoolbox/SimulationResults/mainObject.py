@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.19'
-__release__ = 220602
+__version__ = '0.60.20'
+__release__ = 20220905
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -21,6 +21,8 @@ from .._common.units import unit
 from .._common.units import convertUnit
 from .._common.units import convertible as convertibleUnits
 from matplotlib.colors import is_color_like
+import seaborn as sns
+import matplotlib.pyplot as plt
 from datetime import timedelta
 import pandas as pd
 from pandas import Series, DataFrame
@@ -1651,8 +1653,6 @@ class SimResult(object):
                 share_Yaxis=True, share_Xaxis=True, **kwargs):
         """
         """
-        import seaborn as sns
-        # import matplotlib.pyplot as plt
         sns.set_theme(style="ticks", palette="pastel")
 
         if col_wrap is not None:
@@ -1805,8 +1805,6 @@ class SimResult(object):
         """
         this function uses seaborn pairplot to create the chart.
         """
-        import seaborn as sns
-        # import matplotlib.pyplot as plt
         sns.set_theme(style="ticks", palette="pastel")
 
         if hue == 'main':
@@ -2053,8 +2051,6 @@ class SimResult(object):
 
         this function uses seaborn boxplot to create the chart.
         """
-        import seaborn as sns
-        import matplotlib.pyplot as plt
         sns.set_theme(style=style, palette=palette)
 
         df, hue, label, itemLabel, values = self._common_dataprep_for_seaborn(Keys=Keys,
@@ -2143,8 +2139,6 @@ class SimResult(object):
 
         this function uses seaborn boxplot to create the chart.
         """
-        import seaborn as sns
-        import matplotlib.pyplot as plt
         sns.set_theme(style=style, palette=palette)
 
         df, hue, label, itemLabel, values = self._common_dataprep_for_seaborn(Keys=Keys,
