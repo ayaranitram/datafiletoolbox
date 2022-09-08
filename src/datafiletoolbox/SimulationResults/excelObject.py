@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.22.11'
-__release__ = 220323
+__version__ = '0.22.12'
+__release__ = 20220908
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -42,7 +42,7 @@ class XLSX(_SimResult):
             elif os.path.isfile(inputFile):
                 self.readSimExcel(inputFile, sheet_name=sheet_name, header=header, units=units, combine_SheetName_ColumnName=combine_SheetName_ColumnName, ignore_nameSeparator=ignore_nameSeparator, long=long, **kwargs)
             else:
-                print("file doesn't exists")
+                raise FileNotFoundError("file doesn't exists:\n " + str(inputFile))
         if len(self.Frames) > 0 and inputFile is not None:
             self.name = _extension(inputFile)[1]
             if type(long) is dict and 'index' in long and self.is_Key(long['index']) and 'index' not in kwargs:
