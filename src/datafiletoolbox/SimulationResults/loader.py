@@ -5,8 +5,8 @@ Created on Wed May 13 00:45:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.54.3'
-__release__ = 220512
+__version__ = '0.54.4'
+__release__ = 20220914
 __all__ = ['loadSimulationResults']
 
 from .._common.inout import _extension
@@ -26,10 +26,17 @@ try:
     from .eclObject import ECL as _ECL
     okECL = True
 except ImportError:
-    print ( 'failed import ECL, usually due to fail to import libecl')
+    print("""Failed import ECL, usually due to fail to import libecl.
+          If running on linux please install libecl from pypi.org:
+              pip install libecl
+              
+          An alternative source of the same data use to be the '.h5' file accompaining the '.SMSPEC'.
+          To load the '.h5' file instead of the .'UNSMRY' set the paramenter 'h5' to True:
+              lsr('path_to_file.afi', h5=True)
+          """)
 
 
-def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs):
+def loadSimulationResults(FullPath, Simulator=None, Verbosity=None, **kwargs):
     """
     Loads the results of reservoir simulation into SimResult object.
     This library can read:
@@ -55,11 +62,14 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs):
         Verbosity = 2
 
     if FullPath is None:
-        print( 'Please provide the path to the simulation results as string.')
+        print('Please provide the path to the simulation results as string.')
         return None
     if Simulator is None:
         if _extension(FullPath)[0].upper() in ['.SMSPEC','.UNSMRY','.DATA','.AFI']:
-            Simulator = 'ECLIPSE'
+            if 'h5' in kwargs and kwargs['h5'] is True:
+                Simulator = 'H5'
+            else:
+                Simulator = 'ECLIPSE'
         elif _extension(FullPath)[0].upper() in ['.DAT','.SSS']:
             Simulator = 'VIP'
         elif _extension(FullPath)[0].upper() in ['.FSC','.SS_FIELD','.SS_WELLS','.SS_REGIONS','.SS_NETWORK']:
@@ -84,23 +94,23 @@ def loadSimulationResults(FullPath,Simulator=None,Verbosity=None,**kwargs):
     if Simulator in ['ECL','E100','E300','ECLIPSE','IX','INTERSECT','TNAV','TNAVIGATOR']:
         if okECL is True:
             _loadingECLfile[0] = True
-            OBJ = _ECL(FullPath,verbosity=Verbosity,**kwargs)
+            OBJ = _ECL(FullPath, verbosity=Verbosity, **kwargs)
         else:
             print( 'ECL object not loaded')
     elif Simulator in ['VIP']:
-        OBJ = _VIP(FullPath,verbosity=Verbosity,**kwargs)
+        OBJ = _VIP(FullPath, verbosity=Verbosity, **kwargs)
     elif Simulator in ['NX','NEXUS']:
-        OBJ = _VIP(FullPath,verbosity=Verbosity,**kwargs)
+        OBJ = _VIP(FullPath, verbosity=Verbosity, **kwargs)
     elif Simulator in ['NexusDesktopSimResult']:
-        OBJ = _NexusDesktopCSV(FullPath,verbosity=Verbosity,**kwargs)
+        OBJ = _NexusDesktopCSV(FullPath,verbosity=Verbosity, **kwargs)
     elif Simulator in ['SimPandasExcel']:
-        OBJ = _XLSX(FullPath,verbosity=Verbosity,**kwargs)
+        OBJ = _XLSX(FullPath, verbosity=Verbosity, **kwargs)
     elif Simulator in ['DataTable']:
-        OBJ = _TABLE(FullPath,verbosity=Verbosity,**kwargs)
+        OBJ = _TABLE(FullPath, verbosity=Verbosity, **kwargs)
     elif Simulator in ['RSM']:
-        OBJ = _RSM(FullPath,verbosity=Verbosity,**kwargs)
+        OBJ = _RSM(FullPath, verbosity=Verbosity, **kwargs)
     elif Simulator in ['H5']:
-        OBJ = _H5(FullPath,verbosity=Verbosity,**kwargs)
+        OBJ = _H5(FullPath, verbosity=Verbosity, **kwargs)
     elif Simulator in ['Pickle']:
         import os
         if not os.path.isfile(FullPath):
