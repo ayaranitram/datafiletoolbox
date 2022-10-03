@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: Martin Carlos Araya
 """
 
-__version__ = '0.80.08'
+__version__ = '0.80.09'
 __release__ = 20221003
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
@@ -4336,17 +4336,18 @@ Copy of input object, shifted.
                         else:  # self.autoAppend is True
                             for col in otherI.columns:
                                 result[col] = otherI[col]
-                            
-                    if (selfI.columns != selfC.columns).any() or (otherI.columns != otherC.columns).any():
-                        resultX = selfC + otherC
-                        resultX.rename(columns=newNames, inplace=True)
                     else:
-                        resultX = result
-                    if self.autoAppend:
-                        for col in newNames.values():
-                            result[col] = resultX[col]
-                    else:
-                        result = resultX
+                                
+                        if (selfI.columns != selfC.columns).any() or (otherI.columns != otherC.columns).any():
+                            resultX = selfC + otherC
+                            resultX.rename(columns=newNames, inplace=True)
+                        else:
+                            resultX = result
+                        if self.autoAppend:
+                            for col in newNames.values():
+                                result[col] = resultX[col]
+                        else:
+                            result = resultX
             return result
 
         # other is SimSeries
