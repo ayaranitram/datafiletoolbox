@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.20'
-__release__ = 20220905
+__version__ = '0.60.21'
+__release__ = 20220928
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -507,7 +507,7 @@ class SimResult(object):
                     cols.append(each)
                 elif each in self.attributes:
                     cols += self.attributes[each]
-                elif ':' in each:
+                elif ':' in each and len(each.split(':'))==2:
                     attribute, pattern = each.split(':')
                     cols += self.keyGen(attribute, pattern)
                 elif each in self.wells or each in self.groups or each in self.regions:

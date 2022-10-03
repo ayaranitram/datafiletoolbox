@@ -9,8 +9,8 @@ Created on Tue Jul  9 21:23:27 2019
 @author: martin
 """
 
-__version__ = '0.52.21'
-__release__ = 20220914
+__version__ = '0.52.23'
+__release__ = 20221003
 __author__ = 'Martin Carlos Araya <martinaraya@gmail.com>'
 __all__ = ['stringformat', 'extension', 'Alternate', 'convert', 'SimPandas',
            'SimSeries', 'SimDataFrame', 'loadSimulationResults','melt','pivot','unify','slope']

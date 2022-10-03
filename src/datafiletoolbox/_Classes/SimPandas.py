@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: Martin Carlos Araya
 """
 
-__version__ = '0.80.07'
-__release__ = 20220914
+__version__ = '0.80.08'
+__release__ = 20221003
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
 from sys import getsizeof
@@ -4334,7 +4334,7 @@ Copy of input object, shifted.
                         elif not self.autoAppend:
                             raise TypeError("Not possible to operate SimDataFrames if there aren't common columns")
                         else:  # self.autoAppend is True
-                            for col in otherI.values():
+                            for col in otherI.columns:
                                 result[col] = otherI[col]
                             
                     if (selfI.columns != selfC.columns).any() or (otherI.columns != otherC.columns).any():
