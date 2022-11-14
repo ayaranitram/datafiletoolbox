@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: Martin Carlos Araya
 """
 
-__version__ = '0.80.09'
-__release__ = 20221003
+__version__ = '0.80.10'
+__release__ = 20221114
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
 from sys import getsizeof
@@ -3235,10 +3235,12 @@ Copy of input object, shifted.
                     newUnits[col] = otherC.get_units(col)[col]
             params = self._SimParameters
             params['units'] = newUnits
-            return SimDataFrame(data=self.DF.append(otherC), **params)
+            # return SimDataFrame(data=self.DF.append(otherC), **params)
+            return SimDataFrame(data=pd.concat([self.DF, otherC], axis=0), **params)
         else:
             # append and return SimDataFrame
-            return SimDataFrame(data=self.DF.append(other), **self._SimParameters)
+            # return SimDataFrame(data=self.DF.append(other), **self._SimParameters)
+            return SimDataFrame(data=pd.concat([self.DF, other], axis=0), **self._SimParameters)
 
     def convert(self, units):
         """
@@ -3515,7 +3517,7 @@ Copy of input object, shifted.
             deltaindex = np.diff(index)
             if isinstance(self.index, DatetimeIndex):
                 deltaindex = deltaindex.astype('timedelta64[s]').astype('float64')/60/60/24
-            values = result.first().append(result.last().iloc[-1] )
+            values = result.first().append(result.last().iloc[-1])
             deltavalues = np.diff(values.transpose())
             result = DataFrame(data=(deltavalues/deltaindex).transpose(), index=result.first().index, columns=self.columns)
         else:
