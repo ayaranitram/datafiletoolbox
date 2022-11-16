@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: Martin Carlos Araya
 """
 
-__version__ = '0.80.10'
-__release__ = 20221114
+__version__ = '0.80.11'
+__release__ = 20221116
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
 from sys import getsizeof
@@ -106,13 +106,13 @@ units=1, speak=False, indexName=None, indexUnits=None, nameSeparator=None, inter
             else:
                 header += [units]
 
-    excelread = pandas.read_excel(io, sheet_name=sheet_name, header=header, names=names, index_col=index_col, usecols=usecols, squeeze=False, dtype=dtype, engine=engine, converters=converters, true_values=true_values, false_values=false_values, skiprows=skiprows, nrows=nrows, na_values=na_values, keep_default_na=keep_default_na, na_filter=na_filter, verbose=verbose, parse_dates=parse_dates, date_parser=date_parser, thousands=thousands, comment=comment, skipfooter=skipfooter, mangle_dupe_cols=mangle_dupe_cols, storage_options=storage_options)  # convert_float=convert_float, decimal=decimal
+    excelread = pandas.read_excel(io, sheet_name=sheet_name, header=header, names=names, index_col=index_col, usecols=usecols, dtype=dtype, engine=engine, converters=converters, true_values=true_values, false_values=false_values, skiprows=skiprows, nrows=nrows, na_values=na_values, keep_default_na=keep_default_na, na_filter=na_filter, verbose=verbose, parse_dates=parse_dates, date_parser=date_parser, thousands=thousands, comment=comment, skipfooter=skipfooter, mangle_dupe_cols=mangle_dupe_cols, storage_options=storage_options)  # convert_float=convert_float, decimal=decimal
 
     if type(excelread) is not dict:
         excelread = {'onesheet':excelread}
 
     output = {}
-    for name,df in excelread.items():
+    for name, df in excelread.items():
 
         if type(units) is list:
             if len(units) == len(df.columns):
@@ -179,7 +179,7 @@ units=1, speak=False, indexName=None, indexUnits=None, nameSeparator=None, inter
         output[name] = SimDataFrame(data=df, units=dataunits, speak=speak, indexName=indexName, indexUnits=indexUnits, nameSeparator=nameSeparator, intersectionCharacter=intersectionCharacter, autoAppend=autoAppend, transposed=transposed, operatePerName=operatePerName, *args, **kwargs)
 
         if bool(squeeze):
-            output[name] = output[name].squeeze()
+            output[name] = output[name].squeeze('columns')
 
     if len(output) == 1:
         return output[name]
