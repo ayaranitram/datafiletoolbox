@@ -8,31 +8,31 @@ Created on Tue Jan 11 09:46:24 2022
 __version__ = '0.0.0'
 __release__ = 20220825
 
-
 import string
 import os.path
 from .._common.inout import _extension
 import warnings
 
+
 def readSMSPEC(smspecPath):
     """
     read the SMSPEC file and extract the well and group names
     """
-    if type(smspecPath) is str :
+    if type(smspecPath) is str:
         smspecPath = smspecPath.strip()
-        if _extension(smspecPath)[0].lower() != '.SMSPEC' :
+        if _extension(smspecPath)[0].lower() != '.SMSPEC':
             newPath = _extension(smspecPath)[2] + _extension(smspecPath)[1] + '.SMSPEC'
             if os.path.isfile(newPath):
                 smspecPath = newPath
         if os.path.isfile(smspecPath):
             if os.path.getsize(smspecPath) == 0:
                 warnings.warn("\nThe .SMSPEC file seems to be empty")
-        else :
-            warnings.warn( "the file doesn't exist:\n  -> " + smspecPath )
+        else:
+            warnings.warn("the file doesn't exist:\n  -> " + smspecPath)
     with open(smspecPath, 'rb') as file:
         smspec = file.read()
 
-    temp = [ chr(b) if chr(b) in string.printable else int(b) for b in smspec ]
+    temp = [chr(b) if chr(b) in string.printable else int(b) for b in smspec]
 
     temp2 = []
     for t in temp:
@@ -47,21 +47,21 @@ def readSMSPEC(smspecPath):
     data = {}
     i = 0
     while i < len(temp2):
-        h = len(temp2)-1 if 16 not in temp2[i:] else i + temp2[i:].index(16) + 1
-        f = len(temp2)-1 if 16 not in temp2[h:] else h + temp2[h:].index(16) + 1
-        d = len(temp2)-1 if 16 not in temp2[f:] else f + temp2[f:].index(16)
-        data[temp2[h]] = [temp2[h+1:f],temp2[f+1:d+1]]
+        h = len(temp2) - 1 if 16 not in temp2[i:] else i + temp2[i:].index(16) + 1
+        f = len(temp2) - 1 if 16 not in temp2[h:] else h + temp2[h:].index(16) + 1
+        d = len(temp2) - 1 if 16 not in temp2[f:] else f + temp2[f:].index(16)
+        data[temp2[h]] = [temp2[h + 1:f], temp2[f + 1:d + 1]]
         i = f + 1
 
-    for k in ['KEYWORDS','']:
+    for k in ['KEYWORDS', '']:
         if k in data:
             data[k] = data[k][1][2]
 
-    keywords_index =  smspec.index('\x00\x00\x10KEYWORDS')
+    keywords_index = smspec.index('\x00\x00\x10KEYWORDS')
     keywords_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x03H') + 4
     last_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x10NAMES   ')
     keywords = smspec[keywords_index:last_index]
-    keywords = [ keywords[i:i+8].strip() for i in range(0,len(keywords),8) ]
+    keywords = [keywords[i:i + 8].strip() for i in range(0, len(keywords), 8)]
 
     # names_index = names_index + smspec[names_index:].index('\x00\x00\x03H') + 4
 
@@ -78,14 +78,15 @@ def readSMSPEC(smspecPath):
         names_index = smspec.index('NAMES')
 
     if '@C0' in smspec[names_index:]:
-        name_len = smspec[names_index + smspec[names_index:].index('@C0') + 2:names_index + smspec[names_index:].index('@C0') + 5]
+        name_len = smspec[names_index + smspec[names_index:].index('@C0') + 2:names_index + smspec[names_index:].index(
+            '@C0') + 5]
 
         if name_len.isdigit():
             name_len = int(name_len)
             names_index = names_index + smspec[names_index:].index('@C0') + 5 + 8  # 8 bits
         else:
             name_len = 8
-            names_index = names_index + smspec[names_index:].index('@CHAR') + 5 + 8  #.index('\x00\x00\x03H')
+            names_index = names_index + smspec[names_index:].index('@CHAR') + 5 + 8  # .index('\x00\x00\x03H')
     else:
         name_len = 8
         names_index = names_index + smspec[names_index:].index('@CHAR') + 5 + 8
@@ -95,13 +96,13 @@ def readSMSPEC(smspecPath):
     names = smspec[names_index:last_index]
 
     if name_len == 8:
-        names = [ names[i:i+name_len].strip() for i in range(0,len(names),name_len) ]
+        names = [names[i:i + name_len].strip() for i in range(0, len(names), name_len)]
     else:
         namesList = []
         i = 0
         while i < len(names):
             if names[i] in string.printable:
-                namesList.append(names[i:i+name_len].strip())
+                namesList.append(names[i:i + name_len].strip())
                 i += name_len
             else:
                 f = i
@@ -114,15 +115,15 @@ def readSMSPEC(smspecPath):
     nums_index = names_index + smspec[names_index:].index('NUMS    ')
 
     names = smspec[names_index:nums_index]
-    names = [ names[i:i+8].strip() for i in range(0,len(names),8) ]
+    names = [names[i:i + 8].strip() for i in range(0, len(names), 8)]
 
     units_index = nums_index + smspec[nums_index:].index('\x00\x00\x10UNITS   ')
     units_index = units_index + smspec[units_index:].index('\x00\x00\x03H') + 4
     measrmnt_index = units_index + smspec[units_index:].index('\x00\x00\x10MEASRMNT')
     units = smspec[units_index:measrmnt_index]
-    units = [ units[i:i+8].strip() for i in range(0,len(units),8) ]
+    units = [units[i:i + 8].strip() for i in range(0, len(units), 8)]
 
-    units = { keywords[i]+(':'+names[i] if len(names[i])>0 else '') : units[i] for i in range(len(keywords)) }
+    units = {keywords[i] + (':' + names[i] if len(names[i]) > 0 else ''): units[i] for i in range(len(keywords))}
 
     keynames = {}
     for i in range(len(keywords)):
@@ -130,5 +131,5 @@ def readSMSPEC(smspecPath):
             keynames[keywords[i]] = []
         if names[i] not in keynames[keywords[i]]:
             keynames[keywords[i]].append(names[i])
-        
-    return {'keywords':keywords, 'keynames':keynames, 'units':units}
+
+    return {'keywords': keywords, 'keynames': keynames, 'units': units}

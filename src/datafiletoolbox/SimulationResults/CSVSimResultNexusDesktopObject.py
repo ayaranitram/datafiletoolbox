@@ -6,7 +6,7 @@ Created on Wed May 13 15:34:04 2020
 """
 
 __version__ = '0.1.0'
-__release__ = 220113
+__release__ = 20220113
 __all__ = ['NexusDesktopCSV']
 
 from .mainObject import SimResult as _SimResult

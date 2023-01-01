@@ -6,11 +6,12 @@ Created on Sat Dec  7 21:48:37 2019
 @author: martin
 """
 
-__version__ = '0.5.6'
-__release__ = 220613
+__version__ =  '0.5.6'
+__release__ = 20220613
 
 import numpy
 # import pandas
+
 
 class WrongUnits(Exception):
     def __init__(self, message='unit not listed in library, unit must be a string'):
@@ -21,11 +22,13 @@ class WrongValue(Exception):
     def __init__(self, message='value unit must be a float or integer'):
         print('ERROR: Wrong Value, ' + message)
 
+
 #class basicmeta(type):
 #    def __repr__(cls):
 #        return 'temperature'
 
 #class basics(object, metaclass=basicmeta) :
+
 
 class unit(object) :
 
@@ -406,6 +409,7 @@ def valid_fvf(FVF) :
             return FVF
     return False
 
+
 class conversion(object):
     def __init__(self, src, dest, conv, reverse=False):
         """Assumes src and dest are nodes"""
@@ -428,6 +432,7 @@ class conversion(object):
             return self.conv
     def __str__(self):
         return self.src.getName() + '->' + self.dest.getName()
+
 
 class digraph(object):
     """edges is a dict mapping each node to a list of its children"""
@@ -461,6 +466,7 @@ class digraph(object):
                 result = result + src.getName() + '->'\
                          + dest.getName() + '\n'
         return result[:-1] #omit final newline
+
 
 class UnitDigraph(object):
     """edges is a dict mapping each node to a list of its children"""
@@ -509,13 +515,12 @@ class UnitDigraph(object):
                          str(self.conv) + '\n'
         return result[:-1] #omit final newline
 
+
 def UnitConversions():
     UC = UnitDigraph()
 
     StandardAirDensity = 1.225 # Kg/m3 or g/cc
     StandadEarthGravity = 9.80665 # m/s2 or 980.665 cm/s2 from
-
-
 
     for unitKind in list(unit.dictionary.keys()):
         # print('1: ' +unitKind)
@@ -563,8 +568,6 @@ def UnitConversions():
                             UC.addEdge(conversion(UC.getNode(secondName), UC.getNode(secondName.replace(' ', '-')), lambda X: X ))
                             unit.dictionary[unitKind.split('_')[0]].append(secondName)
                             unit.dictionary[unitKind.split('_')[0]].append(secondName.replace(' ', '-'))
-
-
 
         if '_SI' in unitKind and unitKind.split('_')[0] in unit.SI_order[0] :
             for unitName in list( unit.dictionary[unitKind] ) :
@@ -709,10 +712,6 @@ def UnitConversions():
                     unit.dictionary[unitKind.split('_')[0]].append(unitName.upper())
         if '_INVERSE' in unitKind :
             pass
-
-
-
-
 
     # for unitKind in list(unit.dictionary.keys()) :
     #     if '_REVERSE' in unitKind :
@@ -935,9 +934,8 @@ def BFS(graph, start, end, toPrint = False):
     return None
 
 
-
-
 UnCo = UnitConversions()
+
 
 def convertUnit(value, fromUnit, toUnit, PrintConversionPath=True ) :
 
@@ -959,8 +957,6 @@ def convertUnit(value, fromUnit, toUnit, PrintConversionPath=True ) :
         if type(value) == float and int(value) == value :
             value = int(value)
         return value
-
-
 
 
 def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=unit.RecursionLimit, Start=True) :
@@ -1181,7 +1177,6 @@ def convertible(fromUnit, toUnit, PrintPath=False) :
         return False
 
 
-
 # def basicsProduct(basics1, basics2):
 #     knownBasics = {lenght : {lenght : area,
 #                              area : volume},
@@ -1213,6 +1208,7 @@ def convertible(fromUnit, toUnit, PrintPath=False) :
 #                 pass
     # return unit1 + '*' + unit2
 
+
 def unitBasePower(unit):
     Ubas, Upow = '', ''
     oth = ''
@@ -1228,11 +1224,14 @@ def unitBasePower(unit):
     Upow = 1 if Upow == '' else float(Upow) if '.' in Upow else int(Upow)
     return Ubas, Upow
 
+
 def unitBase(unit):
     return unitBasePower(unit)[0]
 
+
 def unitPower(unit):
     return unitBasePower(unit)[1]
+
 
 def unitProduct(unit1, unit2):
 
@@ -1394,12 +1393,16 @@ class basics(object) :
         self.unit = None
         self.value = None
         self.name = None
+
     def __call__(self):
         return self.value
+
     def __repr__(self):
         return str(self.value) + '_' + str(self.unit)
+
     def __str__(self) :
         return str(self.value) + '_' + str(self.unit)
+
     def convert(self, newunit):
         if type(newunit) != str :
             try :
@@ -1407,8 +1410,10 @@ class basics(object) :
             except :
                 raise WrongUnits
         return self.name( converter(self.value, self.unit, newunit), newunit, False )
+
     def to(self, newunit):
         return self.convert(newunit)
+
     def __add__(self, other) :
         if type(other) == type(self) :
             if self.unit != other.unit :
@@ -1417,6 +1422,7 @@ class basics(object) :
                 return self.name(self.value + other.value, self.unit)
         elif type(other) == int or type(other) == float :
             return self.name(self.value + other, self.unit)
+
     def __radd__(self, other) :
         return self.__add__(other)
 
@@ -1430,7 +1436,6 @@ class basics(object) :
     #         return self.name(self.value * other, self.unit)
     #     else:
     #         return basicsProduct(self.name, other.name)(self.value * other.value, unitProduct(self.unit, other.unit))
-
 
     def __mul__(self, other) :
         if self.name == dimensionless :
@@ -1454,12 +1459,16 @@ class basics(object) :
                     return basicsProduct(self.name, other.name)(self.value * other.value, unitProduct(self.unit, other.unit))
             except :
                 return basicsProduct(self.name, other.name)(self.value * other.value, unitProduct(self.unit, other.unit))
+
     def __rmul__(self, other) :
         return self.__mul__(other)
+
     def __sub__(self, other) :
         return self.__add__(other*-1)
+
     def __rsub__(self, other) :
         return self.__sub__(other)
+
     def __truediv__(self, other):
         if type(other) == type(self) :
             if self.unit != other.unit :
@@ -1470,49 +1479,58 @@ class basics(object) :
             return self.__mul__(1/other)
         else:
             pass
+
     def __rtruediv__(self, other):
         return self.__truediv__(other)
+
     def __lt__(self, other) :
         if type(self) == type(other) :
             return self.value < other.convert(self.unit).value
         else:
             msg = "'<' not supported between instances of '" +   (str(type(self))[str(type(self)).index("'")+1:len(str(type(self))) - str(type(self))[::-1].index("'")-1]).replace('__main__.', '')   + "' and '" +   (str(type(other))[str(type(other)).index("'")+1:len(str(type(other))) - str(type(other))[::-1].index("'")-1]).replace('__main__.', '')   + "'"
             raise TypeError(msg)
+
     def __le__(self, other) :
         if type(self) == type(other) :
             return self.value <= other.convert(self.unit).value
         else:
             msg = "'<=' not supported between instances of '" +   (str(type(self))[str(type(self)).index("'")+1:len(str(type(self))) - str(type(self))[::-1].index("'")-1]).replace('__main__.', '')   + "' and '" +   (str(type(other))[str(type(other)).index("'")+1:len(str(type(other))) - str(type(other))[::-1].index("'")-1]).replace('__main__.', '')   + "'"
             raise TypeError(msg)
+
     def __eq__(self, other) :
         if type(self) == type(other) :
             return self.value == other.convert(self.unit).value
         else:
             msg = "'==' not supported between instances of '" +   (str(type(self))[str(type(self)).index("'")+1:len(str(type(self))) - str(type(self))[::-1].index("'")-1]).replace('__main__.', '')   + "' and '" +   (str(type(other))[str(type(other)).index("'")+1:len(str(type(other))) - str(type(other))[::-1].index("'")-1]).replace('__main__.', '')   + "'"
             raise TypeError(msg)
+
     def __ne__(self, other) :
         if type(self) == type(other) :
             return self.value != other.convert(self.unit).value
         else:
             msg = "'!=' not supported between instances of '" +   (str(type(self))[str(type(self)).index("'")+1:len(str(type(self))) - str(type(self))[::-1].index("'")-1]).replace('__main__.', '')   + "' and '" +   (str(type(other))[str(type(other)).index("'")+1:len(str(type(other))) - str(type(other))[::-1].index("'")-1]).replace('__main__.', '')   + "'"
             raise TypeError(msg)
+
     def __ge__(self, other) :
         if type(self) == type(other) :
             return self.value >= other.convert(self.unit).value
         else:
             msg = "'>=' not supported between instances of '" +   (str(type(self))[str(type(self)).index("'")+1:len(str(type(self))) - str(type(self))[::-1].index("'")-1]).replace('__main__.', '')   + "' and '" +   (str(type(other))[str(type(other)).index("'")+1:len(str(type(other))) - str(type(other))[::-1].index("'")-1]).replace('__main__.', '')   + "'"
             raise TypeError(msg)
+
     def __gt__(self, other) :
         if type(self) == type(other) :
             return self.value > other.convert(self.unit).value
         else:
             msg = "'>' not supported between instances of '" +   (str(type(self))[str(type(self)).index("'")+1:len(str(type(self))) - str(type(self))[::-1].index("'")-1]).replace('__main__.', '')   + "' and '" +   (str(type(other))[str(type(other)).index("'")+1:len(str(type(other))) - str(type(other))[::-1].index("'")-1]).replace('__main__.', '')   + "'"
             raise TypeError(msg)
+
     def __len__(self) :
         try :
             return len(self.value)
         except :
             return 1
+
     def __getitem__(self, item) :
         if type(item) == int :
             if item >= len(self) :
@@ -1520,17 +1538,22 @@ class basics(object) :
         else:
             raise ValueError
         return self.value[item]
+
     def __iter__(self) :
         if type(self.value) == int or type(self.value) == float :
             return numpy.array((self.value, )).__iter__()
         else:
             return self.value.__iter__()
+
     # def __next__(self) :
     #     pass
+
     def getUnit(self) :
         return self.unit
+
     def getValue(self) :
         return self.value
+
     def checkValue(self, value):
         if type(value) == list or type(value) == list :
             return numpy.array(value)
@@ -1542,6 +1565,8 @@ class basics(object) :
         #     return value
         else:
             raise WrongValue
+
+
     def checkUnit(self, units) :
         if type(units) != str :
             try :
@@ -1553,12 +1578,14 @@ class basics(object) :
         else:
             raise WrongUnits
 
+
 class time(basics):
     classUnits = unit.dictionary['time']
     def __init__(self, value, units) :
         self.name = time
         self.value = self.checkValue(value)
         self.unit = self.checkUnit(units)
+
 
 class temperature(basics):
     classUnits = unit.dictionary['temperature']
@@ -1567,12 +1594,14 @@ class temperature(basics):
         self.value = self.checkValue(value)
         self.unit = self.checkUnit(units)
 
+
 class pressure(basics):
     classUnits = unit.dictionary['pressure']
     def __init__(self, value, units) :
         self.name = pressure
         self.value = self.checkValue(value)
         self.unit = self.checkUnit(units)
+
 
 class weight(basics):
     classUnits = unit.dictionary['weight']
@@ -1581,12 +1610,14 @@ class weight(basics):
         self.value = self.checkValue(value)
         self.unit = self.checkUnit(units)
 
+
 class lenght(basics):
     classUnits = unit.dictionary['lenght']
     def __init__(self, value, units) :
         self.name = lenght
         self.value = self.checkValue(value)
         self.unit = self.checkUnit(units)
+
 
 class area(basics):
     classUnits = unit.dictionary['area']
@@ -1595,12 +1626,14 @@ class area(basics):
         self.value = self.checkValue(value)
         self.unit = self.checkUnit(units)
 
+
 class volume(basics):
     classUnits = unit.dictionary['volume']
     def __init__(self, value, units) :
         self.name = volume
         self.value = self.checkValue(value)
         self.unit = self.checkUnit(units)
+
 
 class density(basics):
     classUnits = unit.dictionary['density']
@@ -1609,12 +1642,14 @@ class density(basics):
         self.value = self.checkValue(value)
         self.unit = self.checkUnit(units)
 
+
 class compressibility(basics):
     classUnits = unit.dictionary['compressibility']
     def __init__(self, value, units) :
         self.name = compressibility
         self.value = self.checkValue(value)
         self.unit = self.checkUnit(units)
+
 
 # class volumeRatio(basics):
 #     classUnits = unit.dictionary['volumeRatio']
@@ -1623,12 +1658,14 @@ class compressibility(basics):
 #         self.value = self.checkValue(value)
 #         self.unit = self.checkUnit(units)
 
+
 class rate(basics):
     classUnits = unit.dictionary['rate']
     def __init__(self, value, units) :
         self.name = rate
         self.value = self.checkValue(value)
         self.unit = self.checkUnit(units)
+
 
 # class productivityIndex(basics):
 #     classUnits = unit.dictionary['productivityIndex']
@@ -1650,9 +1687,10 @@ class dimensionless(basics):
     def __init__(self, value, units=None) :
         self.name = dimensionless
         self.value = self.checkValue(value)
-        if units == None :
+        if units is None:
             units = 'dimensionless'
         self.unit = self.checkUnit(units)
+
 
 # class userUnits(basics):
 #     classUnits = unit.dictionary['customUnits']
@@ -1661,6 +1699,7 @@ class dimensionless(basics):
 #         userUnits.classUnits = tuple(unit.customUnits)
 #         self.value = self.checkValue(value)
 #         self.unit = self.checkUnit(units)
+
 
 # def makeUnit(value=None, units=None) :
 #     if value != None and units != None :

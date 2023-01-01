@@ -6,11 +6,11 @@ Created on Wed May 29 16:22:25 2019
 """
 
 __version__ = '1.0.0'
-__release__ = 210225
+__release__ = 20230101
 __all__ = ['_extension', '_verbose']
 
 
-def _verbose(userLevel=0, programLevel=0, StringToPrint='',*args) :
+def _verbose(userLevel=0, programLevel=0, StringToPrint='', *args):
     """
     According to the user desired level of verbosity ( userLevel ) and the
     defined program level ( programLevel ) of the message ( StringToPrint )
@@ -29,29 +29,29 @@ def _verbose(userLevel=0, programLevel=0, StringToPrint='',*args) :
     no matter the value of userLevel
     """
     # debugging only:
-    #print('+++ userLevel: ' + str(userLevel) + '\n+++ programLevel: ' + str(programLevel))
+    # print('+++ userLevel: ' + str(userLevel) + '\n+++ programLevel: ' + str(programLevel))
 
-    if type(StringToPrint) is list or type(StringToPrint) is tuple :
+    if type(StringToPrint) is list or type(StringToPrint) is tuple:
         StringToPrint = ' '.join(StringToPrint)
-    else :
+    else:
         StringToPrint = str(StringToPrint)
-    if len(args) > 0 :
+    if len(args) > 0:
         StringToPrint = (StringToPrint + ' ' + ' '.join([str(a) for a in args])).rstrip()
 
-    if userLevel == None :
+    if userLevel is None:
         userLevel = 0
-    if programLevel == None :
+    if programLevel is None:
         programLevel = 0
 
-    if len(StringToPrint) == 0 :
-            print('\n verbose 0.2\n  syntax: verbose(userLevel, programLevel, StringToPrint)')
-    elif userLevel < 0 or programLevel < 0 :
+    if len(StringToPrint) == 0:
+        print('\n verbose 0.2\n  syntax: verbose(userLevel, programLevel, StringToPrint)')
+    elif userLevel < 0 or programLevel < 0:
         print(StringToPrint)
-    elif userLevel == 0 :
-            pass
-    elif userLevel <= programLevel :
+    elif userLevel == 0:
+        pass
+    elif userLevel <= programLevel:
         print(StringToPrint)
-    else :
+    else:
         pass
 
 
@@ -69,24 +69,24 @@ def _extension(filepath, NullValue='', backSlashToSlash=True, backCompatibility=
 
     filepath = filepath.strip()
 
-    if backSlashToSlash == True :
+    if bool(backSlashToSlash) is True:
         filepath = filepath.replace('\\', '/')
 
-    if '/' in filepath :
-        lpath = len(filepath)-filepath[::-1].index('/')
+    if '/' in filepath:
+        lpath = len(filepath) - filepath[::-1].index('/')
         path = filepath[:lpath]
-    else :
+    else:
         lpath = 0
         path = ''
 
-    if '.' in filepath[lpath:] :
-        filename = filepath[lpath:len(filepath)-filepath[::-1].index('.')-1]
-        extension = filepath[len(filepath)-filepath[::-1].index('.')-1:]
-    else :
+    if '.' in filepath[lpath:]:
+        filename = filepath[lpath:len(filepath) - filepath[::-1].index('.') - 1]
+        extension = filepath[len(filepath) - filepath[::-1].index('.') - 1:]
+    else:
         filename = filepath[lpath:]
         extension = ''
 
-    if backCompatibility :
-        return ( filename, extension, path, path+filename+extension )
+    if backCompatibility:
+        return filename, extension, path, path + filename + extension
 
-    return ( extension, filename, path, path+filename+extension )
+    return extension, filename, path, path + filename + extension

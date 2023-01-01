@@ -6,7 +6,7 @@ Created on Wed May 13 15:45:12 2020
 """
 
 __version__ = '0.25.7'
-__release__ = 220512
+__release__ = 20220512
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult

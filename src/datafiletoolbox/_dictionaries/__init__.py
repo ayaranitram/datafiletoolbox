@@ -6,7 +6,7 @@ Created on Thu Aug  6 14: 36: 56 2020
 """
 
 __version__ = '0.0.0'
-__release__ = 210225
+__release__ = 20210225
 
 from .calculations import *
 from .unitsSystems import *

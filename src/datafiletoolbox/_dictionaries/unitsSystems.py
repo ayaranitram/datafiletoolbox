@@ -6,7 +6,7 @@ Created on Thu Aug  6 14: 07: 00 2020
 """
 
 __version__ = '0.0.1'
-__release__ = 220331
+__release__ = 20220331
 
 unitsFIELD = {'OIP': 'MMstb',
               'WIP': 'MMstb',
@@ -31,10 +31,11 @@ unitsFIELD = {'OIP': 'MMstb',
               'PR': 'psia',
               'PRH': 'psia',
               'PRP': 'psia',
-              'GOR':'Mscf/stb',
-              'WOR':'stb/stb',
-              'ELAPSED':'hours',
+              'GOR': 'Mscf/stb',
+              'WOR': 'stb/stb',
+              'ELAPSED': 'hours',
               }
+
 unitsMETRIC = {'OIP': 'Ksm3',
                'WIP': 'Ksm3',
                'GIP': 'Msm3',
@@ -58,7 +59,7 @@ unitsMETRIC = {'OIP': 'Ksm3',
                'PR': 'bara',
                'PRH': 'bara',
                'PRP': 'bara',
-               'GOR':'sm3/sm3',
-               'WOR':'sm3/sm3',
-               'ELAPSED':'hours',
+               'GOR': 'sm3/sm3',
+               'WOR': 'sm3/sm3',
+               'ELAPSED': 'hours',
                }

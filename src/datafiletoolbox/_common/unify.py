@@ -6,7 +6,7 @@ Created on Wed Jan 19 18:55:24 2022
 """
 
 __version__ = '0.1.1'
-__release__ = 220127
+__release__ = 20220127
 __author__ = 'Martin Carlos Araya <martinaraya@gmail.com>'
 __all__ = ['unify']
 
@@ -14,7 +14,7 @@ import os
 import shutil
 import glob
 from .._common.inout import _extension
-from .._Classes.Errors import OverwrittingError
+from .._Classes.Errors import OverwritingError
 
 
 def unify(filepath,overwrite=None,min_input=None):
@@ -28,7 +28,7 @@ def unify(filepath,overwrite=None,min_input=None):
     overwrite : None or bool, optional
         To set behaviour when .UNSMRY file already exists:
             If None will skip these files and return None.
-            If False will raise OverwrittingError.
+            If False will raise OverwritingError.
             If True will overwrite the existing file.
             The default is None.
     min_input : int or None, optional
@@ -36,7 +36,7 @@ def unify(filepath,overwrite=None,min_input=None):
 
     Raises
     ------
-    OverwrittingError
+    OverwritingError
         when the output file already exists.
 
     Returns
@@ -65,7 +65,7 @@ def unify(filepath,overwrite=None,min_input=None):
         print('The .UNSMRY file aready exists:\n ' + str(unsmry_path) + '.\n Set the second argument to True to overwrite.')
         return None
     elif os.path.isfile(unsmry_path) and overwrite is False:
-        raise OverwrittingError('The .UNSMRY file aready exists:\n ' + str(unsmry_path) + '.\n Set the second argument to True to overwrite.')
+        raise OverwritingError('The .UNSMRY file aready exists:\n ' + str(unsmry_path) + '.\n Set the second argument to True to overwrite.')
     elif os.path.isfile(unsmry_path) and overwrite is True:
         pass
 

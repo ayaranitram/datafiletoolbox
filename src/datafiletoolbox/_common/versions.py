@@ -6,7 +6,7 @@ Created on Sat May 16 14: 44: 06 2020
 """
 
 __version__ = '0.0.0'
-__release__ = 210225
+__release__ = 20210225
 
 import pprint
 

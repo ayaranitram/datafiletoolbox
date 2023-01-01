@@ -10,7 +10,7 @@ __release__ = 20220928
 __all__ = ['SimResult']
 
 from .. import _dictionaries
-from .._Classes.Errors import OverwrittingError, InvalidKeyError, MissingDependence
+from .._Classes.Errors import OverwritingError, InvalidKeyError, MissingDependence
 from .._Classes.SimPandas import SimSeries, SimDataFrame
 from .._common.stringformat import date as _strDate, isDate as _isDate, multisplit as _multisplit, isnumeric as _isnumeric, getnumber as _getnumber
 from .._common.functions import _is_SimulationResult, _mainKey, _itemKey, _wellFromAttribute, _isECLkey, _keyType, tamiz as _tamiz, _meltDF  # _AttributeFromKeys,
@@ -4379,7 +4379,7 @@ class SimResult(object):
             raise TypeError(' <set_Vector> Key must be a string')
 
         if Key in self.vectors and overwrite is False:
-            raise OverwrittingError(' <set_Vector> the Key ' + Key + ' already exists in the dataset and overwrite parameter is set to False. Set overwrite=True to avoid this message and change the DataVector.')
+            raise OverwritingError(' <set_Vector> the Key ' + Key + ' already exists in the dataset and overwrite parameter is set to False. Set overwrite=True to avoid this message and change the DataVector.')
 
         # validating VectorData
         if type(VectorData) in (list,tuple):
@@ -5634,7 +5634,7 @@ class SimResult(object):
             #     self.set_Vector(OutputKey, np.array(Cumulative), OutUnits, overwrite=overwrite)
             #     # _verbose(self.speak, 2, 'not able to save vector because the case has both restarts and continuations.')
 
-        except OverwrittingError:
+        except OverwritingError:
             _verbose(self.speak, 2, 'not able to save vector because the Key already exists.')
         return (OutputKey, np.array(Cumulative), OutUnits)
 
@@ -6450,7 +6450,7 @@ class SimResult(object):
         if path is None:
             path = _extension(self.path)[2] + _extension(self.path)[1] + '.SCH'
         if os.path.isfile(path):
-            raise OverwrittingError("The output file already exists:\n  '"+str(path)+"'")
+            raise OverwritingError("The output file already exists:\n  '" + str(path) + "'")
         if keys is None:
             userKeys, keys = [], ['WOPRH', 'WWPRH','WGPRH', 'WBHPH', 'WGIRH', 'WWIRH', 'WOPR', 'WWPR','WGPR', 'WBHP', 'WGIR', 'WWIR']
         elif type(keys) is str:

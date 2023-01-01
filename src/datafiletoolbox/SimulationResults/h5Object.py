@@ -33,7 +33,7 @@ class H5(_SimResult):
         _SimResult.__init__(self, verbosity=verbosity)
         self.kind = H5
         self.keynames = None
-        self.numpy_dates =  None
+        self.numpy_dates = None
         if type(inputFile) == str and len(inputFile.strip()) > 0:
             self.smspec = self.readSMSPEC(inputFile)
             self.loadSummary(inputFile, **kwargs)
@@ -53,13 +53,13 @@ class H5(_SimResult):
                     h5FilePath = newPath
                 else:
                     newPath = _extension(h5FilePath)[2] + _extension(h5FilePath)[1] + '.H5'
-                    if os.path.isfile( newPath ):
+                    if os.path.isfile(newPath):
                         h5FilePath = newPath
 
             if os.path.isfile(h5FilePath):
                 if os.path.getsize(h5FilePath) == 0:
                     raise CorruptedFileError("\nThe .h5 file seems to be empty")
-                _verbose( self.speak, 1, ' > loading HDF5 file:\n  ' + h5FilePath)
+                _verbose(self.speak, 1, ' > loading HDF5 file:\n  ' + h5FilePath)
                 self.results = h5py.File(h5FilePath, "r")
                 # if ('unload' in kwargs and kwargs['unload'] is True) or ('close' in kwargs and kwargs['close'] is True):
                 #     return None
@@ -71,18 +71,20 @@ class H5(_SimResult):
                 self.get_Keys(reload=True)
                 self.units = self.get_Unit(self.keys)
                 if self.get_Dates() is not None:
-                    _verbose( self.speak, 1, 'simulation runs from ' +  str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
-                self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), DataType='datetime', overwrite=True)
+                    _verbose(self.speak, 1,
+                             'simulation runs from ' + str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
+                self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), DataType='datetime',
+                                overwrite=True)
                 self.stripUnits()
                 self.get_Attributes(reload=True)
                 self.fill_FieldBasics()
 
             else:
-                raise FileNotFoundError( "the file doesn't exist:\n  -> " + h5FilePath )
+                raise FileNotFoundError("the file doesn't exist:\n  -> " + h5FilePath)
         else:
             print("h5FilePath must be a string")
 
-    def readSMSPEC(self,smspecPath):
+    def readSMSPEC(self, smspecPath):
         """
         read the SMSPEC file and extract the well and group names
         """
@@ -96,16 +98,17 @@ class H5(_SimResult):
                     smspecPath = newPath
             if os.path.isfile(smspecPath):
                 if os.path.getsize(smspecPath) == 0:
-                    warnings.warn("\nThe .SMSPEC file seems to be empty:\n  -> "  + smspecPath )
+                    warnings.warn("\nThe .SMSPEC file seems to be empty:\n  -> " + smspecPath)
             else:
-                warnings.warn( "the SMSPEC file doesn't exist:\n  -> " + smspecPath )
+                warnings.warn("the SMSPEC file doesn't exist:\n  -> " + smspecPath)
         if not os.path.isfile(smspecPath) or os.path.getsize(smspecPath) == 0:
-            warnings.warn( "the SMSPEC file doesn't exist or is empty:\n  -> " + smspecPath + "\n  Units and well names will be unkown.")
+            warnings.warn(
+                "the SMSPEC file doesn't exist or is empty:\n  -> " + smspecPath + "\n  Units and well names will be unkown.")
 
         with open(smspecPath, 'r', errors='surrogateescape') as file:
             smspec = file.read()
 
-        keywords_index =  smspec.index('\x00\x00\x10KEYWORDS')
+        keywords_index = smspec.index('\x00\x00\x10KEYWORDS')
         # if '@CHAR' in smspec[keywords_index:]:
         #     keywords_index = keywords_index + smspec[keywords_index:].index('@CHAR') + 5 + 8
         # else:
@@ -113,7 +116,7 @@ class H5(_SimResult):
         keywords_index += 27
         last_index = keywords_index + smspec[keywords_index:].index('\x00\x00\x10')
         keywords = smspec[keywords_index:last_index]
-        keywords = [ keywords[i:i+8].strip() for i in range(0,len(keywords),8) ]
+        keywords = [keywords[i:i + 8].strip() for i in range(0, len(keywords), 8)]
 
         # names_index = last_index + smspec[last_index:].index('\x00\x00\x10NAMES   ')
         if '\x00\x00\x10NAMES   ' in smspec:
@@ -142,7 +145,7 @@ class H5(_SimResult):
         # else:
         #     name_len = 8
         #     names_index = names_index + smspec[names_index:].index('@CHAR') + 5 + 8
-        name_len = smspec[names_index+16:names_index+19]
+        name_len = smspec[names_index + 16:names_index + 19]
         if name_len.isdigit():
             name_len = int(name_len)
         else:
@@ -154,13 +157,13 @@ class H5(_SimResult):
         names = smspec[names_index:last_index]
 
         if name_len == 8:
-            names = [ names[i:i+name_len].strip() for i in range(0,len(names),name_len) ]
+            names = [names[i:i + name_len].strip() for i in range(0, len(names), name_len)]
         else:
             namesList = []
             i = 0
             while i < len(names):
                 if names[i] in string.printable:
-                    namesList.append(names[i:i+name_len].strip())
+                    namesList.append(names[i:i + name_len].strip())
                     i += name_len
                 else:
                     f = i
@@ -171,7 +174,7 @@ class H5(_SimResult):
             names = namesList
 
         # names = [None if n != ':+:+:+:+' else n for n in names]
-        
+
         # nums_index = smspec.index('\x00\x00\x10NUMS    ')
 
         units_index = smspec.index('\x00\x00\x10UNITS   ')
@@ -185,12 +188,13 @@ class H5(_SimResult):
 
         last_index = units_index + smspec[units_index:].index('\x00\x00\x10')
         units = smspec[units_index:last_index]
-        units = [ units[i:i+8].strip() for i in range(0,len(units),8) ]
+        units = [units[i:i + 8].strip() for i in range(0, len(units), 8)]
 
         # measrmnt_index = smspec.index('\x00\x00\x10MEASRMNT')
 
-        self.units = { keywords[i]+(':'+names[i] if len(names[i])>0 else '') : units[i] for i in range(len(keywords)) }
-        fieldKeys = [ k for k in self.units.keys() if _mainKey(k) != k if k[0] == 'F' ]
+        self.units = {keywords[i] + (':' + names[i] if len(names[i]) > 0 else ''): units[i] for i in
+                      range(len(keywords))}
+        fieldKeys = [k for k in self.units.keys() if _mainKey(k) != k if k[0] == 'F']
         for k in fieldKeys:
             self.units[_mainKey(k)] = self.units[k]
 
@@ -208,30 +212,30 @@ class H5(_SimResult):
         """
         support function to extract data from the 'summary_vectors' key of the HDF5 file
         """
-        main , item = _mainKey(key) , _itemKey(key)
+        main, item = _mainKey(key), _itemKey(key)
         item_pos = 0
         if main in self.keynames:
             if item is not None and item in self.keynames[main]:
                 item_pos = self.keynames[main].index(item)
             elif item is not None:
-                raise InvalidKeyError("'" + str(key) +"' is not a valid Key in this dataset.\nThe item '" + str(item) + "' does not have a " + str(main))
+                raise InvalidKeyError("'" + str(key) + "' is not a valid Key in this dataset.\nThe item '" + str(
+                    item) + "' does not have a " + str(main))
         else:
             raise InvalidKeyError("'" + str(key) + "' is not a valid Key in this dataset")
         item_h5 = list(self.results['summary_vectors'][main].keys())[item_pos]
         return np.array(self.results['summary_vectors'][main][item_h5]['values'])
 
-
     # support functions for get_Vector:
     def loadVector(self, key):
-            """
+        """
             internal function to load a numpy vector from the HDF5 files
             """
-            if str(key).upper().strip() in ["DATES", "DATE"]:
-                self.get_Dates()
-                if self.start is not None:
-                    return self.numpy_dates
-            else:
-                return self.readH5(key)
+        if str(key).upper().strip() in ["DATES", "DATE"]:
+            self.get_Dates()
+            if self.start is not None:
+                return self.numpy_dates
+        else:
+            return self.readH5(key)
 
     def get_Dates(self):
         try:
@@ -249,7 +253,8 @@ class H5(_SimResult):
         if self.start is None:
             self.end = None
         else:
-            self.numpy_dates = self.start + np.array([ np.timedelta64(dt.timedelta(float(t))) for t in self.results['general']['time'] ] )
+            self.numpy_dates = self.start + np.array(
+                [np.timedelta64(dt.timedelta(float(t))) for t in self.results['general']['time']])
             self.end = self.numpy_dates[-1]
         return self.numpy_dates
 
@@ -289,7 +294,7 @@ class H5(_SimResult):
                 if ':' in key:
                     item = key.split(':')[1]
                     if item not in ('', ':+:+:+:+'):
-                        outList.append( item )
+                        outList.append(item)
         self.groups = tuple(set(outList))
         # preparing list to return
         if pattern is None:
@@ -317,9 +322,9 @@ class H5(_SimResult):
                 else:  # key in self.keynames and len(self.keynames[key]) > 1:
                     for item in self.keynames[key]:
                         if item not in ('', ':+:+:+:+'):
-                            listOfKeys.append(key+':'+item)
-            self.keys = tuple( set(listOfKeys) )
-            for extra in ( 'TIME', 'DATE', 'DATES' ):
+                            listOfKeys.append(key + ':' + item)
+            self.keys = tuple(set(listOfKeys))
+            for extra in ('TIME', 'DATE', 'DATES'):
                 if extra not in self.keys:
                     self.keys = tuple([extra] + list(self.keys))
         if pattern is None:
@@ -329,14 +334,14 @@ class H5(_SimResult):
 
     def extract_Regions(self, pattern=None):
         # preparing object attribute
-        outList = list( self.regions )
+        outList = list(self.regions)
         for key in self.get_Keys():
             if key[0] == 'R':
                 if ':' in key:
                     item = key.split(':')[1]
                     if item not in ('', ':+:+:+:+'):
-                        outList.append( item )
-        self.regions = tuple( set( outList ) )
+                        outList.append(item)
+        self.regions = tuple(set(outList))
         # preparing list to return
         if pattern is None:
             return self.regions

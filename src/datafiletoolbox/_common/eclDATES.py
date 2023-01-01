@@ -10,7 +10,7 @@ from math import floor
 from datetime import date
 
 __version__ = '0.1.0'
-__release__ = 210225
+__release__ = 20210225
 __all__ = ['simDate']
 
 
@@ -20,40 +20,40 @@ def _monthStr2Int(month):
     return the corresponding integer for that month.
     """
     str2int = {
-            'JAN': 1,
-            'FEB': 2,
-            'MAR': 3,
-            'APR': 4,
-            'MAY': 5,
-            'JUN': 6,
-            'JUL': 7,
-            'JLY': 7,
-            'AUG': 8,
-            'SEP': 9,
-            'OCT': 10,
-            'NOV': 11,
-            'DEC': 12,
-            }
+        'JAN': 1,
+        'FEB': 2,
+        'MAR': 3,
+        'APR': 4,
+        'MAY': 5,
+        'JUN': 6,
+        'JUL': 7,
+        'JLY': 7,
+        'AUG': 8,
+        'SEP': 9,
+        'OCT': 10,
+        'NOV': 11,
+        'DEC': 12,
+    }
     int2str = dict(list(zip(list(str2int.values()), list(str2int.keys()))))
     if type(month) is float:
         month = floor(month)
     if type(month) is int:
-        if month >= 1 and month <= 12:
-            return int2str[month ]
+        if 1 <= month <= 12:
+            return int2str[month]
         elif month > 12:
-            if month%12 == 0:
-                return int2str[12 ]
+            if month % 12 == 0:
+                return int2str[12]
             else:
-                return int2str[month%12 ]
+                return int2str[month % 12]
         elif month < 0:
-            return int2str[month%12 +1 ]
+            return int2str[month % 12 + 1]
         else:
-            print(" month should be integer or string." )
+            print(" month should be integer or string.")
 
     try:
-        return str2int[month.strip().upper()[0: 3] ]
+        return str2int[month.strip().upper()[0: 3]]
     except:
-        print(" not recognized month string: '" + str(month) + "'" )
+        print(" not recognized month string: '" + str(month) + "'")
 
 
 def simDate(DateArgument):

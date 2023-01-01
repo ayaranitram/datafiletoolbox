@@ -7,7 +7,7 @@ Created on Sun Oct 18 05:32:42 2020
 """
 
 __version__ = '0.1.1'
-__release__ = 210723
+__release__ = 20210723
 __all__ = ['Alternate']
 
 

@@ -13,10 +13,9 @@ __version__ = '0.52.26'
 __release__ = 20221116
 __author__ = 'Martin Carlos Araya <martinaraya@gmail.com>'
 __all__ = ['stringformat', 'extension', 'Alternate', 'convert', 'SimPandas',
-           'SimSeries', 'SimDataFrame', 'loadSimulationResults','melt','pivot','unify','slope']
+           'SimSeries', 'SimDataFrame', 'loadSimulationResults', 'melt', 'pivot', 'unify', 'slope']
 
 _msg = """     implementing libecl 2.9.1 from pypi, released on Aug 2020"""
-
 
 from ._Classes.Iterators import Alternate
 from ._Classes.SimPandas import SimSeries, SimDataFrame, read_excel, concat
@@ -36,6 +35,6 @@ from .SimulationResults.loader import loadSimulationResults
 
 print('\n>>> Datafile Tool Box',
       __version__,
-      'r'+str(__release__),
+      'r' + str(__release__),
       'loaded <<<\n')
 # print(_msg)

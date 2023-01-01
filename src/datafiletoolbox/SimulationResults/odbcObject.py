@@ -6,7 +6,7 @@ Created on Wed May 13 15:34:04 2020
 """
 
 __version__ = '0.0.0'
-__release__ = 220525
+__release__ = 20220525
 __all__ = ['ODBC']
 
 from .mainObject import SimResult as _SimResult
@@ -33,7 +33,7 @@ class ODBC(_SimResult):
                  SERVER='SQL12progen1\sql12Gen1',
                  DATABASE=None,
                  UID=None,
-                 PWD=None,
+                 PWD= None,
                  TABLES=None,
                  verbosity=2, nameSeparator=':', preload=True,
                  uniqueID='UniqueID', headertable='OFM_HEADERID',

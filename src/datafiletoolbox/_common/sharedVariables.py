@@ -6,6 +6,6 @@ Created on Mon Mar 15 09:29:57 2021
 """
 
 __version__ = '0.0.0'
-__release__ = 210315
+__release__ = 20210315
 
 _loadingECLfile = [False]

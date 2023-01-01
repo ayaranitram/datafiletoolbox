@@ -7009,11 +7009,11 @@ Copy of input object, shifted.
         None.
         """
         from .._common.stringformat import date as strDate
-        from .._Classes.Errors import OverwrittingError
+        from .._Classes.Errors import OverwritingError
         import os
 
         if os.path.isfile(path):
-            raise OverwrittingError("The output file already exists:\n  '"+str(path)+"'")
+            raise OverwritingError("The output file already exists:\n  '" + str(path) + "'")
 
         eclipseUnits0 = {'FIELD':{'OPR':'stb/day',  # Oil rate
                                  'WPR':'stb/day',  # Water rate

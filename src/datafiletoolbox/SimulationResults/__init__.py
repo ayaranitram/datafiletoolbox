@@ -6,7 +6,7 @@ Created on Sat May 16 20:10:06 2020
 """
 
 __version__ = '0.2.2'
-__release__ = 220316
+__release__ = 20220316
 __all__ = ['loadSimulationResults']
 
 from .mainObject import SimResult

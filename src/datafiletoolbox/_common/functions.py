@@ -6,12 +6,13 @@ Created on Wed May 13 00:46:05 2020
 """
 
 __version__ = '0.4.1'
-__release__ = 220523
+__release__ = 20220523
 __all__ = ['_mainKey', '_itemKey', '_keyType', '_wellFromAttribute', 'tamiz', '_meltDF', '_pivotDF']
 
 import pandas
 import numpy
 from .._Classes.SimPandas import SimSeries, SimDataFrame
+
 
 def _is_SimulationResult(obj):
     """
@@ -34,13 +35,14 @@ def _mainKey(Key, clean=True, nameSeparator=':'):
     if type(Key) is list or type(Key) is tuple:
         results = []
         for K in Key:
-            results.append( _mainKey(K) )
+            results.append(_mainKey(K))
         if clean:
             return list(set(results))
         else:
             return list(results)
-    if isinstance(Key,(SimSeries, pandas.Series)):
+    if isinstance(Key, (SimSeries, pandas.Series)):
         return _mainKey(Key.name)
+
 
 def _itemKey(Key, clean=True, nameSeparator=':'):
     """
@@ -57,13 +59,14 @@ def _itemKey(Key, clean=True, nameSeparator=':'):
     if type(Key) is list or type(Key) is tuple:
         results = []
         for K in Key:
-            results.append( _itemKey(K) )
+            results.append(_itemKey(K))
         if clean:
             return list(set(results))
         else:
             return list(results)
-    if isinstance(Key,(SimSeries, pandas.Series)):
+    if isinstance(Key, (SimSeries, pandas.Series)):
         return _itemKey(Key.name)
+
 
 def _keyType(Key):
     """
@@ -75,7 +78,7 @@ def _keyType(Key):
     """
     if type(Key) is str:
         Key = Key.strip()
-        if len(Key)>0:
+        if len(Key) > 0:
             if Key[0] == 'F':
                 return 'FIELD'
             if Key[0] == 'R':
@@ -100,7 +103,7 @@ def _isECLkey(Key, maxLen=12):
     if type(Key) is list or type(Key) is tuple:
         results = []
         for K in Key:
-            results.append( _isECLkey(K) )
+            results.append(_isECLkey(K))
         return results
 
     if type(Key) is not str:
@@ -114,7 +117,8 @@ def _isECLkey(Key, maxLen=12):
 
     return True
 
-def _wellFromAttribute( listOfAttributes ):
+
+def _wellFromAttribute(listOfAttributes):
     """
     receives a list of attributes, like:
         [ 'WOPR:W1', 'WOPR:W2', 'WOPR:W3', ... ]
@@ -122,13 +126,13 @@ def _wellFromAttribute( listOfAttributes ):
         { 'WOPR:W1':'W1', 'WOPR:W2':'W2', 'WOPR:W3':'W3', ... }
 
     """
-    if type( listOfAttributes ) is str:
+    if type(listOfAttributes) is str:
         listOfAttributes = listOfAttributes.split()
-    if type( listOfAttributes ) is tuple or type( listOfAttributes ) is set:
-        listOfAttributes = list( listOfAttributes )
-    if type( listOfAttributes ) is pandas.core.indexes.base.Index:
-        listOfAttributes = list( listOfAttributes )
-    if type( listOfAttributes ) is not list:
+    if type(listOfAttributes) is tuple or type(listOfAttributes) is set:
+        listOfAttributes = list(listOfAttributes)
+    if type(listOfAttributes) is pandas.core.indexes.base.Index:
+        listOfAttributes = list(listOfAttributes)
+    if type(listOfAttributes) is not list:
         return {}
 
     newNames = {}
@@ -136,7 +140,8 @@ def _wellFromAttribute( listOfAttributes ):
         newNames[each] = each.split(':')[-1]
     return newNames
 
-def _AttributeFromKeys( listOfKeys ):
+
+def _AttributeFromKeys(listOfKeys):
     """
     receives a list of attributes, like:
         [ 'WOPR:W1', 'WOPR:W2', 'WOPR:W3', ... ]
@@ -144,13 +149,13 @@ def _AttributeFromKeys( listOfKeys ):
         { 'WOPR:W1':'WOPR', 'WWPR:W1':'WWPR', 'WGPR:W1':'WGPR', ... }
 
     """
-    if type( listOfKeys ) is str:
+    if type(listOfKeys) is str:
         listOfKeys = listOfKeys.split()
-    if type( listOfKeys ) is tuple or type( listOfKeys ) is set:
-        listOfKeys = list( listOfKeys )
-    if type( listOfKeys ) is pandas.core.indexes.base.Index:
-        listOfKeys = list( listOfKeys )
-    if type( listOfKeys ) is not list:
+    if type(listOfKeys) is tuple or type(listOfKeys) is set:
+        listOfKeys = list(listOfKeys)
+    if type(listOfKeys) is pandas.core.indexes.base.Index:
+        listOfKeys = list(listOfKeys)
+    if type(listOfKeys) is not list:
         return {}
 
     newNames = {}
@@ -158,7 +163,8 @@ def _AttributeFromKeys( listOfKeys ):
         newNames[each] = each.split(':')[0]
     return newNames
 
-def tamiz( ListOrTuple ):
+
+def tamiz(ListOrTuple):
     """
     receives a list or tuple of strings and other types mixed
     returns a tuple where:
@@ -171,7 +177,7 @@ def tamiz( ListOrTuple ):
     others = []
 
     if type(ListOrTuple) is str:
-        strings += [ ListOrTuple ]
+        strings += [ListOrTuple]
     elif type(ListOrTuple) is list or type(ListOrTuple) is tuple:
         for each in ListOrTuple:
             if type(each) is list or type(each) is tuple:
@@ -186,151 +192,153 @@ def tamiz( ListOrTuple ):
         others += [ListOrTuple]
     return strings, others
 
+
 def _meltDF(df, hue='--auto', label='--auto', SimObject=None, FullOutput=False, **kwargs):
-        """
+    """
         common procedure to melt and rename the dataframe
         """
-        if type(df) in [SimSeries,SimDataFrame]:
-            SimDF = True
-            unitsdict = df.get_units().copy()
-            units = lambda col : unitsdict[col] if col in unitsdict else None
-            df = df.DF
-        else:
-            SimDF = False
+    if type(df) in [SimSeries, SimDataFrame]:
+        SimDF = True
+        unitsdict = df.get_units().copy()
+        units = lambda col: unitsdict[col] if col in unitsdict else None
+        df = df.DF
+    else:
+        SimDF = False
 
-        for key in ['hue','label','SimObject','FullOutput']:
-            kwargs.pop(key, None)
-        if 'var_name' in kwargs:
-            var_name = kwargs['var_name']
-        else:
-            var_name = 'SDFvariable'
-        if 'value_name' in kwargs:
-            value_name = kwargs['value_name']
-        else:
-            value_name = 'value'
+    for key in ['hue', 'label', 'SimObject', 'FullOutput']:
+        kwargs.pop(key, None)
+    if 'var_name' in kwargs:
+        var_name = kwargs['var_name']
+    else:
+        var_name = 'SDFvariable'
+    if 'value_name' in kwargs:
+        value_name = kwargs['value_name']
+    else:
+        value_name = 'value'
 
-        df = df.melt(var_name=var_name, value_name=value_name, ignore_index=False)
-        df['attribute'] = _mainKey( list(df[var_name]), False)
-        df['item'] = _itemKey( list(df[var_name]), False)
+    df = df.melt(var_name=var_name, value_name=value_name, ignore_index=False)
+    df['attribute'] = _mainKey(list(df[var_name]), False)
+    df['item'] = _itemKey(list(df[var_name]), False)
 
-        if hue == 'main':
-            hue = 'attribute'
-        if label == 'main':
+    if hue == 'main':
+        hue = 'attribute'
+    if label == 'main':
+        label = 'attribute'
+
+    itemLabel = 'item'
+    values = value_name  # 'value' before
+
+    if len(set([i[0] for i in _mainKey(list(df[var_name]))])) == 1:
+        itemLabel = list(set(_mainKey(list(df[var_name]))))[0][0].upper()
+        if itemLabel == 'W':
+            itemLabel = 'well'
+        elif itemLabel == 'R':
+            itemLabel = 'region'
+        elif itemLabel == 'G':
+            itemLabel = 'group'
+        else:
+            itemLabel = 'item'
+
+    if _is_SimulationResult(SimObject):
+        unitsLabel = ' [' + SimObject.get_plotUnits(_mainKey(list(df[var_name]))[0]) + ']'
+    else:
+        unitsLabel = ''
+
+    if hue == '--auto' and label == '--auto':
+        if len(_mainKey(list(df[var_name]))) == 1 and len(_itemKey(list(df[var_name]))) == 1:
+            hue = None
+            label = itemLabel
+            newLabel = _mainKey(list(df[var_name]))[0] + unitsLabel
+            df = df.rename(columns={value_name: newLabel})  # value_name was 'value' before
+            values = newLabel
+        elif len(_mainKey(list(df[var_name]))) == 1 and len(_itemKey(list(df[var_name]))) > 1:
+            hue = None
+            label = itemLabel
+            newLabel = _mainKey(list(df[var_name]))[0] + unitsLabel
+            df = df.rename(columns={value_name: newLabel})  # value_name was 'value' before
+            values = newLabel
+        elif len(_mainKey(list(df[var_name]))) > 1 and len(_itemKey(list(df[var_name]))) == 1:
+            hue = itemLabel  # None
             label = 'attribute'
-
-        itemLabel = 'item'
-        values = value_name  # 'value' before
-
-        if len(set( [ i[0] for i in _mainKey( list(df[var_name]) ) ] )) == 1:
-            itemLabel = list(set( _mainKey( list(df[var_name]) )))[0][0].upper()
-            if itemLabel == 'W':
-                itemLabel = 'well'
-            elif itemLabel == 'R':
-                itemLabel = 'region'
-            elif itemLabel == 'G':
-                itemLabel = 'group'
-            else:
-                itemLabel = 'item'
-
-        if _is_SimulationResult(SimObject):
-            unitsLabel = ' [' + SimObject.get_plotUnits(_mainKey( list(df[var_name]) )[0]) + ']'
+            # values = _itemKey( list(df[var_name]) )[0]
+            # df = df.rename(columns={'value':values})
+        elif len(_mainKey(list(df[var_name]))) > len(_itemKey(list(df[var_name]))):
+            hue = itemLabel  # 'item'
+            label = 'attribute'
+        elif len(_mainKey(list(df[var_name]))) < len(_itemKey(list(df[var_name]))):
+            hue = 'attribute'
+            label = itemLabel  # 'item'
         else:
-            unitsLabel = ''
+            hue = 'attribute'
+            label = itemLabel  # 'item'
 
-        if hue == '--auto' and label == '--auto':
-            if len( _mainKey( list(df[var_name]) ) ) == 1 and len( _itemKey( list(df[var_name]) ) ) == 1:
+    else:
+        if hue == '--auto':
+            if len(_mainKey(list(df[var_name]))) == 1 and len(_itemKey(list(df[var_name]))) == 1:
                 hue = None
-                label = itemLabel
-                newLabel = _mainKey( list(df[var_name]) )[0] + unitsLabel
-                df = df.rename(columns={value_name:newLabel})  # value_name was 'value' before
-                values = newLabel
-            elif len( _mainKey( list(df[var_name]) ) ) == 1 and len( _itemKey( list(df[var_name]) ) ) > 1:
+                # newLabel = _mainKey( list(df[var_name]) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df[var_name]) )[0]) + ']'
+                # df = df.rename(columns={'value':newLabel})
+                # values = newLabel
+            elif len(_mainKey(list(df[var_name]))) == 1 and len(_itemKey(list(df[var_name]))) > 1:
                 hue = None
+                # newLabel = _mainKey( list(df[var_name]) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df[var_name]) )[0]) + ']'
+                # df = df.rename(columns={'value':newLabel})
+                # values = newLabel
+            elif len(_mainKey(list(df[var_name]))) > 1 and len(_itemKey(list(df[var_name]))) == 1:
+                hue = None
+            elif len(_mainKey(list(df[var_name]))) > len(_itemKey(list(df[var_name]))):
+                hue = itemLabel if label != itemLabel else 'attribute'
+            elif len(_mainKey(list(df[var_name]))) < len(_itemKey(list(df[var_name]))):
+                hue = 'attribute' if label != 'attribute' else itemLabel
+            else:
+                hue = 'attribute' if label != 'attribute' else itemLabel
+        else:
+            if hue == 'item':
+                hue = itemLabel
+            elif hue == 'main':
+                hue = 'attribute'
+
+        if label == '--auto':
+            if len(_mainKey(list(df[var_name]))) == 1 and len(_itemKey(list(df[var_name]))) == 1:
+                label = None
+                # newLabel = _mainKey( list(df[var_name]) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df[var_name]) )[0]) + ']'
+                # df = df.rename(columns={'value':newLabel})
+                # values = newLabel
+            elif len(_mainKey(list(df[var_name]))) == 1 and len(_itemKey(list(df[var_name]))) > 1:
                 label = itemLabel
-                newLabel = _mainKey( list(df[var_name]) )[0] + unitsLabel
-                df = df.rename(columns={value_name:newLabel})  # value_name was 'value' before
-                values = newLabel
-            elif len( _mainKey( list(df[var_name]) ) ) > 1 and len( _itemKey( list(df[var_name]) ) ) == 1:
-                hue = itemLabel # None
-                label = 'attribute'
-                # values = _itemKey( list(df[var_name]) )[0]
-                # df = df.rename(columns={'value':values})
-            elif len( _mainKey( list(df[var_name]) ) ) > len( _itemKey( list(df[var_name]) ) ):
-                hue = itemLabel # 'item'
-                label = 'attribute'
-            elif len( _mainKey( list(df[var_name]) ) ) < len( _itemKey( list(df[var_name]) ) ):
-                hue = 'attribute'
-                label = itemLabel # 'item'
+                # newLabel = _mainKey( list(df[var_name]) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df[var_name]) )[0]) + ']'
+                # df = df.rename(columns={'value':newLabel})
+                # values = newLabel
+            elif len(_mainKey(list(df[var_name]))) > 1 and len(_itemKey(list(df[var_name]))) == 1:
+                label = 'attribute' if hue != 'attribute' else itemLabel
+            elif len(_mainKey(list(df[var_name]))) > len(_itemKey(list(df[var_name]))):
+                label = 'attribute' if hue != 'attribute' else itemLabel
+            elif len(_mainKey(list(df[var_name]))) < len(_itemKey(list(df[var_name]))):
+                label = itemLabel if hue != itemLabel else 'attribute'
             else:
-                hue = 'attribute'
-                label = itemLabel # 'item'
-
+                label = itemLabel if hue != itemLabel else 'attribute'
         else:
-            if hue == '--auto':
-                if len( _mainKey( list(df[var_name]) ) ) == 1 and len( _itemKey( list(df[var_name]) ) ) == 1:
-                    hue = None
-                    # newLabel = _mainKey( list(df[var_name]) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df[var_name]) )[0]) + ']'
-                    # df = df.rename(columns={'value':newLabel})
-                    # values = newLabel
-                elif len( _mainKey( list(df[var_name]) ) ) == 1 and len( _itemKey( list(df[var_name]) ) ) > 1:
-                    hue = None
-                    # newLabel = _mainKey( list(df[var_name]) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df[var_name]) )[0]) + ']'
-                    # df = df.rename(columns={'value':newLabel})
-                    # values = newLabel
-                elif len( _mainKey( list(df[var_name]) ) ) > 1 and len( _itemKey( list(df[var_name]) ) ) == 1:
-                    hue = None
-                elif len( _mainKey( list(df[var_name]) ) ) > len( _itemKey( list(df[var_name]) ) ):
-                    hue = itemLabel if label != itemLabel else 'attribute'
-                elif len( _mainKey( list(df[var_name]) ) ) < len( _itemKey( list(df[var_name]) ) ):
-                    hue = 'attribute' if label != 'attribute' else itemLabel
-                else:
-                    hue = 'attribute' if label != 'attribute' else itemLabel
-            else:
-                if hue == 'item':
-                    hue = itemLabel
-                elif hue == 'main':
-                    hue = 'attribute'
+            if label == 'item':
+                label = itemLabel
+            elif label == 'main':
+                label = 'attribute'
 
-            if label == '--auto':
-                if len( _mainKey( list(df[var_name]) ) ) == 1 and len( _itemKey( list(df[var_name]) ) ) == 1:
-                    label = None
-                    # newLabel = _mainKey( list(df[var_name]) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df[var_name]) )[0]) + ']'
-                    # df = df.rename(columns={'value':newLabel})
-                    # values = newLabel
-                elif len( _mainKey( list(df[var_name]) ) ) == 1 and len( _itemKey( list(df[var_name]) ) ) > 1:
-                    label = itemLabel
-                    # newLabel = _mainKey( list(df[var_name]) )[0] + ' [' + self.get_plotUnits(_mainKey( list(df[var_name]) )[0]) + ']'
-                    # df = df.rename(columns={'value':newLabel})
-                    # values = newLabel
-                elif len( _mainKey( list(df[var_name]) ) ) > 1 and len( _itemKey( list(df[var_name]) ) ) == 1:
-                    label = 'attribute' if hue != 'attribute' else itemLabel
-                elif len( _mainKey( list(df[var_name]) ) ) > len( _itemKey( list(df[var_name]) ) ):
-                    label = 'attribute' if hue != 'attribute' else itemLabel
-                elif len( _mainKey( list(df[var_name]) ) ) < len( _itemKey( list(df[var_name]) ) ):
-                    label = itemLabel if hue != itemLabel else 'attribute'
-                else:
-                    label = itemLabel if hue != itemLabel else 'attribute'
-            else:
-                if label == 'item':
-                    label = itemLabel
-                elif label == 'main':
-                    label = 'attribute'
+    # generate values for units columns
+    if SimDF:
+        unitsCol = [units(df[var_name].iloc[i]) for i in range(len(df))]
 
-        # generate values for units columns
-        if SimDF:
-            unitsCol = [units(df[var_name].iloc[i]) for i in range(len(df))]
+    if var_name == 'SDFvariable':
+        df = df.drop(columns=var_name)
+    df = df.rename(columns={'item': itemLabel})
 
-        if var_name == 'SDFvariable':
-            df = df.drop(columns=var_name)
-        df = df.rename(columns={'item':itemLabel})
+    if FullOutput:
+        return hue, label, itemLabel, values, df
+    elif SimDF:
+        df['units'] = unitsCol
+        return df
+    else:
+        return df
 
-        if FullOutput:
-            return hue, label, itemLabel, values, df
-        elif SimDF:
-            df['units'] = unitsCol
-            return df
-        else:
-            return df
 
 def _pivotDF(df, item=None, index=None, values=None, nameSeparator=':'):
     """
@@ -398,18 +406,22 @@ def _pivotDF(df, item=None, index=None, values=None, nameSeparator=':'):
         else:
             raise TypeError("Not able to find a column to be used as item, please provide 'item' parameter.")
 
-    names = {col[0] if type(col) is tuple else col:col for col in df.columns}
+    names = {col[0] if type(col) is tuple else col: col for col in df.columns}
     if item not in names:
         names[item] = item
     if index not in names:
         names[index] = index
     if values is None:
-        values = [cols for cols in df.columns if cols != names[item]] if index is None else [cols for cols in df.columns if cols != names[item] and cols != names[index]]
+        values = [cols for cols in df.columns if cols != names[item]] if index is None else [cols for cols in df.columns
+                                                                                             if cols != names[
+                                                                                                 item] and cols !=
+                                                                                             names[index]]
 
     newdf = pandas.DataFrame(index=newindex)
     for ite in df[item].squeeze().unique():
         for col in values:
-            newdf[(str(col[0])+':'+str(ite),)+col[1:] if type(col) is tuple else str(col)+':'+str(ite)] = df[df[names[item]] == ite].set_index(names[index])[col]
+            newdf[(str(col[0]) + ':' + str(ite),) + col[1:] if type(col) is tuple else str(col) + ':' + str(ite)] = \
+            df[df[names[item]] == ite].set_index(names[index])[col]
 
     if resetIndex:
         newdf = newdf.reset_index()

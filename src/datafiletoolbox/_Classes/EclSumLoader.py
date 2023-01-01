@@ -6,14 +6,15 @@ Created on Mon Mar  8 08:56:44 2021
 """
 
 __version__ = '0.12.3'
-__release__ = 220110
+__release__ = 20220110
 __all__ = ['EclSumLoader']
 
-from .._Classes.Errors import PrototypeError, MissingDependence
+from .Errors import PrototypeError, MissingDependence
 from .._common.inout import _extension
 import os
 from warnings import warn
 from .._common.sharedVariables import _loadingECLfile
+
 
 class _EclSumLoader(object):
     _EclSum = None
@@ -24,7 +25,7 @@ class _EclSumLoader(object):
         if _EclSumLoader._EclSum:
             self._EclSum = _EclSumLoader._EclSum
         else:
-            try :
+            try:
                 # try to use libecl instalation from pypi.org
                 from ecl.summary import EclSum
                 from ecl.version import version as libecl_version
@@ -36,46 +37,51 @@ class _EclSumLoader(object):
                 eclPath = _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib/python'
                 if 'PYTHONPATH' in os.environ:
                     os.environ['PYTHONPATH'] = eclPath + ';' + os.environ['PYTHONPATH']
-                else :
+                else:
                     os.environ['PYTHONPATH'] = eclPath
 
                 if 'JUPYTER_PATH' in os.environ:
-                    JupyterPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib' + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
+                    JupyterPath = eclPath + ';' + _extension(str(os.getcwd()))[
+                        3] + '/datafiletoolbox/equinor/libecl/win10/lib' + ';' + _extension(str(os.getcwd()))[
+                                      3] + '/datafiletoolbox/equinor/libecl/win10/bin'
                     os.environ['JUPYTER_PATH'] = JupyterPath + ';' + os.environ['JUPYTER_PATH']
-                else :
+                else:
                     os.environ['JUPYTER_PATH'] = eclPath
 
                 eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/lib'
                 eclPath = eclPath + ';' + _extension(str(os.getcwd()))[3] + '/datafiletoolbox/equinor/libecl/win10/bin'
-                os.environ['PATH'] = eclPath + ( ';' + os.environ['PATH'] ) if 'PATH' in os.environ else ''
+                os.environ['PATH'] = eclPath + (';' + os.environ['PATH']) if 'PATH' in os.environ else ''
 
-                #from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
-                try :
+                # from datafiletoolbox.equinor.libecl.win10.lib.python import ecl
+                try:
                     from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.summary import EclSum
                     print('\n using ecl from https://github.com/equinor/libecl compiled for Windows10')
                     self._EclSum = EclSum
                     _EclSumLoader._EclSum = EclSum
-                except ModuleNotFoundError :
-                    print("\n ERROR: missing 'cwrap' module, please intall it using pip command:\n           pip install cwrap\n\n       or upgrade:\n\n          pip install cwrap --upgrade\n        or intall libecl using pip command:\n           pip install libecl\n\n       or upgrade:\n\n          pip install libecl --upgrade" )
+                except ModuleNotFoundError:
+                    print(
+                        "\n ERROR: missing 'cwrap' module, please intall it using pip command:\n           pip install cwrap\n\n       or upgrade:\n\n          pip install cwrap --upgrade\n        or intall libecl using pip command:\n           pip install libecl\n\n       or upgrade:\n\n          pip install libecl --upgrade")
                     raise ModuleNotFoundError()
-                except PrototypeError :
+                except PrototypeError:
                     # the class is already registered in cwrap from a previos load, no need to register again
                     warn("PrototypeError: Type: 'ecl_type_enum' already registered!")
                     # return self._EclSum
                 except Exception as e:
-                    if _loadingECLfile[0] :
+                    if _loadingECLfile[0]:
                         raise MissingDependence("EclSum failed to load")
                     else:
-                        print("WARNING: EclSum failed to load, you will not be able to load results in eclipse binary format.\n")
+                        print(
+                            "WARNING: EclSum failed to load, you will not be able to load results in eclipse binary format.\n")
                         print(e)
             except Exception as e:
                 if _loadingECLfile[0]:
                     raise MissingDependence("EclSum failed to load")
                 else:
-                    print("WARNING: EclSum failed to load, you will not be able to load results in eclipse binary format.\n")
+                    print(
+                        "WARNING: EclSum failed to load, you will not be able to load results in eclipse binary format.\n")
                     print(e)
 
-    def __call__(self,SummaryFilePath,reload=True,unload=False,**kwargs) :  # kwargs will be ignored
+    def __call__(self, SummaryFilePath, reload=True, unload=False, **kwargs):  # kwargs will be ignored
         reload = bool(reload)
         unload = bool(unload)
         if 'close' in kwargs and kwargs['close'] is True:
@@ -98,7 +104,8 @@ class _EclSumLoader(object):
         if self._EclSum:
             _EclSumLoader._AlreadyLoaded[SummaryFilePath] = self._EclSum(SummaryFilePath)
             return _EclSumLoader._AlreadyLoaded[SummaryFilePath]  # self._EclSum(SummaryFilePath)
-        else :
-            raise MissingDependence("failed to load "+str(SummaryFilePath))
+        else:
+            raise MissingDependence("failed to load " + str(SummaryFilePath))
+
 
 EclSumLoader = _EclSumLoader

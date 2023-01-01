@@ -11,7 +11,7 @@ __all__ = ['loadSimulationResults']
 
 from .._common.inout import _extension
 from .._common.sharedVariables import _loadingECLfile
-#from datafiletoolbox.SimulationResults.mainObject import SimResult
+# from datafiletoolbox.SimulationResults.mainObject import SimResult
 from .vipObject import VIP as _VIP
 from .CSVSimResultNexusDesktopObject import NexusDesktopCSV as _NexusDesktopCSV
 from .excelObject import XLSX as _XLSX
@@ -20,10 +20,10 @@ from .rsmObject import RSM as _RSM
 from .h5Object import H5 as _H5
 import pickle
 
-
 okECL = False
 try:
     from .eclObject import ECL as _ECL
+
     okECL = True
 except ImportError:
     print("""Failed import ECL, usually due to fail to import libecl.
@@ -46,8 +46,8 @@ def loadSimulationResults(FullPath, Simulator=None, Verbosity=None, **kwargs):
         .XLSX files exported from datafiletoolbox
         .PKL files from previously saved SimResults instances
     """
-    for verbKey in  ['speak','verbosity','verbose']:
-        if verbKey in kwargs and type(kwargs[verbKey]) in [bool,int,float]:
+    for verbKey in ['speak', 'verbosity', 'verbose']:
+        if verbKey in kwargs and type(kwargs[verbKey]) in [bool, int, float]:
             if Verbosity is None:
                 Verbosity = kwargs[verbKey]
                 del kwargs[verbKey]
@@ -56,7 +56,7 @@ def loadSimulationResults(FullPath, Simulator=None, Verbosity=None, **kwargs):
         Verbosity = 2
     elif type(Verbosity) in [int]:
         pass
-    elif type(Verbosity) in [bool,float]:
+    elif type(Verbosity) in [bool, float]:
         Verbosity = int(Verbosity)
     else:
         Verbosity = 2
@@ -65,14 +65,14 @@ def loadSimulationResults(FullPath, Simulator=None, Verbosity=None, **kwargs):
         print('Please provide the path to the simulation results as string.')
         return None
     if Simulator is None:
-        if _extension(FullPath)[0].upper() in ['.SMSPEC','.UNSMRY','.DATA','.AFI']:
+        if _extension(FullPath)[0].upper() in ['.SMSPEC', '.UNSMRY', '.DATA', '.AFI']:
             if 'h5' in kwargs and kwargs['h5'] is True:
                 Simulator = 'H5'
             else:
                 Simulator = 'ECLIPSE'
-        elif _extension(FullPath)[0].upper() in ['.DAT','.SSS']:
+        elif _extension(FullPath)[0].upper() in ['.DAT', '.SSS']:
             Simulator = 'VIP'
-        elif _extension(FullPath)[0].upper() in ['.FSC','.SS_FIELD','.SS_WELLS','.SS_REGIONS','.SS_NETWORK']:
+        elif _extension(FullPath)[0].upper() in ['.FSC', '.SS_FIELD', '.SS_WELLS', '.SS_REGIONS', '.SS_NETWORK']:
             Simulator = 'NEXUS'
         elif _extension(FullPath)[0].upper() in ['.CSV']:
             Simulator = 'NexusDesktopSimResult'
@@ -91,18 +91,18 @@ def loadSimulationResults(FullPath, Simulator=None, Verbosity=None, **kwargs):
 
     _loadingECLfile[0] = False
     OBJ = None
-    if Simulator in ['ECL','E100','E300','ECLIPSE','IX','INTERSECT','TNAV','TNAVIGATOR']:
+    if Simulator in ['ECL', 'E100', 'E300', 'ECLIPSE', 'IX', 'INTERSECT', 'TNAV', 'TNAVIGATOR']:
         if okECL is True:
             _loadingECLfile[0] = True
             OBJ = _ECL(FullPath, verbosity=Verbosity, **kwargs)
         else:
-            print( 'ECL object not loaded')
+            print('ECL object not loaded')
     elif Simulator in ['VIP']:
         OBJ = _VIP(FullPath, verbosity=Verbosity, **kwargs)
-    elif Simulator in ['NX','NEXUS']:
+    elif Simulator in ['NX', 'NEXUS']:
         OBJ = _VIP(FullPath, verbosity=Verbosity, **kwargs)
     elif Simulator in ['NexusDesktopSimResult']:
-        OBJ = _NexusDesktopCSV(FullPath,verbosity=Verbosity, **kwargs)
+        OBJ = _NexusDesktopCSV(FullPath, verbosity=Verbosity, **kwargs)
     elif Simulator in ['SimPandasExcel']:
         OBJ = _XLSX(FullPath, verbosity=Verbosity, **kwargs)
     elif Simulator in ['DataTable']:
@@ -114,7 +114,7 @@ def loadSimulationResults(FullPath, Simulator=None, Verbosity=None, **kwargs):
     elif Simulator in ['Pickle']:
         import os
         if not os.path.isfile(FullPath):
-            raise FileNotFoundError("File doesn't exists:\n  "+str(FullPath))
+            raise FileNotFoundError("File doesn't exists:\n  " + str(FullPath))
         with open(FullPath, 'wb') as f:
             OBJ = pickle.load(f)
         if OBJ is not None:

@@ -6,7 +6,7 @@ Created on Sun Jan 19 16: 03: 33 2020
 """
 
 __version__ = '0.1.0'
-__release__ = 210225
+__release__ = 20210225
 
 # highly recommended to automatically create inverse dictionaries
 # in the __init__ module of this folder
