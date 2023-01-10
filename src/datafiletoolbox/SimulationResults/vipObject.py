@@ -129,12 +129,16 @@ class VIP(_SimResult):
 
             self.SSSfiles = self.SSSparts(SSSFilePath)
             self.name = _extension(SSSFilePath)[1]
-            validSSSfiles = []
-            for file in self.SSSfiles:
-                readAttempt = self.SSSread(file)
-                if readAttempt is not False:
-                    validSSSfiles.append(file)
-                    self.results[_extension(file)[1] + _extension(file)[0]] = readAttempt
+            # validSSSfiles = []
+            # for file in self.SSSfiles:
+            #     readAttempt = self.SSSread(file)
+            #     if readAttempt is not False:
+            #         validSSSfiles.append(file)
+            #         self.results[_extension(file)[1] + _extension(file)[0]] = readAttempt
+            readAttempt = {file: self.SSSread(file) for file in self.SSSfiles if self.SSSread(file) is not False}
+            validSSSfiles = list(readAttempt.keys())
+            for file in readAttempt:
+                self.results[_extension(file)[1] + _extension(file)[0]] = readAttempt[file]
             self.SSSfiles = tuple(validSSSfiles)
             self.strip('NAME')
             self.set_FieldTime()
