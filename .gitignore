@@ -18,3 +18,4 @@ equinor/libecl/win10/lib/._libecl.dll
 .DS_Store
 *.bak
 *.7z
+src/datafiletoolbox.egg-info

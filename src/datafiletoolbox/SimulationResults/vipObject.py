@@ -249,7 +249,6 @@ class VIP(_SimResult):
         """
         internal function to load a numpy vector from the summary files
         """
-
         def alreadyVIP(key, SSStype):
             wellVIPkeys = ('BHP', 'THP')
             if ':' in key:
@@ -956,12 +955,12 @@ class VIP(_SimResult):
     def get_TotalReservoirVolumes(self):
         for IP in ['I', 'P']:
             for TR in ['R', 'T']:
-                # for FIELD
-                for OGW in ['O', 'G', 'W']:
-                    rv = []
-                    key = 'FV'+IP+TR+OGW
-                    if self.is_Key(key):
-                        rv.append(key)
+                # for OGW in ['O', 'G', 'W']:
+                #     rv = []
+                #     key = 'FV'+IP+TR+OGW
+                #     if self.is_Key(key):
+                #         rv.append(key)
+                rv = ['FV'+IP+TR+OGW for OGW in ['O', 'G', 'W'] if self.is_Key('FV'+IP+TR+OGW)]
 
                 key = 'FV'+IP+TR
                 if len(rv) > 0:
@@ -976,11 +975,12 @@ class VIP(_SimResult):
 
                 # for WELL, GROUP, REGION
                 for T in ['W', 'G', 'R']:
-                    for OGW in ['O', 'G', 'W']:
-                        rv = []
-                        key = T+'V'+IP+TR+OGW
-                        if self.is_Attribute(key):
-                            rv.append(key)
+                    # for OGW in ['O', 'G', 'W']:
+                    #     rv = []
+                    #     key = T+'V'+IP+TR+OGW
+                    #     if self.is_Attribute(key):
+                    #         rv.append(key)
+                    rv = [T+'V'+IP+TR+OGW for OGW in ['O', 'G', 'W'] if self.is_Attribute(T+'V'+IP+TR+OGW)]
 
                     key = T+'V'+IP+TR
                     if len(rv) > 0:
