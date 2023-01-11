@@ -31,6 +31,7 @@ import fnmatch
 import random
 # import json
 import os
+from functools import reduce
 
 # creating vectorized numpy object for len function
 nplen = np.vectorize(len)
@@ -500,23 +501,41 @@ class SimResult(object):
                     return meti.replace(self.null, 0)
 
         if type(item) is list:
-            cols = []
-            for each in item:
+            # cols = []
+            # for each in item:
+            #     each = each.strip(' :')
+            #     if self.is_Key(each):
+            #         cols.append(each)
+            #     elif each in self.attributes:
+            #         cols += self.attributes[each]
+            #     elif ':' in each and len(each.split(':'))==2:
+            #         attribute, pattern = each.split(':')
+            #         cols += self.keyGen(attribute, pattern)
+            #     elif each in self.wells or each in self.groups or each in self.regions:
+            #         cols += list(self.get_Keys('*:'+each))
+            #     elif each in ['FIELD', 'ROOT']:
+            #         cols += list(self.get_Keys('F*'))
+            #     else:
+            #         cols += list(self.get_Keys(each))
+            
+            def each_item(each):
                 each = each.strip(' :')
                 if self.is_Key(each):
-                    cols.append(each)
+                    return [each]
                 elif each in self.attributes:
-                    cols += self.attributes[each]
+                    return self.attributes[each]
                 elif ':' in each and len(each.split(':'))==2:
                     attribute, pattern = each.split(':')
-                    cols += self.keyGen(attribute, pattern)
+                    return self.keyGen(attribute, pattern)
                 elif each in self.wells or each in self.groups or each in self.regions:
-                    cols += list(self.get_Keys('*:'+each))
+                    return list(self.get_Keys('*:'+each))
                 elif each in ['FIELD', 'ROOT']:
-                    cols += list(self.get_Keys('F*'))
+                    return list(self.get_Keys('F*'))
                 else:
-                    cols += list(self.get_Keys(each))
-
+                    return list(self.get_Keys(each))
+            cols = [each_item(each) for each in item]
+            cols = reduce(list.__add__, cols)
+                    
             return self.__call__(cols)
 
         else:
@@ -816,6 +835,7 @@ class SimResult(object):
                     pass
                 elif k[0].upper() == 'G':
                     pass
+
         return ListOfKeys
 
     @property
@@ -1342,9 +1362,7 @@ class SimResult(object):
                         _verbose(self.speak, 2, "the key '" + Key + "' can't be found in this simulation.")
                         matchedKeys = []
                         if Key in self.get_Attributes():
-                            # for Att in self.get_Attributes():
-                                # if Key in Att:
-                            matchedKeys += self.attributes[Key]
+                            matchedKeys = self.attributes[Key]
                         if len(matchedKeys) == 0:
                             _verbose(self.speak, 3, "the key '" + Key + "' does not match any attribute in this simulation.")
                         elif len(matchedKeys) == 1:
@@ -1380,10 +1398,11 @@ class SimResult(object):
             if Key in self.plotUnits:
                 return self.plotUnits[Key]
             else:
-                matchingKeys = []
-                for K in self.plotUnits.keys():
-                    if K in Key:
-                        matchingKeys.append(K)
+                # matchingKeys = []
+                # for K in self.plotUnits.keys():
+                #     if K in Key:
+                #         matchingKeys.append(K)
+                matchingKeys = [K for K in self.plotUnits.keys() if K in Key]
                 if len(matchingKeys) == 0:
                     return self.get_Unit(Key)
                 elif len(matchingKeys) == 1:
@@ -1439,30 +1458,33 @@ class SimResult(object):
                 return None
             else:
                 if Key[0] == 'W':
-                    UList=[]
-                    for W in self.get_Wells():
-                        if Key+':'+W in self.units:
-                            UList.append(self.units[Key+':'+W])
+                    # UList=[]
+                    # for W in self.get_Wells():
+                    #     if Key+':'+W in self.units:
+                    #         UList.append(self.units[Key+':'+W])
+                    UList = [self.units[Key+':'+W] for W in self.get_Wells() if Key+':'+W in self.units]
                     if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
                         return UList[0]
                     else:
                         return None
                 elif Key[0] == 'G':
-                    UList=[]
-                    for G in self.get_Groups():
-                        if Key+':'+G in self.units:
-                            UList.append(self.units[Key+':'+G])
+                    # UList=[]
+                    # for G in self.get_Groups():
+                    #     if Key+':'+G in self.units:
+                    #         UList.append(self.units[Key+':'+G])
+                    UList = [self.units[Key+':'+G] for G in self.get_Groups() if Key+':'+G in self.units]   
                     if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
                         return UList[0]
                     else:
                         return None
                 elif Key[0] == 'R':
-                    UList=[]
-                    for R in self.get_Regions():
-                        if Key+':'+R in self.units:
-                            UList.append(self.units[Key+':'+R])
+                    # UList=[]
+                    # for R in self.get_Regions():
+                    #     if Key+':'+R in self.units:
+                    #         UList.append(self.units[Key+':'+R])
+                    UList = [self.units[Key+':'+R] for R in self.get_Regions() if Key+':'+R in self.units]
                     if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
                         return UList[0]
@@ -1471,25 +1493,29 @@ class SimResult(object):
                 UList = None
 
         elif type(Key) is str and Key.strip() == '--EveryType--':
-            Key = []
-            KeyDict = {}
-            for each in self.keys:
-                if ':' in each:
-                    Key.append( _mainKey(each))
-                    KeyDict[_mainKey(each)] = each
-                else:
-                    Key.append(each)
+            # Key = []
+            # KeyDict = {}
+            # for each in self.keys:
+            #     if ':' in each:
+            #         Key.append( _mainKey(each))
+            #         KeyDict[_mainKey(each)] = each
+            #     else:
+            #         Key.append(each)
+            # KeyDict = {_mainKey(each): each for each in self.keys if ':' in each}
+            Key = [_mainKey(each) if ':' in each else each for each in self.keys]
             Key = list(set(Key))
             Key.sort()
-            tempUnits = {}
-            for each in Key:
-                tempUnits[each] = self.get_Unit(each)
+            # tempUnits = {}
+            # for each in Key:
+            #     tempUnits[each] = self.get_Unit(each)
+            tempUnits = {each: self.get_Unit(each) for each in Key}
             return tempUnits
         elif type(Key) in [list,tuple]:
-            tempUnits = {}
-            for each in Key:
-                if type(each) is str:
-                    tempUnits[each] = self.get_Unit(each)
+            # tempUnits = {}
+            # for each in Key:
+            #     if type(each) is str:
+            #         tempUnits[each] = self.get_Unit(each)
+            tempUnits = {each: self.get_Unit(each) for each in Key if type(each) is str}
             return tempUnits
 
     def get_Units(self, Key='--EveryType--'):
@@ -1502,20 +1528,35 @@ class SimResult(object):
                 elif len(self.get_Keys(Key)) > 0:
                     Key = list(self.get_Keys(Key))
         if type(Key) is list:
-            Keys = []
-            for each in Key:
+            # Keys = []
+            # for each in Key:
+            #     if each in self.keys:
+            #         Keys += [each]
+            #     elif each in self.attributes:
+            #         Keys += self.attributes[each]
+            #     elif each in self.wells or each in self.groups or each in self.regions:
+            #         Key += list(self.get_Keys('*:'+each))
+            #     elif each in ['FIELD', 'ROOT']:
+            #         Keys += list(self.get_Keys('F*'))
+            #     elif len(self.get_Keys(each)) > 0:
+            #         Keys += list(self.get_Keys(each))
+            #     else:
+            #         Keys += [each]
+            def each_Key(each):
                 if each in self.keys:
-                    Keys += [each]
+                    return [each]
                 elif each in self.attributes:
-                    Keys += self.attributes[each]
+                    return self.attributes[each]
                 elif each in self.wells or each in self.groups or each in self.regions:
-                    Key += list(self.get_Keys('*:'+each))
+                    return list(self.get_Keys('*:'+each))
                 elif each in ['FIELD', 'ROOT']:
-                    Keys += list(self.get_Keys('F*'))
+                    return list(self.get_Keys('F*'))
                 elif len(self.get_Keys(each)) > 0:
-                    Keys += list(self.get_Keys(each))
+                    return list(self.get_Keys(each))
                 else:
-                    Keys += [each]
+                    return [each]
+            Keys = [each_Key(each) for each in Key]
+            Keys = reduce(list.__add__, Keys)
             Key = Keys[:]
 
         return self.get_Unit(Key)
@@ -4120,8 +4161,9 @@ class SimResult(object):
         else:
             if self.filter['key'][-1] is not None:
                 _verbose(self.speak, 1, " filter by key '" + self.filter['key'][-1] + "'")
-            for each in returnVectors:
-                returnVectors[each] = returnVectors[each][self.get_Filter()]
+            # for each in returnVectors:
+            #     returnVectors[each] = returnVectors[each][self.get_Filter()]
+            returnVectors = {each: returnVectors[each][self.get_Filter()] for each in returnVectors}
             return returnVectors
 
 
@@ -4183,16 +4225,19 @@ class SimResult(object):
 
         if restartDict != {} and continuationDict != {}:
             # concatenate restarts + self + continuations
-            for each in returnVectors:
-                returnVectors[each] = np.concatenate([ restartDict[each], returnVectors[each], continuationDict[each] ])
+            # for each in returnVectors:
+            #     returnVectors[each] = np.concatenate([ restartDict[each], returnVectors[each], continuationDict[each] ])
+            returnVectors = {each: np.concatenate([restartDict[each], returnVectors[each], continuationDict[each]]) for each in returnVectors}
         elif restartDict != {}:
             # concatenate restarts + self
-            for each in returnVectors:
-                returnVectors[each] = np.concatenate([ restartDict[each], returnVectors[each] ])
+            # for each in returnVectors:
+            #     returnVectors[each] = np.concatenate([ restartDict[each], returnVectors[each] ])
+            returnVectors = {each: np.concatenate([restartDict[each], returnVectors[each]]) for each in returnVectors}
         elif continuationDict != {}:
             # concatenate self + continuations
-            for each in returnVectors:
-                returnVectors[each] = np.concatenate([ returnVectors[each], continuationDict[each] ])
+            # for each in returnVectors:
+            #     returnVectors[each] = np.concatenate([ returnVectors[each], continuationDict[each] ])
+            returnVectors = {each: np.concatenate([returnVectors[each], continuationDict[each]]) for each in returnVectors}
 
         return returnVectors
 
@@ -4209,8 +4254,9 @@ class SimResult(object):
             a list or tuple containing the keys names as strings.
         """
         returnVectors = self.get_RawVector(key=key, reload=reload)
-        for key in returnVectors:
-            returnVectors[key] = (self.get_Unit(key), returnVectors[key])
+        # for key in returnVectors:
+        #     returnVectors[key] = (self.get_Unit(key), returnVectors[key])
+        returnVectors = {key: (self.get_Unit(key), returnVectors[key]) for key in returnVectors}
         return returnVectors
 
 
@@ -4231,7 +4277,7 @@ class SimResult(object):
 
             # extract vector from restarts
             else:
-                VectorsList = []
+                # VectorsList = []
                 _verbose(self.speak, 1, " preparing key '" + str(K) + "'")
                 for R in Rlist:
                     if R.is_Key(K):
