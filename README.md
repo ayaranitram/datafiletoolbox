@@ -1,4 +1,4 @@
-# datafiletoolbox
+# `datafiletoolbox`
 A set of classes and utilities to read different simulation output files, text files and excel file in certain formats.
 In order to read eclipse style binaries this utility relies on libecl from equinor: https://github.com/equinor/ecl
 
@@ -10,25 +10,25 @@ In order to keep track of the units, a subclass of Pandas, is used to return the
 
 ## load data
 The easiest way to load data is using the function loadSimulationResults
-from datafiletoolbox import loadSimulationResults
-data = loadSimulationResults( *path_to_file* )
+`from datafiletoolbox import loadSimulationResults`
+`data = loadSimulationResults( *path_to_file* )`
 
 ## get_data
 To extract data from the loaded files the instances works in analogous way to the Python dictionaries and Pandas DataFrames. 
-We can request a single Series using [ *key_to_extract* ] or DataFrames using [[ *key_to_extract* ]].
-The instance can also be called using ( *key_to_extract* ) and in this case will return a Numpy array.
+We can request a single Series using `[ *key_to_extract* ]` or DataFrames using `[[ *key_to_extract* ]]`.
+The instance can also be called using `( *key_to_extract* )` and in this case will return a NumPy array.
 
 ### keys of VIP simulation results
 The data from a VIP simulation can be accessed using regular eclipse nomenclature, like 'FOPT' meaning 'Qo' of 'ROOT' or 'WGPR:WELL1' meaning 'Qg' of 'WELL1'.
 
 ### keys, wells, groups, regions
 The properties **.keys**, **.wells**, **.groups**, **.regions** contains tuples with their corresponding list of values available in the loaded data. 
-The method **.find_Keys()** can be used to find keys related to any well, group, region, attribute or pattern (using ? * ...)
+The method **`.find_Keys()`** can be used to find keys related to any well, group, region, attribute or pattern (using ? * ...)
 
 ### generic keys
 The **key** does not need to be exact, it can be:
-- a general property, like 'WOPR', and the class will return all the vector for this key
-- the name of a well, region or group, like 'WELL1', and the class will return all the vector for that key
+- a general property, like 'WOPR', and the class will return all the vectors matching the key
+- the name of a well, region or group, like 'WELL1', and the class will return all the vectors for that key
 - it can contain wildcards, like 'W?PR' or 'WELL*'
 
 ### changing the index of the returned DataFrames
@@ -46,4 +46,6 @@ assume data0 is an eclipse binary result and data1 is a VIP simulation results
 data0.plot('FOPR',data1)
 will get the data from both results (converting the key from ECL style to VIP style to extract the data), convert units of data1 to corresponding units of data0 and show the plot.
 
-## many more functions are available, not detailed in this readme. A more detailed tutorial will be available sometime, in the meanwhile, please contact the author <martincarlos.araya@cepsa.com> for further details.
+## further functionalities
+Many more functions are available, not detailed in this readme.
+A more detailed tutorial will be available sometime, in the meanwhile, please contact the author <martincarlos.araya@cepsa.com> for further details.

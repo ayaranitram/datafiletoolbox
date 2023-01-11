@@ -5,8 +5,8 @@ Created on Wed May 13 00:46:05 2020
 @author: MCARAYA
 """
 
-__version__ = '0.4.1'
-__release__ = 20220523
+__version__ = '0.4.5'
+__release__ = 20230110
 __all__ = ['_mainKey', '_itemKey', '_keyType', '_wellFromAttribute', 'tamiz', '_meltDF', '_pivotDF']
 
 import pandas
@@ -33,9 +33,7 @@ def _mainKey(Key, clean=True, nameSeparator=':'):
     if type(Key) is tuple and len(Key) == 2:
         return _mainKey(str(Key[0]), clean=clean, nameSeparator=nameSeparator)
     if type(Key) is list or type(Key) is tuple:
-        results = []
-        for K in Key:
-            results.append(_mainKey(K))
+        results = [_mainKey(K) for K in Key]
         if clean:
             return list(set(results))
         else:
@@ -57,9 +55,7 @@ def _itemKey(Key, clean=True, nameSeparator=':'):
     if type(Key) is tuple and len(Key) == 2:
         return _itemKey(str(Key[0]), clean=clean, nameSeparator=nameSeparator)
     if type(Key) is list or type(Key) is tuple:
-        results = []
-        for K in Key:
-            results.append(_itemKey(K))
+        results = [_itemKey(K) for K in Key]
         if clean:
             return list(set(results))
         else:
@@ -101,9 +97,7 @@ def _isECLkey(Key, maxLen=12):
         raise TypeError("maxLen must be an integer")
 
     if type(Key) is list or type(Key) is tuple:
-        results = []
-        for K in Key:
-            results.append(_isECLkey(K))
+        results = [_isECLkey(K) for K in Key]
         return results
 
     if type(Key) is not str:
@@ -135,9 +129,7 @@ def _wellFromAttribute(listOfAttributes):
     if type(listOfAttributes) is not list:
         return {}
 
-    newNames = {}
-    for each in listOfAttributes:
-        newNames[each] = each.split(':')[-1]
+    newNames = {each: each.split(':')[-1] for each in listOfAttributes}
     return newNames
 
 
@@ -158,9 +150,7 @@ def _AttributeFromKeys(listOfKeys):
     if type(listOfKeys) is not list:
         return {}
 
-    newNames = {}
-    for each in listOfKeys:
-        newNames[each] = each.split(':')[0]
+    newNames = {each: each.split(':')[0] for each in listOfKeys}
     return newNames
 
 
