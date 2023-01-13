@@ -177,9 +177,9 @@ class VIP(_SimResult):
 
     def SSSparts(self, SSSFilePath):
         SSSfiles = []
-        expectedParts = [('_field.sss', '_area.sss', '_flow.sss', '_gather.sss', '_region.sss', '_well.sss'),
-                          ('_FIELD.SSS', '_AREA.SSS', '_FLOW.SSS', '_GATHER.SSS', '_REGION.SSS', '_WELL.SSS')]
-        if _extension(SSSFilePath)[0].upper() == '.SSS':
+        expectedParts = [('_field.sss', '_well.sss', '_region.sss', '_area.sss', '_flow.sss', '_gather.sss'),
+                          ('_FIELD.SSS', '_WELL.SSS', '_REGION.SSS', '_AREA.SSS', '_FLOW.SSS', '_GATHER.SSS')]
+        if _extension(SSSFilePath)[0].lower() == '.sss':
             for Case in expectedParts:
                 for part in Case:
                     if part in SSSFilePath and SSSFilePath[SSSFilePath.index(part):] == part:
@@ -187,22 +187,24 @@ class VIP(_SimResult):
                         break
                 for part in Case:
                     if os.path.isfile(SSSroot + part):
-                        SSSfiles.append(SSSroot + part)
+                        if (SSSroot + part.lower()) not in SSSfiles:
+                            SSSfiles.append(SSSroot + part)
                 if len(SSSfiles) > 0:
-                    SSSfiles = list(set(SSSfiles))
+                    SSSfiles = list(dict.fromkeys(SSSfiles))
                 elif os.path.isfile(SSSFilePath) : # if this line is reached, implicitly len(SSSfiles) == 0
                     SSSfiles = [SSSFilePath]
-                else:
-                    raise FileNotFoundError('No such file or related VIP files found for: ' + str(SSSFilePath))
 
-        else: # if _extension(SSSFilePath)[0] != '.SSS':
+        else: # if _extension(SSSFilePath)[0] != '.sss':
             SSSroot = _extension(SSSFilePath)[2] + _extension(SSSFilePath)[1]
             for Case in expectedParts:
                 for part in Case:
                     if os.path.isfile(SSSroot + part):
-                        SSSfiles.append(SSSroot + part)
+                        if (SSSroot + part.lower()) not in SSSfiles:
+                            SSSfiles.append(SSSroot + part)
                 if len(SSSfiles) > 0:
-                    SSSfiles = list(set(SSSfiles))
+                    SSSfiles = list(dict.fromkeys(SSSfiles))
+                elif os.path.isfile(SSSFilePath) : # if this line is reached, implicitly len(SSSfiles) == 0
+                    SSSfiles = [SSSFilePath]
 
         if len(SSSfiles) == 0:
             raise FileNotFoundError('No such file or related VIP files found for: ' + str(SSSFilePath))
@@ -437,10 +439,14 @@ class VIP(_SimResult):
         # preparing object attribute
         wellsList = list(self.wells)
 
+        # for sss in self.results:
+        #     if self.results[sss][0] == 'WELL':
+        #         wellsList += ' '.join(self.results[sss][1]['Data']['NAME']).split()
+        # wellsList = list(set(wellsList))
         for sss in self.results:
             if self.results[sss][0] == 'WELL':
-                wellsList += ' '.join(self.results[sss][1]['Data']['NAME']).split()
-        wellsList = list(set(wellsList))
+                break
+        wellsList = list(set(wellsList + self.results[sss][1]['Data']['NAME']))
         wellsList.sort()
         self.wells = tuple(wellsList)
 
