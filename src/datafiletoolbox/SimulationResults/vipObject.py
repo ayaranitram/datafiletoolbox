@@ -19,6 +19,7 @@ from .._dictionaries import ECL2VIPkey as _ECL2VIPkey, VIP2ECLtype as _VIP2ECLty
 import pandas as pd
 import numpy as np
 import os
+from itertools import reduce
 
 
 class VIP(_SimResult):
@@ -443,11 +444,10 @@ class VIP(_SimResult):
         #     if self.results[sss][0] == 'WELL':
         #         wellsList += ' '.join(self.results[sss][1]['Data']['NAME']).split()
         # wellsList = list(set(wellsList))
-        for sss in self.results:
-            if self.results[sss][0] == 'WELL':
-                break
-        wellsList = list(set(wellsList + self.results[sss][1]['Data']['NAME']))
-        wellsList.sort()
+        new_list = [self.results[sss][1]['Data']['NAME'] for sss in self.results if self.results[sss][0] == 'WELL']
+        new_list = reduce(list.__add__, new_list)
+        wellsList = list(set(wellsList + new_list))
+        # wellsList.sort()
         self.wells = tuple(wellsList)
 
         return self.wells
@@ -467,11 +467,14 @@ class VIP(_SimResult):
     def extract_Areas(self, pattern=None):
         # preparing object attribute
         areaList = list(self.groups)
-        for sss in self.results:
-            if self.results[sss][0] == 'AREA':
-                areaList += ' '.join(self.results[sss][1]['Data']['NAME']).split()
-        areaList = list(set(areaList))
-        areaList.sort()
+        # for sss in self.results:
+        #     if self.results[sss][0] == 'AREA':
+        #         areaList += ' '.join(self.results[sss][1]['Data']['NAME']).split()
+        # areaList = list(set(areaList))
+        new_list = [self.results[sss][1]['Data']['NAME'] for sss in self.results if self.results[sss][0] == 'AREA']
+        new_list = reduce(list.__add__, new_list)
+        areaList = list(set(areaList + new_list))
+        # areaList.sort()
         self.groups = tuple(areaList)
         # preparing list to return
         if pattern is not None:
@@ -484,12 +487,14 @@ class VIP(_SimResult):
     def extract_Regions(self, pattern=None):
         # preparing object attribute
         regionsList = list(self.regions)
-
-        for sss in self.results:
-            if self.results[sss][0] == 'REGION':
-                regionsList += ' '.join(self.results[sss][1]['Data']['NAME']).split()
-        regionsList = list(set(regionsList))
-        regionsList.sort()
+        # for sss in self.results:
+        #     if self.results[sss][0] == 'REGION':
+        #         regionsList += ' '.join(self.results[sss][1]['Data']['NAME']).split()
+        # regionsList = list(set(regionsList))
+        new_list = [self.results[sss][1]['Data']['NAME'] for sss in self.results if self.results[sss][0] == 'REGION']
+        new_list = reduce(list.__add__, new_list)
+        regionsList = list(set(regionsList + new_list))
+        # regionsList.sort()
         self.regions = tuple(regionsList)
         # preparing list to return
         if pattern is not None:
