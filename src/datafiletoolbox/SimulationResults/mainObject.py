@@ -308,8 +308,9 @@ class SimResult(object):
             self.get_Producers()
             self.get_Injectors()
         else:
-            for wellList in ['WaterProducers', 'GasProducers', 'OilProducers', 'Producers', 'WaterInjectors', 'GasInjectors', 'OilInjectors', 'Injectors']:
-                self.wellsLists[wellList] = []
+            # for wellList in ['WaterProducers', 'GasProducers', 'OilProducers', 'Producers', 'WaterInjectors', 'GasInjectors', 'OilInjectors', 'Injectors']:
+            #     self.wellsLists[wellList] = []
+            self.wellsLists = {wellList: [] for wellList in ['WaterProducers', 'GasProducers', 'OilProducers', 'Producers', 'WaterInjectors', 'GasInjectors', 'OilInjectors', 'Injectors']}
         self.use_SimPandas()
         self.set_RestartsTimeVector()
         # self.set_savingFilter()
@@ -500,24 +501,7 @@ class SimResult(object):
                         return meti
                     return meti.replace(self.null, 0)
 
-        if type(item) is list:
-            # cols = []
-            # for each in item:
-            #     each = each.strip(' :')
-            #     if self.is_Key(each):
-            #         cols.append(each)
-            #     elif each in self.attributes:
-            #         cols += self.attributes[each]
-            #     elif ':' in each and len(each.split(':'))==2:
-            #         attribute, pattern = each.split(':')
-            #         cols += self.keyGen(attribute, pattern)
-            #     elif each in self.wells or each in self.groups or each in self.regions:
-            #         cols += list(self.get_Keys('*:'+each))
-            #     elif each in ['FIELD', 'ROOT']:
-            #         cols += list(self.get_Keys('F*'))
-            #     else:
-            #         cols += list(self.get_Keys(each))
-            
+        if type(item) is list:           
             def each_item(each):
                 each = each.strip(' :')
                 if self.is_Key(each):
@@ -567,7 +551,7 @@ class SimResult(object):
                 elif type(Value[0]) is DataFrame:
                     if type(Value[1]) is str:
                         Value, Units = Value[0], Value[1]
-                    elif type(Value[1]) is list or type(Value[1]) is tuple:
+                    elif type(Value[1]) in [list, tuple]:
                         pass
                         # if len(Value[1]) == len(Value[0].columns):
                         #     Value, Units = Value[0], Value[1]
@@ -835,7 +819,6 @@ class SimResult(object):
                     pass
                 elif k[0].upper() == 'G':
                     pass
-
         return ListOfKeys
 
     @property
@@ -1398,10 +1381,6 @@ class SimResult(object):
             if Key in self.plotUnits:
                 return self.plotUnits[Key]
             else:
-                # matchingKeys = []
-                # for K in self.plotUnits.keys():
-                #     if K in Key:
-                #         matchingKeys.append(K)
                 matchingKeys = [K for K in self.plotUnits.keys() if K in Key]
                 if len(matchingKeys) == 0:
                     return self.get_Unit(Key)
@@ -1458,10 +1437,6 @@ class SimResult(object):
                 return None
             else:
                 if Key[0] == 'W':
-                    # UList=[]
-                    # for W in self.get_Wells():
-                    #     if Key+':'+W in self.units:
-                    #         UList.append(self.units[Key+':'+W])
                     UList = [self.units[Key+':'+W] for W in self.get_Wells() if Key+':'+W in self.units]
                     if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
@@ -1469,10 +1444,6 @@ class SimResult(object):
                     else:
                         return None
                 elif Key[0] == 'G':
-                    # UList=[]
-                    # for G in self.get_Groups():
-                    #     if Key+':'+G in self.units:
-                    #         UList.append(self.units[Key+':'+G])
                     UList = [self.units[Key+':'+G] for G in self.get_Groups() if Key+':'+G in self.units]   
                     if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
@@ -1480,10 +1451,7 @@ class SimResult(object):
                     else:
                         return None
                 elif Key[0] == 'R':
-                    # UList=[]
-                    # for R in self.get_Regions():
-                    #     if Key+':'+R in self.units:
-                    #         UList.append(self.units[Key+':'+R])
+
                     UList = [self.units[Key+':'+R] for R in self.get_Regions() if Key+':'+R in self.units]
                     if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
@@ -1493,28 +1461,12 @@ class SimResult(object):
                 UList = None
 
         elif type(Key) is str and Key.strip() == '--EveryType--':
-            # Key = []
-            # KeyDict = {}
-            # for each in self.keys:
-            #     if ':' in each:
-            #         Key.append( _mainKey(each))
-            #         KeyDict[_mainKey(each)] = each
-            #     else:
-            #         Key.append(each)
-            # KeyDict = {_mainKey(each): each for each in self.keys if ':' in each}
             Key = [_mainKey(each) if ':' in each else each for each in self.keys]
             Key = list(set(Key))
             Key.sort()
-            # tempUnits = {}
-            # for each in Key:
-            #     tempUnits[each] = self.get_Unit(each)
             tempUnits = {each: self.get_Unit(each) for each in Key}
             return tempUnits
         elif type(Key) in [list,tuple]:
-            # tempUnits = {}
-            # for each in Key:
-            #     if type(each) is str:
-            #         tempUnits[each] = self.get_Unit(each)
             tempUnits = {each: self.get_Unit(each) for each in Key if type(each) is str}
             return tempUnits
 
@@ -1528,20 +1480,6 @@ class SimResult(object):
                 elif len(self.get_Keys(Key)) > 0:
                     Key = list(self.get_Keys(Key))
         if type(Key) is list:
-            # Keys = []
-            # for each in Key:
-            #     if each in self.keys:
-            #         Keys += [each]
-            #     elif each in self.attributes:
-            #         Keys += self.attributes[each]
-            #     elif each in self.wells or each in self.groups or each in self.regions:
-            #         Key += list(self.get_Keys('*:'+each))
-            #     elif each in ['FIELD', 'ROOT']:
-            #         Keys += list(self.get_Keys('F*'))
-            #     elif len(self.get_Keys(each)) > 0:
-            #         Keys += list(self.get_Keys(each))
-            #     else:
-            #         Keys += [each]
             def each_Key(each):
                 if each in self.keys:
                     return [each]
@@ -1577,7 +1515,6 @@ class SimResult(object):
             Unit = [Unit]*len(Key)
 
         if Unit is None and type(Key) is dict:
-            # keysDict = Key.copy()
             Unit , Key = list(Key.keys()) , list(Key.values())
         elif Unit is not None and len(Key) != len(Unit):
             raise ValueError('the lists of Keys and Units must have the same length')
@@ -1797,15 +1734,7 @@ class SimResult(object):
         for K in ('Keys', 'objects', 'otherSims', 'cleanAllZeros', 'ignoreZeros', 'hue', 'size', 'style', 'row', 'col', 'kind', 'share_Yaxis', 'share_Xaxis'):
             if K in kwargs:
                 del kwargs[K]
-        # if 'plot_kws' in kwargs:
-        #     if 'alpha' not in kwargs:
-        #         kwargs['plot_kws']['alpha'] = 0.25
-        #     if 'edgecolor' not in kwargs:
-        #         kwargs['plot_kws']['edgecolor'] = 'none'
-        #     if 's' not in kwargs:
-        #         kwargs['plot_kws']['s'] = 7
-        # else:
-        #     kwargs['plot_kws'] = {'alpha':0.25, 'edgecolor':'none', 's':7}
+
         if 'facet_kws' in kwargs:
             if 'sharey' not in kwargs['facet_kws']:
                 kwargs['facet_kws']['sharey']= share_Yaxis
@@ -1835,9 +1764,6 @@ class SimResult(object):
             style = df[style]
 
         fig = sns.relplot(x=df[indexName], y=df[values], row=row, col=col, hue=hue, size=size, style=style, kind=kind, col_wrap=col_wrap, **kwargs)
-        # sns.despine(offset=10, trim=True)
-        # if grid:
-        #     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
 
         return fig
 
@@ -1919,9 +1845,6 @@ class SimResult(object):
 
         # Draw a nested boxplot to show bills by day and time
         fig = sns.pairplot(data=df, hue=hue, **kwargs,)
-        # sns.despine(offset=10, trim=True)
-        # if grid:
-        #     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
 
         return fig
 
@@ -2105,14 +2028,10 @@ class SimResult(object):
                                                                               ascending=ascending,
                                                                               resample=resample)
         fig = plt.figure(figsize=figsize, dpi=dpi)
-        # Draw a nested boxplot to show bills by day and time
-        # ax = sns.catplot(kind='box',
         ax = sns.boxplot(
                     x=label, y=values,
                     hue=hue,
                     data=df,
-                    # row=row,
-                    # col=col,
                     **kwargs
                     )
         sns.despine(offset=10, trim=True)
@@ -2201,8 +2120,6 @@ class SimResult(object):
             _verbose(2, self.speak, "There must be exactly two hue levels to use 'split', thus it will be ignored.")
 
         fig = plt.figure(figsize=figsize, dpi=dpi)
-        # Draw a nested boxplot to show bills by day and time
-        # ax = sns.catplot(kind='violin',
         ax = sns.violinplot(
                     x=label, y=values,
                     hue=hue,
@@ -2210,8 +2127,6 @@ class SimResult(object):
                     scale=scale,
                     split=split,
                     inner=inner,
-                    # row=row,
-                    # col=col,
                     **kwargs
                     )
         sns.despine(offset=10, trim=True)
@@ -2253,7 +2168,7 @@ class SimResult(object):
              figsize=(6, 4),
              dpi=150,
              singleYaxis=False,
-             **kwargs):  # Index='TIME'
+             **kwargs):
         """
         creates a line chart for the selected Keys vs the selected Index.
         returns the a tuple with (the plot, list of Keys in Y axes, list of Indexes in X axis)
@@ -2281,8 +2196,6 @@ class SimResult(object):
             pass
         elif type(hline) is bool:
             hline = int(hline)
-        # elif hline is False:
-        #     hline = None
         elif type(hline) not in [int,float]:
             raise ValueError('hline must be int, float or bool')
 
@@ -2304,12 +2217,13 @@ class SimResult(object):
                 Xgrid, Ygrid = 2, 2
 
         if Keys == []:
-            for K in ['FOPR', 'FGPR', 'FWPR', 'FGIR', 'FWIR', 'FOIR']:
-                if self.is_Key(K):
-                    if min(self(K)) == max(self(K)) and sum(self(K)) == 0:
-                        pass # skip all zeros vectors
-                    else:
-                        Keys.append(K)
+            # for K in ['FOPR', 'FGPR', 'FWPR', 'FGIR', 'FWIR', 'FOIR']:
+            #     if self.is_Key(K):
+            #         if min(self(K)) == max(self(K)) and sum(self(K)) == 0:
+            #             pass # skip all zeros vectors
+            #         else:
+            #             Keys.append(K)
+            Keys = [Keys.append(K) for K in ['FOPR', 'FGPR', 'FWPR', 'FGIR', 'FWIR', 'FOIR'] if self.is_Key(K) and not (min(self(K)) == max(self(K)) and sum(self(K)) == 0)]
             if Index is None:
                 if self.is_Key('DATE'):
                     Index = 'DATE'
