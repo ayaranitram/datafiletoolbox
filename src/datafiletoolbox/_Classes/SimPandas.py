@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: Martin Carlos Araya
 """
 
-__version__ = '0.80.11'
-__release__ = 20221116
+__version__ = '0.80.12'
+__release__ = 20230323
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
 from sys import getsizeof
@@ -2216,7 +2216,7 @@ class SimSeries(Series):
         """
         return jitter(self,std)
 
-    def daily(self, outBy='mean', datetimeIndex=False):
+    def daily(self, outBy='mean', datetimeIndex=False, **kwargs):
         """
         return a Series with a single row per day.
         index must be a date type.
@@ -2232,9 +2232,9 @@ class SimSeries(Series):
             sum : returns the summation of all the values per year
             count : returns the number of rows per year
         """
-        return self.to_SimDataFrame().daily(outBy=outBy, datetimeIndex=datetimeIndex).to_SimSeries()
+        return self.to_SimDataFrame().daily(outBy=outBy, datetimeIndex=datetimeIndex, **kwargs).to_SimSeries()
 
-    def monthly(self, outBy='mean', datetimeIndex=False):
+    def monthly(self, outBy='mean', datetimeIndex=False, **kwargs):
         """
         return a dataframe with a single row per month.
         index must be a date type.
@@ -2254,9 +2254,9 @@ class SimSeries(Series):
             if True the index will converted to DateTimeIndex with Day=1 for each month
             if False the index will be a MultiIndex (Year,Month)
         """
-        return self.to_SimDataFrame().monthly(outBy=outBy, datetimeIndex=datetimeIndex).to_SimSeries()
+        return self.to_SimDataFrame().monthly(outBy=outBy, datetimeIndex=datetimeIndex, **kwargs).to_SimSeries()
 
-    def yearly(self, outBy='mean', datetimeIndex=False):
+    def yearly(self, outBy='mean', datetimeIndex=False, **kwargs):
         """
         return a dataframe with a single row per year.
         index must be a date type.
@@ -2276,7 +2276,7 @@ class SimSeries(Series):
             if True the index will converted to DateTimeIndex with Day=1 and Month=1 for each year
             if False the index will be a MultiIndex (Year,Month)
         """
-        return self.to_SimDataFrame().yearly(outBy=outBy, datetimeIndex=datetimeIndex).to_SimSeries()
+        return self.to_SimDataFrame().yearly(outBy=outBy, datetimeIndex=datetimeIndex, **kwargs).to_SimSeries()
 
     def DaysInYear(self,column=None):
         """
