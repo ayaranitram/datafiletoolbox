@@ -5,8 +5,8 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.23.0'
-__release__ = 20230110
+__version__ = '0.23.1'
+__release__ = 20230217
 __all__ = ['VIP']
 
 from .mainObject import SimResult as _SimResult
@@ -19,7 +19,7 @@ from .._dictionaries import ECL2VIPkey as _ECL2VIPkey, VIP2ECLtype as _VIP2ECLty
 import pandas as pd
 import numpy as np
 import os
-from itertools import reduce
+from functools import reduce
 
 
 class VIP(_SimResult):
