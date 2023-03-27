@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: Martin Carlos Araya
 """
 
-__version__ = '0.80.12'
+__version__ = '0.80.14'
 __release__ = 20230323
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
@@ -773,7 +773,10 @@ class SimSeries(Series):
                 objs += [each]
         return tuple(set(objs))
 
-    def to_excel(self, excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None, header=True, units=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None, sort=None):
+    def to_excel(self, excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None,
+                 header=True, units=True, index=True, index_label=None, startrow=0, startcol=0, engine=None,
+                 merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None, sort=None,
+                 format_header=True):
         """
         Wrapper of .to_excel method from Pandas.
         On top of Pandas method this method is able to split the data into different
@@ -860,7 +863,12 @@ class SimSeries(Series):
             if int == 0 will keep the current order of the columns.
 
         """
-        return self.to_SimDataFrame().to_excel(excel_writer, split_by=split_by, sheet_name=sheet_name, na_rep=na_rep, float_format=float_format, columns=columns, header=header, units=units, index=index, index_label=index_label, startrow=startrow, startcol=startcol, engine=engine, merge_cells=merge_cells, encoding=encoding, inf_rep=inf_rep, verbose=verbose, freeze_panes=freeze_panes, sort=sort)
+        return self.to_SimDataFrame().to_excel(excel_writer, split_by=split_by, sheet_name=sheet_name, na_rep=na_rep,
+                                               float_format=float_format, columns=columns, header=header, units=units,
+                                               index=index, index_label=index_label, startrow=startrow,
+                                               startcol=startcol, engine=engine, merge_cells=merge_cells,
+                                               encoding=encoding, inf_rep=inf_rep, verbose=verbose,
+                                               freeze_panes=freeze_panes, sort=sort, format_header=format_header)
 
     def renameRight(self, inplace=False):
         if self.nameSeparator in [None, '', False]:
@@ -2791,7 +2799,10 @@ Copy of input object, shifted.
         """
         return SimDataFrame(data=self.DF.shift(periods=periods, freq=freq, axis=axis, fill_value=fill_value), **self._SimParameters)
 
-    def to_excel(self, excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None, header=True, units=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None, sort=None):
+    def to_excel(self, excel_writer, split_by=None, sheet_name=None, na_rep='', float_format=None, columns=None,
+                 header=True, units=True, index=True, index_label=None, startrow=0, startcol=0, engine=None,
+                 merge_cells=True, encoding=None, inf_rep='inf', verbose=True, freeze_panes=None, sort=None,
+                 format_header=True):
         """
         Wrapper of .to_excel method from Pandas.
         On top of Pandas method this method is able to split the data into different
@@ -2959,7 +2970,7 @@ Copy of input object, shifted.
             SDFwriter = excel_writer
         elif type(excel_writer) is str:
             if excel_writer.strip().lower().endswith('.xlsx'):
-                pass # ok
+                pass  # ok
             elif excel_writer.strip().lower().endswith('.xls'):
                 if verbose:
                     print(" the file")
@@ -3037,14 +3048,17 @@ Copy of input object, shifted.
                     colselect = tuple(fnmatch.filter(cols, names[i][0]+'*' ))
 
             # write the sheet to the ExcelWriter
-            self.DF.to_excel(SDFwriter, sheet_name=names[i], na_rep=na_rep, float_format=float_format, columns=colselect, header=False, index=index, index_label=index_label, startrow=startrow+headerRows, startcol=startcol, engine=engine, merge_cells=merge_cells, encoding=encoding, inf_rep=inf_rep, verbose=verbose, freeze_panes=freeze_panes)
+            self.DF.to_excel(SDFwriter, sheet_name=names[i], na_rep=na_rep, float_format=float_format, columns=colselect,
+                             header=not format_header and header, index=index, index_label=index_label,
+                             startrow=startrow+headerRows, startcol=startcol, engine=engine, merge_cells=merge_cells,
+                             encoding=encoding, inf_rep=inf_rep, verbose=verbose, freeze_panes=freeze_panes)
 
             # Get the xlsxwriter workbook and worksheet objects.
             SDFworkbook  = SDFwriter.book
             SDFworksheet = SDFwriter.sheets[names[i]]
 
-            if header:
-                header_format = SDFworkbook.add_format({'bold': True, 'font_size':11})
+            if header and format_header:
+                header_format = SDFworkbook.add_format({'bold': True, 'font_size': 11})
                 units_format = SDFworkbook.add_format({'italic': True})
 
                 # add the index name and units to the header
