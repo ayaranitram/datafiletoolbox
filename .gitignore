@@ -20,3 +20,4 @@ equinor/libecl/win10/lib/._libecl.dll
 *.7z
 src/datafiletoolbox.egg-info
 test/.ipynb_checkpoints
+dist
