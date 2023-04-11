@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.21'
-__release__ = 20220928
+__version__ = '0.60.22'
+__release__ = 20230411
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -238,7 +238,7 @@ class SimResult(object):
         self.wells = tuple()
         self.groups = tuple()
         self.regions = tuple()
-        self.keys = tuple()
+        self.keys_ = tuple()
         self.attributes = {}
         self.vectors = {}
         self.units = {}
@@ -254,7 +254,7 @@ class SimResult(object):
         self.keyMarkers = {}
         self.keyMarkersSize = {}
         self.style = '-'
-        self.keyStyles = {}
+        self.keys_tyles = {}
         self.alpha = 1.0
         self.keyAlphas = {}
         self.historyAsDots = True
@@ -320,6 +320,9 @@ class SimResult(object):
                 _ = self.set_index(kwargs['index'])
             else:
                 print("\n ·-> the requested index is not a valid key in this object: '"+str(kwargs['index'])+"' !!!")
+
+    def keys(self):
+        return self.keys_
 
     def get_start(self):
         if self.start is not None:
@@ -423,11 +426,11 @@ class SimResult(object):
 
     @property
     def index(self):
-        return self[[ self.keys[0] ]].index
+        return self[[ self.keys_[0] ]].index
 
     @property
     def columns(self):
-        return list(self.keys)
+        return list(self.keys_)
 
     def __call__(self, Key=None, Index=None):
         if Key is None and Index is None:
@@ -821,10 +824,10 @@ class SimResult(object):
                     pass
         return ListOfKeys
 
-    @property
+    #@property
     def describe(self):
         # # calling the describe method from pandas for the entire dataframe is very intensive (huge dataframe)
-        # describeKeys = list(set(self.keys))
+        # describeKeys = list(set(self.keys_))
         # describeKeys.sort()
         # return self[describeKeys].describe()
         print()
@@ -840,7 +843,7 @@ class SimResult(object):
         desc['time'] = [ self.len_tSteps(), self.fieldtime[0], self.fieldtime[1] ]
         desc['dates'] = [ len(self('DATE')), _strDate(min(self('DATE')), speak=False), _strDate(max(self('DATE')), speak=False) ]
         desc['kind'] = [ kind, '', '' ]
-        desc['keys'] = [ len(self.keys), '', '' ]
+        desc['keys'] = [ len(self.keys_), '', '' ]
         desc['attributes'] = [ len(self.attributes), '', '' ]
         desc['wells'] = [ len(self.wells), '', '' ]
         desc['groups'] = [ len(self.groups), '', '' ]
@@ -1423,7 +1426,7 @@ class SimResult(object):
             if Key in ['DATES','DATE','Date','date']:
                     self.units[Key] = 'DATE'
                     return 'DATE'
-            if Key in self.keys:
+            if Key in self.keys_:
                 if ':' in Key:
                     if Key[0] == 'W':
                         if Key.split(':')[-1] in self.wells:
@@ -1461,7 +1464,7 @@ class SimResult(object):
                 UList = None
 
         elif type(Key) is str and Key.strip() == '--EveryType--':
-            Key = [_mainKey(each) if ':' in each else each for each in self.keys]
+            Key = [_mainKey(each) if ':' in each else each for each in self.keys_]
             Key = list(set(Key))
             Key.sort()
             tempUnits = {each: self.get_Unit(each) for each in Key}
@@ -1472,7 +1475,7 @@ class SimResult(object):
 
     def get_Units(self, Key='--EveryType--'):
         if type(Key) is str:
-            if Key not in self.keys and Key not in self.attributes:
+            if Key not in self.keys_ and Key not in self.attributes:
                 if Key in self.wells or Key in self.groups or Key in self.regions:
                     Key = list(self.get_Keys('*:'+Key))
                 elif Key in ['FIELD', 'ROOT']:
@@ -1481,7 +1484,7 @@ class SimResult(object):
                     Key = list(self.get_Keys(Key))
         if type(Key) is list:
             def each_Key(each):
-                if each in self.keys:
+                if each in self.keys_:
                     return [each]
                 elif each in self.attributes:
                     return self.attributes[each]
@@ -2452,7 +2455,7 @@ class SimResult(object):
 
         figure = Plot(SimResultObjects=SimsToPlot, Y_Keys=PlotKeys, X_Key=IndexList, DoNotRepeatColors=DoNotRepeatColors, Xgrid=Xgrid, Ygrid=Ygrid , fig=fig, show=show, hline=hline, singleYaxis=singleYaxis, figsize=figsize, dpi=dpi, num=num, **kwargs)
 
-        return (figure, PlotKeys, IndexList)
+        return figure  # return (figure, PlotKeys, IndexList)
 
     def replaceNullbyNaN(self):
         """
@@ -3308,7 +3311,7 @@ class SimResult(object):
     def add_Key(self, Key):
         if type(Key) is str:
             Key = Key.strip()
-            self.keys = tuple(set(list(self.get_Keys()) + [Key]))
+            self.keys_ = tuple(set(list(self.get_Keys()) + [Key]))
         else:
             raise TypeError('Key must be string')
 
@@ -3316,7 +3319,7 @@ class SimResult(object):
         """
         Will return a list of all the well names in the case.
         """
-        wellsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys if (K[0] == 'W' and self.nameSeparator in K)]
+        wellsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys_ if (K[0] == 'W' and self.nameSeparator in K)]
         wellsList = sorted(list(set(wellsList)))
         self.wells = tuple(wellsList)
         return self.wells
@@ -3325,7 +3328,7 @@ class SimResult(object):
         """
         Will return a list of all the group names in the case.
         """
-        groupsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys if ( K[0] == 'G' and self.nameSeparator in K)]
+        groupsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys_ if ( K[0] == 'G' and self.nameSeparator in K)]
         groupsList = sorted(list(set(groupsList)))
         self.groups = tuple(groupsList)
         return self.groups
@@ -3335,7 +3338,7 @@ class SimResult(object):
         Will return a list of all the regions names or numbers in the case.
         """
         # preparing object attribute
-        regionsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys if ( K[0] == 'G' and self.nameSeparator in K)]
+        regionsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys_ if ( K[0] == 'G' and self.nameSeparator in K)]
         regionsList = sorted(list(set(regionsList)))
         return tuple(regionsList)
 
@@ -3440,13 +3443,13 @@ class SimResult(object):
         if pattern is not None and type(pattern) is not str:
             raise TypeError('pattern argument must be a string.')
 
-        if len(self.keys) == 0 or reload is True:
-            self.keys = self.list_Keys()
+        if len(self.keys_) == 0 or reload is True:
+            self.keys_ = self.list_Keys()
 
         if pattern is None:
-            return self.keys
+            return self.keys_
         else:
-            return tuple(fnmatch.filter(self.keys, pattern))
+            return tuple(fnmatch.filter(self.keys_, pattern))
 
     def find_keys(self, criteria=None, reload=False):
         """
@@ -3496,19 +3499,19 @@ class SimResult(object):
         """
         reload = bool(reload)
 
-        if len(self.keys) == 0 or reload is True:
-            self.keys = self.get_Keys(reload=reload)
+        if len(self.keys_) == 0 or reload is True:
+            self.keys_ = self.get_Keys(reload=reload)
 
         if criteria is not None and (type(criteria) is not str and type(criteria) not in [list, tuple, set]):
             raise TypeError('criteria argument must be a string or list of strings.')
 
         if criteria is None:
-            return self.keys
+            return self.keys_
 
         keys = []
         if type(criteria) is str and len(criteria.strip()) > 0:
             if criteria.strip()[0] == '!' and len(criteria.strip()) > 1:
-                keys = list(self.keys)
+                keys = list(self.keys_)
                 keys.remove(criteria[1:])
                 return tuple(keys)
             criteria = [criteria]
@@ -3518,7 +3521,7 @@ class SimResult(object):
             except:
                 raise TypeError('criteria argument must be a string or list of strings.')
         for key in criteria:
-            if type(key) is str and key not in self.keys:
+            if type(key) is str and key not in self.keys_:
                 if key in self.wells or key in self.groups or key in self.regions:
                     keys += list(self.get_Keys('*:'+key))
                 elif key in self.attributes:
@@ -3528,7 +3531,7 @@ class SimResult(object):
                         keys += list(self.get_Keys(key+':*'))
                     else:
                         keys += list(self.get_Keys(key))
-            elif type(key) is str and key in self.keys:
+            elif type(key) is str and key in self.keys_:
                 keys += [ key ]
             else:
                 keys += list(self.find_Keys(key))
@@ -3537,7 +3540,7 @@ class SimResult(object):
     def get_Filter(self):
         if self.filter['filter'] is None:
             _verbose(self.speak, 1, " <get_Filter> filter is not yet defined")
-            return np.array([True]*len(self.get_Vector(self.keys[0])[self.keys[0]]))
+            return np.array([True]*len(self.get_Vector(self.keys_[0])[self.keys_[0]]))
         if len(self.filter['filter']) != len(self.vectorTemplate):
             self.redo_Filter()
         return self.filter['filter']
@@ -4852,8 +4855,8 @@ class SimResult(object):
         """
         if self.is_Key(self.get_TimeVector()):
             Vlen = len(self(self.get_TimeVector()))
-        elif len(self.keys) > 0:
-            Vlen = len(self(self.keys[0]))
+        elif len(self.keys_) > 0:
+            Vlen = len(self(self.keys_[0]))
         else:
             _verbose(self.speak, 3, 'there are no Keys in this object.')
             return True
@@ -5725,7 +5728,7 @@ class SimResult(object):
     #     txtfile = txtfile + 'wells =:= ' + str(self.wells) + '\n'
     #     txtfile = txtfile + 'groups =:= ' + str(self.groups) + '\n'
     #     txtfile = txtfile + 'regions =:= ' + str(self.regions) + '\n'
-    #     txtfile = txtfile + 'keys =:= ' + str(self.keys) + '\n'
+    #     txtfile = txtfile + 'keys =:= ' + str(self.keys_) + '\n'
 
     #     # dump attributes dictionary to JSON file
     #     with open(Folder + fileName + '_storage/json/attributes.sro', 'w') as file:
@@ -5825,7 +5828,7 @@ class SimResult(object):
     #         elif key == 'regions':
     #             self.regions = tuple(line.split(' =:= ')[1][1:-1].split(', '))
     #         elif key == 'keys':
-    #             self.keys = tuple(line.split(' =:= ')[1][1:-1].split(', '))
+    #             self.keys_ = tuple(line.split(' =:= ')[1][1:-1].split(', '))
     #         elif key == 'overwrite':
     #             self.overwrite = line.split(' =:= ')[1]
     #         elif key == 'null':
@@ -5975,12 +5978,12 @@ class SimResult(object):
         if Keys == '--all':
             if ECLkeywordsOnly:
                 CleanColumns = []
-                for Key in self.keys:
+                for Key in self.keys_:
                     if _isECLkey(Key, maxLen=RSMleng):
                         CleanColumns.append(Key)
             else:
-                CleanColumns = self.keys
-                VIPcolLen = max(nplen(np.array(_mainKey(self.keys))))
+                CleanColumns = self.keys_
+                VIPcolLen = max(nplen(np.array(_mainKey(self.keys_))))
                 if VIPcolLen > RSMleng:
                     _verbose(self.speak, 3, "\nIMPORTANT: the lenght of the columns must be set to " + str(VIPcolLen) + " to fit key names.")
                     RSMleng = VIPcolLen
@@ -6268,11 +6271,11 @@ class SimResult(object):
         if Keys == '--all':
             if ECLkeywordsOnly:
                 CleanColumns = []
-                for Key in self.keys:
+                for Key in self.keys_:
                     if _isECLkey(Key, maxLen=16):
                         CleanColumns.append(Key)
             else:
-                CleanColumns = self.keys
+                CleanColumns = self.keys_
 
         else:
             CleanColumns = []
@@ -6441,12 +6444,12 @@ class SimResult(object):
         # exportKeys += [ _mainKey(k)+':'+g for k in keys for g in exportGroups if k[0] == 'G' ]
 
         # keep only valid keys, not duplicated
-        exportKeys = [ k for k in exportKeys if k in self.keys ]
+        exportKeys = [ k for k in exportKeys if k in self.keys_ ]
         exportKeys = list(set(exportKeys))
 
         if useDates:
             if type(useDates) is str:
-                if useDates in self.keys:
+                if useDates in self.keys_:
                     if 'datetime' in str(test('DATE').dtype):
                         datekey = useDates
                     else:
@@ -6455,7 +6458,7 @@ class SimResult(object):
                     raise ValueError("The key '" + str(useDates) +"' requested to be used as DATES is not a key in this simulation results.")
             else:
                 for datekey in ('DATE','DATES'):
-                    if datekey in self.keys and datekey not in exportKeys:
+                    if datekey in self.keys_ and datekey not in exportKeys:
                         exportKeys.append(datekey)
                         break
 

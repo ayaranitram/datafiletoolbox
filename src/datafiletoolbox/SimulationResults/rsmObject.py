@@ -5,8 +5,8 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.0'
-__release__ = 20220223
+__version__ = '0.1.1'
+__release__ = 20230411
 __all__ = ['RSM']
 
 from .mainObject import SimResult as _SimResult
@@ -50,7 +50,7 @@ class RSM(_SimResult):
         """
         run intensive routines, to have the data loaded and ready
         """
-        self.keys = tuple(sorted(self.keys))
+        self.keys_ = tuple(sorted(self.keys_))
         self.extract_Wells()
         self.extract_Groups()
         self.extract_Regions()
@@ -88,7 +88,7 @@ class RSM(_SimResult):
             return self.DTindex
 
         # look for other identical index
-        for Key in ('DATE', 'DATES', 'TIME', 'DAYS', 'MONTHS', 'YEARS') + self.keys:
+        for Key in ('DATE', 'DATES', 'TIME', 'DAYS', 'MONTHS', 'YEARS') + self.keys_:
             KeyIndex = False
             IndexVector = None
             if Key in self.results:
@@ -116,7 +116,7 @@ class RSM(_SimResult):
         with open(inputFile, 'r') as file:
             rsm = file.readlines()
         l = 0
-        self.keys = []
+        self.keys_ = []
         while l < len(rsm):
 
             if len(rsm[l].strip()) == 0:
@@ -186,13 +186,13 @@ class RSM(_SimResult):
                                         'datetime64[s]')
                                 except:
                                     self.results[colnames[c]] = table[:, c]
-                        self.keys.append(colnames[c])
+                        self.keys_.append(colnames[c])
                         self.units[colnames[c]] = units[c]
                         if 'float' in str(self.results[colnames[c]].dtype) or 'int' in str(
                                 self.results[colnames[c]].dtype):
                             self.results[colnames[c]] = self.results[colnames[c]] * multipliers[c]
 
-        self.keys = tuple(set(self.keys))
+        self.keys_ = tuple(set(self.keys_))
 
     def list_Keys(self, pattern=None, reload=False):
         """
@@ -208,10 +208,10 @@ class RSM(_SimResult):
         """
 
         if pattern is None:
-            return self.keys
+            return self.keys_
         else:
             keysList = []
-            for key in self.keys:
+            for key in self.keys_:
                 if pattern in key:
                     keysList.append(key)
             return tuple(keysList)

@@ -5,8 +5,8 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.0.0'
-__release__ = 20220525
+__version__ = '0.0.1'
+__release__ = 20230411
 __all__ = ['ODBC']
 
 from .mainObject import SimResult as _SimResult
@@ -70,7 +70,7 @@ class ODBC(_SimResult):
         """
         run intensive routines, to have the data loaded and ready
         """
-        self.keys = tuple( sorted(self.keys))
+        self.keys_ = tuple( sorted(self.keys_))
         self.extract_Wells()
         self.extract_Groups()
         self.extract_Regions()
@@ -153,16 +153,16 @@ class ODBC(_SimResult):
             self.results[self.headertable] = pd.read_sql_query('SELECT * FROM OFM_HEADERID', conn)
             # not implemented
 
-        self.keys = []
+        self.keys_ = []
         for t in self.results:
             for c in t.columns:
                 if self.uniqueID in t:
                     for uid in t[self.uniqueID].unique():
-                        self.keys.append(c+str(self.nameSeparator)+uid)
+                        self.keys_.append(c+str(self.nameSeparator)+uid)
                 else:
-                    self.keys.append(c)
-        self.keys = tuple(set(self.keys))
-        #self.keys = tuple(set([c+self.nameSeparator+uid for t in self.results for c in self.results[t] for uid in self.results[t][self.uniqueID].unique()]))
+                    self.keys_.append(c)
+        self.keys_ = tuple(set(self.keys_))
+        #self.keys_ = tuple(set([c+self.nameSeparator+uid for t in self.results for c in self.results[t] for uid in self.results[t][self.uniqueID].unique()]))
 
     def list_Keys(self, pattern=None, reload=False):
         """
@@ -178,10 +178,10 @@ class ODBC(_SimResult):
         """
 
         if pattern is None:
-            return self.keys
+            return self.keys_
         else:
-            keysList = [k for k in self.keys if pattern in key]
-            # for key in self.keys:
+            keysList = [k for k in self.keys_ if pattern in key]
+            # for key in self.keys_:
             #     if pattern in key:
             #         keysList.append(key)
             return tuple(keysList)
@@ -219,7 +219,7 @@ class ODBC(_SimResult):
         """
         Will return a list of all the group names in the case.
         """
-        # groupsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys if ( K[0] == 'G' and self.nameSeparator in K)]
+        # groupsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys_ if ( K[0] == 'G' and self.nameSeparator in K)]
         # groupsList = sorted(list(set(groupsList)))
         self.groups = tuple()
         return self.groups
@@ -229,6 +229,6 @@ class ODBC(_SimResult):
         Will return a list of all the regions names or numbers in the case.
         """
         # preparing object attribute
-        # regionsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys if ( K[0] == 'G' and self.nameSeparator in K)]
+        # regionsList = [K.split(self.nameSeparator)[-1].strip() for K in self.keys_ if ( K[0] == 'G' and self.nameSeparator in K)]
         # regionsList = sorted(list(set(regionsList)))
         return tuple()
