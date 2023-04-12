@@ -257,7 +257,7 @@ class SimResult(object):
         self.keyMarkers = {}
         self.keyMarkersSize = {}
         self.style = '-'
-        self.keys_tyles = {}
+        self.key_styles = {}
         self.alpha = 1.0
         self.keyAlphas = {}
         self.historyAsDots = True
@@ -2100,9 +2100,8 @@ class SimResult(object):
                 hue='--auto', label='--auto',
                 figsize=(8, 6), dpi=100, grid=False,
                 sort='item', ascending=True, rotation=True, tight_layout=True, resample='daily',
-                row=None, col=None,
-                return_fig=True, return_df=False, logY=False, logX=False,
-                style="ticks", palette="pastel", **kwargs):
+                row=None, col=None, return_fig=True, return_df=False, logY=False, logX=False,
+                style="ticks", palette="pastel", show=False, **kwargs):
         """
         creates a boxplot for the desired keys
 
@@ -2147,7 +2146,8 @@ class SimResult(object):
             plt.yscale('log')
         if bool(logX):
             plt.xscale('log')
-        plt.show()
+        if show:
+            plt.show()
 
         if bool(return_fig) and bool(return_df):
             return fig, df
@@ -2165,7 +2165,7 @@ class SimResult(object):
                split=True, resample='daily',
                row=None, col=None, inner=None, logY=False, logX=False,
                return_fig=True, return_df=False,
-               style="ticks", palette="pastel", **kwargs):
+               style="ticks", palette="pastel", show=False, **kwargs):
         """
         wrapper for violinplot method
         """
@@ -2232,7 +2232,8 @@ class SimResult(object):
 
         if bool(tight_layout):
             plt.tight_layout()
-        plt.show()
+        if show:
+            plt.show()
 
         if bool(return_fig) and bool(return_df):
             return fig, df
@@ -2243,23 +2244,11 @@ class SimResult(object):
         else:
             return None
 
-    def plot(self,
-             keys=[],
-             index=None,
-             other_sims=None,
-             wells=[],
-             groups=[],
-             regions=[],
-             do_not_repeat_colors=None,
-             grid=False,
-             show=True,
-             hline=None,
-             fig=None,
-             num=None,
-             figsize=(6, 4),
-             dpi=150,
-             singleYaxis=False,
-             **kwargs):
+    def plot(self, keys=[], index=None, other_sims=None,
+             wells=[], groups=[], regions=[],
+             do_not_repeat_colors=None, grid=False,
+             show=False, hline=None, fig=None, num=None, figsize=(6, 4), dpi=150,
+             singleYaxis=False, **kwargs):
         """
         creates a line chart for the selected Keys vs the selected Index.
         returns the a tuple with (the plot, list of Keys in Y axes, list of Indexes in X axis)
@@ -2269,7 +2258,7 @@ class SimResult(object):
             Wells : list of wells to plot for the desired Keys
             Groups : list of groups to plot for the desired Keys
             Regions : list of Regions to plot for the desired Keys
-            DoNotRepeatColors : True or False
+            do_not_repeat_colors : True or False
                 the colors of the lines are by default asigned based on the property of the Key,
                 then for several objects plotting the same Key all the lines will have the same color.
                 To avoid that behaviour, set this parameter to True
@@ -2347,7 +2336,7 @@ class SimResult(object):
                     if other_sims is None:
                         other_sims, index = index, self.get_Index()
                     elif _is_SimulationResult(other_sims):
-                        other_sims, index = list(set([index, other_sims])), self.get_Index()
+                        other_sims, index = list({index, other_sims}), self.get_Index()
                     elif type(other_sims) is str and self.is_Key(other_sims):
                         other_sims, index = index, other_sims.stip().upper()
                     elif type(other_sims) is list or type(other_sims) is tuple:
@@ -2365,7 +2354,7 @@ class SimResult(object):
             if other_sims is None:
                 other_sims, index = index, self.get_Index()
             elif _is_SimulationResult(other_sims):
-                other_sims, index = list(set([index, other_sims])), self.get_Index()
+                other_sims, index = list({index, other_sims}), self.get_Index()
             elif type(other_sims) is str and self.is_Key(other_sims):
                 other_sims, index = index, other_sims.stip().upper()
             elif type(other_sims) is list or type(other_sims) is tuple:
@@ -2540,7 +2529,7 @@ class SimResult(object):
             hline = {'y': hline, 'xmin': xmin, 'xmax': xmax, 'colors': 'black', 'linestyle': '-'}
 
         figure = Plot(SimResultObjects=sims_to_plot, Y_Keys=plot_keys, X_Key=index_list,
-                      DoNotRepeatColors=do_not_repeat_colors, Xgrid=Xgrid, Ygrid=Ygrid, fig=fig, show=show, hline=hline,
+                      do_not_repeat_colors=do_not_repeat_colors, Xgrid=Xgrid, Ygrid=Ygrid, fig=fig, show=show, hline=hline,
                       singleYaxis=singleYaxis, figsize=figsize, dpi=dpi, num=num, **kwargs)
 
         return figure  # return (figure, plot_keys, index_list)
@@ -2664,7 +2653,6 @@ class SimResult(object):
                                     returnVector[NewKey + ':' + aggregated_key_name], KeyUnits, overwrite=True)
                     self.set_Vector(NewKey + ':' + aggregated_key_name,
                                     returnVector[NewKey + ':' + aggregated_key_name], KeyUnits, overwrite=True)
-
         return returnVector
 
     def fillZeros(self, key_vector, key_time, force=False):
@@ -3195,9 +3183,9 @@ class SimResult(object):
             self.style = linestyle
         else:
             if self.is_Key(key):
-                self.keyStyles[key] = linestyle
+                self.key_styles[key] = linestyle
             elif key in self.attributes:
-                self.keyStyles[key] = linestyle
+                self.key_styles[key] = linestyle
             elif len(self.find_Keys(key)) > 0:
                 for K in self.find_Keys(key):
                     _verbose(self.speak, 2, '<set_Style> applying style to key', K)
@@ -3207,14 +3195,14 @@ class SimResult(object):
         if Key is None:
             return 'None' if self.style.startswith('None#') else self.style
         elif self.is_Key(Key):
-            if Key in self.keyStyles:
-                return 'None' if self.keyStyles[Key].startswith('None#') else self.keyStyles[Key]
-            elif _mainKey(Key) in self.keyStyles:
-                return 'None' if self.keyStyles[_mainKey(Key)].startswith('None#') else self.keyStyles[_mainKey(Key)]
+            if Key in self.key_styles:
+                return 'None' if self.key_styles[Key].startswith('None#') else self.key_styles[Key]
+            elif _mainKey(Key) in self.key_styles:
+                return 'None' if self.key_styles[_mainKey(Key)].startswith('None#') else self.key_styles[_mainKey(Key)]
             else:
                 return None
         elif Key in self.attributes:
-            return 'None' if self.keyStyles[Key].startswith('None#') else self.keyStyles[Key]
+            return 'None' if self.key_styles[Key].startswith('None#') else self.key_styles[Key]
 
     def set_Marker(self, marker=None, key=None):
         """

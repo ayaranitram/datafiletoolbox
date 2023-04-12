@@ -55,7 +55,7 @@ class VIP(_SimResult):
         run intensive routines, to have the data loaded and ready
         """
         self.strip_units()
-        self.fill_FieldBasics()
+        self.fill_field_basics()
         self.get_Attributes(reload=True)
         self.complete_Units()
         self.regionNumber = self.extract_Region_Numbers()

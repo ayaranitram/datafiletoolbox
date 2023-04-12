@@ -59,7 +59,7 @@ class NexusDesktopCSV(_VIP):
         self.get_Wells(reload=True)
         # self.CSVextractBacis()
         self.strip_units()
-        self.fill_FieldBasics()
+        self.fill_field_basics()
         self.prepareWellData()
         self.get_Attributes(reload=True)
         self.complete_Units()
