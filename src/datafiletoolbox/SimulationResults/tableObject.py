@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.20.3'
-__release__ = 20230411
+__version__ = '0.20.4'
+__release__ = 20230412
 __all__ = ['TABLE']
 
 from .mainObject import SimResult as _SimResult
@@ -451,7 +451,7 @@ class TABLE(_SimResult):
             else:
                 if key[0] == 'W':
                     UList = []
-                    for W in self.get_Wells():
+                    for W in self.get_wells():
                         if key + ':' + W in self.units:
                             UList.append(self.units[key + ':' + W])
                     if len(set(UList)) == 1:

@@ -5,8 +5,8 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.0'
-__release__ = 20220113
+__version__ = '0.1.1'
+__release__ = 20230412
 
 from datafiletoolbox.SimulationResults.mainObject import SimResult
 from datafiletoolbox.common.inout import extension
@@ -44,7 +44,7 @@ class VIP(SimResult):
         if type(inputFile) == str and len(inputFile.strip()) > 0:
             self.selectLoader(inputFile)
         self.complete_Units()
-        self.stripUnits()
+        self.strip_units()
         self.fill_FieldBasics()
         self.get_Attributes(reload=True)
         self.regionNumber = self.extract_Region_Numbers()

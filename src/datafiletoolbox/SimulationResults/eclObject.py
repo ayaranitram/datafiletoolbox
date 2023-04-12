@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.25.8'
-__release__ = 20230411
+__version__ = '0.25.9'
+__release__ = 20230412
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
@@ -71,7 +71,7 @@ class ECL(_SimResult):
                     return None
                 self.name = _extension(SummaryFilePath)[1]
                 self.set_FieldTime()
-                self.get_Wells(reload=True)
+                self.get_wells(reload=True)
                 self.get_groups(reload=True)
                 self.get_regions(reload=True)
                 self.get_keys(reload=True)
@@ -79,7 +79,7 @@ class ECL(_SimResult):
                 _verbose( self.speak, 1, 'simulation runs from ' +  str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
                 self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), data_type='datetime',
                                 overwrite=True)
-                self.stripUnits()
+                self.strip_units()
                 self.get_Attributes(reload=True)
                 self.fill_FieldBasics()
 
@@ -203,7 +203,7 @@ class ECL(_SimResult):
             else:
                 if key[0] == 'W':
                     UList=[]
-                    for W in self.get_Wells():
+                    for W in self.get_wells():
                         if key+ ':'+W in self.units:
                             UList.append(self.units[key + ':' + W])
                         elif key in self.keys_:
@@ -241,38 +241,38 @@ class ECL(_SimResult):
 
         elif type(key) is str and key.strip() == '--EveryType--':
             key = []
-            KeyDict = {}
+            key_dict = {}
             for each in self.keys_:
                 if ':' in each:
                     key.append(_mainKey(each))
-                    KeyDict[ _mainKey(each) ] = each
+                    key_dict[ _mainKey(each)] = each
                 else:
                     key.append(each)
-            key = list(set (key))
+            key = list(set(key))
             key.sort()
-            tempUnits = {}
+            temp_units = {}
             for each in key:
                 if each in self.units:
-                    tempUnits[each] = self.units[each]
+                    temp_units[each] = self.units[each]
                 elif each in self.keys_ and ( each != 'DATES' and each != 'DATE' ):
                     if self.results.unit(each) is None:
-                        tempUnits[each] = self.results.unit(each)
+                        temp_units[each] = self.results.unit(each)
                     else:
-                        tempUnits[each] = self.results.unit(each).strip('( )').strip("'").strip('"')
+                        temp_units[each] = self.results.unit(each).strip('( )').strip("'").strip('"')
                 elif each in self.keys_ and ( each == 'DATES' or each == 'DATE' ):
-                    tempUnits[each] = 'DATE'
+                    temp_units[each] = 'DATE'
                 else:
-                    if KeyDict[each] in self.units:
-                        tempUnits[each] = self.units[KeyDict[each]]
-                    elif KeyDict[each] in self.keys_:
-                        if self.results.unit(KeyDict[each]) is None:
-                            tempUnits[each] = self.results.unit(KeyDict[each])
+                    if key_dict[each] in self.units:
+                        temp_units[each] = self.units[key_dict[each]]
+                    elif key_dict[each] in self.keys_:
+                        if self.results.unit(key_dict[each]) is None:
+                            temp_units[each] = self.results.unit(key_dict[each])
                         else:
-                            tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
-            return tempUnits
+                            temp_units[each] = self.results.unit(key_dict[each]).strip('( )').strip("'").strip('"')
+            return temp_units
         elif type(key) in [list, tuple]:
-            tempUnits = {}
+            temp_units = {}
             for each in key:
                 if type(each) is str:
-                    tempUnits[each] = self.get_Unit(each)
-            return tempUnits
+                    temp_units[each] = self.get_Unit(each)
+            return temp_units

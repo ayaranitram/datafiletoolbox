@@ -5,8 +5,8 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.23.2'
-__release__ = 20230411
+__version__ = '0.23.3'
+__release__ = 20230412
 __all__ = ['VIP']
 
 from .mainObject import SimResult as _SimResult
@@ -54,7 +54,7 @@ class VIP(_SimResult):
         """
         run intensive routines, to have the data loaded and ready
         """
-        self.stripUnits()
+        self.strip_units()
         self.fill_FieldBasics()
         self.get_Attributes(reload=True)
         self.complete_Units()

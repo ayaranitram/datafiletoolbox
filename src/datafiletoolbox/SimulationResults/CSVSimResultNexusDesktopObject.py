@@ -58,7 +58,7 @@ class NexusDesktopCSV(_VIP):
         self.set_FieldTime()
         self.get_Wells(reload=True)
         # self.CSVextractBacis()
-        self.stripUnits()
+        self.strip_units()
         self.fill_FieldBasics()
         self.prepareWellData()
         self.get_Attributes(reload=True)

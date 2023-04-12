@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.9'
-__release__ = 20230411
+__version__ = '0.1.10'
+__release__ = 20230412
 __all__ = ['H5']
 
 from .mainObject import SimResult as _SimResult
@@ -65,7 +65,7 @@ class H5(_SimResult):
                 #     return None
                 self.name = _extension(h5FilePath)[1]
                 self.set_FieldTime()
-                self.get_Wells(reload=True)
+                self.get_wells(reload=True)
                 self.get_groups(reload=True)
                 self.get_regions(reload=True)
                 self.get_keys(reload=True)
@@ -75,7 +75,7 @@ class H5(_SimResult):
                              'simulation runs from ' + str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
                 self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), data_type='datetime',
                                 overwrite=True)
-                self.stripUnits()
+                self.strip_units()
                 self.get_Attributes(reload=True)
                 self.fill_FieldBasics()
 
