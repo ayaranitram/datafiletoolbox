@@ -301,10 +301,10 @@ class NexusDesktopCSV(_VIP):
             if len(Vector) > 0 :
                 Unit = self.CSV[CSVname]['[HEADERS]']['UNITS'][i]
                 _verbose( self.speak, 1, ' Setting vector for CSV key ' + CSVkey )
-                self.set_Vector( Key=CSVkey, VectorData=Vector, Units=Unit, DataType='auto', overwrite=True)
+                self.set_Vector(key=CSVkey, vector_data=Vector, units=Unit, data_type='auto', overwrite=True)
                 if ECLkey is not None and len(ECLkey) > 0 :
                     _verbose( self.speak, 1, ' Setting vector for ECL key ' + ECLkey )
-                    self.set_Vector( Key=ECLkey, VectorData=Vector, Units=Unit, DataType='auto', overwrite=True)
+                    self.set_Vector(key=ECLkey, vector_data=Vector, units=Unit, data_type='auto', overwrite=True)
 
         if 'TIME' in self.CSV[CSVname]['[HEADERS]']['VARIABLE'] :
             iTIME = self.CSV[CSVname]['[HEADERS]']['VARIABLE'].index('TIME')
@@ -503,10 +503,11 @@ class NexusDesktopCSV(_VIP):
                             Vector = np.array(Vector)
                         Unit = self.CSV[CSVname]['[HEADERS]']['UNITS'][col]
                         _verbose( self.speak, 1, ' Setting vector for CSV key ' + CSVkey )
-                        self.set_Vector( Key=CSVkey, VectorData=Vector, Units=Unit, DataType='auto', overwrite=True)
+                        self.set_Vector(key=CSVkey, vector_data=Vector, units=Unit, data_type='auto', overwrite=True)
                         if ECLkey is not None and len(ECLkey) > 0 :
                             _verbose( self.speak, 1, ' Setting vector for ECL key ' + ECLkey )
-                            self.set_Vector( Key=ECLkey, VectorData=Vector, Units=Unit, DataType='auto', overwrite=True)
+                            self.set_Vector(key=ECLkey, vector_data=Vector, units=Unit, data_type='auto',
+                                            overwrite=True)
                         FOUNDflag = True
                         if type(DATEflag) == str  :
                             _verbose( self.speak, 1, ' Creating date vector for CSV key ' + DATEflag )
@@ -827,7 +828,7 @@ class NexusDesktopCSV(_VIP):
     #     self.end = max( self.get_Vector('DATE')['DATE'] )
     #     return self.get_Vector('DATE')['DATE']
 
-    def extract_Wells(self) : #, pattern=None) :
+    def extract_wells(self) : #, pattern=None) :
         # preparing object attribute
         wellsList = list( self.wells )
         # if self.CSV == False :
@@ -866,7 +867,7 @@ class NexusDesktopCSV(_VIP):
     #     else:
     #         return tuple( self.extract_Areas(pattern) )
 
-    def extract_Areas(self, pattern=None) :
+    def extract_areas(self, pattern=None) :
         # preparing object attribute
         areaList = list( self.groups )
         # for sss in self.results :
@@ -885,7 +886,7 @@ class NexusDesktopCSV(_VIP):
         else :
             return self.groups
 
-    def extract_Regions(self, pattern=None) :
+    def extract_regions(self, pattern=None) :
         # preparing object attribute
         regionsList = list( self.regions )
         # if self.CSV == False :

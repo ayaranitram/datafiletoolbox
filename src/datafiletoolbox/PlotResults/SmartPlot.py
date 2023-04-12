@@ -912,7 +912,8 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
                         #     #     Ls = SeriesColors[s]
                         #     Ls = SeriesColors[s]
 
-                        plotLines += Axis[Yax].plot(X, Y, linestyle=Ls, linewidth=Lw, color=Lc, marker=Mk, markersize=Ms, label=ThisLabel, **kwargs)
+                        plotLines += Axis[Yax].plot(X, Y, linestyle=Ls, linewidth=Lw, color=Lc, marker=Mk,
+                                                    markersize=Ms, label=ThisLabel, **kwargs)
 
                         if Xdate :
                             # round to nearest years.

@@ -64,9 +64,9 @@ class TABLE(_SimResult):
         self.extract_Keys()
         self.extractDATE()
         self.find_index()
-        self.extract_Wells()
-        self.extract_Groups()
-        self.extract_Regions()
+        self.extract_wells()
+        self.extract_groups()
+        self.extract_regions()
         self.get_Attributes(None, True)
         if self.is_Key('DATES') and not self.is_Key('DATE'):
             self['DATE'] = 'DATES'
@@ -419,7 +419,7 @@ class TABLE(_SimResult):
         else:
             self.DTindex = None
 
-    def get_Unit(self, Key='--EveryType--'):
+    def get_Unit(self, key='--EveryType--'):
         """
         returns a string identifiying the unit of the requested Key
 
@@ -429,71 +429,71 @@ class TABLE(_SimResult):
         for all the keys in the results file
 
         """
-        if type(Key) is str and Key.strip() != '--EveryType--':
-            Key = Key.strip().upper()
-            if Key in self.units:
-                return self.units[Key]
-            if Key in ['DATES', 'DATE']:
-                self.units[Key] = 'DATE'
+        if type(key) is str and key.strip() != '--EveryType--':
+            key = key.strip().upper()
+            if key in self.units:
+                return self.units[key]
+            if key in ['DATES', 'DATE']:
+                self.units[key] = 'DATE'
                 return 'DATE'
-            if Key in self.keys_:
-                if ':' in Key:
-                    if Key[0] == 'W':
-                        if Key.split(':')[-1] in self.wells:
-                            return self.get_Unit(Key.split(':')[0])
-                    if Key[0] == 'G':
-                        if Key.split(':')[-1] in self.groups:
-                            return self.get_Unit(Key.split(':')[0])
-                    if Key[0] == 'R':
-                        if Key.split(':')[-1] in self.regions:
-                            return self.get_Unit(Key.split(':')[0])
+            if key in self.keys_:
+                if ':' in key:
+                    if key[0] == 'W':
+                        if key.split(':')[-1] in self.wells:
+                            return self.get_Unit(key.split(':')[0])
+                    if key[0] == 'G':
+                        if key.split(':')[-1] in self.groups:
+                            return self.get_Unit(key.split(':')[0])
+                    if key[0] == 'R':
+                        if key.split(':')[-1] in self.regions:
+                            return self.get_Unit(key.split(':')[0])
                 return None
             else:
-                if Key[0] == 'W':
+                if key[0] == 'W':
                     UList = []
                     for W in self.get_Wells():
-                        if Key + ':' + W in self.units:
-                            UList.append(self.units[Key + ':' + W])
+                        if key + ':' + W in self.units:
+                            UList.append(self.units[key + ':' + W])
                     if len(set(UList)) == 1:
-                        self.units[Key] = UList[0]
+                        self.units[key] = UList[0]
                         return UList[0]
                     else:
                         return None
-                elif Key[0] == 'G':
+                elif key[0] == 'G':
                     UList = []
-                    for G in self.get_Groups():
-                        if Key + ':' + G in self.units:
-                            UList.append(self.units[Key + ':' + G])
+                    for G in self.get_groups():
+                        if key + ':' + G in self.units:
+                            UList.append(self.units[key + ':' + G])
                     if len(set(UList)) == 1:
-                        self.units[Key] = UList[0]
+                        self.units[key] = UList[0]
                         return UList[0]
                     else:
                         return None
-                elif Key[0] == 'R':
+                elif key[0] == 'R':
                     UList = []
-                    for R in self.get_Regions():
-                        if Key + ':' + R in self.units:
-                            UList.append(self.units[Key + ':' + R])
+                    for R in self.get_regions():
+                        if key + ':' + R in self.units:
+                            UList.append(self.units[key + ':' + R])
                     if len(set(UList)) == 1:
-                        self.units[Key] = UList[0]
+                        self.units[key] = UList[0]
                         return UList[0]
                     else:
                         return None
                 UList = None
 
-        elif type(Key) is str and Key.strip() == '--EveryType--':
-            Key = []
+        elif type(key) is str and key.strip() == '--EveryType--':
+            key = []
             KeyDict = {}
             for each in self.keys_:
                 if ':' in each:
-                    Key.append(_mainKey(each))
+                    key.append(_mainKey(each))
                     KeyDict[_mainKey(each)] = each
                 else:
-                    Key.append(each)
-            Key = list(set(Key))
-            Key.sort()
+                    key.append(each)
+            key = list(set(key))
+            key.sort()
             tempUnits = {}
-            for each in Key:
+            for each in key:
                 if each in self.units:
                     tempUnits[each] = self.units[each]
                 elif each in self.keys_ and (each != 'DATES' and each != 'DATE'):
@@ -512,9 +512,9 @@ class TABLE(_SimResult):
                         else:
                             tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
             return tempUnits
-        elif type(Key) in [list, tuple]:
+        elif type(key) in [list, tuple]:
             tempUnits = {}
-            for each in Key:
+            for each in key:
                 if type(each) is str:
                     tempUnits[each] = self.get_Unit(each)
             return tempUnits

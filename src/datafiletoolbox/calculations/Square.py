@@ -82,7 +82,7 @@ def SquareDifferences(SimResultObjects=[], AttributesOrKeys=[], TimeSteps=None, 
     # extract the keys corresponding to the attributes
     for obj in SimResultObjects:
         for Att in Atts:
-            MatchingKeys += list(obj.get_Keys(pattern=str(Att) + ':*'))
+            MatchingKeys += list(obj.get_keys(pattern=str(Att) + ':*'))
     Atts = None
 
     # eliminate duplicated keys
@@ -90,7 +90,7 @@ def SquareDifferences(SimResultObjects=[], AttributesOrKeys=[], TimeSteps=None, 
 
     # keep only keys matching all the objects and
     for obj in SimResultObjects:
-        MatchingKeys = list(set(MatchingKeys).intersection(set(obj.get_Keys())))
+        MatchingKeys = list(set(MatchingKeys).intersection(set(obj.get_keys())))
     _verbose(verbosity, 1, ' < SqDiff > totalizing ' + str(
         len(MatchingKeys)) + ' Keys after extending the Attributes and removing duplicates.')
 
@@ -145,7 +145,7 @@ def SquareDifferences(SimResultObjects=[], AttributesOrKeys=[], TimeSteps=None, 
     # calculate differences:
     # request base DataFrame:
     _verbose(verbosity, 1, ' < SqDiff >  prepating the Pandas DataFrames, please wait...')
-    baseDF = SimResultObjects[0].get_DataFrame(Keys=MatchingKeys, Index=TimeKind)
+    baseDF = SimResultObjects[0].get_DataFrame(keys=MatchingKeys, index=TimeKind)
     baseDF.replace([SimResultObjects[0].null], np.nan, inplace=True)
     baseDF.interpolate(axis=0, inplace=True)
     baseDF.replace([np.inf, -np.inf], 0.0, inplace=True)
@@ -170,7 +170,7 @@ def SquareDifferences(SimResultObjects=[], AttributesOrKeys=[], TimeSteps=None, 
     # calculate every difference and add it to the sumDF
     for obj in range(1, len(SimResultObjects)):
         # get DataFrame with units converted to first DataFrame
-        otherDF = SimResultObjects[obj].get_ConvertedDataFrame(Keys=MatchingKeys, Index=TimeKind,
+        otherDF = SimResultObjects[obj].get_ConvertedDataFrame(keys=MatchingKeys, index=TimeKind,
                                                                OtherObject_or_NewUnits=SimResultObjects[0])
         otherDF.replace([SimResultObjects[obj].null], np.nan, inplace=True)
         otherDF.interpolate(axis=0, inplace=True)

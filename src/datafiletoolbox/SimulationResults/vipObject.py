@@ -142,9 +142,9 @@ class VIP(_SimResult):
             self.set_FieldTime()
             self.get_Vector('DATE')
             self.get_Wells(reload=True)
-            self.get_Groups(reload=True)
-            self.get_Regions(reload=True)
-            self.get_Keys(reload=True)
+            self.get_groups(reload=True)
+            self.get_regions(reload=True)
+            self.get_keys(reload=True)
             self.units = self.get_Unit(self.keys_)
             try:
                 dates = self.get_Dates()
@@ -162,7 +162,7 @@ class VIP(_SimResult):
                 if self.is_Key(LPGkey):
                     Before = self.get_Vector(LPGkey)[LPGkey]
                     Corrected = Before * 0.1292 / 33.4962
-                    self.set_Vector(LPGkey, Corrected, self.get_Unit(LPGkey), DataType='float', overwrite=True)
+                    self.set_Vector(LPGkey, Corrected, self.get_Unit(LPGkey), data_type='float', overwrite=True)
                     self.LPGcorrected = True
                     _verbose(self.speak, 2, 'Successfully applied LPG correction for VIP sss reports.')
 
@@ -427,13 +427,14 @@ class VIP(_SimResult):
                 _verbose(self.speak, 2, "'DATE' extracted from " + sss)
                 DateVector = list(set(DateVector))
 
-        self.set_Vector('DATES', np.array(pd.to_datetime(DateVector), dtype='datetime64[s]'), self.get_Unit('DATE'), DataType='datetime64', overwrite=True)
+        self.set_Vector('DATES', np.array(pd.to_datetime(DateVector), dtype='datetime64[s]'), self.get_Unit('DATE'),
+                        data_type='datetime64', overwrite=True)
         self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), overwrite=True)
         self.start = min(self.get_Vector('DATE')['DATE'])
         self.end = max(self.get_Vector('DATE')['DATE'])
         return self.get_Vector('DATE')['DATE']
 
-    def extract_Wells(self):
+    def extract_wells(self):
         """
         Will return a list of all the well names in case.
         """
@@ -452,7 +453,7 @@ class VIP(_SimResult):
 
         return self.wells
 
-    def extract_Groups(self, pattern=None, reload=False):
+    def extract_groups(self, pattern=None, reload=False):
         """
         Will return a list of all the group names in case.
 
@@ -461,10 +462,10 @@ class VIP(_SimResult):
         on fnmatch(), i.e. shell style wildcards.
         """
         if len(self.groups) == 0 or reload is True:
-            self.groups = tuple(self.extract_Areas(pattern))
+            self.groups = tuple(self.extract_areas(pattern))
         return self.groups
 
-    def extract_Areas(self, pattern=None):
+    def extract_areas(self, pattern=None):
         # preparing object attribute
         areaList = list(self.groups)
         # for sss in self.results:
@@ -484,7 +485,7 @@ class VIP(_SimResult):
         else:
             return self.groups
 
-    def extract_Regions(self, pattern=None):
+    def extract_regions(self, pattern=None):
         # preparing object attribute
         regionsList = list(self.regions)
         # for sss in self.results:
@@ -616,19 +617,19 @@ class VIP(_SimResult):
             self['WSIR'] = (salt * inje>0), self.get_Unit('WSALINITY')
             self['WSPR'] = (salt * prod>0), self.get_Unit('WSALINITY')
 
-    def add_Key(self, Key, SSStype=None):
-        if type(Key) == str:
-            Key = Key.strip()
+    def add_Key(self, key):
+        if type(key) == str:
+            key = key.strip()
             if self.ECLstyle:
-                self.keys_ = tuple(set(list(self.get_Keys()) + [Key]))
-                self.keysECL = tuple(set(list(self.get_Keys()) + [Key]))
-                VIPkey, keyType, keyName = _fromECLtoVIP(Key, self.speak)
-                self.keysVIP = tuple(set(list(self.get_Keys()) + [VIPkey +':'+ keyName]))
+                self.keys_ = tuple(set(list(self.get_keys()) + [key]))
+                self.keysECL = tuple(set(list(self.get_keys()) + [key]))
+                VIPkey, keyType, keyName = _fromECLtoVIP(key, self.speak)
+                self.keysVIP = tuple(set(list(self.get_keys()) + [VIPkey + ':' + keyName]))
             else:
-                self.keys_ = tuple(set(list(self.get_Keys()) [Key]))
-                self.keysVIP = tuple(set(list(self.get_Keys()) + [Key]))
-                ECLkey = _fromVIPtoECL(Key, SSStype, self.speak)
-                self.keysECL = tuple(set(list(self.get_Keys()) + [ECLkey]))
+                self.keys_ = tuple(set(list(self.get_keys()) [key]))
+                self.keysVIP = tuple(set(list(self.get_keys()) + [key]))
+                ECLkey = _fromVIPtoECL(key, SSStype, self.speak)
+                self.keysECL = tuple(set(list(self.get_keys()) + [ECLkey]))
 
         else:
             raise TypeError('Key must be string')
@@ -723,7 +724,7 @@ class VIP(_SimResult):
             else:
                 return self.keys_
 
-    def get_Unit(self, Key='--EveryType--'):
+    def get_Unit(self, key='--EveryType--'):
         """
         returns a string identifiying the unit of the requested Key
 
@@ -733,54 +734,56 @@ class VIP(_SimResult):
         for all the keys in the results file
 
         """
-        if type(Key) is str and Key in self.units and self.units[Key] is not None:
-            return self.units[Key]
-        if type(Key) is str and Key.strip() != '--EveryType--':
-            Key = Key.strip().upper()
-            if Key in self.units:
-                if self.units[Key] is not None:
-                    return self.units[Key]
+        if type(key) is str and key in self.units and self.units[key] is not None:
+            return self.units[key]
+        if type(key) is str and key.strip() != '--EveryType--':
+            key = key.strip().upper()
+            if key in self.units:
+                if self.units[key] is not None:
+                    return self.units[key]
                 else: # if self.units[Key] is None:
-                    if ':' in Key:
-                        if _mainKey(Key) in self.units:
-                            if self.units[_mainKey(Key)] is not None:
-                                return self.units[_mainKey(Key)]
+                    if ':' in key:
+                        if _mainKey(key) in self.units:
+                            if self.units[_mainKey(key)] is not None:
+                                return self.units[_mainKey(key)]
                             else:
-                                return self.extract_Unit(Key)
-            if Key in ['DATES','DATE']:
-                    self.units[Key] = 'DATE'
+                                return self.extract_Unit(key)
+            if key in ['DATES', 'DATE']:
+                    self.units[key] = 'DATE'
                     return 'DATE'
-            if Key in self.keys_:
-                return self.extract_Unit(Key)
+            if key in self.keys_:
+                return self.extract_Unit(key)
             else:
-                if Key[0] == 'W':
-                    UList = [self.units[Key+':'+W] if Key+':'+W in self.units else self.extract_Unit(Key+':'+W) for W in self.get_Wells()]
+                if key[0] == 'W':
+                    UList = [self.units[key + ':' + W] if key + ':' + W in self.units else self.extract_Unit(key + ':' + W) for W in self.get_Wells()]
                     if len(set(UList)) == 1:
-                        self.units[Key] = UList[0]
+                        self.units[key] = UList[0]
                         return UList[0]
                     else:
                         return None
-                elif Key[0] == 'G':
-                    UList = [self.units[Key+':'+G] if Key+':'+G in self.units else self.extract_Unit(Key+':'+G) for G in self.get_Groups()]
+                elif key[0] == 'G':
+                    UList = [self.units[key + ':' + G] if key + ':' + G in self.units else self.extract_Unit(key + ':' + G) for G in
+                             self.get_groups()]
                     if len(set(UList)) == 1:
-                        self.units[Key] = UList[0]
+                        self.units[key] = UList[0]
                         return UList[0]
                     else:
                         return None
-                elif Key[0] == 'R':
-                    UList = [self.units[Key+':'+R] if Key+':'+R in self.units else self.extract_Unit(Key+':'+R) for R in self.get_Regions()]
+                elif key[0] == 'R':
+                    UList = [self.units[key + ':' + R] if key + ':' + R in self.units else self.extract_Unit(key + ':' + R) for R in
+                             self.get_regions()]
                     if len(set(UList)) == 1:
-                        self.units[Key] = UList[0]
+                        self.units[key] = UList[0]
                         return UList[0]
                     else:
                         return None
                 UList = None
 
-        elif type(Key) is str and Key.strip() == '--EveryType--':
-            Key = [_mainKey(each) if ':' in each else each for each in self.keys_]
+        elif type(key) is str and key.strip() == '--EveryType--':
+            key = [_mainKey(each) if ':' in each else each for each in self.keys_]
             KeyDict = {_mainKey(each): each for each in self.keys_ if ':' in each}
-            Key = list(set(Key))
-            Key.sort()
+            key = list(set(key))
+            key.sort()
             def each_key_units(each):
                 if each in self.units:
                     return self.units[each]
@@ -796,9 +799,9 @@ class VIP(_SimResult):
                             return self.extract_Unit(KeyDict[each])
                         else:
                             return self.extract_Unit(KeyDict[each]).strip('( )').strip("'").strip('"')
-            tempUnits = {each: each_key_units(each) for each in Key}
+            tempUnits = {each: each_key_units(each) for each in key}
             return tempUnits
-        elif type(Key) in [list,tuple]:
+        elif type(key) in [list, tuple]:
             def each_key_units(each):
                 if type(each) is str and each.strip() in self.units:
                     return self.units[each.strip()]
@@ -809,7 +812,7 @@ class VIP(_SimResult):
                         return self.extract_Unit(each.strip())
                     else:
                         return self.extract_Unit(each.strip()).strip('( )').strip("'").strip('"')
-            tempUnits = {each: each_key_units(each) for each in Key}
+            tempUnits = {each: each_key_units(each) for each in key}
             return tempUnits
 
     def extract_Unit(self, Key, SSStype='FIELD'):
@@ -877,8 +880,10 @@ class VIP(_SimResult):
                         user = input('please write YES or NO: ')
                     if user in ['Y', 'YES', 'SI', 'SÍ', 'OUI']:
                         if ':' in ECLkey:
-                            if self.is_Key('WBP:'+ECLkey.split(':')[1]):
-                                self.set_Vector(Key=ECLkey, VectorData=self('WBP:'+ECLkey.split(':')[1]), Units=self.get_Unit('WBP:'+ECLkey.split(':')[1]), DataType='float', overwrite=True)
+                            if self.is_Key('WBP:' + ECLkey.split(':')[1]):
+                                self.set_Vector(key=ECLkey, vector_data=self('WBP:' + ECLkey.split(':')[1]),
+                                                units=self.get_Unit(
+                                                    'WBP:' + ECLkey.split(':')[1]), data_type='float', overwrite=True)
                             else:
                                 _verbose(self.speak, -1, " the corresponding well for the key '" + _mainKey(ECLkey) + "' does not have WBP here.")
                         else:
@@ -890,10 +895,12 @@ class VIP(_SimResult):
                         user = input('please write YES or NO: ')
                     if user in ['Y', 'YES', 'SI', 'SÍ', 'OUI']:
                         for W in self.get_Wells():
-                            self.set_Vector(Key=W, VectorData=self('WBP:'+W), Units=self.get_Unit('WBP:'+W), DataType='float', overwrite=True)
+                            self.set_Vector(key=W, vector_data=self('WBP:' + W), units=self.get_Unit('WBP:' + W),
+                                            data_type='float', overwrite=True)
                 else:
                     for W in self.get_Wells():
-                        self.set_Vector(Key=W, VectorData=self('WBP:'+W), Units=self.get_Unit('WBP:'+W), DataType='float', overwrite=True)
+                        self.set_Vector(key=W, vector_data=self('WBP:' + W), units=self.get_Unit('WBP:' + W),
+                                        data_type='float', overwrite=True)
         elif KeyArguments is not None:
             if type(KeyArguments) is str and len(KeyArguments) > 0:
                 KeyArguments = KeyArguments.strip()
@@ -968,7 +975,7 @@ class VIP(_SimResult):
                 #     key = 'FV'+IP+TR+OGW
                 #     if self.is_Key(key):
                 #         rv.append(key)
-                rv = ['FV'+IP+TR+OGW for OGW in ['O', 'G', 'W'] if self.is_Key('FV'+IP+TR+OGW)]
+                rv = ['FV' + IP + TR + OGW for OGW in ['O', 'G', 'W'] if self.is_Key('FV' + IP + TR + OGW)]
 
                 key = 'FV'+IP+TR
                 if len(rv) > 0:
@@ -988,7 +995,8 @@ class VIP(_SimResult):
                     #     key = T+'V'+IP+TR+OGW
                     #     if self.is_Attribute(key):
                     #         rv.append(key)
-                    rv = [T+'V'+IP+TR+OGW for OGW in ['O', 'G', 'W'] if self.is_Attribute(T+'V'+IP+TR+OGW)]
+                    rv = [T +'V' + IP + TR + OGW for OGW in ['O', 'G', 'W'] if
+                          self.is_Attribute(T + 'V' + IP + TR + OGW)]
 
                     key = T+'V'+IP+TR
                     if len(rv) > 0:
@@ -1022,7 +1030,7 @@ class VIP(_SimResult):
                     'MSM3':('SM3', 1000000),
                     'MSTM3':('STM3', 1000000)}
 
-        for k in self.get_Keys():
+        for k in self.get_keys():
             ku = self.get_Unit(k)
             if ku is not None:
                 for vu,conv in vipunits.items():

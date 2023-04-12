@@ -71,9 +71,9 @@ class ODBC(_SimResult):
         run intensive routines, to have the data loaded and ready
         """
         self.keys_ = tuple( sorted(self.keys_))
-        self.extract_Wells()
-        self.extract_Groups()
-        self.extract_Regions()
+        self.extract_wells()
+        self.extract_groups()
+        self.extract_regions()
         self.get_Attributes(None, True)
         self.find_index()
         _SimResult.initialize(self, **kwargs)
@@ -85,11 +85,11 @@ class ODBC(_SimResult):
             self.set_Units('DATE', 'DATE', overwrite=True)
         if not self.is_Key('DATES') and self.is_Key('DATE'):
             self['DATES'] = 'DATE'
-        if self.is_Key('DATES') and ( self.get_Unit('DATES') is None or self.get_Unit('DATES') != 'DATE' ):
+        if self.is_Key('DATES') and (self.get_Unit('DATES') is None or self.get_Unit('DATES') != 'DATE'):
             self.set_Unit('DATES', 'DATE', overwrite=True)
         if not self.is_Key('TIME') and self.is_Key('DATE'):
             self['TIME'] = ( self('DATE').astype('datetime64[s]') - self.start ).astype('int') / (60*60*24)
-        if self.is_Key('TIME') and ( self.get_Unit('TIME') is None or self.get_Unit('TIME').upper() in ['', 'NONE'] ):
+        if self.is_Key('TIME') and (self.get_Unit('TIME') is None or self.get_Unit('TIME').upper() in ['', 'NONE']):
             self.set_Unit('TIME', 'DAYS', overwrite=True)
 
     def connectDB(self,
@@ -206,7 +206,7 @@ class ODBC(_SimResult):
                     verbose(self.speak, 2, "loading key '"+str(key)+"' from table '"+str(table))
                     return self.loadVector(key, table)
 
-    def extract_Wells(self):
+    def extract_wells(self):
         """
         Will return a list of all the well names in the case.
         """
@@ -215,7 +215,7 @@ class ODBC(_SimResult):
         self.wells = tuple(wellsList)
         return self.wells
 
-    def extract_Groups(self):
+    def extract_groups(self):
         """
         Will return a list of all the group names in the case.
         """
@@ -224,7 +224,7 @@ class ODBC(_SimResult):
         self.groups = tuple()
         return self.groups
 
-    def extract_Regions(self):
+    def extract_regions(self):
         """
         Will return a list of all the regions names or numbers in the case.
         """

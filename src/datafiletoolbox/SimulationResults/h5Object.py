@@ -66,14 +66,14 @@ class H5(_SimResult):
                 self.name = _extension(h5FilePath)[1]
                 self.set_FieldTime()
                 self.get_Wells(reload=True)
-                self.get_Groups(reload=True)
-                self.get_Regions(reload=True)
-                self.get_Keys(reload=True)
+                self.get_groups(reload=True)
+                self.get_regions(reload=True)
+                self.get_keys(reload=True)
                 self.units = self.get_Unit(self.keys_)
                 if self.get_Dates() is not None:
                     _verbose(self.speak, 1,
                              'simulation runs from ' + str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
-                self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), DataType='datetime',
+                self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), data_type='datetime',
                                 overwrite=True)
                 self.stripUnits()
                 self.get_Attributes(reload=True)
@@ -258,13 +258,13 @@ class H5(_SimResult):
             self.end = self.numpy_dates[-1]
         return self.numpy_dates
 
-    def extract_Wells(self, pattern=None):
+    def extract_wells(self, pattern=None):
         """
         Will return a list of all the well names in case.
         """
         # preparing object attribute
         outList = list(self.wells)
-        for key in self.get_Keys():
+        for key in self.get_keys():
             if key[0] == 'W':
                 if ':' in key:
                     item = key.split(':')[1]
@@ -277,7 +277,7 @@ class H5(_SimResult):
         else:
             return tuple(fnmatch.filter(self.wells, pattern))
 
-    def extract_Groups(self, pattern=None, reload=False):
+    def extract_groups(self, pattern=None, reload=False):
         """
         calls group method from libecl:
 
@@ -289,7 +289,7 @@ class H5(_SimResult):
         """
         # preparing object attribute
         outList = list(self.groups)
-        for key in self.get_Keys():
+        for key in self.get_keys():
             if key[0] == 'G':
                 if ':' in key:
                     item = key.split(':')[1]
@@ -332,10 +332,10 @@ class H5(_SimResult):
         else:
             return tuple(fnmatch.filter(self.keys_, pattern))
 
-    def extract_Regions(self, pattern=None):
+    def extract_regions(self, pattern=None):
         # preparing object attribute
         outList = list(self.regions)
-        for key in self.get_Keys():
+        for key in self.get_keys():
             if key[0] == 'R':
                 if ':' in key:
                     item = key.split(':')[1]

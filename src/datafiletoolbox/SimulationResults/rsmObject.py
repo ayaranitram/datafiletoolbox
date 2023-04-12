@@ -51,9 +51,9 @@ class RSM(_SimResult):
         run intensive routines, to have the data loaded and ready
         """
         self.keys_ = tuple(sorted(self.keys_))
-        self.extract_Wells()
-        self.extract_Groups()
-        self.extract_Regions()
+        self.extract_wells()
+        self.extract_groups()
+        self.extract_regions()
         self.get_Attributes(None, True)
         self.find_index()
         _SimResult.initialize(self, **kwargs)
@@ -102,8 +102,8 @@ class RSM(_SimResult):
             IndexVector = self.results[self.DTindex]
             self.add_Key(self.DTindex)
             self.TimeVector = self.DTindex
-            _ = self.set_Vector(Key=self.DTindex, VectorData=IndexVector, Units=self.get_Units(self.DTindex),
-                                DataType='auto', overwrite=True)
+            _ = self.set_Vector(key=self.DTindex, vector_data=IndexVector, units=self.get_Units(self.DTindex),
+                                data_type='auto', overwrite=True)
             return self.DTindex
         else:
             _verbose(self.speak, 3, "time index not found.")

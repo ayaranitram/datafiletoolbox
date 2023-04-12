@@ -136,9 +136,9 @@ class NEXUS(_SimResult):
             self.set_FieldTime()
             self.get_Vector('DATE')
             self.get_Wells(reload=True)
-            self.get_Groups(reload=True)
-            self.get_Regions(reload=True)
-            self.get_Keys(reload=True)
+            self.get_groups(reload=True)
+            self.get_regions(reload=True)
+            self.get_keys(reload=True)
             self.units = self.get_Unit(self.keys_)
             _verbose(self.speak, 1,
                      'simulation runs from ' + str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
@@ -153,7 +153,7 @@ class NEXUS(_SimResult):
                 if self.is_Key(LPGkey):
                     Before = self.get_Vector(LPGkey)[LPGkey]
                     Corrected = Before * 0.1292 / 33.4962
-                    self.set_Vector(LPGkey, Corrected, self.get_Unit(LPGkey), DataType='float', overwrite=True)
+                    self.set_Vector(LPGkey, Corrected, self.get_Unit(LPGkey), data_type='float', overwrite=True)
                     self.LPGcorrected = True
                     _verbose(self.speak, 2, 'Successfully applied LPG correction for VIP sss reports.')
 
@@ -413,14 +413,14 @@ class NEXUS(_SimResult):
             DateVector = _strDate(list(self.loadVector('DATE', 'FIELD', True)), formatIN='DD-MM-YYYY',
                                   speak=(self.speak == 1))
         self.set_Vector('DATES', np.array(pd.to_datetime(DateVector), dtype='datetime64[s]'), self.get_Unit('DATE'),
-                        DataType='datetime64', overwrite=True)
+                        data_type='datetime64', overwrite=True)
         # self.set_Vector( 'DATES', np.array( pd.to_datetime( self.get_Vector('DATE')['DATE'] ), dtype='datetime64[s]'), self.get_Unit('DATE'), DataType='datetime64', overwrite=True )
         self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), overwrite=True)
         self.start = min(self.get_Vector('DATE')['DATE'])
         self.end = max(self.get_Vector('DATE')['DATE'])
         return self.get_Vector('DATE')['DATE']
 
-    def extract_Wells(self):  # , pattern=None):
+    def extract_wells(self):  # , pattern=None):
         # preparing object attribute
         wellsList = list(self.wells)
         # if self.CSV is False:
@@ -442,7 +442,7 @@ class NEXUS(_SimResult):
 
         return self.wells
 
-    def extract_Groups(self, pattern=None, reload=False):
+    def extract_groups(self, pattern=None, reload=False):
         """
         Will return a list of all the group names in case.
 
@@ -476,7 +476,7 @@ class NEXUS(_SimResult):
         else:
             return self.groups
 
-    def extract_Regions(self, pattern=None):
+    def extract_regions(self, pattern=None):
         # preparing object attribute
         regionsList = list(self.regions)
         # if self.CSV is False:
@@ -613,19 +613,19 @@ class NEXUS(_SimResult):
             self['WSPR'] = (salt * prod > 0), self.get_Unit('WSALINITY')
             # self.set_Unit('WSPR', self.get_Unit('WSALINITY') )
 
-    def add_Key(self, Key, SSStype=None):
-        if type(Key) == str:
-            Key = Key.strip()
+    def add_Key(self, key):
+        if type(key) == str:
+            key = key.strip()
             if self.ECLstyle:
-                self.keys_ = tuple(set(list(self.get_Keys()) + [Key]))
-                self.keysECL = tuple(set(list(self.get_Keys()) + [Key]))
-                VIPkey, keyType, keyName = _fromECLtoVIP(Key, self.speak)
-                self.keysVIP = tuple(set(list(self.get_Keys()) + [VIPkey + ':' + keyName]))
+                self.keys_ = tuple(set(list(self.get_keys()) + [key]))
+                self.keysECL = tuple(set(list(self.get_keys()) + [key]))
+                VIPkey, keyType, keyName = _fromECLtoVIP(key, self.speak)
+                self.keysVIP = tuple(set(list(self.get_keys()) + [VIPkey + ':' + keyName]))
             else:
-                self.keys_ = tuple(set(list(self.get_Keys())[Key]))
-                self.keysVIP = tuple(set(list(self.get_Keys()) + [Key]))
-                ECLkey = _fromVIPtoECL(Key, SSStype, self.speak)
-                self.keysECL = tuple(set(list(self.get_Keys()) + [ECLkey]))
+                self.keys_ = tuple(set(list(self.get_keys())[key]))
+                self.keysVIP = tuple(set(list(self.get_keys()) + [key]))
+                ECLkey = _fromVIPtoECL(key, SSStype, self.speak)
+                self.keysECL = tuple(set(list(self.get_keys()) + [ECLkey]))
 
         else:
             raise TypeError('Key must be string')
@@ -725,7 +725,7 @@ class NEXUS(_SimResult):
             else:
                 return self.keys_
 
-    def get_Unit(self, Key='--EveryType--'):
+    def get_Unit(self, key='--EveryType--'):
         """
         returns a string identifiying the unit of the requested Key
 
@@ -735,75 +735,75 @@ class NEXUS(_SimResult):
         for all the keys in the results file
 
         """
-        if type(Key) is str and Key.strip() != '--EveryType--':
-            Key = Key.strip().upper()
-            if Key in self.units:
-                if self.units[Key] is not None:
-                    return self.units[Key]
+        if type(key) is str and key.strip() != '--EveryType--':
+            key = key.strip().upper()
+            if key in self.units:
+                if self.units[key] is not None:
+                    return self.units[key]
                 else:  # if self.units[Key] is None:
-                    if ':' in Key:
-                        if _mainKey(Key) in self.units:
-                            if self.units[_mainKey(Key)] is not None:
-                                return self.units[_mainKey(Key)]
+                    if ':' in key:
+                        if _mainKey(key) in self.units:
+                            if self.units[_mainKey(key)] is not None:
+                                return self.units[_mainKey(key)]
                             else:
-                                return self.extract_Unit(Key)
-            if Key == 'DATES' or Key == 'DATE':
-                self.units[Key] = 'DATE'
+                                return self.extract_Unit(key)
+            if key == 'DATES' or key == 'DATE':
+                self.units[key] = 'DATE'
                 return 'DATE'
-            if Key in self.keys_:
-                return self.extract_Unit(Key)
+            if key in self.keys_:
+                return self.extract_Unit(key)
             else:
-                if Key[0] == 'W':
+                if key[0] == 'W':
                     UList = []
                     for W in self.get_Wells():
-                        if Key + ':' + W in self.units:
-                            UList.append(self.units[Key + ':' + W])
-                        elif Key + ':' + W in self.keys_:
-                            UList.append(self.extract_Unit(Key + ':' + W))
+                        if key + ':' + W in self.units:
+                            UList.append(self.units[key + ':' + W])
+                        elif key + ':' + W in self.keys_:
+                            UList.append(self.extract_Unit(key + ':' + W))
                     if len(set(UList)) == 1:
-                        self.units[Key] = UList[0]
+                        self.units[key] = UList[0]
                         return UList[0]
                     else:
                         return None
-                elif Key[0] == 'G':
+                elif key[0] == 'G':
                     UList = []
-                    for G in self.get_Groups():
-                        if Key + ':' + G in self.units:
-                            UList.append(self.units[Key + ':' + G])
-                        elif Key + ':' + G in self.keys_:
-                            UList.append(self.extract_Unit(Key + ':' + G))
+                    for G in self.get_groups():
+                        if key + ':' + G in self.units:
+                            UList.append(self.units[key + ':' + G])
+                        elif key + ':' + G in self.keys_:
+                            UList.append(self.extract_Unit(key + ':' + G))
                     if len(set(UList)) == 1:
-                        self.units[Key] = UList[0]
+                        self.units[key] = UList[0]
                         return UList[0]
                     else:
                         return None
-                elif Key[0] == 'R':
+                elif key[0] == 'R':
                     UList = []
-                    for R in self.get_Regions():
-                        if Key + ':' + R in self.units:
-                            UList.append(self.units[Key + ':' + R])
-                        elif Key + ':' + R in self.keys_:
-                            UList.append(self.extract_Unit(Key + ':' + R))
+                    for R in self.get_regions():
+                        if key + ':' + R in self.units:
+                            UList.append(self.units[key + ':' + R])
+                        elif key + ':' + R in self.keys_:
+                            UList.append(self.extract_Unit(key + ':' + R))
                     if len(set(UList)) == 1:
-                        self.units[Key] = UList[0]
+                        self.units[key] = UList[0]
                         return UList[0]
                     else:
                         return None
                 UList = None
 
-        elif type(Key) is str and Key.strip() == '--EveryType--':
-            Key = []
+        elif type(key) is str and key.strip() == '--EveryType--':
+            key = []
             KeyDict = {}
             for each in self.keys_:
                 if ':' in each:
-                    Key.append(_mainKey(each))
+                    key.append(_mainKey(each))
                     KeyDict[_mainKey(each)] = each
                 else:
-                    Key.append(each)
-            Key = list(set(Key))
-            Key.sort()
+                    key.append(each)
+            key = list(set(key))
+            key.sort()
             tempUnits = {}
-            for each in Key:
+            for each in key:
                 if each in self.units:
                     tempUnits[each] = self.units[each]
                 elif each in self.keys_ and (each != 'DATES' and each != 'DATE'):
@@ -819,9 +819,9 @@ class NEXUS(_SimResult):
                         else:
                             tempUnits[each] = self.extract_Unit(KeyDict[each]).strip('( )').strip("'").strip('"')
             return tempUnits
-        elif type(Key) in [list, tuple]:
+        elif type(key) in [list, tuple]:
             tempUnits = {}
-            for each in Key:
+            for each in key:
                 if type(each) == str and each.strip() in self.units:
                     tempUnits[each] = self.units[each.strip()]
                 if type(each) == str and (each.strip() == 'DATES' or each.strip() == 'DATE'):
@@ -902,8 +902,8 @@ class NEXUS(_SimResult):
                     if user in ['Y', 'YES', 'SI', 'SÍ', 'OUI']:
                         if ':' in ECLkey:
                             if self.is_Key('WBP:' + ECLkey.split(':')[1]):
-                                self.set_Vector(Key=ECLkey, VectorData=self('WBP:' + ECLkey.split(':')[1]),
-                                                Units=self.get_Unit('WBP:' + ECLkey.split(':')[1]), DataType='float',
+                                self.set_Vector(key=ECLkey, vector_data=self('WBP:' + ECLkey.split(':')[1]),
+                                                units=self.get_Unit('WBP:' + ECLkey.split(':')[1]), data_type='float',
                                                 overwrite=True)
                             else:
                                 _verbose(self.speak, -1, " the corresponding well for the key '" + _mainKey(
@@ -919,12 +919,12 @@ class NEXUS(_SimResult):
                         user = input('please write YES or NO: ')
                     if user in ['Y', 'YES', 'SI', 'SÍ', 'OUI']:
                         for W in self.get_Wells():
-                            self.set_Vector(Key=W, VectorData=self('WBP:' + W), Units=self.get_Unit('WBP:' + W),
-                                            DataType='float', overwrite=True)
+                            self.set_Vector(key=W, vector_data=self('WBP:' + W), units=self.get_Unit('WBP:' + W),
+                                            data_type='float', overwrite=True)
                 else:
                     for W in self.get_Wells():
-                        self.set_Vector(Key=W, VectorData=self('WBP:' + W), Units=self.get_Unit('WBP:' + W),
-                                        DataType='float', overwrite=True)
+                        self.set_Vector(key=W, vector_data=self('WBP:' + W), units=self.get_Unit('WBP:' + W),
+                                        data_type='float', overwrite=True)
         elif KeyArguments is not None:
             if type(KeyArguments) is str and len(KeyArguments) > 0:
                 KeyArguments = KeyArguments.strip()

@@ -59,9 +59,9 @@ class XLSX(_SimResult):
         run intensive routines, to have the data loaded and ready
         """
         self.keys_ = tuple(sorted(self.keys_))
-        self.extract_Wells()
-        self.extract_Groups()
-        self.extract_Regions()
+        self.extract_wells()
+        self.extract_groups()
+        self.extract_regions()
         self.get_Attributes(None, True)
         self.find_index(**kwargs)
         self.otherDateNames()
@@ -282,7 +282,7 @@ class XLSX(_SimResult):
                             vector = pd.merge_ordered(vector,
                                                       pd.Series(self.get_RawVector(datename)[datename], name='DATE'),
                                                       how='outer').squeeze()
-            _ = self.set_Vector(Key='DATE', VectorData=vector, Units='date', DataType='datetime', overwrite=True)
+            _ = self.set_Vector(key='DATE', vector_data=vector, units='date', data_type='datetime', overwrite=True)
 
     def fromSimDataFrame(self, frame):
         self.units = frame.get_units()
@@ -761,7 +761,7 @@ class XLSX(_SimResult):
                 for frame in self.Frames:
                     thisTimeK = \
                     [col for col in self.Frames[frame].columns if str(col[0]).strip().upper() == self.commonIndex[0]][0]
-                    self.Frames[frame] = self.Frames[frame].set_index(thisTimeK, drop=True).reindex(
+                    self.Frames[frame] = self.Frames[frame].set_index(thisTimeK).reindex(
                         index=self.commonIndex[1], method=None)
                     colsBefore = list(self.Frames[frame].columns)
                     self.Frames[frame] = self.Frames[frame].reset_index()
@@ -861,8 +861,8 @@ class XLSX(_SimResult):
                         commonIndexVector = self.createCommonVector(self.DTindex)
                 elif self.DTindex in self.FramesIndex and self.FramesIndex[self.DTindex][1] in self.Frames[thisFrame]:
                     if self.FramesIndex[key][1] == self.FramesIndex[self.DTindex][1]:
-                        result = self.Frames[thisFrame][[self.FramesIndex[key][1]]].set_index(self.FramesIndex[key][1],
-                                                                                              drop=False).squeeze()
+                        result = self.Frames[thisFrame][[self.FramesIndex[key][1]]].set_index(
+                            self.FramesIndex[key][1]).squeeze()
                     else:
                         result = self.Frames[thisFrame][[self.FramesIndex[key][1]]]
                         result.index = self.Frames[thisFrame][self.FramesIndex[self.DTindex][1]].squeeze()

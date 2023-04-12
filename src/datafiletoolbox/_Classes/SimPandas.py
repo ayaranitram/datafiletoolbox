@@ -308,18 +308,19 @@ class _SimLocIndexer(indexing._LocIndexer):
             if key[1] not in self.spd.columns or not isinstance(self.spd.loc[key],(Series,SimSeries,DataFrame,SimDataFrame)) or (
                     isinstance(self.spd.loc[key],(Series,SimSeries,DataFrame,SimDataFrame)) and type(value[0]) is not str and hasattr(value[0],'__iter__') and len(self.spd.loc[key]) == len(value[0])):
                 value, units = value[0], value[1]
-                if key[1] not in self.spd.columns or self.spd.get_Units(key[1])[key[1]] is None or self.spd.get_Units(key[1])[key[1]].lower() in ('dimensionless', 'unitless', 'none', ''):
+                if key[1] not in self.spd.columns or self.spd.get_Units(key[1])[key[1]] is None or self.spd.get_Units(
+                        key[1])[key[1]].lower() in ('dimensionless', 'unitless', 'none', ''):
                     newUnits = True
                 else:
                     if units == self.spd.get_Units(key[1])[key[1]]:
                         pass
                     elif convertibleUnits(units, self.spd.get_Units(key[1])[key[1]]):
-                        value = convertUnit(value,units,self.spd.get_Units(key[1])[key[1]],self.spd.speak)
+                        value = convertUnit(value, units, self.spd.get_Units(key[1])[key[1]], self.spd.speak)
                     else:
                         warn(' Not able to convert ' + str(units) + ' to ' + str(self.spd.get_Units(key[1])[key[1]]))
         super().__setitem__(key, value)
         if newUnits:
-            self.spd.set_Units({key[1]:units})
+            self.spd.set_Units({key[1]: units})
 
 
 # class _iSimLocIndexer(indexing._iLocIndexer):
@@ -6429,14 +6430,14 @@ Copy of input object, shifted.
         # elif method in ['const', 'constant']:
         #     Cumulative = (dt *(self.DF[:-1]).transpose() ).transpose()[1:]
         if method[0] in 't':
-            Vmin = np.minimum(self.DF[sl1].set_index(self.index[sl2]), self.DF[sl2] )
-            Vmax = np.maximum(self.DF[sl1].set_index(self.index[sl2]), self.DF[sl2] )
+            Vmin = np.minimum(self.DF[sl1].set_index(self.index[sl2], ), self.DF[sl2])
+            Vmax = np.maximum(self.DF[sl1].set_index(self.index[sl2], ), self.DF[sl2])
             Cumulative =(dt * Vmin.transpose() ).transpose() +(dt *(Vmax - Vmin ).transpose() / 2.0 ).transpose()
         elif method[0] in 'ac':
             if at == 'same':
                 Cumulative = (dt *(self.DF[sl1]).transpose() ).transpose()  # [sl2]
             if at == 'next':
-                Cumulative = (dt *(self.DF[sl1].set_index(self.index[sl2])).transpose() ).transpose()
+                Cumulative = (dt * (self.DF[sl1].set_index(self.index[sl2], )).transpose()).transpose()
         elif method[0] in 'm':
             Cumulative = ( dt * self.DF.transpose() ).transpose()
 
@@ -6970,7 +6971,8 @@ Copy of input object, shifted.
                     if labels is None:
                         kwargs['ax'] = oth[newY].to(self.get_units()).plot(y=y, x=x, others=None, **kwargs)
                     else:
-                        kwargs['ax'] = oth[newY].to(self.get_units()).plot(y=y, x=x, others=None, label=labels[labcount], **kwargs)
+                        kwargs['ax'] = oth[newY].to(self.get_units()).plot(y=y, x=x, others=None,
+                                                                           label=labels[labcount], **kwargs)
                 elif isinstance(oth,DataFrame):
                     newY = [ ny for ny in self.columns if ny in oth ]
                     if labels is None:

@@ -72,12 +72,13 @@ class ECL(_SimResult):
                 self.name = _extension(SummaryFilePath)[1]
                 self.set_FieldTime()
                 self.get_Wells(reload=True)
-                self.get_Groups(reload=True)
-                self.get_Regions(reload=True)
-                self.get_Keys(reload=True)
+                self.get_groups(reload=True)
+                self.get_regions(reload=True)
+                self.get_keys(reload=True)
                 self.units = self.get_Unit(self.keys_)
                 _verbose( self.speak, 1, 'simulation runs from ' +  str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
-                self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), DataType='datetime', overwrite=True)
+                self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), data_type='datetime',
+                                overwrite=True)
                 self.stripUnits()
                 self.get_Attributes(reload=True)
                 self.fill_FieldBasics()
@@ -116,11 +117,11 @@ class ECL(_SimResult):
                 self.end = self.start + int(max(self.get_Vector('TIME')['TIME']))
         return self.results.numpy_dates
 
-    def extract_Wells(self):
+    def extract_wells(self):
         self.wells = tuple(self.results.wells())
         return self.wells
 
-    def extract_Groups(self, pattern=None, reload=False):
+    def extract_groups(self, pattern=None, reload=False):
         """
         calls group method from libecl:
 
@@ -159,10 +160,10 @@ class ECL(_SimResult):
         else:
             return tuple( self.results.keys(pattern) )
 
-    def extract_Regions(self, pattern=None):
+    def extract_regions(self, pattern=None):
         # preparing object attribute
         regionsList = list( self.regions )
-        for key in self.get_Keys():
+        for key in self.get_keys():
             if key[0] == 'R':
                 if ':' in key:
                     region = key.split(':')[1]
@@ -180,7 +181,7 @@ class ECL(_SimResult):
         else:
             return self.regions
 
-    def get_Unit(self, Key='--EveryType--'):
+    def get_Unit(self, key='--EveryType--'):
         """
         returns a string identifiying the unit of the requested Key
 
@@ -190,67 +191,67 @@ class ECL(_SimResult):
         for all the keys in the results file
 
         """
-        if type(Key) is str and Key.strip() != '--EveryType--':
-            Key = Key.strip().upper()
-            if Key in self.units:
-                return self.units[Key]
-            if Key in ['DATES','DATE']:
-                    self.units[Key] = 'DATE'
+        if type(key) is str and key.strip() != '--EveryType--':
+            key = key.strip().upper()
+            if key in self.units:
+                return self.units[key]
+            if key in ['DATES', 'DATE']:
+                    self.units[key] = 'DATE'
                     return 'DATE'
-            if Key in self.keys_:
-                return self.results.unit(Key)
+            if key in self.keys_:
+                return self.results.unit(key)
             else:
-                if Key[0] == 'W':
+                if key[0] == 'W':
                     UList=[]
                     for W in self.get_Wells():
-                        if Key+':'+W in self.units:
-                            UList.append(self.units[Key+':'+W])
-                        elif Key in self.keys_:
-                            UList.append( self.results.unit(Key+':'+W) )
+                        if key+ ':'+W in self.units:
+                            UList.append(self.units[key + ':' + W])
+                        elif key in self.keys_:
+                            UList.append(self.results.unit(key + ':' + W))
                     if len(set(UList)) == 1:
-                        self.units[Key] = UList[0]
+                        self.units[key] = UList[0]
                         return UList[0]
                     else:
                         return None
-                elif Key[0] == 'G':
+                elif key[0] == 'G':
                     UList=[]
-                    for G in self.get_Groups():
-                        if Key+':'+G in self.units:
-                            UList.append(self.units[Key+':'+G])
-                        elif Key in self.keys_:
-                            UList.append( self.results.unit(Key+':'+G) )
+                    for G in self.get_groups():
+                        if key+ ':'+G in self.units:
+                            UList.append(self.units[key + ':' + G])
+                        elif key in self.keys_:
+                            UList.append(self.results.unit(key + ':' + G))
                     if len(set(UList)) == 1:
-                        self.units[Key] = UList[0]
+                        self.units[key] = UList[0]
                         return UList[0]
                     else:
                         return None
-                elif Key[0] == 'R':
+                elif key[0] == 'R':
                     UList=[]
-                    for R in self.get_Regions():
-                        if Key+':'+R in self.units:
-                            UList.append(self.units[Key+':'+R])
-                        elif Key in self.keys_:
-                            UList.append( self.results.unit(Key+':'+R) )
+                    for R in self.get_regions():
+                        if key+ ':'+R in self.units:
+                            UList.append(self.units[key + ':' + R])
+                        elif key in self.keys_:
+                            UList.append(self.results.unit(key + ':' + R))
                     if len(set(UList)) == 1:
-                        self.units[Key] = UList[0]
+                        self.units[key] = UList[0]
                         return UList[0]
                     else:
                         return None
                 UList = None
 
-        elif type(Key) is str and Key.strip() == '--EveryType--':
-            Key = []
+        elif type(key) is str and key.strip() == '--EveryType--':
+            key = []
             KeyDict = {}
             for each in self.keys_:
                 if ':' in each:
-                    Key.append( _mainKey(each) )
+                    key.append(_mainKey(each))
                     KeyDict[ _mainKey(each) ] = each
                 else:
-                    Key.append(each)
-            Key = list( set (Key) )
-            Key.sort()
+                    key.append(each)
+            key = list(set (key))
+            key.sort()
             tempUnits = {}
-            for each in Key:
+            for each in key:
                 if each in self.units:
                     tempUnits[each] = self.units[each]
                 elif each in self.keys_ and ( each != 'DATES' and each != 'DATE' ):
@@ -269,9 +270,9 @@ class ECL(_SimResult):
                         else:
                             tempUnits[each] = self.results.unit(KeyDict[each]).strip('( )').strip("'").strip('"')
             return tempUnits
-        elif type(Key) in [list,tuple]:
+        elif type(key) in [list, tuple]:
             tempUnits = {}
-            for each in Key:
+            for each in key:
                 if type(each) is str:
                     tempUnits[each] = self.get_Unit(each)
             return tempUnits
