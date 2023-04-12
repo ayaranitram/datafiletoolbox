@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.8'
-__release__ = 20220901
+__version__ = '0.1.9'
+__release__ = 20230411
 __all__ = ['H5']
 
 from .mainObject import SimResult as _SimResult
@@ -69,7 +69,7 @@ class H5(_SimResult):
                 self.get_Groups(reload=True)
                 self.get_Regions(reload=True)
                 self.get_Keys(reload=True)
-                self.units = self.get_Unit(self.keys)
+                self.units = self.get_Unit(self.keys_)
                 if self.get_Dates() is not None:
                     _verbose(self.speak, 1,
                              'simulation runs from ' + str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
@@ -314,7 +314,7 @@ class H5(_SimResult):
         If pattern is None you will get all the keys of summary
         object.
         """
-        if len(self.keys) == 0 or reload is True:
+        if len(self.keys_) == 0 or reload is True:
             listOfKeys = []
             for key in list(self.results['summary_vectors'].keys()):
                 if key not in self.keynames or len(self.keynames[key]) == 1:
@@ -323,14 +323,14 @@ class H5(_SimResult):
                     for item in self.keynames[key]:
                         if item not in ('', ':+:+:+:+'):
                             listOfKeys.append(key + ':' + item)
-            self.keys = tuple(set(listOfKeys))
+            self.keys_ = tuple(set(listOfKeys))
             for extra in ('TIME', 'DATE', 'DATES'):
-                if extra not in self.keys:
-                    self.keys = tuple([extra] + list(self.keys))
+                if extra not in self.keys_:
+                    self.keys_ = tuple([extra] + list(self.keys_))
         if pattern is None:
-            return self.keys
+            return self.keys_
         else:
-            return tuple(fnmatch.filter(self.keys, pattern))
+            return tuple(fnmatch.filter(self.keys_, pattern))
 
     def extract_Regions(self, pattern=None):
         # preparing object attribute

@@ -5,8 +5,8 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.23.1'
-__release__ = 20230217
+__version__ = '0.23.2'
+__release__ = 20230411
 __all__ = ['VIP']
 
 from .mainObject import SimResult as _SimResult
@@ -87,7 +87,7 @@ class VIP(_SimResult):
         if len(self.keysECL) == 0:
             _verbose(self.speak, 0, ' ECL style keys: ' + str(self.extract_Keys()))
         if len(self.keysECL) > 0:
-            self.keys = self.keysECL
+            self.keys_ = self.keysECL
             _verbose(self.speak, 0, ' attributes as ECL style: ' + str(self.get_Attributes()))
             self.ECLstyle = True
             self.VIPstyle = False
@@ -103,7 +103,7 @@ class VIP(_SimResult):
         if len(self.keysVIP) == 0:
             _verbose(self.speak, 0, ' VIP style keys: ' + str(self.extract_Keys()))
         if len(self.keysVIP) > 0:
-            self.keys = self.keysVIP
+            self.keys_ = self.keysVIP
             _verbose(self.speak, 0, 'attributes as VIP style: ' + str(self.get_Attributes()))
             self.ECLstyle = False
             self.VIPstyle = True
@@ -145,7 +145,7 @@ class VIP(_SimResult):
             self.get_Groups(reload=True)
             self.get_Regions(reload=True)
             self.get_Keys(reload=True)
-            self.units = self.get_Unit(self.keys)
+            self.units = self.get_Unit(self.keys_)
             try:
                 dates = self.get_Dates()
                 _verbose(self.speak, 1, 'simulation runs from ' +  str(dates[0]) + ' to ' + str(dates[-1]))
@@ -620,12 +620,12 @@ class VIP(_SimResult):
         if type(Key) == str:
             Key = Key.strip()
             if self.ECLstyle:
-                self.keys = tuple(set(list(self.get_Keys()) + [Key]))
+                self.keys_ = tuple(set(list(self.get_Keys()) + [Key]))
                 self.keysECL = tuple(set(list(self.get_Keys()) + [Key]))
                 VIPkey, keyType, keyName = _fromECLtoVIP(Key, self.speak)
                 self.keysVIP = tuple(set(list(self.get_Keys()) + [VIPkey +':'+ keyName]))
             else:
-                self.keys = tuple(set(list(self.get_Keys()) [Key]))
+                self.keys_ = tuple(set(list(self.get_Keys()) [Key]))
                 self.keysVIP = tuple(set(list(self.get_Keys()) + [Key]))
                 ECLkey = _fromVIPtoECL(Key, SSStype, self.speak)
                 self.keysECL = tuple(set(list(self.get_Keys()) + [ECLkey]))
@@ -646,7 +646,7 @@ class VIP(_SimResult):
         object.
         """
 
-        if len(self.keys) == 0 or reload is True:
+        if len(self.keys_) == 0 or reload is True:
             keys = []
             keys +=  list(self.extract_Keys())
             for extra in ('TIME', 'DATE', 'DATES'):
@@ -664,13 +664,13 @@ class VIP(_SimResult):
             elif self.VIPstyle is True:
                 return self.keysVIP
             else:
-                return self.keys
+                return self.keys_
         else:
             return tuple(self.extract_Keys(pattern))
 
     def extract_Keys(self, pattern=None, SSStoExtract=None):
         # preparing object attribute
-        keysList = list(self.keys)
+        keysList = list(self.keys_)
         keysListVIP = list(self.keysVIP)
         keysListECL = list(self.keysECL)
 
@@ -721,7 +721,7 @@ class VIP(_SimResult):
             elif self.VIPstyle is True:
                 return self.keysVIP
             else:
-                return self.keys
+                return self.keys_
 
     def get_Unit(self, Key='--EveryType--'):
         """
@@ -750,7 +750,7 @@ class VIP(_SimResult):
             if Key in ['DATES','DATE']:
                     self.units[Key] = 'DATE'
                     return 'DATE'
-            if Key in self.keys:
+            if Key in self.keys_:
                 return self.extract_Unit(Key)
             else:
                 if Key[0] == 'W':
@@ -777,21 +777,21 @@ class VIP(_SimResult):
                 UList = None
 
         elif type(Key) is str and Key.strip() == '--EveryType--':
-            Key = [_mainKey(each) if ':' in each else each for each in self.keys]
-            KeyDict = {_mainKey(each): each for each in self.keys if ':' in each}
+            Key = [_mainKey(each) if ':' in each else each for each in self.keys_]
+            KeyDict = {_mainKey(each): each for each in self.keys_ if ':' in each}
             Key = list(set(Key))
             Key.sort()
             def each_key_units(each):
                 if each in self.units:
                     return self.units[each]
-                elif each in self.keys and (each != 'DATES' and each != 'DATE'):
+                elif each in self.keys_ and (each != 'DATES' and each != 'DATE'):
                    return self.extract_Unit(each)
-                elif each in self.keys and (each == 'DATES' or each == 'DATE'):
+                elif each in self.keys_ and (each == 'DATES' or each == 'DATE'):
                     return 'DATE'
                 else:
                     if KeyDict[each] in self.units:
                         return self.units[KeyDict[each]]
-                    elif KeyDict[each] in self.keys:
+                    elif KeyDict[each] in self.keys_:
                         if self.extract_Unit(KeyDict[each]) is None:
                             return self.extract_Unit(KeyDict[each])
                         else:
@@ -804,7 +804,7 @@ class VIP(_SimResult):
                     return self.units[each.strip()]
                 elif type(each) is str and (each.strip() == 'DATES' or each.strip() == 'DATE'):
                     return 'DATE'
-                elif type(each) is str and each.strip() in self.keys:
+                elif type(each) is str and each.strip() in self.keys_:
                     if self.extract_Unit(each.strip()) is None:
                         return self.extract_Unit(each.strip())
                     else:

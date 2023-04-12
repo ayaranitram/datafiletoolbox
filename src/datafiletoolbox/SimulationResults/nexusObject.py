@@ -5,8 +5,8 @@ Created on Wed May 13 15:34:04 2020
 @author: MCARAYA
 """
 
-__version__ = '0.1.1'
-__release__ = 20220512
+__version__ = '0.1.2'
+__release__ = 20230411
 __all__ = ['NEXUS']
 
 from .mainObject import SimResult as _SimResult
@@ -87,7 +87,7 @@ class NEXUS(_SimResult):
         if len(self.keysECL) == 0:
             _verbose(self.speak, 0, ' ECL style keys: ' + str(self.extract_Keys()))
         if len(self.keysECL) > 0:
-            self.keys = self.keysECL
+            self.keys_ = self.keysECL
             _verbose(self.speak, 0, ' attributes as ECL style: ' + str(self.get_Attributes()))
             self.ECLstyle = True
             self.VIPstyle = False
@@ -103,7 +103,7 @@ class NEXUS(_SimResult):
         if len(self.keysVIP) == 0:
             _verbose(self.speak, 0, ' VIP style keys: ' + str(self.extract_Keys()))
         if len(self.keysVIP) > 0:
-            self.keys = self.keysVIP
+            self.keys_ = self.keysVIP
             _verbose(self.speak, 0, 'attributes as VIP style: ' + str(self.get_Attributes()))
             self.ECLstyle = False
             self.VIPstyle = True
@@ -139,7 +139,7 @@ class NEXUS(_SimResult):
             self.get_Groups(reload=True)
             self.get_Regions(reload=True)
             self.get_Keys(reload=True)
-            self.units = self.get_Unit(self.keys)
+            self.units = self.get_Unit(self.keys_)
             _verbose(self.speak, 1,
                      'simulation runs from ' + str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
         else:
@@ -617,12 +617,12 @@ class NEXUS(_SimResult):
         if type(Key) == str:
             Key = Key.strip()
             if self.ECLstyle:
-                self.keys = tuple(set(list(self.get_Keys()) + [Key]))
+                self.keys_ = tuple(set(list(self.get_Keys()) + [Key]))
                 self.keysECL = tuple(set(list(self.get_Keys()) + [Key]))
                 VIPkey, keyType, keyName = _fromECLtoVIP(Key, self.speak)
                 self.keysVIP = tuple(set(list(self.get_Keys()) + [VIPkey + ':' + keyName]))
             else:
-                self.keys = tuple(set(list(self.get_Keys())[Key]))
+                self.keys_ = tuple(set(list(self.get_Keys())[Key]))
                 self.keysVIP = tuple(set(list(self.get_Keys()) + [Key]))
                 ECLkey = _fromVIPtoECL(Key, SSStype, self.speak)
                 self.keysECL = tuple(set(list(self.get_Keys()) + [ECLkey]))
@@ -643,11 +643,11 @@ class NEXUS(_SimResult):
         object.
         """
         # if self.ECLstyle:
-        #     self.keys = self.keysECL
+        #     self.keys_ = self.keysECL
         # else:
-        #     self.keys = self.keysVIP
+        #     self.keys_ = self.keysVIP
 
-        if len(self.keys) == 0 or reload is True:
+        if len(self.keys_) == 0 or reload is True:
             keys = []
             keys += list(self.extract_Keys())
             for extra in ('TIME', 'DATE', 'DATES'):
@@ -665,13 +665,13 @@ class NEXUS(_SimResult):
             elif self.VIPstyle is True:
                 return self.keysVIP
             else:
-                return self.keys
+                return self.keys_
         else:
             return tuple(self.extract_Keys(pattern))
 
     def extract_Keys(self, pattern=None, SSStoExtract=None):
         # preparing object attribute
-        keysList = list(self.keys)
+        keysList = list(self.keys_)
         keysListVIP = list(self.keysVIP)
         keysListECL = list(self.keysECL)
 
@@ -723,7 +723,7 @@ class NEXUS(_SimResult):
             elif self.VIPstyle is True:
                 return self.keysVIP
             else:
-                return self.keys
+                return self.keys_
 
     def get_Unit(self, Key='--EveryType--'):
         """
@@ -750,7 +750,7 @@ class NEXUS(_SimResult):
             if Key == 'DATES' or Key == 'DATE':
                 self.units[Key] = 'DATE'
                 return 'DATE'
-            if Key in self.keys:
+            if Key in self.keys_:
                 return self.extract_Unit(Key)
             else:
                 if Key[0] == 'W':
@@ -758,7 +758,7 @@ class NEXUS(_SimResult):
                     for W in self.get_Wells():
                         if Key + ':' + W in self.units:
                             UList.append(self.units[Key + ':' + W])
-                        elif Key + ':' + W in self.keys:
+                        elif Key + ':' + W in self.keys_:
                             UList.append(self.extract_Unit(Key + ':' + W))
                     if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
@@ -770,7 +770,7 @@ class NEXUS(_SimResult):
                     for G in self.get_Groups():
                         if Key + ':' + G in self.units:
                             UList.append(self.units[Key + ':' + G])
-                        elif Key + ':' + G in self.keys:
+                        elif Key + ':' + G in self.keys_:
                             UList.append(self.extract_Unit(Key + ':' + G))
                     if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
@@ -782,7 +782,7 @@ class NEXUS(_SimResult):
                     for R in self.get_Regions():
                         if Key + ':' + R in self.units:
                             UList.append(self.units[Key + ':' + R])
-                        elif Key + ':' + R in self.keys:
+                        elif Key + ':' + R in self.keys_:
                             UList.append(self.extract_Unit(Key + ':' + R))
                     if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
@@ -794,7 +794,7 @@ class NEXUS(_SimResult):
         elif type(Key) is str and Key.strip() == '--EveryType--':
             Key = []
             KeyDict = {}
-            for each in self.keys:
+            for each in self.keys_:
                 if ':' in each:
                     Key.append(_mainKey(each))
                     KeyDict[_mainKey(each)] = each
@@ -806,14 +806,14 @@ class NEXUS(_SimResult):
             for each in Key:
                 if each in self.units:
                     tempUnits[each] = self.units[each]
-                elif each in self.keys and (each != 'DATES' and each != 'DATE'):
+                elif each in self.keys_ and (each != 'DATES' and each != 'DATE'):
                     tempUnits[each] = self.extract_Unit(each)
-                elif each in self.keys and (each == 'DATES' or each == 'DATE'):
+                elif each in self.keys_ and (each == 'DATES' or each == 'DATE'):
                     tempUnits[each] = 'DATE'
                 else:
                     if KeyDict[each] in self.units:
                         tempUnits[each] = self.units[KeyDict[each]]
-                    elif KeyDict[each] in self.keys:
+                    elif KeyDict[each] in self.keys_:
                         if self.extract_Unit(KeyDict[each]) is None:
                             tempUnits[each] = self.extract_Unit(KeyDict[each])
                         else:
@@ -826,7 +826,7 @@ class NEXUS(_SimResult):
                     tempUnits[each] = self.units[each.strip()]
                 if type(each) == str and (each.strip() == 'DATES' or each.strip() == 'DATE'):
                     tempUnits[each] = 'DATE'
-                elif type(each) == str and each.strip() in self.keys:
+                elif type(each) == str and each.strip() in self.keys_:
                     if self.extract_Unit(each.strip()) is None:
                         tempUnits[each] = self.extract_Unit(each.strip())
                     else:

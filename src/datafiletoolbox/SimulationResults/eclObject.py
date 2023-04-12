@@ -5,8 +5,8 @@ Created on Wed May 13 15:45:12 2020
 @author: MCARAYA
 """
 
-__version__ = '0.25.7'
-__release__ = 20220512
+__version__ = '0.25.8'
+__release__ = 20230411
 __all__ = ['ECL']
 
 from .mainObject import SimResult as _SimResult
@@ -75,7 +75,7 @@ class ECL(_SimResult):
                 self.get_Groups(reload=True)
                 self.get_Regions(reload=True)
                 self.get_Keys(reload=True)
-                self.units = self.get_Unit(self.keys)
+                self.units = self.get_Unit(self.keys_)
                 _verbose( self.speak, 1, 'simulation runs from ' +  str(self.get_Dates()[0]) + ' to ' + str(self.get_Dates()[-1]))
                 self.set_Vector('DATE', self.get_Vector('DATES')['DATES'], self.get_Unit('DATES'), DataType='datetime', overwrite=True)
                 self.stripUnits()
@@ -149,13 +149,13 @@ class ECL(_SimResult):
         If pattern is None you will get all the keys of summary
         object.
         """
-        if len(self.keys) == 0 or reload is True:
-            self.keys = tuple( self.results.keys(pattern))
+        if len(self.keys_) == 0 or reload is True:
+            self.keys_ = tuple( self.results.keys(pattern))
             for extra in ( 'TIME', 'DATE', 'DATES' ):
-                if extra not in self.keys:
-                    self.keys = tuple( [extra] + list(self.keys) )
+                if extra not in self.keys_:
+                    self.keys_ = tuple( [extra] + list(self.keys_) )
         if pattern is None:
-            return self.keys
+            return self.keys_
         else:
             return tuple( self.results.keys(pattern) )
 
@@ -197,7 +197,7 @@ class ECL(_SimResult):
             if Key in ['DATES','DATE']:
                     self.units[Key] = 'DATE'
                     return 'DATE'
-            if Key in self.keys:
+            if Key in self.keys_:
                 return self.results.unit(Key)
             else:
                 if Key[0] == 'W':
@@ -205,7 +205,7 @@ class ECL(_SimResult):
                     for W in self.get_Wells():
                         if Key+':'+W in self.units:
                             UList.append(self.units[Key+':'+W])
-                        elif Key in self.keys:
+                        elif Key in self.keys_:
                             UList.append( self.results.unit(Key+':'+W) )
                     if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
@@ -217,7 +217,7 @@ class ECL(_SimResult):
                     for G in self.get_Groups():
                         if Key+':'+G in self.units:
                             UList.append(self.units[Key+':'+G])
-                        elif Key in self.keys:
+                        elif Key in self.keys_:
                             UList.append( self.results.unit(Key+':'+G) )
                     if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
@@ -229,7 +229,7 @@ class ECL(_SimResult):
                     for R in self.get_Regions():
                         if Key+':'+R in self.units:
                             UList.append(self.units[Key+':'+R])
-                        elif Key in self.keys:
+                        elif Key in self.keys_:
                             UList.append( self.results.unit(Key+':'+R) )
                     if len(set(UList)) == 1:
                         self.units[Key] = UList[0]
@@ -241,7 +241,7 @@ class ECL(_SimResult):
         elif type(Key) is str and Key.strip() == '--EveryType--':
             Key = []
             KeyDict = {}
-            for each in self.keys:
+            for each in self.keys_:
                 if ':' in each:
                     Key.append( _mainKey(each) )
                     KeyDict[ _mainKey(each) ] = each
@@ -253,17 +253,17 @@ class ECL(_SimResult):
             for each in Key:
                 if each in self.units:
                     tempUnits[each] = self.units[each]
-                elif each in self.keys and ( each != 'DATES' and each != 'DATE' ):
+                elif each in self.keys_ and ( each != 'DATES' and each != 'DATE' ):
                     if self.results.unit(each) is None:
                         tempUnits[each] = self.results.unit(each)
                     else:
                         tempUnits[each] = self.results.unit(each).strip('( )').strip("'").strip('"')
-                elif each in self.keys and ( each == 'DATES' or each == 'DATE' ):
+                elif each in self.keys_ and ( each == 'DATES' or each == 'DATE' ):
                     tempUnits[each] = 'DATE'
                 else:
                     if KeyDict[each] in self.units:
                         tempUnits[each] = self.units[KeyDict[each]]
-                    elif KeyDict[each] in self.keys:
+                    elif KeyDict[each] in self.keys_:
                         if self.results.unit(KeyDict[each]) is None:
                             tempUnits[each] = self.results.unit(KeyDict[each])
                         else:

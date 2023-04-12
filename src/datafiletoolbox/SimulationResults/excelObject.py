@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.22.12'
-__release__ = 20220908
+__version__ = '0.22.13'
+__release__ = 20230411
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -58,7 +58,7 @@ class XLSX(_SimResult):
         """
         run intensive routines, to have the data loaded and ready
         """
-        self.keys = tuple(sorted(self.keys))
+        self.keys_ = tuple(sorted(self.keys_))
         self.extract_Wells()
         self.extract_Groups()
         self.extract_Regions()
@@ -92,7 +92,7 @@ class XLSX(_SimResult):
 
         possibleKeys = ('DATE', 'DATES', 'Date', 'date', 'Dates', 'dates', 'TIME', 'Time', 'time', 'DAYS', 'Days',
                         'days', 'MONTHS', 'Months', 'months', 'YEARS', 'Years',
-                        'years') + self.keys  # + tuple(map(_mainKey,self.FramesIndex.keys()))
+                        'years') + self.keys_  # + tuple(map(_mainKey,self.FramesIndex.keys()))
         if 'index' in kwargs and kwargs['index'] in self.FramesIndex:
             possibleKeys = (kwargs['index'],) + possibleKeys
             self.DTindex = kwargs['index']
@@ -148,7 +148,7 @@ class XLSX(_SimResult):
 
         # look for other not indentical but common index
         if not KeyIndex:
-            for Key in possibleKeys + self.keys:
+            for Key in possibleKeys + self.keys_:
                 IndexVector = None
                 if Key not in self.FramesIndex:
                     KeyIndex = False
@@ -270,7 +270,7 @@ class XLSX(_SimResult):
         if not self.is_Key('DATE') and not self.is_Key('DATES'):
             vector = None
             for datename in ('Date', 'date', 'Dates', 'dates', 'FECHA', 'Fecha', 'fecha', 'DATA', 'Data',
-                             'data') + self.keys:
+                             'data') + self.keys_:
                 if self.is_Key(datename):
                     if self.get_RawVector(datename)[datename] is None:
                         print(datename, 'is None')
@@ -293,7 +293,7 @@ class XLSX(_SimResult):
             frame.reset_index(inplace=True)
         self.Frames['sdf'] = frame
         self.name = 'from SimDataFrame'
-        self.keys = frame.columns
+        self.keys_ = frame.columns
 
     def readSimExcel(self, inputFile, sheet_name=None, header=[0, 1], units=1, combine_SheetName_ColumnName=None,
                      ignore_nameSeparator=False, long=False, **kwargs):
@@ -713,7 +713,7 @@ class XLSX(_SimResult):
                 ###############################################################
 
         if len(cleaningList) > 0:
-            self.keys = tuple(set([K for K in self.keys if K not in set(cleaningList)]))
+            self.keys_ = tuple(set([K for K in self.keys_ if K not in set(cleaningList)]))
             for K in cleaningList:
                 if K in self.units:
                     del self.units[K]
@@ -785,7 +785,7 @@ class XLSX(_SimResult):
                     elif frame + self.nameSeparator + partK in self.units:
                         del self.units[frame + self.nameSeparator + partK]
 
-                    self.keys = tuple([K for K in self.keys if K != (partK + self.nameSeparator + frame) and K != (
+                    self.keys_ = tuple([K for K in self.keys_ if K != (partK + self.nameSeparator + frame) and K != (
                                 frame + self.nameSeparator + partK)])
 
     def list_Keys(self, pattern=None, reload=False):
@@ -802,10 +802,10 @@ class XLSX(_SimResult):
         """
 
         if pattern is None:
-            return self.keys
+            return self.keys_
         else:
             keysList = []
-            for key in self.keys:
+            for key in self.keys_:
                 if pattern in key:
                     keysList.append(key)
             return tuple(keysList)

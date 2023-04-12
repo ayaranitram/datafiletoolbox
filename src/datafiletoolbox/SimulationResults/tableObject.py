@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.20.2'
-__release__ = 20220512
+__version__ = '0.20.3'
+__release__ = 20230411
 __all__ = ['TABLE']
 
 from .mainObject import SimResult as _SimResult
@@ -263,7 +263,7 @@ class TABLE(_SimResult):
                         if not self.Frames[frame][self.Frames[frame][self.itemsCol[frame]] == item][col].isna().all():
                             if col not in ['DATE', 'DATES', 'TIME', 'YEARS', 'MONTHS', 'DAYS']:
                                 keys.append(str(col) + ':' + str(item))
-        self.keys = tuple(sorted(set(keys)))
+        self.keys_ = tuple(sorted(set(keys)))
 
     def list_Keys(self, pattern=None, reload=False):
         """
@@ -277,13 +277,13 @@ class TABLE(_SimResult):
         If pattern is None you will get all the keys of summary
         object.
         """
-        if len(self.keys) == 0:
+        if len(self.keys_) == 0:
             self.extract_Keys()
         if pattern is None:
-            return self.keys
+            return self.keys_
         else:
             keysList = []
-            for key in self.keys:
+            for key in self.keys_:
                 if pattern in key:
                     keysList.append(key)
             return tuple(keysList)
@@ -296,7 +296,7 @@ class TABLE(_SimResult):
     #     matching the pattern will be returned; the matching is based
     #     on fnmatch(), i.e. shell style wildcards.
     #     """
-    #     wellsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'W' and ':' in K ) ]
+    #     wellsList = [ K.split(':')[-1].strip() for K in self.keys_ if ( K[0] == 'W' and ':' in K ) ]
     #     wellsList = list( set( wellsList ) )
     #     wellsList.sort()
     #     self.wells = tuple( wellsList )
@@ -311,7 +311,7 @@ class TABLE(_SimResult):
     #     matching the pattern will be returned; the matching is based
     #     on fnmatch(), i.e. shell style wildcards.
     #     """
-    #     groupsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
+    #     groupsList = [ K.split(':')[-1].strip() for K in self.keys_ if ( K[0] == 'G' and ':' in K ) ]
     #     groupsList = list( set( groupsList ) )
     #     groupsList.sort()
     #     self.groups = tuple( groupsList )
@@ -326,7 +326,7 @@ class TABLE(_SimResult):
 
     # def extract_Regions(self, pattern=None):
     #     # preparing object attribute
-    #     regionsList = [ K.split(':')[-1].strip() for K in self.keys if ( K[0] == 'G' and ':' in K ) ]
+    #     regionsList = [ K.split(':')[-1].strip() for K in self.keys_ if ( K[0] == 'G' and ':' in K ) ]
     #     regionsList = list( set( regionsList ) )
     #     regionsList.sort()
     #     self.groups = tuple( regionsList )
@@ -391,7 +391,7 @@ class TABLE(_SimResult):
             return self.DTindex
 
         # look for other index
-        for Key in ('TIME', 'DATE', 'DATES', 'DAYS', 'MONTHS', 'YEARS') + self.keys:
+        for Key in ('TIME', 'DATE', 'DATES', 'DAYS', 'MONTHS', 'YEARS') + self.keys_:
             KeyIndex = True
             IndexVector = None
             for frame in self.Frames:
@@ -436,7 +436,7 @@ class TABLE(_SimResult):
             if Key in ['DATES', 'DATE']:
                 self.units[Key] = 'DATE'
                 return 'DATE'
-            if Key in self.keys:
+            if Key in self.keys_:
                 if ':' in Key:
                     if Key[0] == 'W':
                         if Key.split(':')[-1] in self.wells:
@@ -484,7 +484,7 @@ class TABLE(_SimResult):
         elif type(Key) is str and Key.strip() == '--EveryType--':
             Key = []
             KeyDict = {}
-            for each in self.keys:
+            for each in self.keys_:
                 if ':' in each:
                     Key.append(_mainKey(each))
                     KeyDict[_mainKey(each)] = each
@@ -496,17 +496,17 @@ class TABLE(_SimResult):
             for each in Key:
                 if each in self.units:
                     tempUnits[each] = self.units[each]
-                elif each in self.keys and (each != 'DATES' and each != 'DATE'):
+                elif each in self.keys_ and (each != 'DATES' and each != 'DATE'):
                     if self.results.unit(each) is None:
                         tempUnits[each] = self.results.unit(each)
                     else:
                         tempUnits[each] = self.results.unit(each).strip('( )').strip("'").strip('"')
-                elif each in self.keys and (each == 'DATES' or each == 'DATE'):
+                elif each in self.keys_ and (each == 'DATES' or each == 'DATE'):
                     tempUnits[each] = 'DATE'
                 else:
                     if KeyDict[each] in self.units:
                         tempUnits[each] = self.units[KeyDict[each]]
-                    elif KeyDict[each] in self.keys:
+                    elif KeyDict[each] in self.keys_:
                         if self.results.unit(KeyDict[each]) is None:
                             tempUnits[each] = self.results.unit(KeyDict[each])
                         else:
