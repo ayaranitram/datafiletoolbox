@@ -77,7 +77,7 @@ class H5(_SimResult):
                                 overwrite=True)
                 self.strip_units()
                 self.get_Attributes(reload=True)
-                self.fill_FieldBasics()
+                self.fill_field_basics()
 
             else:
                 raise FileNotFoundError("the file doesn't exist:\n  -> " + h5FilePath)

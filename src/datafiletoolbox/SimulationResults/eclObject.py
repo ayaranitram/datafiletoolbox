@@ -81,7 +81,7 @@ class ECL(_SimResult):
                                 overwrite=True)
                 self.strip_units()
                 self.get_Attributes(reload=True)
-                self.fill_FieldBasics()
+                self.fill_field_basics()
 
             else:
                 if not os.path.isfile(_extension(SummaryFilePath)[2] + _extension(SummaryFilePath)[1] + '.UNSMRY'):

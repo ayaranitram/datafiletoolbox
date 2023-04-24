@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.23'
-__release__ = 20230412
+__version__ = '0.60.24'
+__release__ = 20230420
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -257,7 +257,7 @@ class SimResult(object):
         self.keyMarkers = {}
         self.keyMarkersSize = {}
         self.style = '-'
-        self.keys_tyles = {}
+        self.key_styles = {}
         self.alpha = 1.0
         self.keyAlphas = {}
         self.historyAsDots = True
@@ -2086,7 +2086,7 @@ class SimResult(object):
             label='--auto', figsize=(8, 6), dpi=100, grid=False, sort='item', ascending=True, rotation=True,
             tight_layout=True, resample='daily', row=None, col=None,
             return_fig=True, return_df=False,
-            logY=False, logX=False, **kwargs):
+            logY=False, logX=False, show=False, **kwargs):
         """
         alias of boxplot method
         """
@@ -2094,7 +2094,7 @@ class SimResult(object):
                             ignore_zeros=ignore_zeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid,
                             sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout,
                             resample=resample, row=row, col=col, return_fig=return_fig, return_df=return_df, logY=logY,
-                            logX=logX, style="ticks", palette="pastel", **kwargs)
+                            logX=logX, style="ticks", palette="pastel", show=show, **kwargs)
 
     def boxplot(self, keys=[], objects=None, other_sims=None, clean_all_zeros=True, ignore_zeros=True,
                 hue='--auto', label='--auto',
@@ -2102,7 +2102,7 @@ class SimResult(object):
                 sort='item', ascending=True, rotation=True, tight_layout=True, resample='daily',
                 row=None, col=None,
                 return_fig=True, return_df=False, logY=False, logX=False,
-                style="ticks", palette="pastel", **kwargs):
+                style="ticks", palette="pastel", show=False, **kwargs):
         """
         creates a boxplot for the desired keys
 
@@ -2118,6 +2118,8 @@ class SimResult(object):
         this function uses seaborn boxplot to create the chart.
         """
         sns.set_theme(style=style, palette=palette)
+
+        show = bool(show)
 
         df, hue, label, itemLabel, values = self._common_dataprep_for_seaborn(keys=keys, objects=objects,
                                                                               other_sims=other_sims,
@@ -2147,7 +2149,9 @@ class SimResult(object):
             plt.yscale('log')
         if bool(logX):
             plt.xscale('log')
-        plt.show()
+        
+        if show:
+            plt.show()
 
         if bool(return_fig) and bool(return_df):
             return fig, df
@@ -2165,7 +2169,7 @@ class SimResult(object):
                split=True, resample='daily',
                row=None, col=None, inner=None, logY=False, logX=False,
                return_fig=True, return_df=False,
-               style="ticks", palette="pastel", **kwargs):
+               style="ticks", palette="pastel", show=False, **kwargs):
         """
         wrapper for violinplot method
         """
@@ -2173,7 +2177,7 @@ class SimResult(object):
                                ignore_zeros=ignore_zeros, hue=hue, label=label, figsize=figsize, dpi=dpi, grid=grid,
                                sort=sort, ascending=ascending, rotation=rotation, tight_layout=tight_layout,
                                scale=scale, split=split, resample=resample, row=row, col=col, inner=inner, logY=logY,
-                               logX=logX, return_fig=return_fig, return_df=return_df, style=style, palette=palette,
+                               logX=logX, return_fig=return_fig, return_df=return_df, style=style, palette=palette, show=show,
                                **kwargs)
 
     def violinplot(self, keys=[], objects=None, other_sims=None, clean_all_zeros=True, ignore_zeros=True,
@@ -2182,7 +2186,7 @@ class SimResult(object):
                    resample='daily',
                    row=None, col=None, inner=None, logY=False, logX=False,
                    return_fig=True, return_df=False,
-                   style="ticks", palette="pastel", **kwargs):
+                   style="ticks", palette="pastel", show=False, **kwargs):
         """
         creates a violin plot for the desired keys
 
@@ -2196,6 +2200,8 @@ class SimResult(object):
         this function uses seaborn boxplot to create the chart.
         """
         sns.set_theme(style=style, palette=palette)
+        
+        show = bool(show)
 
         df, hue, label, itemLabel, values = self._common_dataprep_for_seaborn(keys=keys, objects=objects,
                                                                               other_sims=other_sims,
@@ -2232,7 +2238,9 @@ class SimResult(object):
 
         if bool(tight_layout):
             plt.tight_layout()
-        plt.show()
+        
+        if show:
+            plt.show()
 
         if bool(return_fig) and bool(return_df):
             return fig, df
@@ -2243,23 +2251,11 @@ class SimResult(object):
         else:
             return None
 
-    def plot(self,
-             keys=[],
-             index=None,
-             other_sims=None,
-             wells=[],
-             groups=[],
-             regions=[],
-             do_not_repeat_colors=None,
-             grid=False,
-             show=True,
-             hline=None,
-             fig=None,
-             num=None,
-             figsize=(6, 4),
-             dpi=150,
-             singleYaxis=False,
-             **kwargs):
+    def plot(self, keys=[], index=None, other_sims=None,
+             wells=[], groups=[], regions=[],
+             do_not_repeat_colors=None, grid=False,
+             hline=None, fig=None, num=None, figsize=(6, 4), dpi=150,
+             singleYaxis=False, **kwargs):
         """
         creates a line chart for the selected Keys vs the selected Index.
         returns the a tuple with (the plot, list of Keys in Y axes, list of Indexes in X axis)
@@ -2269,13 +2265,14 @@ class SimResult(object):
             Wells : list of wells to plot for the desired Keys
             Groups : list of groups to plot for the desired Keys
             Regions : list of Regions to plot for the desired Keys
-            DoNotRepeatColors : True or False
+            do_not_repeat_colors : True or False
                 the colors of the lines are by default asigned based on the property of the Key,
                 then for several objects plotting the same Key all the lines will have the same color.
                 To avoid that behaviour, set this parameter to True
 
         """
         from matplotlib.figure import Figure
+                
         if type(fig) is tuple:
             fig = fig[0]
         if fig is None:
@@ -2539,11 +2536,10 @@ class SimResult(object):
                 xmin = max(self(index_list[i])) if max(self(index_list[i])) < xmax else xmax
             hline = {'y': hline, 'xmin': xmin, 'xmax': xmax, 'colors': 'black', 'linestyle': '-'}
 
-        figure = Plot(SimResultObjects=sims_to_plot, Y_Keys=plot_keys, X_Key=index_list,
-                      DoNotRepeatColors=do_not_repeat_colors, Xgrid=Xgrid, Ygrid=Ygrid, fig=fig, show=show, hline=hline,
+        return Plot(SimResultObjects=sims_to_plot, Y_Keys=plot_keys, X_Key=index_list,
+                      do_not_repeat_colors=do_not_repeat_colors, 
+                      Xgrid=Xgrid, Ygrid=Ygrid, fig=fig, hline=hline,
                       singleYaxis=singleYaxis, figsize=figsize, dpi=dpi, num=num, **kwargs)
-
-        return figure  # return (figure, plot_keys, index_list)
 
     def replaceNullbyNaN(self):
         """
@@ -3195,9 +3191,9 @@ class SimResult(object):
             self.style = linestyle
         else:
             if self.is_Key(key):
-                self.keyStyles[key] = linestyle
+                self.key_styles[key] = linestyle
             elif key in self.attributes:
-                self.keyStyles[key] = linestyle
+                self.key_styles[key] = linestyle
             elif len(self.find_Keys(key)) > 0:
                 for K in self.find_Keys(key):
                     _verbose(self.speak, 2, '<set_Style> applying style to key', K)
@@ -3207,14 +3203,14 @@ class SimResult(object):
         if Key is None:
             return 'None' if self.style.startswith('None#') else self.style
         elif self.is_Key(Key):
-            if Key in self.keyStyles:
-                return 'None' if self.keyStyles[Key].startswith('None#') else self.keyStyles[Key]
-            elif _mainKey(Key) in self.keyStyles:
-                return 'None' if self.keyStyles[_mainKey(Key)].startswith('None#') else self.keyStyles[_mainKey(Key)]
+            if Key in self.key_styles:
+                return 'None' if self.key_styles[Key].startswith('None#') else self.key_styles[Key]
+            elif _mainKey(Key) in self.key_styles:
+                return 'None' if self.key_styles[_mainKey(Key)].startswith('None#') else self.key_styles[_mainKey(Key)]
             else:
                 return None
         elif Key in self.attributes:
-            return 'None' if self.keyStyles[Key].startswith('None#') else self.keyStyles[Key]
+            return 'None' if self.key_styles[Key].startswith('None#') else self.key_styles[Key]
 
     def set_Marker(self, marker=None, key=None):
         """
@@ -3344,14 +3340,14 @@ class SimResult(object):
 
     def set_Start(self, start_date):
         """
-        startDate must be a string representing a date or a Pandas or Numpy or datetime object
+        start_date must be a string representing a date or a Pandas or Numpy or datetime object
         """
         self.start = np.datetime64(pd.to_datetime(start_date), 's')
         return self.start
 
     def get_Start(self):
         """
-        startDate must be a string representing a date or a Pandas or Numpy or datetime object
+        start_date must be a string representing a date or a Pandas or Numpy or datetime object
         """
         return self.start
 
@@ -5708,25 +5704,25 @@ class SimResult(object):
         if date is None:
             return False
         else:
-            if startDate is None:
-                startDate = min(date)
+            if start_date is None:
+                start_date = min(date)
             else:
                 import datetime as dt
-                if type(startDate) is str:
+                if type(start_date) is str:
                     try:
-                        startDate = np.datetime64(pd.to_datetime(startDate))
+                        start_date = np.datetime64(pd.to_datetime(start_date))
                     except:
-                        raise ValueError(" string date not understood: '" + startDate + "'")
-                elif isinstance(startDate, pd._libs.tslibs.timestamps.Timestamp):
-                    startDate = np.datetime64(startDate)
-                elif isinstance(startDate, dt.datetime):
-                    startDate = np.datetime64(startDate)
-                elif type(startDate) is np.datetime64:
+                        raise ValueError(" string date not understood: '" + start_date + "'")
+                elif isinstance(start_date, pd._libs.tslibs.timestamps.Timestamp):
+                    start_date = np.datetime64(start_date)
+                elif isinstance(start_date, dt.datetime):
+                    start_date = np.datetime64(start_date)
+                elif type(start_date) is np.datetime64:
                     pass  # ok
                 else:
-                    raise TypeError(" not recognized startDate paramenter", startDate)
+                    raise TypeError(" not recognized start_date paramenter", start_date)
 
-            time = (pd.to_timedelta(date - startDate).astype('timedelta64[s]') / 60 / 60 / 24).to_numpy()
+            time = (pd.to_timedelta(date - start_date).astype('timedelta64[s]') / 60 / 60 / 24).to_numpy()
             ow = self.overwrite
             self.overwrite = True
             self.set_Vector('TIME', time, 'DAYS', data_type='float', overwrite=True)
