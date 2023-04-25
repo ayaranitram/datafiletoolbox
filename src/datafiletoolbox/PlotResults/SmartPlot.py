@@ -6,7 +6,7 @@ Created on Wed May 13 00:31:52 2020
 """
 
 __version__ = '0.4.5'
-__release__ = 20220420
+__release__ = 20220425
 __all__ = ['Plot']
 
 import time
@@ -33,7 +33,7 @@ def savePlot(figure, FileName=''):
 def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], ObjectsColors=[], SeriesColors=[],
          graphName='', Y_Axis=[], Y_Scales=[], legendLocation='best', X_Scale=[], Labels={}, linewidth=[], linestyle=[],
          markers=[], markersize=[], do_not_repeat_colors=True, ColorBySimulation=None, ColorBySeries=None,
-         DropZeros=False, minlinewidth=0.1, minmarkersize=0.5, Xgrid=0, Ygrid=0, fig=None, num=None, show=True,
+         DropZeros=False, minlinewidth=0.1, minmarkersize=0.5, Xgrid=0, Ygrid=0, fig=None, num=None,
          hline=None, figsize=(6, 4), dpi=150, singleYaxis=False, legend=True, xlim=(None, None), ylim=(None, None),
          tight_layout=True, **kwargs):
     """
