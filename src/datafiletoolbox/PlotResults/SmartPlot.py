@@ -5,8 +5,8 @@ Created on Wed May 13 00:31:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.4.4'
-__release__ = 20220401
+__version__ = '0.4.5'
+__release__ = 20220420
 __all__ = ['Plot']
 
 import time
@@ -40,7 +40,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     uses matplot lib to create graphs of the selected vectors
     for the selected SimResult objects.
     """
-
+    
     # validate common keyword parameters:
     for kw in ['xMin', 'xMax', 'yMin', 'yMax', 'Xmin', 'Xmax', 'Ymin', 'Ymax']:
         if kw in kwargs:
@@ -721,7 +721,7 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
 
     Axis = [fig.add_subplot()]
 
-    plt.title(Title)
+    _ = plt.title(Title)
 
     # display grid if required
     if Xgrid > 0:
@@ -996,8 +996,5 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
 
     if tight_layout:
         plt.tight_layout()
-
-    if bool(show):
-        plt.show()
 
     return fig
