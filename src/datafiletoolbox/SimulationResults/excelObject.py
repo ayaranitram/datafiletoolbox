@@ -5,8 +5,8 @@ Created on Thu Jan 21 11:00:20 2021
 @author: MCARAYA
 """
 
-__version__ = '0.22.13'
-__release__ = 20230411
+__version__ = '0.22.14'
+__release__ = 20230503
 __all__ = ['XLSX']
 
 from .mainObject import SimResult as _SimResult
@@ -804,10 +804,7 @@ class XLSX(_SimResult):
         if pattern is None:
             return self.keys_
         else:
-            keysList = []
-            for key in self.keys_:
-                if pattern in key:
-                    keysList.append(key)
+            keysList = [key for key in self.keys_ if pattern in key]
             return tuple(keysList)
 
     # support functions for get_Vector:
