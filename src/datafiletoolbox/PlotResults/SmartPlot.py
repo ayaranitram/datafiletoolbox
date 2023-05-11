@@ -5,8 +5,8 @@ Created on Wed May 13 00:31:52 2020
 @author: MCARAYA
 """
 
-__version__ = '0.4.5'
-__release__ = 20220425
+__version__ = '0.4.6'
+__release__ = 20220511
 __all__ = ['Plot']
 
 import time
@@ -997,4 +997,4 @@ def Plot(SimResultObjects=[], Y_Keys=[], X_Key='TIME', X_Units=[], Y_Units=[], O
     if tight_layout:
         plt.tight_layout()
 
-    return fig
+    return fig.axes[0] if len(fig.axes) == 1 else fig.axes
