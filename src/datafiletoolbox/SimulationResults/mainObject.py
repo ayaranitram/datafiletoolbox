@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.24'
-__release__ = 20230420
+__version__ = '0.60.25'
+__release__ = 20230511
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -2415,6 +2415,8 @@ class SimResult(object):
                         items = [None] * len(regions)
                         for i in range(len(regions)):
                             items[i] = k + ':' + regions[i]
+                elif k[0] == 'F':
+                    items = self.find_keys(k)
                 plot_keys += items
             elif len(self.find_Keys(k)) > 0:
                 plot_keys += list(self.find_Keys(k))
@@ -4508,6 +4510,8 @@ class SimResult(object):
                 raise TypeError(' <set_Vector> VectorData must not be empty')
             vector_data = np.array(vector_data)
         elif type(vector_data) is np.ndarray:
+            if vector_data.size == 0:
+                raise TypeError(' <set_Vector> VectorData must not be empty')
             if data_type == 'auto':
                 if 'int' in str(vector_data.dtype):
                     data_type = 'int'
@@ -4521,8 +4525,6 @@ class SimResult(object):
                     data_type = 'datetime'
                     _verbose(self.speak, 1,
                              key + ' <set_Vector> vector detected as numpy.array of dtype ' + data_type + '.')
-            if vector_data.size == 0:
-                raise TypeError(' <set_Vector> VectorData must not be empty')
             if len(vector_data.shape) == 1:
                 pass  # OK
             elif len(vector_data.shape) == 2:
@@ -4533,6 +4535,8 @@ class SimResult(object):
             else:
                 pass  # is a multidimensional matrix!!!
         elif isinstance(vector_data, Series):
+            if vector_data.size == 0:
+                raise TypeError(' <set_Vector> VectorData must not be empty')
             if data_type == 'auto':
                 if 'int' in str(vector_data.dtype):
                     data_type = 'int'
@@ -4546,8 +4550,8 @@ class SimResult(object):
                     data_type = 'datetime'
                     _verbose(self.speak, 1,
                              key + ' <set_Vector> vector detected as pandas.series of dtype ' + data_type + '.')
-            if vector_data.size == 0:
-                raise TypeError(' <set_Vector> VectorData must not be empty')
+            if key[0] =='F':
+                vector_data = vector_data.values
         elif isinstance(vector_data, (DataFrame)):
             if vector_data.size == 0:
                 raise TypeError(' <set_Vector> VectorData must not be empty')
