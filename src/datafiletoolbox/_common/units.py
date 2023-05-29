@@ -6,8 +6,8 @@ Created on Sat Dec  7 21:48:37 2019
 @author: martin
 """
 
-__version__ =  '0.5.6'
-__release__ = 20220613
+__version__ =  '0.5.7'
+__release__ = 20230516
 
 import numpy
 # import pandas
@@ -937,7 +937,7 @@ def BFS(graph, start, end, toPrint = False):
 UnCo = UnitConversions()
 
 
-def convertUnit(value, fromUnit, toUnit, PrintConversionPath=True ) :
+def convertUnit(value, fromUnit, toUnit, PrintConversionPath=True):
 
     if type(PrintConversionPath) != bool :
         if type(PrintConversionPath) == int or type(PrintConversionPath) == float :
@@ -948,13 +948,13 @@ def convertUnit(value, fromUnit, toUnit, PrintConversionPath=True ) :
         else:
             PrintConversionPath = True
 
-    conv = converter( value, fromUnit, toUnit, PrintConversionPath )#[0]
+    conv = converter(value, fromUnit, toUnit, PrintConversionPath)
     if type(conv) is not None :
         return conv
     else:
         if PrintConversionPath :
             print( " No conversion found from '" + fromUnit + "' to '" + toUnit + "' .\n ... returning the received value for '" + str(fromUnit) + "'." )
-        if type(value) == float and int(value) == value :
+        if type(value) is float and int(value) == value :
             value = int(value)
         return value
 
@@ -972,17 +972,20 @@ def converter(value, fromUnit, toUnit, PrintConversionPath=True, AllowRecursion=
     if type(fromUnit) is str and type(toUnit) is str and fromUnit.lower().strip() == toUnit.lower().strip():
         return value
 
-    if Start==True :
+    if Start == True :
         unit.previous=[]
 
     # strip off the parentesis, the string o
-    if type(fromUnit) == str and fromUnit not in ('"', "'") :
+    if type(fromUnit) is str and fromUnit not in ('"', "'") :
         fromUnit = fromUnit.strip("( ')").strip('"')
-    if type(toUnit) == str and toUnit not in ('"', "'") :
+    if type(toUnit) is str and toUnit not in ('"', "'") :
         toUnit = toUnit.strip("( ')").strip('"')
 
     if fromUnit.lower().strip(' ()') in unit.dictionary['dimensionless'] or toUnit.lower().strip(' ()') in unit.dictionary['dimensionless'] :
         return value
+
+    if (fromUnit, toUnit) in unit.Memory:
+        return unit.Memory[(fromUnit, toUnit)]
 
     # if PrintConversionPath :
     #     print( "\n converting from '" + str(fromUnit) + "' to '" + str(toUnit) + "'")
