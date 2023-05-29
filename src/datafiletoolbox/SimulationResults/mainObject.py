@@ -6988,5 +6988,67 @@ class SimResult(object):
                 ) + '\n'
                 out.write(datastr)
 
+    def to_obsh(self, path, wells=None, keys=None, units='FIELD'):
+        """
+        writes out a .obsh file for the selected wells and selected keys.
+
+        Parameters
+        ----------
+        path : str
+            A string indicating the path to the file to exported
+        wells : str or list-like, optional
+            The name of the well to be exported (a string) or a list containing
+            the names (strings) of the wells to be exported.
+            By default will export all the well in this SimResults.
+        keys : str or list-like, optional
+            The keys to be exported.
+            By default will export all the well cumulatives, 
+            bottom hole pressure and tubing head pressure.
+        units : str, optional
+            The string 'FIELD' or 'METRIC' indicating the units to export the .vol
+            The default is 'FIELD'.
+
+        Raises
+        ------
+        ValueError
+            if a parameter is wrong.
+
+        Returns
+        -------
+        None
+
+        """
+        def isRate(unit_string):
+            if '/' in unit_string:
+                if len(unit_string.split('/')) > 1:
+                    if unit_string.split('/')[1].strip('( )').upper()[:3] == 'DAY':
+                        return True
+            return False
+
+        if keys is None:
+            keys = _mainKey(self.find_Keys('W*T:'))
+            wkeys = [k for k in keys if isRate(self.get_Unit(k))]
+        elif type(keys) is str:
+            keys, ukeys = _mainKey(self.find_Keys(keys)), keys
+            if len(keys) == 0:
+                raise ValueError("No keys found by the string '" + ukeys + "'")
+        if wells is None:
+            wells = self.wells
+        if type(units) is not str or (
+                type(units) is not str and
+                units.upper().strip() not in ('FIELD', 'METRIC')):
+            raise ValueError("units must be 'FIELD' or 'METRIC'")
+        else:
+            if units.upper().strip() == 'FIELD':
+                unitsDict = _dictionaries.unitsFIELD
+            else:  # elif units.upper().strip() == 'METRIC':
+                unitsDict = _dictionaries.unitsMETRIC
+            exportUnits = {k: unitsDict[k[1:]] for k in keys if k[1:] in unitsDict}
+            
+        data = self[[]]
+            
+    
+        
+
     def close(self):
         print("close method not defined for this type of source.")
