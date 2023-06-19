@@ -6,7 +6,7 @@ Created on Sun Oct 11 11:14:32 2020
 @author: Martin Carlos Araya
 """
 
-__version__ = '0.80.15'
+__version__ = '0.80.16'
 __release__ = 20230619
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
@@ -124,30 +124,33 @@ units=1, speak=False, indexName=None, indexUnits=None, nameSeparator=None, inter
         elif type(units) is int:
             if type(header) is list:
                 if len(header) == 2:
-                    dataunits = {}
-                    newcols = []
-                    for col in df.columns:
-                        if str(col[-1]).startswith('Unnamed:'):
-                            nc = str(col[0]).strip()
-                            dataunits[nc] = 'unitless'
-                            newcols.append(nc)
-                        else:
-                            nc = str(col[0]).strip()
-                            dataunits[nc] = str(col[-1]).strip()
-                            newcols.append(nc)
+                    # dataunits = {}
+                    # newcols = []
+                    # for col in df.columns:
+                    #     if str(col[-1]).startswith('Unnamed:'):
+                    #         nc = str(col[0]).strip()
+                    #         dataunits[nc] = 'unitless'
+                    #         newcols.append(nc)
+                    #     else:
+                    #         nc = str(col[0]).strip()
+                    #         dataunits[nc] = str(col[-1]).strip()
+                    #         newcols.append(nc)
+                    dataunits = {str(col[0]).strip(): 'unitless' if str(col[-1]).startswith('Unnamed:') else str(col[-1]).strip() for col in df.columns}
+                    newcols = list(dataunits.keys())
                 elif len(header) > 2:
-                    dataunits = {}
-                    newcols = []
-                    for col in df.columns:
-                        if str(col[-1]).startswith('Unnamed:'):
-                            nc = col[:-1]
-                            dataunits[nc] = 'unitless'
-                            newcols.append(nc)
-                        else:
-                            nc = col[:-1]
-                            dataunits[nc] = str(col[-1]).strip()
-                            newcols.append(nc)
-                    newcols = pandas.MultiIndex.from_tuples(newcols)
+                    # dataunits = {}
+                    # newcols = []
+                    # for col in df.columns:
+                    #     if str(col[-1]).startswith('Unnamed:'):
+                    #         nc = col[:-1]
+                    #         dataunits[nc] = 'unitless'
+                    #         newcols.append(nc)
+                    #     else:
+                    #         nc = col[:-1]
+                    #         dataunits[nc] = str(col[-1]).strip()
+                    #         newcols.append(nc)
+                    dataunits = {col[:-1]: 'unitless' if str(col[-1]).startswith('Unnamed:') else str(col[-1]).strip() for col in df.columns}
+                    newcols = pandas.MultiIndex.from_tuples(list(dataunits.keys()))
                 df.columns = newcols
             elif type(header) is int:
                 dataunits = {c:str(c) for c in df.columns}
@@ -3493,11 +3496,12 @@ Copy of input object, shifted.
         if by is None:
             by = []
         elif type(by) is not str and hasattr(by,'__iter__'):
-            newBy = []
-            for each in by:
-                if each in self.columns:
-                    newBy.append(each)
-            by = newBy
+            # newBy = []
+            # for each in by:
+            #     if each in self.columns:
+            #         newBy.append(each)
+            # by = newBy
+            by = [each for each in by if each in self.columns]
         elif by in self.columns:
             by =  [by]
         else:
@@ -3698,11 +3702,12 @@ Copy of input object, shifted.
         if by is None:
             by = []
         elif type(by) is not str and hasattr(by,'__iter__'):
-            newBy = []
-            for each in by:
-                if each in self.columns:
-                    newBy.append(each)
-            by = newBy
+            # newBy = []
+            # for each in by:
+            #     if each in self.columns:
+            #         newBy.append(each)
+            # by = newBy
+            by = [each for each in by if each in self.columns]
         elif by in self.columns:
             by =  [by]
         else:
@@ -3899,11 +3904,12 @@ Copy of input object, shifted.
         if by is None:
             by = []
         elif type(by) is not str and hasattr(by,'__iter__'):
-            newBy = []
-            for each in by:
-                if each in self.columns:
-                    newBy.append(each)
-            by = newBy
+            # newBy = []
+            # for each in by:
+            #     if each in self.columns:
+            #         newBy.append(each)
+            # by = newBy
+            by = [each for each in by if each in self.columns]
         elif by in self.columns:
             by =  [by]
         else:
@@ -5591,29 +5597,31 @@ Copy of input object, shifted.
                 return self.DF.iloc[key]
 
     def _columnsNameAndUnits2MultiIndex(self):
-        out = []  # out = {}
+        # out = []  # out = {}
         units = self.get_units()
         if units is None or len(units) == 0:
             return self.columns  # there are not units, return column names as they are
         if len(self.columns) == 0:
             return self.columns  # is an empty DataFrame
-        for col in self.columns:
-            if col in units:
-                out.append((col,units[col]))  # out[col] = units[col]
-            else:
-                out.append((col,None))  # out[col] = None
+        # for col in self.columns:
+        #     if col in units:
+        #         out.append((col,units[col]))  # out[col] = units[col]
+        #     else:
+        #         out.append((col,None))  # out[col] = None
+        out = [(col, units[col]) if col in units else (col, None) for col in self.columns]
         out = pd.MultiIndex.from_tuples(out)  # out = pd.MultiIndex.from_tuples(out.items())
         return out
 
     def _DataFrameWithMultiIndex(self):
         if self.transposed:
             result = self.DF.copy()
-            units = []
-            for i in result.index:
-                if i in self.units:
-                    units.append(self.units[i])
-                else:
-                    units.append('UNITLESS')
+            # units = []
+            # for i in result.index:
+            #     if i in self.units:
+            #         units.append(self.units[i])
+            #     else:
+            #         units.append('UNITLESS')
+            units = [self.units[i] if i in self.units else 'UNITLESS' for i in result.index]
             joker = ('*','@','$','-','%','_',' ')
             for unitsCol in [s + 'units' for s in joker ] + [s + 'units' + s for s in joker ] + [s + 'UNITS' for s in joker ] + [s + 'UNITS' + s for s in joker ]:
                 if unitsCol not in result.columns:
