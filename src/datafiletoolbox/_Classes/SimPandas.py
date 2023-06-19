@@ -6,8 +6,8 @@ Created on Sun Oct 11 11:14:32 2020
 @author: Martin Carlos Araya
 """
 
-__version__ = '0.80.14'
-__release__ = 20230323
+__version__ = '0.80.15'
+__release__ = 20230619
 __all__ = ['SimSeries', 'SimDataFrame', 'read_excel', 'concat', 'znorm', 'minmaxnorm']
 
 from sys import getsizeof
@@ -3572,7 +3572,9 @@ Copy of input object, shifted.
                     if newDF is None:
                         newDF = groupDF.copy()
                     else:
-                        newDF = newDF.append(groupDF)
+                        # to avoid FutureWarning: The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead.
+                        # newDF = newDF.append(groupDF)
+                        newDF = pd.concat([newDF, groupDF], axis=0)
 
             elif len(by) == 3:
                 daily_index = pd.date_range(min(result.index), max(result.index), freq='D')
@@ -3941,7 +3943,9 @@ Copy of input object, shifted.
             deltaindex = np.diff(index)
             if isinstance(self.index, DatetimeIndex):
                 deltaindex = deltaindex.astype('timedelta64[s]').astype('float64')/60/60/24
-            values = result.first().append(result.last().iloc[-1] )
+            # to avoid FutureWarning: The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead.
+            values = result.first().append(result.last().iloc[-1])
+            values = pd.concat([result.first(), result.last().iloc[-1]], axis=0)
             deltavalues = np.diff(values.transpose())
             result = DataFrame(data=(deltavalues/deltaindex).transpose(), index=result.first().index, columns=self.columns)
         else:
@@ -5428,11 +5432,11 @@ Copy of input object, shifted.
                     try:
                         resultUnits = self.get_Units(result.index)
                     except:
-                        resultUnits = { result.name:'UNITLESS' }
+                        resultUnits = { result.name:'UNITLESS'}
                 else:
                     resultUnits = self.get_Units(result.name)
             else:
-                resultUnits = { result.name:'UNITLESS' }
+                resultUnits = { result.name:'UNITLESS'}
             params = self._SimParameters
             params['units'] = resultUnits
             result = SimSeries(data=result, **params)
@@ -5450,7 +5454,10 @@ Copy of input object, shifted.
             iresult = _Series2Frame(result._getbyIndex(indexeslices[0]))
             if len(indexeslices) > 1:
                 for i in indexeslices[1:]:
-                    iresult = iresult.append(_Series2Frame(result._getbyIndex(i)) )
+                    # to avoid FutureWarning: The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead.
+                    # iresult = iresult.append(_Series2Frame(result._getbyIndex(i)))
+                    iresult = pd.concat([iresult, _Series2Frame(result._getbyIndex(i))], axis=0)
+                    
             try:
                 result = iresult.sort_index()
             except:
@@ -6458,13 +6465,17 @@ Copy of input object, shifted.
                 firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[0]]))
             else:
                 firstRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=[self.index[0]])
-            return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative)), **params)
+            # to avoid FutureWarning: The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead.
+            # return SimDataFrame(data=np.cumsum(firstRow.append(Cumulative)), **params)
+            return SimDataFrame(data=np.cumsum(pd.concat([firstRow, Cumulative], axis=0)), **params)
         elif method[0] in 'ac' and at == 'same':
             if str(dt.dtype).startswith('timedelta'):
                 lastRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=[str(len(self)-1)]).set_index(DatetimeIndex([self.index[-1]]))
             else:
                 lastRow = DataFrame(dict(zip(self.columns, [0.0]*len(self.columns))), index=[self.index[-1]])
-            return SimDataFrame(data=np.cumsum(Cumulative.append(lastRow)), **params)
+            # to avoid FutureWarning: The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead.
+            # return SimDataFrame(data=np.cumsum(Cumulative.append(lastRow)), **params)
+            return SimDataFrame(data=np.cumsum(pd.concat([Cumulative, lastRow], axis=0)), **params)
         else:
             return SimDataFrame(data=np.cumsum(Cumulative), **params)
 
@@ -6507,14 +6518,18 @@ Copy of input object, shifted.
             else:
                 NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=[self.index[0]])
             diff = DataFrame(data=diff, index=self.index[1:], columns=self.columns)
-            diff = NaNRow.append(diff)
+            # to avoid FutureWarning: The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead
+            # diff = NaNRow.append(diff)
+            diff = pd.concat([NaNRow, diff], axis=0)
         else:
             if str(dt.dtype).startswith('timedelta'):
                 NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=['0']).set_index(DatetimeIndex([self.index[-1]]))
             else:
                 NaNRow = DataFrame(dict(zip(self.columns, [None]*len(self.columns))), index=[self.index[-1]])
             diff = DataFrame(data=diff, index=self.index[:-1], columns=self.columns)
-            diff = diff.append(NaNRow)
+            # to avoid FutureWarning: The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead
+            # diff = diff.append(NaNRow)
+            diff = pd.concat([diff, NaNRow], axis=0)
 
         params = self._SimParameters
         params['units'] = newUnits
@@ -7631,10 +7646,16 @@ def _MergeIndex(left, right, how='outer', *, drop_duplicates=True, keep='first')
             newframe = None
             for dup in range(len(dupframe.index)):
                 if newframe is None:
-                    newframe = temp.iloc[0:list(temp.index).index(dupframe.index[dup])+1].append(dupframe.iloc[dup])
+                    # to avoid FutureWarning: The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead
+                    # newframe = temp.iloc[0:list(temp.index).index(dupframe.index[dup])+1].append(dupframe.iloc[dup])
+                    newframe = pd.concat([temp.iloc[0:list(temp.index).index(dupframe.index[dup])+1], dupframe.iloc[dup]], axis=0)
                 else:
-                    newframe = newframe.append([ temp.iloc[list(temp.index).index(dup-1):list(temp.index).index(dup)] , dupframe.iloc[dup] ])
-            newframe = newframe.append( temp.iloc[list(temp.index).index(dupframe.index[dup])+1: ] )
+                    # to avoid FutureWarning: The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead
+                    # newframe = newframe.append([temp.iloc[list(temp.index).index(dup-1):list(temp.index).index(dup)] , dupframe.iloc[dup]])
+                    newframe = pd.concat([newframe, temp.iloc[list(temp.index).index(dup-1):list(temp.index).index(dup)] , dupframe.iloc[dup]], axis=0)
+            # to avoid FutureWarning: The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead
+            # newframe = newframe.append(temp.iloc[list(temp.index).index(dupframe.index[dup])+1:])
+            newframe = pd.concat([newframe, temp.iloc[list(temp.index).index(dupframe.index[dup])+1:]], axis= 0)
         else:
             newframe = frame.reindex(index=newIndex)
         return SimDataFrame(newframe, **frame._SimParameters)

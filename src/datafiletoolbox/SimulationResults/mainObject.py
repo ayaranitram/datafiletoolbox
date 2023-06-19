@@ -5,8 +5,8 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.25'
-__release__ = 20230511
+__version__ = '0.60.26'
+__release__ = 20230619
 __all__ = ['SimResult']
 
 from .. import _dictionaries
@@ -2077,7 +2077,9 @@ class SimResult(object):
                                                         resample=resample)
                 other = other[0].rename(columns={'value': values})
                 other['Simulation'] = str(os.name)
-                df = df.append(other)
+                # to avoid FutureWarning: The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead
+                # df = df.append(other)
+                df = pd.concat([df, other], axis=0)
             hue = 'Simulation'
 
         return df, hue, label, itemLabel, values
