@@ -5,7 +5,7 @@ Created on Wed May 13 15:14:35 2020
 @author: MCARAYA
 """
 
-__version__ = '0.60.26'
+__version__ = '0.60.27'
 __release__ = 20230619
 __all__ = ['SimResult']
 
@@ -1699,10 +1699,11 @@ class SimResult(object):
                             for O in objects:
                                 newKeys.append(K.strip(': ') + ':' + O.strip(': '))
                 newKeys = list(set(self.find_Keys(newKeys)))
-                keys = []
-                for K in newKeys:
-                    if self.is_Key(K):
-                        keys.append(K)
+                # keys = []
+                # for K in newKeys:
+                #     if self.is_Key(K):
+                #         keys.append(K)
+                keys = [K for K in newKeys if self.is_Key(K)]
 
         # expand Keys
         keys = list(self.find_Keys(keys))
@@ -1913,13 +1914,16 @@ class SimResult(object):
         df = df.pivot_table(columns=label, index=[df.index, df[hue]])
         df = df.reset_index()
         df = df.set_index(indexName)
-        newNames = []
-        for col in list(df.columns):
-            if type(col) is tuple:
-                if col[0] == values:
-                    newNames.append(col[-1])
-                else:
-                    newNames.append(col[0])
+        # newNames = []
+        # for col in list(df.columns):
+        #     if type(col) is tuple:
+        #         if col[0] == values:
+        #             newNames.append(col[-1])
+        #         else:
+        #             newNames.append(col[0])
+        newNames = [col[-1] if col[0] == values else col[0] 
+                    for col in df.columns 
+                    if type(col) is tuple]
         df.columns = newNames
 
         for K in ('Keys', 'objects', 'otherSims', 'cleanAllZeros', 'ignoreZeros', 'hue', 'label'):
@@ -2307,7 +2311,7 @@ class SimResult(object):
                 Xgrid, Ygrid = 2, 2
 
         if keys == []:
-            keys = [keys.append(K) for K in ['FOPR', 'FGPR', 'FWPR', 'FGIR', 'FWIR', 'FOIR'] if
+            keys = [K for K in ['FOPR', 'FGPR', 'FWPR', 'FGIR', 'FWIR', 'FOIR'] if
                     self.is_Key(K) and not (min(self(K)) == max(self(K)) and sum(self(K)) == 0)]
             if index is None:
                 if self.is_Key('DATE'):
@@ -2373,14 +2377,18 @@ class SimResult(object):
                 elif type(other_sims[0]) is str and self.is_Key(other_sims[0]):
                     other_sims, index = index, other_sims
 
-        for k in range(len(keys)):
-            keys[k] = keys[k].strip()
-        for W in range(len(wells)):
-            wells[W] = wells[W].strip()
-        for G in range(len(groups)):
-            groups[G] = groups[G].strip()
-        for R in range(len(regions)):
-            regions[R] = regions[R].strip()
+        # for k in range(len(keys)):
+        #     keys[k] = keys[k].strip()
+        keys = [k.strip() for k in keys]
+        # for W in range(len(wells)):
+        #     wells[W] = wells[W].strip()
+        wells = [w for w in wells]
+        # for G in range(len(groups)):
+        #     groups[G] = groups[G].strip()
+        groups = [g.strip() for g in groups]
+        # for R in range(len(regions)):
+        #     regions[R] = regions[R].strip()
+        regions = [r.strip() for r in regions]
 
         plot_keys = []
         for k in keys:
