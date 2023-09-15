@@ -48,4 +48,4 @@ will get the data from both results (converting the key from ECL style to VIP st
 
 ## further functionalities
 Many more functions are available, not detailed in this readme.
-A more detailed tutorial will be available sometime, in the meanwhile, please contact the author <martincarlos.araya@cepsa.com> for further details.
+A more detailed tutorial will be available sometime, in the meanwhile, please contact the author <martinaraya@gmail.com> for further details.
