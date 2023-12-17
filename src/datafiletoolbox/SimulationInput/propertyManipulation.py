@@ -10,12 +10,34 @@ routines:
     to shift the propery keywords.
 """
 
-__version__ = '0.0.20-05-16'
+__version__ = '0.0.17-12-23'
 
 from .._common.inout import _verbose
 
-def expandKeyword( keywordValues , speak=0 , expandDefaults=True) :
+def expand_keyword(keyword_values, verbose=0, default_value=0):
+    if type(keyword_values) is list:
+        keyword_values = ' '.join(
+            [item
+             for row in matrix
+             for item in row]
+        )
+    keyword_values = ' '.join(keyword_values.strip().split())
+    default_value = '*' + str(default_value) + ' '
+    if '* ' in keyword_values:
+        keyword_values = keyword_values.replace('* ', default_value)
+
+    keyword_values = ' '.join(
+        [' '.join([each.split('*')[1]] * int(each.split('*')[0]))
+         if '*' in each
+         else each
+         for each in keyword_values.split()
+         ]
+    )
+    return keyword_values
+
+def expandKeyword(keyword_values, verbose=0, expandDefaults=True):
     """
+    Deprecated!! use `expand_keyword` which is faster.
     expandKeyword receives list of values or a space-separated string containing
     the values of the property keyword in the compressed format ' 3*0.257 ' and
     returns the expanded ' 0.257 0.257 0.257 ' property as a list or
@@ -26,31 +48,31 @@ def expandKeyword( keywordValues , speak=0 , expandDefaults=True) :
         1 = print every message
         2 = print final statement only
     """
-    if keywordValues == None :
+    if keyword_values is None :
         return ''
 
-    if type(keywordValues) == list :
+    if type(keyword_values) is list :
         outformat = 'list'
         try :
-            inputValues = ' ' + ' '.join(keywordValues) + ' '
+            inputValues = ' ' + ' '.join(keyword_values) + ' '
         except :
-            inputValues = ' ' + ' '.join(list(map(str,keywordValues))) + ' '
-    elif type(keywordValues) == str :
+            inputValues = ' ' + ' '.join(list(map(str, keyword_values))) + ' '
+    elif type(keyword_values) is str :
         outformat = 'str'
         
-        inputValues = ' ' + keywordValues + ' '
+        inputValues = ' ' + keyword_values + ' '
         inputValues = inputValues.replace('\n',' ')
         inputValues = inputValues.replace('/',' /')
         inputValues = inputValues.replace('\t',' ')
     else :
-        _verbose(speak,-1,'ERROR: keyword values to be expanded should be provided as LIST or STRING')
+        _verbose(verbose, -1, 'ERROR: keyword values to be expanded should be provided as LIST or STRING')
         raise Exception('keyword values to be expanded should be provided as LIST or STRING')
     outputValues = ''
     ini = 0
     end = len(inputValues)
     starFlag = '*' in inputValues[ini:]
     prog = 100*ini//end
-    _verbose(speak,2,'expanding 0%')
+    _verbose(verbose, 2, 'expanding 0%')
 
     while starFlag :
 
@@ -85,12 +107,12 @@ def expandKeyword( keywordValues , speak=0 , expandDefaults=True) :
         starFlag = '*' in inputValues[ini:]
         if prog < 100*ini//end :
             prog = 100*ini//end
-            _verbose(speak,1,'expanding ' + str(prog) + '%')
+            _verbose(verbose, 1, 'expanding ' + str(prog) + '%')
 
     outputValues = outputValues + ' ' + inputValues[ini:]
     if prog < 100 :
-        _verbose(speak,1,'expanding 100%')
-    _verbose(speak,2,'property expanded')
+        _verbose(verbose, 1, 'expanding 100%')
+    _verbose(verbose, 2, 'property expanded')
 
     outputValues = outputValues.split()
     if outformat == 'str' :
@@ -100,7 +122,7 @@ def expandKeyword( keywordValues , speak=0 , expandDefaults=True) :
 
 
 
-def compressKeyword(keywordValues , speak=0):
+def compress_keyword(keyword_values, verbose=0):
     """
     compressKeyword receives list of values or a space-separated string containing
     the values of the property keyword and returns the compressed property
@@ -112,19 +134,17 @@ def compressKeyword(keywordValues , speak=0):
         1 = print every message
         2 = print final statement only
     """
-
-
-    if type(keywordValues) == str :
-        keywordValues = keywordValues.split()
+    if type(keyword_values) is str:
+        keyword_values = keyword_values.split()
         inFormat = 'str'
-    elif type(keywordValues) == list :
+    elif type(keyword_values) is list:
         inFormat = 'list'
     else:
         return 'incorrect input format, string or list expected'
 
     Compressed = []
     prog = 0
-    totaldimen = len(keywordValues)-1
+    totaldimen = len(keyword_values) - 1
     reptFlag = False
     uniqueFlag = True
     irept = 1
@@ -132,14 +152,14 @@ def compressKeyword(keywordValues , speak=0):
 
     i = 0
     while i < totaldimen:
-        if keywordValues[i] == keywordValues[i+1]:
+        if keyword_values[i] == keyword_values[i + 1]:
             irept += 1
             if uniqueFlag == True :
                 uniqueFlag = False
-                Compressed = Compressed + keywordValues[uniqueStart:i]
+                Compressed = Compressed + keyword_values[uniqueStart:i]
             if reptFlag == False:
                 reptFlag = True
-                reptStr = keywordValues[i]
+                reptStr = keyword_values[i]
         else:
             if reptFlag == True :
                 reptFlag = False
@@ -153,21 +173,20 @@ def compressKeyword(keywordValues , speak=0):
 
         if prog < 100*i//totaldimen :
             prog = 100*i//totaldimen
-            _verbose(speak , 1 , 'compressing ' + str(prog) + '%')
+            _verbose(verbose, 1, 'compressing ' + str(prog) + '%')
 
     if reptFlag == True:
         Compressed = Compressed + [str(irept) + '*' + str(reptStr)]
     if uniqueFlag == True:
-        Compressed = Compressed + keywordValues[uniqueStart:]
+        Compressed = Compressed + keyword_values[uniqueStart:]
 
-    _verbose(speak , 2 , 'compressed finished')
+    _verbose(verbose, 2, 'compressed finished')
     if inFormat == 'str' :
         Compressed = ' '.join(Compressed)
     return Compressed
 
 
-
-def shiftProperty( ValuesArray , DIMENS=[] , newValues=0 , skipI=-1 , shiftI=0 , skipJ=-1 , shiftJ=0 , skipK=-1 , shiftK=0 , speak=0 ) :
+def shiftProperty(ValuesArray, DIMENS=[], newValues=0, skipI=-1, shiftI=0, skipJ=-1, shiftJ=0, skipK=-1, shiftK=0, speak=0) :
     """
     shift moves values inside the array, like COPYREG but works withs overlaping boxes
     """
@@ -192,7 +211,7 @@ def shiftProperty( ValuesArray , DIMENS=[] , newValues=0 , skipI=-1 , shiftI=0 ,
     _verbose( speak , 2 , 'property shifted')
 
     if compressed == True :
-        NewArray = compressKeyword( NewArray , speak )
+        NewArray = compress_keyword(NewArray, speak)
 
     if outformat == 'str' :
         NewArray = ' ' + ' '.join(NewArray) + ' '
