@@ -15,10 +15,21 @@ __version__ = '0.0.17-12-23'
 from .._common.inout import _verbose
 
 def expand_keyword(keyword_values, verbose=0, default_value=0):
+    """
+    expand_keyword receives list of values or a space-separated string containing
+    the values of the property keyword in the eclipse compressed format ' 3*0.257 ' and
+    returns the expanded ' 0.257 0.257 0.257 ' property as a list or
+    space-separated string according to the format of the received input.
+
+    the optional argument verbose controls the verbosity of expand_keyword, where:
+        0 = not output at all
+        1 = print every message
+        2 = print final statement only
+    """
     if type(keyword_values) is list:
         keyword_values = ' '.join(
             [item
-             for row in matrix
+             for row in keyword_values
              for item in row]
         )
     keyword_values = ' '.join(keyword_values.strip().split())
@@ -43,8 +54,8 @@ def expandKeyword(keyword_values, verbose=0, expandDefaults=True):
     returns the expanded ' 0.257 0.257 0.257 ' property as a list or
     space-separated string according to the format of the received input.
 
-    the optional argument speak controls the verbosity of expandKeyword, where:
-        0 = not ouptut at all
+    the optional argument verbose controls the verbosity of expandKeyword, where:
+        0 = not output at all
         1 = print every message
         2 = print final statement only
     """
