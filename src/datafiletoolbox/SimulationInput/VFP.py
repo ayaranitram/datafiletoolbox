@@ -34,6 +34,7 @@ class VFP(object) :
         if keyword_data is None and input_file is not None :
             from .readInput import readKeyword 
             keyword_data = readKeyword(input_file)
+            keyword_data = {k.upper(): v for k, v in keyword_data.items() if k.upper() in ['VFPPROD', 'VFPINJ']}
         self.KeywordData = keyword_data
         self.records = []
         self.type = None
@@ -121,7 +122,7 @@ class VFP(object) :
         
         for r in range(6,len(records)) :
             if len( records[r].strip() ) > 0 :
-                temp = [ float(i) for i in records[r].split() ]
+                temp = [ float(i) for i in expandKeyword(records[r]).split() ]
                 thp = self.THP_values[int(temp[0]) - 1]
                 wfr = self.WFR_values[int(temp[1]) - 1]
                 gfr = self.GFR_values[int(temp[2]) - 1]
@@ -293,12 +294,3 @@ class VFP(object) :
             serie = list(result.values())
             multindex = pd.MultiIndex.from_tuples(multindex, names=['RATE','THP','WFR','GFR','ALQ'])
             return pd.DataFrame(data={'BHP':serie}, index=multindex)  
-                
-            
-            
-        
-        
-        
-
-                    
-                    
