@@ -35,6 +35,19 @@ The **key** does not need to be exact, it can be:
 The default *index* is defined automatically based on the available data, usually the 'TIME' vector or the 'DATE' vector.  
 To change the index use the __`.set_index(key)`__ method. It can be any *key* in the data.  
 
+## reading a VFP file
+To read and use a VFP table from eclipse keyword data, start by importing the VFP class:
+- **`from datafiletoolbox.SimulationInput.VFP import VFP`**
+This class can read the include file containing the VFP data from the eclipse keyword and return an instance of VFP with the loaded data. The _include file_ can be directly provided using the `input_file` parameter:
+- `well_vfp = VFP(input_file='path_to_vfp_include_file')`
+Then, the VFP instance can be called providing the VFP table parameters (rate, thp, wfr, gfr, aql) that will be used to calculate the bhp.
+By example:
+- `well_vfp(RATE=500,THP=50,WFR=0,GFR=1000,ALQ=0)` will return a single float for the corresponding bhp
+Multiple values for **one** of the parameters can be provided in a tuple:
+- `well_vfp(RATE=(100,250,500),THP=50,WFR=0,GFR=1000,ALQ=0)` will return an array of floats for the corresponding bhps.
+Any of these parameters can be left empty (`=None`) and then the values defined in the VFP keyword definition will be used to calculate the bhp:
+- `well_vfp(RATE=None, THP=50, WFR=0, GFR=1000, ALQ=0)` will return an array with the bhp for each one of the rates defined in the keyword parameter.  
+  
 ## plotting
 To make a plot from an instance of loaded data, simply use the **`.plot(keys)`** method and a matplotlib plot will be generated setting the color of the lines according to the fluid or data plotted.  
 ### X axis
