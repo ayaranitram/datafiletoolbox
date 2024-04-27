@@ -5,8 +5,8 @@ Created on Mon Mar  8 08:56:44 2021
 @author: martin
 """
 
-__version__ = '0.12.3'
-__release__ = 20220110
+__version__ = '0.12.4'
+__release__ = 20240425
 __all__ = ['EclSumLoader']
 
 from .Errors import PrototypeError, MissingDependence
@@ -28,8 +28,11 @@ class _EclSumLoader(object):
             try:
                 # try to use libecl instalation from pypi.org
                 from ecl.summary import EclSum
-                from ecl.version import version as libecl_version
-                print('\n using libecl version ' + str(libecl_version))
+                try:
+                    from ecl.version import version as libecl_version
+                    print('\n using libecl version ' + str(libecl_version))
+                except:
+                    pass
                 self._EclSum = EclSum
                 _EclSumLoader._EclSum = EclSum
             except ModuleNotFoundError:
