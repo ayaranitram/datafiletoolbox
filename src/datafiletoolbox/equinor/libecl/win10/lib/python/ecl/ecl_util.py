@@ -28,8 +28,22 @@ from __future__ import absolute_import
 import ctypes
 
 from cwrap import BaseCEnum
-from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.util import monkey_the_camel # from ecl.util.util import monkey_the_camel
-from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype # from ecl import EclPrototype
+try:
+    from ecl.util.util import monkey_the_camel
+except:
+    try:
+        from datafiletoolbox.equinor.libecl.win10.lib.python.ecl.util.util import monkey_the_camel
+    except:
+        pass
+
+try:
+    from ecl import EclPrototype
+except:
+    try:
+        from datafiletoolbox.equinor.libecl.win10.lib.python.ecl import EclPrototype
+    except:
+        pass
+
 
 class EclFileEnum(BaseCEnum):
     TYPE_NAME = "ecl_file_enum"
